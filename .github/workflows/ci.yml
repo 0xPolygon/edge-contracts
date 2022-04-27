@@ -22,3 +22,6 @@ jobs:
       - run: npx eslint .
       - run: npx prettier -c .
       - uses: crytic/slither-action@v0.1.1
+      - name: solidity-coverage
+        if: always()
+        run: npx hardhat coverage
