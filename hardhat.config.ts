@@ -29,8 +29,8 @@ const config: HardhatUserConfig = {
       optimizer: {
         enabled: true,
         runs: 99999,
-      }
-    }
+      },
+    },
   },
   networks: {
     goerli: {
