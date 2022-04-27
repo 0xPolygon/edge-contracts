@@ -1,0 +1,24 @@
+name: Solidity CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - run: npm install
+      - run: npx hardhat compile --show-stack-traces
+      - run: npx hardhat test
+      - run: npx solhint "contracts/**/*.sol"
+      - run: npx eslint .
+      - run: npx prettier -c .
+      - uses: crytic/slither-action@v0.1.1
