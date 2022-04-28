@@ -36,7 +36,7 @@ pragma solidity ^0.8.13;
  */
 library ModexpInverse {
     function run(uint256 t2) internal pure returns (uint256 t0) {
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let
                 n
@@ -361,7 +361,7 @@ library ModexpInverse {
  */
 library ModexpSqrt {
     function run(uint256 t6) internal pure returns (uint256 t0) {
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let
                 n

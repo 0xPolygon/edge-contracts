@@ -26,7 +26,7 @@ SOFTWARE.
 
 pragma solidity ^0.8.13;
 
-import { ModexpInverse, ModexpSqrt } from "../libs/ModExp.sol";
+import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
 
 /**
     @title  Boneh–Lynn–Shacham (BLS) signature scheme on Barreto-Naehrig 254 bit curve (BN-254)
@@ -65,34 +65,26 @@ contract BLS {
         uint256[4] calldata pubkey,
         uint256[2] calldata message
     ) external view returns (bool, bool) {
-        uint256[12] memory input =
-            [
-                signature[0],
-                signature[1],
-                N_G2_X1,
-                N_G2_X0,
-                N_G2_Y1,
-                N_G2_Y0,
-                message[0],
-                message[1],
-                pubkey[1],
-                pubkey[0],
-                pubkey[3],
-                pubkey[2]
-            ];
+        uint256[12] memory input = [
+            signature[0],
+            signature[1],
+            N_G2_X1,
+            N_G2_X0,
+            N_G2_Y1,
+            N_G2_Y0,
+            message[0],
+            message[1],
+            pubkey[1],
+            pubkey[0],
+            pubkey[3],
+            pubkey[2]
+        ];
         uint256[1] memory out;
 
         bool callSuccess;
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            callSuccess := staticcall(
-                gas(),
-                8,
-                input,
-                384,
-                out,
-                0x20
-            )
+            callSuccess := staticcall(gas(), 8, input, 384, out, 0x20)
         }
         if (!callSuccess) {
             return (false, false);
@@ -106,7 +98,9 @@ contract BLS {
         uint256[2][] calldata messages
     ) external view returns (bool checkResult, bool callSuccess) {
         uint256 size = pubkeys.length;
+        // solhint-disable-next-line reason-string
         require(size > 0, "BLS: number of public key is zero");
+        // solhint-disable-next-line reason-string
         require(
             size == messages.length,
             "BLS: number of public keys and messages must be equal"
@@ -129,7 +123,7 @@ contract BLS {
         }
         uint256[1] memory out;
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             callSuccess := staticcall(
                 gas(),
@@ -152,6 +146,7 @@ contract BLS {
         uint256[2] calldata message
     ) external view returns (bool checkResult, bool callSuccess) {
         uint256 size = pubkeys.length;
+        // solhint-disable-next-line reason-string
         require(size > 0, "BLS: number of public key is zero");
         uint256 inputSize = (size + 1) * 6;
         uint256[] memory input = new uint256[](inputSize);
@@ -171,7 +166,7 @@ contract BLS {
         }
         uint256[1] memory out;
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             callSuccess := staticcall(
                 gas(),
@@ -205,13 +200,13 @@ contract BLS {
         bnAddInput[2] = p1[0];
         bnAddInput[3] = p1[1];
         bool success;
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             success := staticcall(sub(gas(), 2000), 6, bnAddInput, 128, p0, 64)
             switch success
-                case 0 {
-                    invalid()
-                }
+            case 0 {
+                invalid()
+            }
         }
         require(success, "BLS: bn add call failed");
         return p0;
@@ -222,6 +217,7 @@ contract BLS {
         pure
         returns (uint256[2] memory p)
     {
+        // solhint-disable-next-line reason-string
         require(_x < N, "mapToPointFT: invalid field element");
         uint256 x = _x;
 
@@ -276,6 +272,7 @@ contract BLS {
         a1 = mulmod(a1, x, N);
         a1 = addmod(a1, 3, N);
         (a1, found) = sqrt(a1);
+        // solhint-disable-next-line reason-string
         require(found, "BLS: bad ft mapping implementation");
         if (!decision) {
             a1 = N - a1;
@@ -300,7 +297,7 @@ contract BLS {
         pure
         returns (bool _isOnCurve)
     {
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let t0 := mload(point)
             let t1 := mload(add(point, 32))
@@ -317,7 +314,7 @@ contract BLS {
         pure
         returns (bool _isOnCurve)
     {
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             // x0, x1
             let t0 := mload(point)
@@ -378,7 +375,7 @@ contract BLS {
         uint256 u1;
         uint256 a0;
         uint256 a1;
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let p := add(_msg, 24)
             u1 := and(mload(p), MASK24)
@@ -404,7 +401,7 @@ contract BLS {
         bytes memory msg0 = new bytes(32 + t0 + 64 + 4);
         bytes memory out = new bytes(96);
         // b0
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let p := add(msg0, 96)
             for {
@@ -432,14 +429,14 @@ contract BLS {
         t0 = 32 + 34;
 
         // resize intermediate message
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             mstore(msg0, t0)
         }
 
         // b1
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             mstore(add(msg0, 32), b0)
             mstore8(add(msg0, 64), 1)
@@ -449,14 +446,14 @@ contract BLS {
 
         bi = sha256(msg0);
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             mstore(add(out, 32), bi)
         }
 
         // b2
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let t := xor(b0, bi)
             mstore(add(msg0, 32), t)
@@ -467,14 +464,14 @@ contract BLS {
 
         bi = sha256(msg0);
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             mstore(add(out, 64), bi)
         }
 
         // b3
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             let t := xor(b0, bi)
             mstore(add(msg0, 32), t)
@@ -485,7 +482,7 @@ contract BLS {
 
         bi = sha256(msg0);
 
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             mstore(add(out, 96), bi)
         }
