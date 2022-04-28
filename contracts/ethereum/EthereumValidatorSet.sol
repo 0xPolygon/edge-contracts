@@ -23,9 +23,14 @@ contract EthereumValidatorSet is Initializable, Ownable {
     }
 
     uint256 public currentValidatorId;
+    IBLS public bls;
+
     uint256[2] public message;
     mapping(uint256 => Validator) public validators;
+
     EnumerableSet.AddressSet private whitelist;
+
+    event NewValidator(uint256 indexed id, address indexed validator);
 
     modifier isWhitelisted(address _address) {
         require(whitelist.contains(_address), "NOT_WHITELISTED");
@@ -34,9 +39,11 @@ contract EthereumValidatorSet is Initializable, Ownable {
     }
 
     function initialize(
+        IBLS _bls,
         Validator[] calldata _validators,
         uint256[2] calldata _message
     ) external initializer {
+        bls = _bls;
         for (uint256 i = 0; i < _validators.length; i++) {
             validators[currentValidatorId++] = _validators[i];
         }
@@ -44,7 +51,10 @@ contract EthereumValidatorSet is Initializable, Ownable {
         _transferOwnership(msg.sender);
     }
 
-    function addToWhitelist(address[] calldata _whitelisted) external {
+    function addToWhitelist(address[] calldata _whitelisted)
+        external
+        onlyOwner
+    {
         for (uint256 i = 0; i < _whitelisted.length; i++) {
             whitelist.add(_whitelisted[i]);
         }
@@ -53,5 +63,18 @@ contract EthereumValidatorSet is Initializable, Ownable {
     function register(uint256[2] calldata signature, uint256[4] calldata pubkey)
         external
         isWhitelisted(msg.sender)
-    {}
+    {
+        (bool result, bool callSuccess) = bls.verifySingle(
+            signature,
+            pubkey,
+            message
+        );
+        require(callSuccess && result, "INVALID_SIGNATURE");
+        Validator storage newValidator = validators[currentValidatorId];
+        newValidator.id = currentValidatorId++;
+        newValidator.ethAddress = msg.sender;
+        newValidator.blsKey = pubkey;
+
+        emit NewValidator(currentValidatorId - 1, msg.sender);
+    }
 }
