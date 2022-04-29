@@ -13,7 +13,13 @@ interface IBLS {
     ) external view returns (bool, bool);
 }
 
-contract EthereumValidatorSet is Initializable, Ownable {
+/**
+    @title RootValidatorSet
+    @author Polygon Technology
+    @notice Validator set contract for Polygon PoS v3. This contract serves the purpose of validator registration.
+    @dev The contract is used to onboard new validators and register their ECDSA and BLS public keys.
+ */
+contract RootValidatorSet is Initializable, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     struct Validator {
@@ -38,6 +44,13 @@ contract EthereumValidatorSet is Initializable, Ownable {
         _;
     }
 
+    /**
+     * @notice Initialization function for RootValidatorSet
+     * @dev Contract can only be initialized once, also transfers ownership to initializing address.
+     * @param _bls Address of the BLS library contract.
+     * @param _validators Array of validators to seed the contract with.
+     * @param _message Signed message to verify with BLS.
+     */
     function initialize(
         IBLS _bls,
         Validator[] calldata _validators,
@@ -51,6 +64,10 @@ contract EthereumValidatorSet is Initializable, Ownable {
         _transferOwnership(msg.sender);
     }
 
+    /**
+     * @notice Adds addresses which are allowed to register as validators.
+     * @param _whitelisted Array of address to whitelist
+     */
     function addToWhitelist(address[] calldata _whitelisted)
         external
         onlyOwner
@@ -60,6 +77,11 @@ contract EthereumValidatorSet is Initializable, Ownable {
         }
     }
 
+    /**
+     * @notice Validates BLS signature with the provided pubkey and registers validators into the set.
+     * @param signature Signature to validate message against
+     * @param pubkey BLS public key of validator
+     */
     function register(uint256[2] calldata signature, uint256[4] calldata pubkey)
         external
         isWhitelisted(msg.sender)
