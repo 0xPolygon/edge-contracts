@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0",
-    "hardhat": "^2.9.3"
+    "hardhat": "^2.9.3",
+    "mcl-wasm": "^1.0.2"
   },
   "name": "v3-contracts",
   "description": "",
