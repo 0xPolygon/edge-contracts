@@ -69,18 +69,20 @@ contract RootValidatorSet is Initializable, Ownable {
             "LENGTH_MISMATCH"
         );
         bls = newBls;
+        uint256 currentId = 1; // set counter to 1 assuming validatorId is currently at 1 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
-            Validator storage newValidator = validators[currentValidatorId];
-            newValidator.id = currentValidatorId;
+            Validator storage newValidator = validators[currentId];
+            newValidator.id = currentId;
             newValidator._address = validatorAddresses[i];
             newValidator.blsKey = validatorPubkeys[i];
 
             emit NewValidator(
-                currentValidatorId++,
+                currentId++,
                 validatorAddresses[i],
                 validatorPubkeys[i]
             );
         }
+        currentValidatorId = currentId;
         message = newMessage;
         _transferOwnership(msg.sender);
     }
@@ -132,11 +134,13 @@ contract RootValidatorSet is Initializable, Ownable {
         // slither-disable-next-line unused-return
         whitelist.remove(msg.sender);
 
-        Validator storage newValidator = validators[currentValidatorId];
-        newValidator.id = currentValidatorId;
+        uint256 currentId = currentValidatorId;
+
+        Validator storage newValidator = validators[currentId];
+        newValidator.id = currentId;
         newValidator._address = msg.sender;
         newValidator.blsKey = pubkey;
-        validatorIdByAddress[msg.sender] = currentValidatorId;
+        validatorIdByAddress[msg.sender] = currentId;
 
         emit NewValidator(currentValidatorId++, msg.sender, pubkey);
     }
