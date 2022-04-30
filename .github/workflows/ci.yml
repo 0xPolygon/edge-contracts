@@ -48,5 +48,6 @@ jobs:
         with:
           node-version: "16.x"
       - run: npm install
+      - run: npx hardhat compile
       - name: solidity-coverage
         run: npx hardhat coverage
