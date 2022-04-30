@@ -53,48 +53,49 @@ contract RootValidatorSet is Initializable, Ownable {
     /**
      * @notice Initialization function for RootValidatorSet
      * @dev Contract can only be initialized once, also transfers ownership to initializing address.
-     * @param _bls Address of the BLS library contract.
-     * @param _validatorAddresses Array of validator addresses to seed the contract with.
-     * @param _validatorPubkeys Array of validator pubkeys to seed the contract with.
-     * @param _message Signed message to verify with BLS.
+     * @param newBls Address of the BLS library contract.
+     * @param validatorAddresses Array of validator addresses to seed the contract with.
+     * @param validatorAddresses Array of validator pubkeys to seed the contract with.
+     * @param newMessage Signed message to verify with BLS.
      */
     function initialize(
-        IBLS _bls,
-        address[] calldata _validatorAddresses,
-        uint256[4][] calldata _validatorPubkeys,
-        uint256[2] calldata _message
+        IBLS newBls,
+        address[] calldata validatorAddresses,
+        uint256[4][] calldata validatorPubkeys,
+        uint256[2] calldata newMessage
     ) external initializer {
         require(
-            _validatorAddresses.length == _validatorPubkeys.length,
+            validatorAddresses.length == validatorPubkeys.length,
             "LENGTH_MISMATCH"
         );
-        bls = _bls;
-        for (uint256 i = 0; i < _validatorAddresses.length; i++) {
+        bls = newBls;
+        for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[currentValidatorId];
             newValidator.id = currentValidatorId;
-            newValidator._address = _validatorAddresses[i];
-            newValidator.blsKey = _validatorPubkeys[i];
+            newValidator._address = validatorAddresses[i];
+            newValidator.blsKey = validatorPubkeys[i];
 
             emit NewValidator(
                 currentValidatorId++,
-                _validatorAddresses[i],
-                _validatorPubkeys[i]
+                validatorAddresses[i],
+                validatorPubkeys[i]
             );
         }
-        message = _message;
+        message = newMessage;
         _transferOwnership(msg.sender);
     }
 
     /**
      * @notice Adds addresses which are allowed to register as validators.
-     * @param _whitelisted Array of address to whitelist
+     * @param whitelistAddreses Array of address to whitelist
      */
-    function addToWhitelist(address[] calldata _whitelisted)
+    function addToWhitelist(address[] calldata whitelistAddreses)
         external
         onlyOwner
     {
-        for (uint256 i = 0; i < _whitelisted.length; i++) {
-            whitelist.add(_whitelisted[i]);
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            // slither-disable-next-line unused-return
+            whitelist.add(whitelistAddreses[i]);
         }
     }
 
@@ -128,7 +129,7 @@ contract RootValidatorSet is Initializable, Ownable {
             message
         );
         require(callSuccess && result, "INVALID_SIGNATURE");
-
+        // slither-disable-next-line unused-return
         whitelist.remove(msg.sender);
 
         Validator storage newValidator = validators[currentValidatorId];
