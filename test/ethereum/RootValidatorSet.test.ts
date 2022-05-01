@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { Signer } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { BLS, RootValidatorSet } from "../../typechain";
@@ -9,9 +10,13 @@ const DOMAIN = ethers.utils.arrayify(
 );
 
 describe("RootValidatorSet", function () {
-  let bls: BLS, rootValidatorSet: RootValidatorSet;
+  let bls: BLS,
+    rootValidatorSet: RootValidatorSet,
+    validatorSetSize: number,
+    accounts: any[]; // we use any so we can access address directly from object
   before(async function () {
     await mcl.init();
+    accounts = await ethers.getSigners();
     const BLS = await ethers.getContractFactory("BLS");
     bls = await BLS.deploy();
 
@@ -31,10 +36,9 @@ describe("RootValidatorSet", function () {
         DOMAIN
       )
     );
-    let validatorSetSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
     let addresses = [];
     let pubkeys = [];
-    const accounts = await ethers.getSigners();
     for (let i = 0; i < validatorSetSize; i++) {
       const { pubkey, secret } = mcl.newKeyPair();
       pubkeys.push(mcl.g2ToHex(pubkey));
@@ -61,5 +65,14 @@ describe("RootValidatorSet", function () {
       expect(validator._address).to.equal(addresses[i]);
       //expect(validator.blsKey).to.equal(pubkeys[i]); typings for this aren't generated...
     }
+  });
+  it("Add to whitelist", async function () {
+    const whitelistSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
+    const addresses: string[] = [];
+    for (let i = 0; i < whitelistSize; i++) {
+      addresses.push(accounts[i + validatorSetSize].address);
+    }
+    await rootValidatorSet.addToWhitelist(addresses);
+    expect(await rootValidatorSet.viewWhitelist()).to.deep.equal(addresses);
   });
 });
