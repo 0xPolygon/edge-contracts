@@ -24,14 +24,14 @@ describe("RootValidatorSet", function () {
 
     await rootValidatorSet.deployed();
   });
-  it("Should be able to initialize", async function () {
+  it("Initialize and validate initialization", async function () {
     const messagePoint = mcl.g1ToHex(
       mcl.hashToPoint(
         ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")),
         DOMAIN
       )
     );
-    let validatorSetSize = 3;
+    let validatorSetSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
     let addresses = [];
     let pubkeys = [];
     const accounts = await ethers.getSigners();
@@ -46,5 +46,20 @@ describe("RootValidatorSet", function () {
       pubkeys,
       messagePoint
     );
+    expect(await rootValidatorSet.currentValidatorId()).to.equal(
+      validatorSetSize + 1
+    );
+    expect(ethers.utils.hexValue(await rootValidatorSet.message(0))).to.equal(
+      ethers.utils.hexValue(messagePoint[0])
+    );
+    expect(ethers.utils.hexValue(await rootValidatorSet.message(1))).to.equal(
+      ethers.utils.hexValue(messagePoint[1])
+    );
+    for (let i = 0; i < validatorSetSize; i++) {
+      const validator = await rootValidatorSet.validators(i + 1);
+      expect(validator.id).to.equal(i + 1);
+      expect(validator._address).to.equal(addresses[i]);
+      //expect(validator.blsKey).to.equal(pubkeys[i]); typings for this aren't generated...
+    }
   });
 });
