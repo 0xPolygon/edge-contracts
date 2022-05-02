@@ -45,7 +45,7 @@ contract RootValidatorSet is Initializable, Ownable {
 
     modifier isWhitelistedAndNotRegistered(address _address) {
         require(whitelist.contains(_address), "NOT_WHITELISTED");
-        require(validatorIdByAddress[msg.sender] != 0, "ALREADY_REGISTERED");
+        require(validatorIdByAddress[msg.sender] == 0, "ALREADY_REGISTERED");
 
         _;
     }
