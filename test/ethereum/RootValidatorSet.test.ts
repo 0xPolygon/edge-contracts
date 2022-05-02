@@ -14,6 +14,7 @@ describe("RootValidatorSet", function () {
     rootValidatorSet: RootValidatorSet,
     validatorSetSize: number,
     whitelistSize: number,
+    whitelistAddresses: string[],
     signature: mcl.Signature,
     parsedPubkey: mcl.PublicKey,
     messagePoint: mcl.MessagePoint,
@@ -55,7 +56,7 @@ describe("RootValidatorSet", function () {
       messagePoint
     );
     expect(await rootValidatorSet.currentValidatorId()).to.equal(
-      validatorSetSize + 1
+      validatorSetSize
     );
     expect(ethers.utils.hexValue(await rootValidatorSet.message(0))).to.equal(
       ethers.utils.hexValue(messagePoint[0])
@@ -75,12 +76,16 @@ describe("RootValidatorSet", function () {
   });
   it("Add to whitelist", async function () {
     whitelistSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
-    const addresses: string[] = [];
+    whitelistAddresses = [];
     for (let i = 0; i < whitelistSize; i++) {
-      addresses.push(accounts[i + validatorSetSize].address);
+      whitelistAddresses.push(accounts[i + validatorSetSize].address);
     }
-    await rootValidatorSet.addToWhitelist(addresses);
-    expect(await rootValidatorSet.viewWhitelist()).to.deep.equal(addresses);
+    await rootValidatorSet.addToWhitelist(whitelistAddresses);
+    for (let i = 0; i < whitelistSize; i++) {
+      expect(await rootValidatorSet.whitelist(whitelistAddresses[i])).to.equal(
+        true
+      );
+    }
   });
   it("Register a validator: whitelisted address", async function () {
     const signer = accounts[validatorSetSize];
@@ -124,8 +129,12 @@ describe("RootValidatorSet", function () {
       newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
     ).to.be.reverted;
   });
-  it("Clear whitelist", async function () {
-    await rootValidatorSet.clearWhitelist();
-    expect(await rootValidatorSet.viewWhitelist()).to.deep.equal([]);
+  it("Delete from whitelist", async function () {
+    await rootValidatorSet.deleteFromWhitelist(whitelistAddresses);
+    for (let i = 0; i < whitelistSize; i++) {
+      expect(await rootValidatorSet.whitelist(whitelistAddresses[i])).to.equal(
+        false
+      );
+    }
   });
 });
