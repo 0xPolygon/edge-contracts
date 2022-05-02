@@ -67,6 +67,9 @@ describe("RootValidatorSet", function () {
       const validator = await rootValidatorSet.validators(i + 1);
       expect(validator.id).to.equal(i + 1);
       expect(validator._address).to.equal(addresses[i]);
+      expect(
+        await rootValidatorSet.validatorIdByAddress(addresses[i])
+      ).to.equal(i + 1);
       //expect(validator.blsKey).to.equal(pubkeys[i]); typings for this aren't generated...
     }
   });
@@ -99,10 +102,13 @@ describe("RootValidatorSet", function () {
     const parsedBlsKey = event?.args?.blsKey.map((elem: BigNumber) =>
       ethers.utils.hexValue(elem.toHexString())
     );
-    const strippedParsedPubkey = parsedPubkey.map((elem: mcl.PublicKgey) =>
+    const strippedParsedPubkey = parsedPubkey.map((elem: mcl.PublicKey) =>
       ethers.utils.hexValue(elem)
     );
     expect(parsedBlsKey).to.deep.equal(strippedParsedPubkey);
+    expect(
+      await rootValidatorSet.validatorIdByAddress(signer.address)
+    ).to.equal(validatorSetSize + 1);
   });
   it("Register a validator: non-whitelisted address", async function () {
     const signer = accounts[validatorSetSize + whitelistSize];

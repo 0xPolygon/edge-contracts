@@ -76,6 +76,8 @@ contract RootValidatorSet is Initializable, Ownable {
             newValidator._address = validatorAddresses[i];
             newValidator.blsKey = validatorPubkeys[i];
 
+            validatorIdByAddress[validatorAddresses[i]] = currentId;
+
             emit NewValidator(
                 currentId++,
                 validatorAddresses[i],
