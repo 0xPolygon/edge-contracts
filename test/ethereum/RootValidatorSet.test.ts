@@ -14,6 +14,9 @@ describe("RootValidatorSet", function () {
     rootValidatorSet: RootValidatorSet,
     validatorSetSize: number,
     whitelistSize: number,
+    signature: mcl.Signature,
+    parsedPubkey: mcl.PublicKey,
+    messagePoint: mcl.MessagePoint,
     accounts: any[]; // we use any so we can access address directly from object
   before(async function () {
     await mcl.init();
@@ -82,9 +85,9 @@ describe("RootValidatorSet", function () {
       ethers.utils.toUtf8Bytes("polygon-v3-validator")
     );
     const { pubkey, secret } = mcl.newKeyPair();
-    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+    ({ signature, messagePoint } = mcl.sign(message, secret, DOMAIN));
     const newRootValidatorSet = rootValidatorSet.connect(signer);
-    const parsedPubkey = mcl.g2ToHex(pubkey);
+    parsedPubkey = mcl.g2ToHex(pubkey);
     const tx = await newRootValidatorSet.register(
       mcl.g1ToHex(signature),
       parsedPubkey
@@ -96,33 +99,21 @@ describe("RootValidatorSet", function () {
     const parsedBlsKey = event?.args?.blsKey.map((elem: BigNumber) =>
       ethers.utils.hexValue(elem.toHexString())
     );
-    const strippedParsedPubkey = parsedPubkey.map((elem) =>
+    const strippedParsedPubkey = parsedPubkey.map((elem: mcl.PublicKgey) =>
       ethers.utils.hexValue(elem)
     );
     expect(parsedBlsKey).to.deep.equal(strippedParsedPubkey);
   });
   it("Register a validator: non-whitelisted address", async function () {
     const signer = accounts[validatorSetSize + whitelistSize];
-    const message = ethers.utils.hexlify(
-      ethers.utils.toUtf8Bytes("polygon-v3-validator")
-    );
-    const { pubkey, secret } = mcl.newKeyPair();
-    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
     const newRootValidatorSet = rootValidatorSet.connect(signer);
-    const parsedPubkey = mcl.g2ToHex(pubkey);
     await expect(
       newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
     ).to.be.reverted;
   });
   it("Register a validator: registered address", async function () {
     const signer = accounts[0];
-    const message = ethers.utils.hexlify(
-      ethers.utils.toUtf8Bytes("polygon-v3-validator")
-    );
-    const { pubkey, secret } = mcl.newKeyPair();
-    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
     const newRootValidatorSet = rootValidatorSet.connect(signer);
-    const parsedPubkey = mcl.g2ToHex(pubkey);
     await expect(
       newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
     ).to.be.reverted;
