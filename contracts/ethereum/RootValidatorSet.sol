@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 interface IBLS {
     function verifySingle(
@@ -20,22 +19,19 @@ interface IBLS {
     @dev The contract is used to onboard new validators and register their ECDSA and BLS public keys.
  */
 contract RootValidatorSet is Initializable, Ownable {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
     struct Validator {
         uint256 id;
         address _address;
         uint256[4] blsKey;
     }
 
-    uint256 public currentValidatorId = 1;
+    uint256 public currentValidatorId = 0;
     IBLS public bls;
 
     uint256[2] public message;
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
-
-    EnumerableSet.AddressSet private whitelist;
+    mapping(address => bool) public whitelist;
 
     event NewValidator(
         uint256 indexed id,
@@ -43,8 +39,8 @@ contract RootValidatorSet is Initializable, Ownable {
         uint256[4] blsKey
     );
 
-    modifier isWhitelistedAndNotRegistered(address _address) {
-        require(whitelist.contains(_address), "NOT_WHITELISTED");
+    modifier isWhitelistedAndNotRegistered() {
+        require(whitelist[msg.sender], "NOT_WHITELISTED");
         require(validatorIdByAddress[msg.sender] == 0, "ALREADY_REGISTERED");
 
         _;
@@ -69,9 +65,9 @@ contract RootValidatorSet is Initializable, Ownable {
             "LENGTH_MISMATCH"
         );
         bls = newBls;
-        uint256 currentId = 1; // set counter to 1 assuming validatorId is currently at 1 which it should be...
+        uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
-            Validator storage newValidator = validators[currentId];
+            Validator storage newValidator = validators[++currentId];
             newValidator.id = currentId;
             newValidator._address = validatorAddresses[i];
             newValidator.blsKey = validatorPubkeys[i];
@@ -79,7 +75,7 @@ contract RootValidatorSet is Initializable, Ownable {
             validatorIdByAddress[validatorAddresses[i]] = currentId;
 
             emit NewValidator(
-                currentId++,
+                currentId,
                 validatorAddresses[i],
                 validatorPubkeys[i]
             );
@@ -98,24 +94,21 @@ contract RootValidatorSet is Initializable, Ownable {
         onlyOwner
     {
         for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            // slither-disable-next-line unused-return
-            whitelist.add(whitelistAddreses[i]);
+            whitelist[whitelistAddreses[i]] = true;
         }
     }
 
     /**
-     * @notice Clears whitelist entirely.
+     * @notice Deletes addresses which are allowed to register as validators.
+     * @param whitelistAddreses Array of address to remove from whitelist
      */
-    function clearWhitelist() external onlyOwner {
-        delete whitelist;
-    }
-
-    /**
-     * @notice View whitelist.
-     * @return Returns the whitelist EnumerableSet as an array of addresses.
-     */
-    function viewWhitelist() external view returns (address[] memory) {
-        return whitelist.values();
+    function deleteFromWhitelist(address[] calldata whitelistAddreses)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            whitelist[whitelistAddreses[i]] = false;
+        }
     }
 
     /**
@@ -125,7 +118,7 @@ contract RootValidatorSet is Initializable, Ownable {
      */
     function register(uint256[2] calldata signature, uint256[4] calldata pubkey)
         external
-        isWhitelistedAndNotRegistered(msg.sender)
+        isWhitelistedAndNotRegistered
     {
         (bool result, bool callSuccess) = bls.verifySingle(
             signature,
@@ -133,10 +126,10 @@ contract RootValidatorSet is Initializable, Ownable {
             message
         );
         require(callSuccess && result, "INVALID_SIGNATURE");
-        // slither-disable-next-line unused-return
-        whitelist.remove(msg.sender);
 
-        uint256 currentId = currentValidatorId;
+        whitelist[msg.sender] = false;
+
+        uint256 currentId = ++currentValidatorId;
 
         Validator storage newValidator = validators[currentId];
         newValidator.id = currentId;
@@ -144,6 +137,6 @@ contract RootValidatorSet is Initializable, Ownable {
         newValidator.blsKey = pubkey;
         validatorIdByAddress[msg.sender] = currentId;
 
-        emit NewValidator(currentValidatorId++, msg.sender, pubkey);
+        emit NewValidator(currentId, msg.sender, pubkey);
     }
 }
