@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Signer } from "ethers";
+import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { BLS, RootValidatorSet } from "../../typechain";
@@ -13,6 +13,7 @@ describe("RootValidatorSet", function () {
   let bls: BLS,
     rootValidatorSet: RootValidatorSet,
     validatorSetSize: number,
+    whitelistSize: number,
     accounts: any[]; // we use any so we can access address directly from object
   before(async function () {
     await mcl.init();
@@ -67,12 +68,67 @@ describe("RootValidatorSet", function () {
     }
   });
   it("Add to whitelist", async function () {
-    const whitelistSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
+    whitelistSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
     const addresses: string[] = [];
     for (let i = 0; i < whitelistSize; i++) {
       addresses.push(accounts[i + validatorSetSize].address);
     }
     await rootValidatorSet.addToWhitelist(addresses);
     expect(await rootValidatorSet.viewWhitelist()).to.deep.equal(addresses);
+  });
+  it("Register a validator: whitelisted address", async function () {
+    const signer = accounts[validatorSetSize];
+    const message = ethers.utils.hexlify(
+      ethers.utils.toUtf8Bytes("polygon-v3-validator")
+    );
+    const { pubkey, secret } = mcl.newKeyPair();
+    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+    const newRootValidatorSet = rootValidatorSet.connect(signer);
+    const parsedPubkey = mcl.g2ToHex(pubkey);
+    const tx = await newRootValidatorSet.register(
+      mcl.g1ToHex(signature),
+      parsedPubkey
+    );
+    const receipt = await tx.wait();
+    const event = receipt.events?.find((log) => log.event === "NewValidator");
+    expect(event?.args?.id).to.equal(validatorSetSize + 1);
+    expect(event?.args?.validator).to.equal(signer.address);
+    const parsedBlsKey = event?.args?.blsKey.map((elem: BigNumber) =>
+      ethers.utils.hexValue(elem.toHexString())
+    );
+    const strippedParsedPubkey = parsedPubkey.map((elem) =>
+      ethers.utils.hexValue(elem)
+    );
+    expect(parsedBlsKey).to.deep.equal(strippedParsedPubkey);
+  });
+  it("Register a validator: non-whitelisted address", async function () {
+    const signer = accounts[validatorSetSize + whitelistSize];
+    const message = ethers.utils.hexlify(
+      ethers.utils.toUtf8Bytes("polygon-v3-validator")
+    );
+    const { pubkey, secret } = mcl.newKeyPair();
+    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+    const newRootValidatorSet = rootValidatorSet.connect(signer);
+    const parsedPubkey = mcl.g2ToHex(pubkey);
+    await expect(
+      newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
+    ).to.be.reverted;
+  });
+  it("Register a validator: registered address", async function () {
+    const signer = accounts[0];
+    const message = ethers.utils.hexlify(
+      ethers.utils.toUtf8Bytes("polygon-v3-validator")
+    );
+    const { pubkey, secret } = mcl.newKeyPair();
+    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+    const newRootValidatorSet = rootValidatorSet.connect(signer);
+    const parsedPubkey = mcl.g2ToHex(pubkey);
+    await expect(
+      newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
+    ).to.be.reverted;
+  });
+  it("Clear whitelist", async function () {
+    await rootValidatorSet.clearWhitelist();
+    expect(await rootValidatorSet.viewWhitelist()).to.deep.equal([]);
   });
 });
