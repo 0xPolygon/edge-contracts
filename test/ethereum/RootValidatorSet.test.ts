@@ -9,7 +9,7 @@ const DOMAIN = ethers.utils.arrayify(
   ethers.utils.hexlify(ethers.utils.randomBytes(32))
 );
 
-describe("RootValidatorSet", function () {
+describe("RootValidatorSet", () => {
   let bls: BLS,
     rootValidatorSet: RootValidatorSet,
     validatorSetSize: number,
@@ -19,7 +19,7 @@ describe("RootValidatorSet", function () {
     parsedPubkey: mcl.PublicKey,
     messagePoint: mcl.MessagePoint,
     accounts: any[]; // we use any so we can access address directly from object
-  before(async function () {
+  before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
     const BLS = await ethers.getContractFactory("BLS");
@@ -34,7 +34,7 @@ describe("RootValidatorSet", function () {
 
     await rootValidatorSet.deployed();
   });
-  it("Initialize and validate initialization", async function () {
+  it("Initialize and validate initialization", async () => {
     const messagePoint = mcl.g1ToHex(
       mcl.hashToPoint(
         ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")),
@@ -87,7 +87,7 @@ describe("RootValidatorSet", function () {
       );
     }
   });
-  it("Register a validator: whitelisted address", async function () {
+  it("Register a validator: whitelisted address", async () => {
     const signer = accounts[validatorSetSize];
     const message = ethers.utils.hexlify(
       ethers.utils.toUtf8Bytes("polygon-v3-validator")
@@ -115,26 +115,27 @@ describe("RootValidatorSet", function () {
       await rootValidatorSet.validatorIdByAddress(signer.address)
     ).to.equal(validatorSetSize + 1);
   });
-  it("Register a validator: non-whitelisted address", async function () {
+  it("Register a validator: non-whitelisted address", async () => {
     const signer = accounts[validatorSetSize + whitelistSize];
     const newRootValidatorSet = rootValidatorSet.connect(signer);
     await expect(
       newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
-    ).to.be.reverted;
+    ).to.be.revertedWith("NOT_WHITELISTED");
   });
-  it("Register a validator: registered address", async function () {
+  it("Register a validator: registered address", async () => {
     const signer = accounts[0];
+    await rootValidatorSet.addToWhitelist([signer.address]); // mock data
     const newRootValidatorSet = rootValidatorSet.connect(signer);
     await expect(
       newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
-    ).to.be.reverted;
+    ).to.be.revertedWith("ALREADY_REGISTERED");
+    await rootValidatorSet.deleteFromWhitelist([signer.address]); // cleanup
   });
   it("Delete from whitelist", async function () {
     await rootValidatorSet.deleteFromWhitelist(whitelistAddresses);
     for (let i = 0; i < whitelistSize; i++) {
-      expect(await rootValidatorSet.whitelist(whitelistAddresses[i])).to.equal(
-        false
-      );
+      expect(await rootValidatorSet.whitelist(whitelistAddresses[i])).to.be
+        .false;
     }
   });
 });
