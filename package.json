@@ -43,7 +43,7 @@
   "scripts": {
     "test": "npx hardhat test",
     "lint:sol": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w .",
-    "lint:js": "npx eslint --fix .",
+    "lint:ts": "npx prettier -w . && npx eslint --fix .",
     "lint": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w . && npx eslint --fix .",
     "slither": "slither .",
     "coverage": "npx hardhat coverage"
