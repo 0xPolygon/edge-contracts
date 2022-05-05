@@ -3,7 +3,8 @@
    mcl.ts */
 import * as mcl from "mcl-wasm";
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { FIELD_ORDER, hashToField, randHex } from "./hashToField";
+import { FIELD_ORDER, hashToField } from "./hashToField";
+import { randHex } from "./utils";
 import { arrayify, hexlify } from "ethers/lib/utils";
 
 export type mclG2 = any;
@@ -135,7 +136,7 @@ export function aggregateRaw(signatures: Signature[]): Signature {
   return aggregated;
 }
 
-export function aggregatePK(pks: PublicKey[]): PublicKey {
+export function aggregatePks(pks: PublicKey[]): PublicKey {
   let aggregated = new mcl.G2();
   for (const pk of pks) {
     aggregated = mcl.add(aggregated, pk);

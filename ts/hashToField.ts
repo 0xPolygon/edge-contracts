@@ -103,7 +103,3 @@ export function expandMsg(
   out.set(arrayify(bi), 32 * (ell - 1));
   return out;
 }
-
-export function randHex(n: number): string {
-  return hexlify(randomBytes(n));
-}
