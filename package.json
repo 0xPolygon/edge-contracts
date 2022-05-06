@@ -60,7 +60,7 @@
     "solidity"
   ],
   "author": "Polygon Technology",
-  "license": "GPL-3.0-or-later",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/maticnetwork/v3-contracts/issues"
   },
