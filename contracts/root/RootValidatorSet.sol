@@ -25,7 +25,7 @@ contract RootValidatorSet is Initializable, Ownable {
         uint256[4] blsKey;
     }
 
-    uint256 public currentValidatorId = 0;
+    uint256 public currentValidatorId;
     IBLS public bls;
 
     uint256[2] public message;
