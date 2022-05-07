@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/Arrays.sol";
 
 /**
     @title ChildValidatorSet
@@ -10,6 +11,7 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
 contract ChildValidatorSet is Initializable {
+    using Arrays for uint256[];
     struct Validator {
         uint256 id;
         address _address;
@@ -31,7 +33,7 @@ contract ChildValidatorSet is Initializable {
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
     mapping(uint256 => Epoch) public epochs;
-    mapping(uint256 => uint256) public epochIdByBlock;
+    uint256[] public epochEndBlocks;
 
     event NewValidator(
         uint256 indexed id,
@@ -43,21 +45,18 @@ contract ChildValidatorSet is Initializable {
         uint256 indexed id,
         uint256 indexed startBlock,
         uint256 indexed endBlock
-    )
-
-    /**
-     * @notice Constructor for ChildValidatorSet
-     * @dev This is a genesis contract, the intent is to get the bytecode and directly put it in v3 client.
-     */
-    constructor() {
-
-    }
+    );
 
     modifier onlySystemCall() {
         require(msg.sender == 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE, "ONLY_SYSTEMCALL");
         _;
     }
 
+    /**
+     * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
+     * @param validatorAddresses Addresses of validators
+     * @param validatorPubkeys BLS pubkeys of validators
+     */
     function initialize(
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys
@@ -84,6 +83,12 @@ contract ChildValidatorSet is Initializable {
         currentValidatorId = currentId;
     }
 
+    /**
+     * @notice Allows the v3 client to commit epochs to this contract.
+     * @param id ID of epoch to be committed
+     * @param startBlock First block in epoch
+     * @param endBlock Last block in epoch
+     */
     function commitEpoch(uint256 id, uint256 startBlock, uint256 endBlock) external onlySystemCall {
         uint256 newEpochId = ++currentEpochId;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
@@ -96,6 +101,23 @@ contract ChildValidatorSet is Initializable {
         newEpoch.endBlock = endBlock;
         newEpoch.startBlock = startBlock;
 
+        epochEndBlocks.push(endBlock);
+
         emit NewEpoch(id, startBlock, endBlock);
+    }
+
+    /**
+     * @notice Look up an epoch by block number. Searches in O(log n) time.
+     * @param blockNumber ID of epoch to be committed
+     * @return bool Returns true if the search was successful, else false
+     * @return Epoch Returns epoch if found, or else, the last epoch
+     */
+    function getEpochByBlock(uint256 blockNumber) external view returns (bool, Epoch memory) {
+        uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
+        if (ret == epochEndBlocks.length) {
+            return (false, epochs[currentEpochId]);
+        } else {
+            return (true, epochs[ret]);
+        }
     }
 }
