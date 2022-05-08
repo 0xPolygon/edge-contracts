@@ -140,10 +140,15 @@ contract ChildValidatorSet is IStateReceiver {
         emit NewEpoch(id, startBlock, endBlock);
     }
 
+    /**
+     * @notice Enables the RootValidatorSet to trustlessly update validator set on child chain.
+     * @param data Data received from RootValidatorSet
+     */
     function onStateReceive(
         uint256, /* id */
         bytes calldata data
     ) external {
+        // slither-disable-next-line too-many-digits
         require(
             msg.sender == 0x0000000000000000000000000000000000001001,
             "INVALID_SENDER"
@@ -189,6 +194,10 @@ contract ChildValidatorSet is IStateReceiver {
         }
     }
 
+    /**
+     * @notice Calculate validator power for a validator in percentage.
+     * @return uint256 Returns validator power at 6 decimals. Therefore, a return value of 123456 is 0.123456%
+     */
     function calculateValidatorPower(uint256 id)
         external
         view
@@ -196,9 +205,15 @@ contract ChildValidatorSet is IStateReceiver {
     {
         uint256 totalStake = calculateTotalStake();
         uint256 validatorStake = validators[id].stake;
-        return (validatorStake * 100 * 1000000) / totalStake; // returns at 6 degrees of precision
+        /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
+           MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
+        return (validatorStake * 100 * (10**6)) / totalStake;
     }
 
+    /**
+     * @notice Calculate total stake in the network (self-stake + delegation)
+     * @return stake Returns total stake (in MATIC wei)
+     */
     function calculateTotalStake() public view returns (uint256 stake) {
         for (uint256 i = 1; i <= currentValidatorId; i++) {
             stake += validators[i].stake;
