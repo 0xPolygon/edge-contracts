@@ -26,6 +26,11 @@ describe("RootValidatorSet", () => {
 
     await childValidatorSet.deployed();
   });
+  it("Initialize without system call", async () => {
+    await expect(
+      childValidatorSet.initialize([], [], [], [], [])
+    ).to.be.revertedWith("ONLY_SYSTEMCALL");
+  });
   it("Initialize and validate initialization", async () => {
     await hre.network.provider.send("hardhat_setBalance", [
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE",
@@ -73,6 +78,17 @@ describe("RootValidatorSet", () => {
       expect(validator._address).to.equal(addresses[i]);
       expect(validator.selfStake).to.equal(validatorStake);
       expect(validator.stake).to.equal(validatorStake);
+      expect(
+        await childValidatorSet.validatorIdByAddress(addresses[i])
+      ).to.equal(validator.id);
     }
+    // struct array is not available on typechain
+    //expect(await childValidatorSet.epochs(1).validatorSet).to.deep.equal(validatorSet);
+    //expect(await childValidatorSet.epochs(1).producerSet).to.deep.equal(validatorSet);
+  });
+  it("Attempt reinitialization", async () => {
+    await expect(
+      childValidatorSet.initialize([], [], [], [], [])
+    ).to.be.revertedWith("ALREADY_INITIALIZED");
   });
 });
