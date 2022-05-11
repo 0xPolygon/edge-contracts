@@ -78,6 +78,7 @@ contract ChildValidatorSet is IStateReceiver {
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
      * @param validatorAddresses Addresses of validators
      * @param validatorPubkeys BLS pubkeys of validators
+     * @param epochValidatorSet First active validator set
      */
     function initialize(
         address[] calldata validatorAddresses,
@@ -224,25 +225,30 @@ contract ChildValidatorSet is IStateReceiver {
         }
     }
 
+    /**
+     * @notice Sets the validator set for an epoch using the previous root as seed
+     */
     function setNextValidatorSet(uint256 epochId, bytes32 epochRoot) internal {
-        if (currentValidatorId <= activeValidatorSetSize) {
-            uint256[] memory validatorSet = new uint256[](currentValidatorId); // include all validators in set
-            for (uint256 i = 0; i < currentValidatorId; i++) {
+        uint256 currentId = currentValidatorId;
+        uint256 validatorSetSize = activeValidatorSetSize;
+        if (currentId <= validatorSetSize) {
+            uint256[] memory validatorSet = new uint256[](currentId); // include all validators in set
+            for (uint256 i = 0; i < currentId; i++) {
                 validatorSet[i] = i;
             }
             epochs[epochId].validatorSet = validatorSet;
         } else {
-            uint256[] memory validatorSet = new uint256[](activeValidatorSetSize);
+            uint256[] memory validatorSet = new uint256[](validatorSetSize);
             uint256 counter;
             for (uint256 i = 0;; i++) {
-                uint256 randomIndex = uint256(keccak256(abi.encodePacked(epochRoot, i))) % currentValidatorId;
+                uint256 randomIndex = uint256(keccak256(abi.encodePacked(epochRoot, i))) % currentId;
                 if (validatorsByEpoch[epochId][randomIndex]) {
                      continue;
                 } else {
                     validatorsByEpoch[epochId][randomIndex] = true;
                     validatorSet[counter++] = randomIndex;
                 }
-                if (validatorSet[activeValidatorSetSize - 1] != 0) {
+                if (validatorSet[validatorSetSize - 1] != 0) {
                     break; // last element filled, break
                 }
             }
