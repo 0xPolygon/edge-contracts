@@ -15,6 +15,7 @@ interface IStateReceiver {
  */
 contract ChildValidatorSet is IStateReceiver {
     using Arrays for uint256[];
+
     struct Validator {
         uint256 id;
         address _address;
@@ -28,7 +29,6 @@ contract ChildValidatorSet is IStateReceiver {
         uint256 startBlock;
         uint256 endBlock;
         uint256[] validatorSet;
-        uint256[] producerSet;
     }
 
     bytes32 public constant NEW_VALIDATOR_SIG =
@@ -36,12 +36,14 @@ contract ChildValidatorSet is IStateReceiver {
     uint256 public constant SPRINT = 64;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
+    uint256 public activeValidatorSetSize = 100;
+
+    uint256[] public epochEndBlocks;
 
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
     mapping(uint256 => Epoch) public epochs;
-
-    uint256[] public epochEndBlocks;
+    mapping(uint256 => mapping(uint256 => bool)) validatorsByEpoch;
 
     uint8 private initialized;
 
@@ -81,8 +83,7 @@ contract ChildValidatorSet is IStateReceiver {
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
-        uint256[] calldata epochValidatorSet,
-        uint256[] calldata epochProducerSet
+        uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
@@ -97,9 +98,8 @@ contract ChildValidatorSet is IStateReceiver {
         }
         currentValidatorId = currentId;
 
-        Epoch storage nextEpoch = epochs[1];
+        Epoch storage nextEpoch = epochs[++currentEpochId];
         nextEpoch.validatorSet = epochValidatorSet;
-        nextEpoch.producerSet = epochProducerSet;
     }
 
     /**
@@ -108,16 +108,15 @@ contract ChildValidatorSet is IStateReceiver {
      * @param startBlock First block in epoch
      * @param endBlock Last block in epoch
      * @param epochValidatorSet Update validator set for next epoch
-     * @param epochProducerSet Update producer set for next epoch
      */
     function commitEpoch(
         uint256 id,
         uint256 startBlock,
         uint256 endBlock,
-        uint256[] calldata epochValidatorSet,
-        uint256[] calldata epochProducerSet
+        bytes32 epochRoot,
+        uint256[] calldata epochValidatorSet
     ) external onlySystemCall {
-        uint256 newEpochId = ++currentEpochId;
+        uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
         require((endBlock - startBlock + 1) % SPRINT == 0, "INCOMPLETE_SPRINT");
@@ -135,7 +134,8 @@ contract ChildValidatorSet is IStateReceiver {
 
         Epoch storage nextEpoch = epochs[newEpochId + 1];
         nextEpoch.validatorSet = epochValidatorSet;
-        nextEpoch.producerSet = epochProducerSet;
+
+        setNextValidatorSet(newEpochId + 1, epochRoot);
 
         emit NewEpoch(id, startBlock, endBlock);
     }
@@ -173,6 +173,10 @@ contract ChildValidatorSet is IStateReceiver {
         currentValidatorId = id; // we assume statesyncs are strictly ordered
 
         emit NewValidator(id, _address, blsKey);
+    }
+
+    function getCurrentValidatorSet() external view returns (uint256[] memory) {
+        return epochs[currentEpochId].validatorSet;
     }
 
     /**
@@ -217,6 +221,32 @@ contract ChildValidatorSet is IStateReceiver {
     function calculateTotalStake() public view returns (uint256 stake) {
         for (uint256 i = 1; i <= currentValidatorId; i++) {
             stake += validators[i].stake;
+        }
+    }
+
+    function setNextValidatorSet(uint256 epochId, bytes32 epochRoot) internal {
+        if (currentValidatorId <= activeValidatorSetSize) {
+            uint256[] memory validatorSet = new uint256[](currentValidatorId); // include all validators in set
+            for (uint256 i = 0; i < currentValidatorId; i++) {
+                validatorSet[i] = i;
+            }
+            epochs[epochId].validatorSet = validatorSet;
+        } else {
+            uint256[] memory validatorSet = new uint256[](activeValidatorSetSize);
+            uint256 counter;
+            for (uint256 i = 0;; i++) {
+                uint256 randomIndex = uint256(keccak256(abi.encodePacked(epochRoot, i))) % currentValidatorId;
+                if (validatorsByEpoch[epochId][randomIndex]) {
+                     continue;
+                } else {
+                    validatorsByEpoch[epochId][randomIndex] = true;
+                    validatorSet[counter++] = randomIndex;
+                }
+                if (validatorSet[activeValidatorSetSize - 1] != 0) {
+                    break; // last element filled, break
+                }
+            }
+            epochs[epochId].validatorSet = validatorSet;
         }
     }
 }
