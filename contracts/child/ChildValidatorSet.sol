@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/utils/Arrays.sol";
 
 interface IStateReceiver {
-    function onStateReceive(uint256 id, bytes calldata data) external;
+    function onStateReceive(uint256 id, address sender, bytes calldata data) external;
 }
 
 /**
@@ -153,7 +153,7 @@ contract ChildValidatorSet is IStateReceiver {
      * @param data Data received from RootValidatorSet
      */
     function onStateReceive(
-        uint256, /* id */,
+        uint256 /* id */,
         address sender,
         bytes calldata data
     ) external {
