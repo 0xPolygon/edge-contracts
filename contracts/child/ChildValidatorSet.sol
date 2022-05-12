@@ -4,7 +4,11 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/utils/Arrays.sol";
 
 interface IStateReceiver {
-    function onStateReceive(uint256 id, address sender, bytes calldata data) external;
+    function onStateReceive(
+        uint256 id,
+        address sender,
+        bytes calldata data
+    ) external;
 }
 
 /**
@@ -34,7 +38,7 @@ contract ChildValidatorSet is IStateReceiver {
     bytes32 public constant NEW_VALIDATOR_SIG =
         0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
-    uint256 public constant activeValidatorSetSize = 100; // might want to change later!
+    uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
@@ -44,7 +48,7 @@ contract ChildValidatorSet is IStateReceiver {
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
     mapping(uint256 => Epoch) public epochs;
-    mapping(uint256 => mapping(uint256 => bool)) validatorsByEpoch;
+    mapping(uint256 => mapping(uint256 => bool)) public validatorsByEpoch;
 
     uint8 private initialized;
 
@@ -153,7 +157,7 @@ contract ChildValidatorSet is IStateReceiver {
      * @param data Data received from RootValidatorSet
      */
     function onStateReceive(
-        uint256 /* id */,
+        uint256, /* id */
         address sender,
         bytes calldata data
     ) external {
@@ -239,7 +243,7 @@ contract ChildValidatorSet is IStateReceiver {
      */
     function setNextValidatorSet(uint256 epochId, bytes32 epochRoot) internal {
         uint256 currentId = currentValidatorId;
-        uint256 validatorSetSize = activeValidatorSetSize;
+        uint256 validatorSetSize = ACTIVE_VALIDATOR_SET_SIZE;
         if (currentId <= validatorSetSize) {
             uint256[] memory validatorSet = new uint256[](currentId); // include all validators in set
             for (uint256 i = 0; i < currentId; i++) {
@@ -249,10 +253,12 @@ contract ChildValidatorSet is IStateReceiver {
         } else {
             uint256[] memory validatorSet = new uint256[](validatorSetSize);
             uint256 counter = 0;
-            for (uint256 i = 0;; i++) {
-                uint256 randomIndex = uint256(keccak256(abi.encodePacked(epochRoot, i))) % currentId;
+            for (uint256 i = 0; ; i++) {
+                uint256 randomIndex = uint256(
+                    keccak256(abi.encodePacked(epochRoot, i))
+                ) % currentId;
                 if (validatorsByEpoch[epochId][randomIndex]) {
-                     continue;
+                    continue;
                 } else {
                     validatorsByEpoch[epochId][randomIndex] = true;
                     validatorSet[counter++] = randomIndex;
