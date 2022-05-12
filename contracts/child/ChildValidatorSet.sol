@@ -34,9 +34,10 @@ contract ChildValidatorSet is IStateReceiver {
     bytes32 public constant NEW_VALIDATOR_SIG =
         0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
+    uint256 public constant activeValidatorSetSize = 100; // might want to change later!
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
-    uint256 public activeValidatorSetSize = 100;
+    address public rootValidatorSet;
 
     uint256[] public epochEndBlocks;
 
@@ -81,11 +82,13 @@ contract ChildValidatorSet is IStateReceiver {
      * @param epochValidatorSet First active validator set
      */
     function initialize(
+        address newRootValidatorSet,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
         uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
+        rootValidatorSet = newRootValidatorSet;
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[++currentId];
@@ -141,12 +144,17 @@ contract ChildValidatorSet is IStateReceiver {
         emit NewEpoch(id, startBlock, endBlock);
     }
 
+    // function modifyValidatorSetSize(uint256 _newSize) external onlySystemCall {
+    //     activeValidatorSetSize = _newSize;
+    // }
+
     /**
      * @notice Enables the RootValidatorSet to trustlessly update validator set on child chain.
      * @param data Data received from RootValidatorSet
      */
     function onStateReceive(
-        uint256, /* id */
+        uint256, /* id */,
+        address sender,
         bytes calldata data
     ) external {
         // slither-disable-next-line too-many-digits
@@ -154,6 +162,7 @@ contract ChildValidatorSet is IStateReceiver {
             msg.sender == 0x0000000000000000000000000000000000001001,
             "INVALID_SENDER"
         );
+        require(sender == rootValidatorSet, "ONLY_ROOT");
         (bytes32 signature, bytes memory decodedData) = abi.decode(
             data,
             (bytes32, bytes)
@@ -239,7 +248,7 @@ contract ChildValidatorSet is IStateReceiver {
             epochs[epochId].validatorSet = validatorSet;
         } else {
             uint256[] memory validatorSet = new uint256[](validatorSetSize);
-            uint256 counter;
+            uint256 counter = 0;
             for (uint256 i = 0;; i++) {
                 uint256 randomIndex = uint256(keccak256(abi.encodePacked(epochRoot, i))) % currentId;
                 if (validatorsByEpoch[epochId][randomIndex]) {

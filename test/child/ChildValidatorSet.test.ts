@@ -84,11 +84,15 @@ describe("RootValidatorSet", () => {
     }
     // struct array is not available on typechain
     //expect(await childValidatorSet.epochs(1).validatorSet).to.deep.equal(validatorSet);
-    //expect(await childValidatorSet.epochs(1).producerSet).to.deep.equal(validatorSet);
   });
   it("Attempt reinitialization", async () => {
     await expect(
       childValidatorSet.initialize([], [], [], [], [])
     ).to.be.revertedWith("ALREADY_INITIALIZED");
+  });
+  it("Commit epoch fail (not system call)", async () => {
+    await expect(
+      childValidatorSet.commitEpoch(0, 0, 0, [], [])
+    ).to.be.revertedWith("ONLY_SYSTEMCALL");
   });
 });
