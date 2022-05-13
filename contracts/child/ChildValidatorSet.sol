@@ -206,7 +206,7 @@ contract ChildValidatorSet is IStateReceiver {
         if (ret == epochEndBlocks.length) {
             return (false, epochs[currentEpochId]);
         } else {
-            return (true, epochs[ret]);
+            return (true, epochs[ret + 1]);
         }
     }
 
@@ -245,7 +245,7 @@ contract ChildValidatorSet is IStateReceiver {
         if (currentId <= validatorSetSize) {
             uint256[] memory validatorSet = new uint256[](currentId); // include all validators in set
             for (uint256 i = 0; i < currentId; i++) {
-                validatorSet[i] = i;
+                validatorSet[i] = i + 1; // validators are one-indexed
             }
             epochs[epochId].validatorSet = validatorSet;
         } else {
