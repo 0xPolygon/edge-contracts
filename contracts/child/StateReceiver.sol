@@ -43,7 +43,7 @@ contract StateReceiver {
 
         // Skip transaction if necessary
         if (skip) {
-            emit ResultEvent(id, ResultStatus.SKIP, "");
+            emit ResultEvent(counter, ResultStatus.SKIP, "");
             return;
         }
 
@@ -53,7 +53,7 @@ contract StateReceiver {
         bool success = false;
         bytes memory paramData = abi.encodeWithSignature(
             "onStateReceive(uint64,address,bytes)",
-            id,
+            counter,
             sender,
             data
         );
