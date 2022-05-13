@@ -15,6 +15,7 @@ describe("ChildValidatorSet", () => {
     rootValidatorSetAddress: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
+    stateSyncChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
@@ -34,14 +35,26 @@ describe("ChildValidatorSet", () => {
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE",
       "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
     ]);
+    await hre.network.provider.send("hardhat_setBalance", [
+      "0x0000000000000000000000000000000000001001",
+      "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    ]);
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
     });
-    const signer = await ethers.getSigner(
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0x0000000000000000000000000000000000001001"],
+    });
+    const systemSigner = await ethers.getSigner(
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"
     );
-    systemChildValidatorSet = childValidatorSet.connect(signer);
+    const stateSyncSigner = await ethers.getSigner(
+      "0x0000000000000000000000000000000000001001"
+    );
+    systemChildValidatorSet = childValidatorSet.connect(systemSigner);
+    stateSyncChildValidatorSet = childValidatorSet.connect(stateSyncSigner);
   });
   it("Initialize without system call", async () => {
     await expect(
@@ -154,5 +167,25 @@ describe("ChildValidatorSet", () => {
         ethers.utils.randomBytes(32)
       )
     ).to.be.revertedWith("BLOCK_IN_COMMITTED_EPOCH");
+  });
+  it("State sync tx from wrong address", async () => {
+    const wallet = ethers.Wallet.createRandom();
+    await expect(
+      childValidatorSet.onStateReceive(
+        0,
+        wallet.address,
+        ethers.utils.randomBytes(1)
+      )
+    ).to.be.revertedWith("ONLY_STATESYNC");
+  });
+  it("State sync data from wrong root validator set address", async () => {
+    const wallet = ethers.Wallet.createRandom();
+    await expect(
+      stateSyncChildValidatorSet.onStateReceive(
+        0,
+        wallet.address,
+        ethers.utils.randomBytes(1)
+      )
+    ).to.be.revertedWith("ONLY_ROOT");
   });
 });

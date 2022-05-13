@@ -162,7 +162,7 @@ contract ChildValidatorSet is IStateReceiver {
         // slither-disable-next-line too-many-digits
         require(
             msg.sender == 0x0000000000000000000000000000000000001001,
-            "INVALID_SENDER"
+            "ONLY_STATESYNC"
         );
         require(sender == rootValidatorSet, "ONLY_ROOT");
         (bytes32 signature, bytes memory decodedData) = abi.decode(
