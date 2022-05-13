@@ -52,7 +52,7 @@ contract StateReceiver {
         uint256 txGas = MAX_GAS;
         bool success = false;
         bytes memory paramData = abi.encodeWithSignature(
-            "onStateReceive(uint64,address,bytes)",
+            "onStateReceive(uint256,address,bytes)",
             counter,
             sender,
             data
