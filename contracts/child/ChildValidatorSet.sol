@@ -32,6 +32,7 @@ contract ChildValidatorSet is IStateReceiver {
         uint256 id;
         uint256 startBlock;
         uint256 endBlock;
+        bytes32 epochRoot;
         uint256[] validatorSet;
     }
 
@@ -61,7 +62,8 @@ contract ChildValidatorSet is IStateReceiver {
     event NewEpoch(
         uint256 indexed id,
         uint256 indexed startBlock,
-        uint256 indexed endBlock
+        uint256 indexed endBlock,
+        bytes32 epochRoot
     );
 
     modifier initializer() {
@@ -135,12 +137,13 @@ contract ChildValidatorSet is IStateReceiver {
         newEpoch.id = newEpochId;
         newEpoch.endBlock = endBlock;
         newEpoch.startBlock = startBlock;
+        newEpoch.epochRoot = epochRoot;
 
         epochEndBlocks.push(endBlock);
 
         setNextValidatorSet(newEpochId + 1, epochRoot);
 
-        emit NewEpoch(id, startBlock, endBlock);
+        emit NewEpoch(id, startBlock, endBlock, epochRoot);
     }
 
     // function modifyValidatorSetSize(uint256 _newSize) external onlySystemCall {

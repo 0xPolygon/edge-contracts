@@ -88,7 +88,13 @@ describe("ChildValidatorSet", () => {
   });
   it("Attempt reinitialization", async () => {
     await expect(
-      systemChildValidatorSet.initialize(rootValidatorSetAddress, [], [], [], [])
+      systemChildValidatorSet.initialize(
+        rootValidatorSetAddress,
+        [],
+        [],
+        [],
+        []
+      )
     ).to.be.revertedWith("ALREADY_INITIALIZED");
   });
   it("Commit epoch without system call", async () => {
@@ -108,17 +114,45 @@ describe("ChildValidatorSet", () => {
   });
   it("Commit epoch with incomplete sprint", async () => {
     await expect(
-      systemChildValidatorSet.commitEpoch(1, 1, 63, ethers.utils.randomBytes(32))
+      systemChildValidatorSet.commitEpoch(
+        1,
+        1,
+        63,
+        ethers.utils.randomBytes(32)
+      )
     ).to.be.revertedWith("INCOMPLETE_SPRINT");
   });
   it("Commit epoch", async () => {
+    const epoch = {
+      id: 1,
+      startBlock: 1,
+      endBlock: 64,
+      epochRoot: ethers.utils.randomBytes(32),
+    };
     await expect(
-      systemChildValidatorSet.commitEpoch(1, 1, 64, ethers.utils.randomBytes(32))
+      systemChildValidatorSet.commitEpoch(
+        epoch.id,
+        epoch.startBlock,
+        epoch.endBlock,
+        epoch.epochRoot
+      )
+    );
+    const storedEpoch = await childValidatorSet.epochs(epoch.id);
+    expect(storedEpoch.id).to.equal(BigNumber.from(epoch.id));
+    expect(storedEpoch.startBlock).to.equal(BigNumber.from(epoch.startBlock));
+    expect(storedEpoch.endBlock).to.equal(BigNumber.from(epoch.endBlock));
+    expect(storedEpoch.epochRoot).to.equal(
+      ethers.utils.hexlify(epoch.epochRoot)
     );
   });
   it("Commit epoch with old block", async () => {
     await expect(
-      systemChildValidatorSet.commitEpoch(2, 64, 127, ethers.utils.randomBytes(32))
+      systemChildValidatorSet.commitEpoch(
+        2,
+        64,
+        127,
+        ethers.utils.randomBytes(32)
+      )
     ).to.be.revertedWith("BLOCK_IN_COMMITTED_EPOCH");
   });
 });
