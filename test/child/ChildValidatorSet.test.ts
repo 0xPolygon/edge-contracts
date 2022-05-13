@@ -86,6 +86,7 @@ describe("ChildValidatorSet", () => {
     expect(await childValidatorSet.currentValidatorId()).to.equal(
       validatorSetSize
     );
+    console.log(await childValidatorSet.currentValidatorId());
     for (let i = 0; i < validatorSetSize; i++) {
       const validator = await childValidatorSet.validators(i + 1);
       expect(validator.id).to.equal(i + 1);
@@ -197,7 +198,8 @@ describe("ChildValidatorSet", () => {
     );
     const encodedData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "bytes"],
-      [ethers.utils.randomBytes(32), data]);
+      [ethers.utils.randomBytes(32), data]
+    );
     await expect(
       stateSyncChildValidatorSet.onStateReceive(
         0,
@@ -209,19 +211,34 @@ describe("ChildValidatorSet", () => {
   it("Validator registration state sync", async () => {
     const wallet = ethers.Wallet.createRandom();
     const { pubkey, secret } = mcl.newKeyPair();
+    const strippedPubkey = mcl
+      .g2ToHex(pubkey)
+      .map((elem: any) => ethers.utils.hexValue(elem));
     const data = ethers.utils.defaultAbiCoder.encode(
       ["uint256", "address", "uint256[4]"],
-      [validatorSetSize, wallet.address, mcl.g2ToHex(pubkey)]
+      [validatorSetSize + 1, wallet.address, strippedPubkey]
     );
     const encodedData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "bytes"],
-      ["0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc", data]);
-    await expect(
-      stateSyncChildValidatorSet.onStateReceive(
-        0,
-        rootValidatorSetAddress,
-        encodedData
-      )
+      [
+        "0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc",
+        data,
+      ]
     );
+    await stateSyncChildValidatorSet.onStateReceive(
+      0,
+      rootValidatorSetAddress,
+      encodedData
+    );
+    expect(await childValidatorSet.currentValidatorId()).to.equal(
+      validatorSetSize + 1
+    );
+    const validator = await childValidatorSet.validators(validatorSetSize + 1);
+    expect(validator.id).to.equal(validatorSetSize + 1);
+    expect(validator._address).to.equal(wallet.address);
+    expect(
+      await childValidatorSet.validatorIdByAddress(wallet.address)
+    ).to.equal(validator.id);
+    //expect(validator.blsKey).to.deep.equal(strippedPubkey);
   });
 });

@@ -182,7 +182,7 @@ contract ChildValidatorSet is IStateReceiver {
 
         validatorIdByAddress[_address] = id;
 
-        currentValidatorId = id; // we assume statesyncs are strictly ordered
+        currentValidatorId++; // we assume statesyncs are strictly ordered
 
         emit NewValidator(id, _address, blsKey);
     }
