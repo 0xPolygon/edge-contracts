@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 contract StateSender {
-    uint256 public constant DATA_LENGTH = 30000;
+    uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
 
     event StateSynced(
@@ -14,7 +14,7 @@ contract StateSender {
 
     /**
      *
-     * Generates sync state event based on receiver and data.
+     * @notice Generates sync state event based on receiver and data.
      * Anyone can call this method to emit an event. Receiver on Polygon should add check based on sender.
      *
      * @param receiver Receiver address on Polygon chain
@@ -23,11 +23,9 @@ contract StateSender {
      */
     function syncState(address receiver, bytes calldata data) external {
         // check data length
-        require(data.length <= DATA_LENGTH, "Unsupported data length");
-
-        counter = counter + 1;
+        require(data.length <= MAX_LENGTH, "EXCEEDS_MAX_LENGTH");
 
         // State sync id will start with 1
-        emit StateSynced(counter, msg.sender, receiver, data);
+        emit StateSynced(++counter, msg.sender, receiver, data);
     }
 }
