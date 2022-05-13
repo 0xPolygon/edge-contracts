@@ -22,7 +22,7 @@ describe("ChildValidatorSet", () => {
     await mcl.init();
     accounts = await ethers.getSigners();
 
-    rootValidatorSetAddress = "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287";
+    rootValidatorSetAddress = ethers.Wallet.createRandom().address;
 
     const ChildValidatorSet = await ethers.getContractFactory(
       "ChildValidatorSet"
@@ -168,7 +168,7 @@ describe("ChildValidatorSet", () => {
       )
     ).to.be.revertedWith("BLOCK_IN_COMMITTED_EPOCH");
   });
-  it("State sync tx from wrong address", async () => {
+  it("Validator registration state sync from wrong address", async () => {
     const wallet = ethers.Wallet.createRandom();
     await expect(
       childValidatorSet.onStateReceive(
@@ -178,7 +178,7 @@ describe("ChildValidatorSet", () => {
       )
     ).to.be.revertedWith("ONLY_STATESYNC");
   });
-  it("State sync data from wrong root validator set address", async () => {
+  it("Validator registration state sync data from wrong root validator set address", async () => {
     const wallet = ethers.Wallet.createRandom();
     await expect(
       stateSyncChildValidatorSet.onStateReceive(
@@ -187,5 +187,41 @@ describe("ChildValidatorSet", () => {
         ethers.utils.randomBytes(1)
       )
     ).to.be.revertedWith("ONLY_ROOT");
+  });
+  it("Validator registration state sync data with wrong signature", async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const { pubkey, secret } = mcl.newKeyPair();
+    const data = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "address", "uint256[4]"],
+      [validatorSetSize, wallet.address, mcl.g2ToHex(pubkey)]
+    );
+    const encodedData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "bytes"],
+      [ethers.utils.randomBytes(32), data]);
+    await expect(
+      stateSyncChildValidatorSet.onStateReceive(
+        0,
+        rootValidatorSetAddress,
+        encodedData
+      )
+    ).to.be.revertedWith("INVALID_SIGNATURE");
+  });
+  it("Validator registration state sync", async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const { pubkey, secret } = mcl.newKeyPair();
+    const data = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "address", "uint256[4]"],
+      [validatorSetSize, wallet.address, mcl.g2ToHex(pubkey)]
+    );
+    const encodedData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "bytes"],
+      ["0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc", data]);
+    await expect(
+      stateSyncChildValidatorSet.onStateReceive(
+        0,
+        rootValidatorSetAddress,
+        encodedData
+      )
+    );
   });
 });
