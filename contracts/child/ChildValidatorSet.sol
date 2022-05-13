@@ -115,21 +115,19 @@ contract ChildValidatorSet is IStateReceiver {
      * @param id ID of epoch to be committed
      * @param startBlock First block in epoch
      * @param endBlock Last block in epoch
-     * @param epochValidatorSet Update validator set for next epoch
      */
     function commitEpoch(
         uint256 id,
         uint256 startBlock,
         uint256 endBlock,
-        bytes32 epochRoot,
-        uint256[] calldata epochValidatorSet
+        bytes32 epochRoot
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
         require((endBlock - startBlock + 1) % SPRINT == 0, "INCOMPLETE_SPRINT");
         require(
-            epochs[currentEpochId].endBlock < startBlock,
+            epochs[newEpochId - 1].endBlock < startBlock,
             "BLOCK_IN_COMMITTED_EPOCH"
         );
 
@@ -139,9 +137,6 @@ contract ChildValidatorSet is IStateReceiver {
         newEpoch.startBlock = startBlock;
 
         epochEndBlocks.push(endBlock);
-
-        Epoch storage nextEpoch = epochs[newEpochId + 1];
-        nextEpoch.validatorSet = epochValidatorSet;
 
         setNextValidatorSet(newEpochId + 1, epochRoot);
 
