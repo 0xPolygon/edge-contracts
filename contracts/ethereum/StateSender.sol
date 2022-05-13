@@ -13,14 +13,14 @@ contract StateSender {
     );
 
     /**
-    * 
-    * Generates sync state event based on receiver and data. 
-    * Anyone can call this method to emit an event. Receiver on Polygon should add check based on sender.
-    * 
-    * @param receiver Receiver address on Polygon chain
-    * @param data Data to send on Polygon chain
-    *
-    */
+     *
+     * Generates sync state event based on receiver and data.
+     * Anyone can call this method to emit an event. Receiver on Polygon should add check based on sender.
+     *
+     * @param receiver Receiver address on Polygon chain
+     * @param data Data to send on Polygon chain
+     *
+     */
     function syncState(address receiver, bytes calldata data) external {
         // check data length
         require(data.length <= DATA_LENGTH, "Unsupported data length");
