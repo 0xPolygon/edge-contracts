@@ -8,7 +8,7 @@ contract StateSender {
     event StateSynced(
         uint256 indexed id,
         address indexed sender,
-        address indexed contractAddress,
+        address indexed receiver,
         bytes data
     );
 
@@ -26,6 +26,8 @@ contract StateSender {
         require(data.length <= DATA_LENGTH, "Unsupported data length");
 
         counter = counter + 1;
+
+        // State sync id will start with 1
         emit StateSynced(counter, msg.sender, receiver, data);
     }
 }
