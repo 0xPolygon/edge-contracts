@@ -10,10 +10,11 @@ const DOMAIN = ethers.utils.arrayify(
   ethers.utils.hexlify(ethers.utils.randomBytes(32))
 );
 
-describe("RootValidatorSet", () => {
+describe("ChildValidatorSet", () => {
   let bls: BLS,
     rootValidatorSetAddress: string,
     childValidatorSet: ChildValidatorSet,
+    systemChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
@@ -28,13 +29,7 @@ describe("RootValidatorSet", () => {
     childValidatorSet = await ChildValidatorSet.deploy();
 
     await childValidatorSet.deployed();
-  });
-  it("Initialize without system call", async () => {
-    await expect(
-      childValidatorSet.initialize(rootValidatorSetAddress, [], [], [], [])
-    ).to.be.revertedWith("ONLY_SYSTEMCALL");
-  });
-  it("Initialize and validate initialization", async () => {
+
     await hre.network.provider.send("hardhat_setBalance", [
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE",
       "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
@@ -46,7 +41,14 @@ describe("RootValidatorSet", () => {
     const signer = await ethers.getSigner(
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"
     );
-    const newChildValidatorSet = childValidatorSet.connect(signer);
+    systemChildValidatorSet = childValidatorSet.connect(signer);
+  });
+  it("Initialize without system call", async () => {
+    await expect(
+      childValidatorSet.initialize(rootValidatorSetAddress, [], [], [], [])
+    ).to.be.revertedWith("ONLY_SYSTEMCALL");
+  });
+  it("Initialize and validate initialization", async () => {
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
     const validatorStake = ethers.utils.parseEther(
       String(Math.floor(Math.random() * (10000 - 1000) + 1000))
@@ -61,17 +63,13 @@ describe("RootValidatorSet", () => {
       addresses.push(accounts[i].address);
       validatorSet.push(i + 1);
     }
-    await newChildValidatorSet.initialize(
+    await systemChildValidatorSet.initialize(
       rootValidatorSetAddress,
       addresses,
       pubkeys,
       validatorStakes,
       validatorSet
     );
-    await hre.network.provider.request({
-      method: "hardhat_stopImpersonatingAccount",
-      params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
-    });
     expect(await childValidatorSet.currentValidatorId()).to.equal(
       validatorSetSize
     );
@@ -89,25 +87,38 @@ describe("RootValidatorSet", () => {
     //expect(await childValidatorSet.epochs(1).validatorSet).to.deep.equal(validatorSet);
   });
   it("Attempt reinitialization", async () => {
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
-    });
-    const signer = await ethers.getSigner(
-      "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"
-    );
-    const newChildValidatorSet = childValidatorSet.connect(signer);
     await expect(
-      newChildValidatorSet.initialize(rootValidatorSetAddress, [], [], [], [])
+      systemChildValidatorSet.initialize(rootValidatorSetAddress, [], [], [], [])
     ).to.be.revertedWith("ALREADY_INITIALIZED");
-    await hre.network.provider.request({
-      method: "hardhat_stopImpersonatingAccount",
-      params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
-    });
   });
-  it("Commit epoch fail (not system call)", async () => {
+  it("Commit epoch without system call", async () => {
     await expect(
-      childValidatorSet.commitEpoch(0, 0, 0, ethers.utils.randomBytes(32), [])
+      childValidatorSet.commitEpoch(0, 0, 0, ethers.utils.randomBytes(32))
     ).to.be.revertedWith("ONLY_SYSTEMCALL");
+  });
+  it("Commit epoch with unexpected id", async () => {
+    await expect(
+      systemChildValidatorSet.commitEpoch(0, 0, 0, ethers.utils.randomBytes(32))
+    ).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
+  });
+  it("Commit epoch with no blocks committed", async () => {
+    await expect(
+      systemChildValidatorSet.commitEpoch(1, 0, 0, ethers.utils.randomBytes(32))
+    ).to.be.revertedWith("NO_BLOCKS_COMMITTED");
+  });
+  it("Commit epoch with incomplete sprint", async () => {
+    await expect(
+      systemChildValidatorSet.commitEpoch(1, 1, 63, ethers.utils.randomBytes(32))
+    ).to.be.revertedWith("INCOMPLETE_SPRINT");
+  });
+  it("Commit epoch", async () => {
+    await expect(
+      systemChildValidatorSet.commitEpoch(1, 1, 64, ethers.utils.randomBytes(32))
+    );
+  });
+  it("Commit epoch with old block", async () => {
+    await expect(
+      systemChildValidatorSet.commitEpoch(2, 64, 127, ethers.utils.randomBytes(32))
+    ).to.be.revertedWith("BLOCK_IN_COMMITTED_EPOCH");
   });
 });
