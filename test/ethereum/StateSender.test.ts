@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { BytesLike, utils } from "ethers";
 import { StateSender } from "../../typechain";
 
-describe.only("StateSender", () => {
+describe("StateSender", () => {
   let stateSender: StateSender, accounts: any[]; // we use any so we can access address directly from object
 
   before(async () => {
