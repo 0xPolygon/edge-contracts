@@ -94,6 +94,7 @@ contract ChildValidatorSet is IStateReceiver {
         uint256[] calldata validatorStakes,
         uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
+        // slither-disable-next-line missing-zero-check
         rootValidatorSet = newRootValidatorSet;
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
