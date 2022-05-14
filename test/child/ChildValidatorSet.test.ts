@@ -263,6 +263,46 @@ describe("ChildValidatorSet", () => {
     expect(storedEpoch.endBlock).to.equal(ethers.constants.Zero);
     expect(storedEpoch.epochRoot).to.equal(ethers.constants.HashZero);
   });
+  it("Get and set current validators when exceeds active validator set size", async () => {
+    const currentValidatorId = await childValidatorSet.currentValidatorId();
+    const totalSetSize = Math.floor(Math.random() * 100 + 100); // pick randomly from 100 - 200
+    const { pubkey, secret } = mcl.newKeyPair();
+    const strippedPubkey = mcl
+      .g2ToHex(pubkey)
+      .map((elem: any) => ethers.utils.hexValue(elem));
+    for (let i = 1; i <= totalSetSize; i++) {
+      const wallet = ethers.Wallet.createRandom();
+      const data = ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "address", "uint256[4]"],
+        [currentValidatorId.add(i), wallet.address, strippedPubkey]
+      );
+      const encodedData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes32", "bytes"],
+        [
+          "0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc",
+          data,
+        ]
+      );
+      await stateSyncChildValidatorSet.onStateReceive(
+        0,
+        rootValidatorSetAddress,
+        encodedData
+      );
+    }
+    await systemChildValidatorSet.commitEpoch(
+      2,
+      65,
+      128,
+      ethers.utils.randomBytes(32)
+    ); // commit epoch to update validator set
+    const newValidatorSet = await childValidatorSet.getCurrentValidatorSet();
+    expect(newValidatorSet).to.have.lengthOf(
+      (await childValidatorSet.ACTIVE_VALIDATOR_SET_SIZE()).toNumber()
+    );
+    let set = new Set();
+    newValidatorSet.map((elem: BigNumber) => set.add(elem));
+    expect(set).to.have.lengthOf(newValidatorSet.length); // assert each element is unique
+  });
   it("Calculate validator power", async () => {
     expect(await childValidatorSet.calculateValidatorPower(1)).to.be.closeTo(
       BigNumber.from(Math.floor((100 * 10 ** 6) / validatorSetSize)),
