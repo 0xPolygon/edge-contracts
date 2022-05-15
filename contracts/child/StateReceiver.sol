@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {System} from "./System.sol";
 
 // StateReceiver is the contract which executes and relays the state data on Polygon
-contract StateReceiver is System {
+contract StateReceiver is ReentrancyGuard, System {
     // Maxium gas state sync use
     uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed.
@@ -30,9 +31,13 @@ contract StateReceiver is System {
         bytes calldata data,
         bool skip,
         bytes calldata sigs
-    ) public payable {
+    ) external nonReentrant {
         // validate state id order
         require(counter + 1 == id, "ID_NOT_SEQUENTIAL");
+        // check sender
+        require(sender != address(0), "INVALID_SENDER");
+        // check receiver
+        require(receiver != address(0), "INVALID_RECEIVER");
 
         // increament the counter
         counter++;
@@ -45,7 +50,6 @@ contract StateReceiver is System {
         bool sigVerfied = false;
         // solhint-disable-next-line avoid-low-level-calls
         (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.call{
-            value: 0,
             gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
         }(abi.encode(sigData, sigs));
         require(sigVerfied, "SIG_VERIFICATION_FAILED");
@@ -65,7 +69,7 @@ contract StateReceiver is System {
             data
         );
         // solhint-disable-next-line avoid-low-level-calls
-        (success, ) = receiver.call{value: 0, gas: MAX_GAS}(paramData);
+        (success, ) = receiver.call{gas: MAX_GAS}(paramData);
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {

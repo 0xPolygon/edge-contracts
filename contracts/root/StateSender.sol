@@ -22,6 +22,8 @@ contract StateSender {
      *
      */
     function syncState(address receiver, bytes calldata data) external {
+        // check receiver
+        require(receiver != address(0), "INVALID_RECEIVER");
         // check data length
         require(data.length <= MAX_LENGTH, "EXCEEDS_MAX_LENGTH");
 
