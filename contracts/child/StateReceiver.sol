@@ -38,8 +38,8 @@ contract StateReceiver is System {
         counter++;
 
         // create sig data for verification
-        // data = hash(id, skip)
-        bytes32 sigData = keccak256(abi.encode(id, skip));
+        // data = hash(counter, skip)
+        bytes32 sigData = keccak256(abi.encode(counter, skip));
 
         // verify signatures for provided sig data and sigs bytes
         bool sigVerfied = false;
