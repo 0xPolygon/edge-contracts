@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import {System} from "./System.sol";
 
-// Bridge is the proxy that calls the specific bridge contracts
-contract StateReceiver {
+// StateReceiver is the contract which executes and relays the state data on Polygon
+contract StateReceiver is System {
     // Maxium gas state sync use
     uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed.
@@ -22,13 +23,13 @@ contract StateReceiver {
         bytes extra
     );
 
-    function stateSync (
+    function stateSync(
         uint256 id,
         address sender,
         address receiver,
         bytes calldata data,
         bool skip,
-        bytes memory /*signature*/
+        bytes calldata sigs
     ) public payable {
         // validate state id order
         require(counter + 1 == id, "ID_NOT_SEQUENTIAL");
@@ -36,10 +37,18 @@ contract StateReceiver {
         // increament the counter
         counter++;
 
-        //
-        // TODO check the signatures before processing anything below
-        // TODO Validate signature parameter. Signature must be present in current validator set.
-        //
+        // create sig data for verification
+        // data = hash(id, skip)
+        bytes32 sigData = keccak256(abi.encode(id, skip));
+
+        // verify signatures for provided sig data and sigs bytes
+        bool sigVerfied = false;
+        // solhint-disable-next-line avoid-low-level-calls
+        (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.call{
+            value: 0,
+            gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
+        }(abi.encode(sigData, sigs));
+        require(sigVerfied, "SIG_VERIFICATION_FAILED");
 
         // Skip transaction if necessary
         if (skip) {
@@ -47,9 +56,7 @@ contract StateReceiver {
             return;
         }
 
-
-        // Execute onStateReceive method on target using max gas limit
-        uint256 txGas = MAX_GAS;
+        // Execute `onStateReceive` method on target using max gas limit
         bool success = false;
         bytes memory paramData = abi.encodeWithSignature(
             "onStateReceive(uint256,address,bytes)",
@@ -57,17 +64,8 @@ contract StateReceiver {
             sender,
             data
         );
-        assembly {
-            success := call(
-                txGas,
-                receiver,
-                0,
-                add(paramData, 0x20),
-                mload(paramData),
-                0,
-                0
-            )
-        }
+        // solhint-disable-next-line avoid-low-level-calls
+        (success, ) = receiver.call{value: 0, gas: MAX_GAS}(paramData);
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
