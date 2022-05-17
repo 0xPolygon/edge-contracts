@@ -46,22 +46,22 @@ contract StateReceiver is ReentrancyGuard, System {
         );
 
         // verify signatures` for provided sig data and sigs bytes
-        bool sigVerfied = false;
+        bool success = false;
         // solhint-disable-next-line avoid-low-level-calls
-        (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
+        (success, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
             gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
         }(abi.encode(dataHash, sigs));
-        require(sigVerfied, "SIG_VERIFICATION_FAILED");
+        require(success, "SIG_VERIFICATION_FAILED");
 
         // execute state sync
-        _executeStateSync(obj);
+        _executeStateSync(counter, obj);
     }
 
     function stateSyncBatch(StateSync[] calldata objs, bytes calldata sigs)
         external
         nonReentrant
     {
-        require(objs.length >= 1, "INVALID_STATE_SYNC_ARRAY");
+        require(objs.length != 0, "NO_STATESYNC_DATA");
 
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be
@@ -69,50 +69,32 @@ contract StateReceiver is ReentrancyGuard, System {
         //
         // dataHash = hash(counter, sender, receiver, data, result)
 
-        bytes32 dataHash = 0;
+        // verify signatures` for provided sig data and sigs bytes
+        bool success = false;
+        bytes32 dataHash = keccak256(abi.encode(objs));
+        // solhint-disable-next-line avoid-low-level-calls
+        (success, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
+            gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
+        }(abi.encode(dataHash, sigs));
+        require(success, "SIG_VERIFICATION_FAILED");
+
+        uint256 currentId = counter;
         for (uint256 index = 0; index < objs.length; index++) {
             StateSync calldata obj = objs[index];
 
-            // execute state sync
-            // TODO should we execute after sig verificaiton?
-            _executeStateSync(obj);
-
-            bytes32 _dataHash = keccak256(
-                abi.encode(obj.id, obj.sender, obj.receiver, obj.data, obj.skip)
-            );
-
-            // create the chain of hash for all state-sync
-            // dataHash = hash(dataHash, newStateSyncHash)
-            if (index != 0) {
-                dataHash = keccak256(abi.encode(dataHash, _dataHash));
-            } else {
-                dataHash = _dataHash;
-            }
+            _executeStateSync(currentId++, obj);
         }
-
-        // verify signatures` for provided sig data and sigs bytes
-        bool sigVerfied = false;
-        // solhint-disable-next-line avoid-low-level-calls
-        (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
-            gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
-        }(abi.encode(dataHash, sigs));
-        require(sigVerfied, "SIG_VERIFICATION_FAILED");
+        counter = currentId;
     }
 
     //
     // Execute state sync
     //
 
-    function _executeStateSync(StateSync calldata obj) internal {
-        // increament the counter
-        counter++;
-
-        // validate state id order
-        require(counter == obj.id, "ID_NOT_SEQUENTIAL");
-        // check sender
-        require(obj.sender != address(0), "INVALID_SENDER");
-        // check receiver
-        require(obj.receiver != address(0), "INVALID_RECEIVER");
+    function _executeStateSync(uint256 prevId, StateSync calldata obj)
+        internal
+    {
+        require(prevId + 1 == obj.id, "ID_NOT_SEQUENTIAL");
 
         // Skip transaction if necessary
         if (obj.skip) {
@@ -124,12 +106,19 @@ contract StateReceiver is ReentrancyGuard, System {
         bool success = false;
         bytes memory paramData = abi.encodeWithSignature(
             "onStateReceive(uint256,address,bytes)",
-            counter,
+            obj.id,
             obj.sender,
             obj.data
         );
-        // solhint-disable-next-line avoid-low-level-calls
-        (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData);
+
+        if (obj.receiver.code.length != 0) {
+            // if EOA, skip call
+            // solhint-disable-next-line avoid-low-level-calls
+            (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData);
+        } else {
+            emit ResultEvent(counter, ResultStatus.SKIP, "");
+            return;
+        }
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
