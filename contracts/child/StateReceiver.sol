@@ -85,6 +85,8 @@ contract StateReceiver is ReentrancyGuard, System {
             // dataHash = hash(dataHash, newStateSyncHash)
             if (index != 0) {
                 dataHash = keccak256(abi.encode(dataHash, _dataHash));
+            } else {
+                dataHash = _dataHash;
             }
         }
 
