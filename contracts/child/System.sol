@@ -4,9 +4,12 @@ pragma solidity ^0.8.13;
 contract System {
     // pre-compiled contracts
     address public constant PRECOMPILED_NATIVE_TRANSFER_CONTRACT =
-        address(0x0000000000000000000000000000000000002020);
+        0x0000000000000000000000000000000000002020;
     address public constant PRECOMPILED_SIGS_VERIFICATION_CONTRACT =
-        address(0x0000000000000000000000000000000000002030);
+        0x0000000000000000000000000000000000002030;
+
+    // internal addrs
+    address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
 
     // pre-compiled gas consumption
     uint256 public constant PRECOMPILED_NATIVE_TRANSFER_CONTRACT_GAS = 21000;
@@ -14,5 +17,10 @@ contract System {
 
     // genesis contracts
     address public constant NATIVE_TOKEN_CONTRACT =
-        address(0x0000000000000000000000000000000000001010);
+        0x0000000000000000000000000000000000001010;
+
+    modifier onlySystemCall() {
+        require(msg.sender == SYSTEM, "ONLY_SYSTEMCALL");
+        _;
+    }
 }

@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {System} from "./System.sol";
 
 // StateReceiver is the contract which executes and relays the state data on Polygon
-contract StateReceiver is ReentrancyGuard, System {
-    // Maxium gas state sync use
+contract StateReceiver is System {
+    struct StateSync {
+        uint256 id;
+        address sender;
+        address receiver;
+        bytes data;
+        bool skip;
+    }
+    // Maximum gas provided for each message call
     uint256 public constant MAX_GAS = 300000;
-    // Index of the next event which needs to be processed.
+    // Index of the next event which needs to be processed
     uint256 public counter;
 
     // 0=success, 1=failure, 2=skip
@@ -18,32 +24,22 @@ contract StateReceiver is ReentrancyGuard, System {
         SKIP
     }
 
-    event ResultEvent(
+    event StateSyncResult(
         uint256 indexed counter,
         ResultStatus indexed status,
-        bytes extra
+        bytes message
     );
-
-    struct StateSync {
-        uint256 id;
-        address sender;
-        address receiver;
-        bytes data;
-        bool skip;
-    }
 
     function stateSync(StateSync calldata obj, bytes calldata sigs)
         external
-        nonReentrant
+        onlySystemCall
     {
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be
         // part of the dataHash. Otherwise data can be manipulated for same sigs
         //
         // dataHash = hash(counter, sender, receiver, data, result)
-        bytes32 dataHash = keccak256(
-            abi.encode(obj.id, obj.sender, obj.receiver, obj.data, obj.skip)
-        );
+        bytes32 dataHash = keccak256(abi.encode(obj));
 
         // verify signatures` for provided sig data and sigs bytes
         bool success = false;
@@ -54,12 +50,12 @@ contract StateReceiver is ReentrancyGuard, System {
         require(success, "SIG_VERIFICATION_FAILED");
 
         // execute state sync
-        _executeStateSync(counter, obj);
+        _executeStateSync(counter++, obj);
     }
 
     function stateSyncBatch(StateSync[] calldata objs, bytes calldata sigs)
         external
-        nonReentrant
+        onlySystemCall
     {
         require(objs.length != 0, "NO_STATESYNC_DATA");
 
@@ -80,9 +76,7 @@ contract StateReceiver is ReentrancyGuard, System {
 
         uint256 currentId = counter;
         for (uint256 index = 0; index < objs.length; index++) {
-            StateSync calldata obj = objs[index];
-
-            _executeStateSync(currentId++, obj);
+            _executeStateSync(currentId++, objs[index]);
         }
         counter = currentId;
     }
@@ -98,7 +92,7 @@ contract StateReceiver is ReentrancyGuard, System {
 
         // Skip transaction if necessary
         if (obj.skip) {
-            emit ResultEvent(counter, ResultStatus.SKIP, "");
+            emit StateSyncResult(counter, ResultStatus.SKIP, "");
             return;
         }
 
@@ -116,15 +110,15 @@ contract StateReceiver is ReentrancyGuard, System {
             // solhint-disable-next-line avoid-low-level-calls
             (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData);
         } else {
-            emit ResultEvent(counter, ResultStatus.SKIP, "");
+            emit StateSyncResult(counter, ResultStatus.SKIP, "");
             return;
         }
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
-            emit ResultEvent(counter, ResultStatus.SUCCESS, "");
+            emit StateSyncResult(counter, ResultStatus.SUCCESS, "");
         } else {
-            emit ResultEvent(counter, ResultStatus.FAILURE, "");
+            emit StateSyncResult(counter, ResultStatus.FAILURE, "");
         }
     }
 }
