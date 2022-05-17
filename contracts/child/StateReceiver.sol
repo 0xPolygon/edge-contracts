@@ -29,42 +29,91 @@ contract StateReceiver is ReentrancyGuard, System {
         address sender;
         address receiver;
         bytes data;
-        bool result;
+        bool skip;
     }
 
     function stateSync(StateSync calldata obj, bytes calldata sigs)
         external
         nonReentrant
     {
-        // validate state id order
-        require(counter + 1 == obj.id, "ID_NOT_SEQUENTIAL");
-        // check sender
-        require(obj.sender != address(0), "INVALID_SENDER");
-        // check receiver
-        require(obj.receiver != address(0), "INVALID_RECEIVER");
-
-        // increament the counter
-        counter++;
-
         // create sig data for verification
-        // counter, sender, receiver, data and result should be
+        // counter, sender, receiver, data and result (skip) should be
         // part of the dataHash. Otherwise data can be manipulated for same sigs
         //
         // dataHash = hash(counter, sender, receiver, data, result)
         bytes32 dataHash = keccak256(
-            abi.encode(obj.id, obj.sender, obj.receiver, obj.data, obj.result)
+            abi.encode(obj.id, obj.sender, obj.receiver, obj.data, obj.skip)
         );
 
         // verify signatures` for provided sig data and sigs bytes
         bool sigVerfied = false;
         // solhint-disable-next-line avoid-low-level-calls
-        (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.call{
+        (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
             gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
         }(abi.encode(dataHash, sigs));
         require(sigVerfied, "SIG_VERIFICATION_FAILED");
 
+        // execute state sync
+        _executeStateSync(obj);
+    }
+
+    function stateSyncBatch(StateSync[] calldata objs, bytes calldata sigs)
+        external
+        nonReentrant
+    {
+        require(objs.length >= 1, "INVALID_STATE_SYNC_ARRAY");
+
+        // create sig data for verification
+        // counter, sender, receiver, data and result (skip) should be
+        // part of the dataHash. Otherwise data can be manipulated for same sigs
+        //
+        // dataHash = hash(counter, sender, receiver, data, result)
+
+        bytes32 dataHash = 0;
+        for (uint256 index = 0; index < objs.length; index++) {
+            StateSync calldata obj = objs[index];
+
+            // execute state sync
+            // TODO should we execute after sig verificaiton?
+            _executeStateSync(obj);
+
+            bytes32 _dataHash = keccak256(
+                abi.encode(obj.id, obj.sender, obj.receiver, obj.data, obj.skip)
+            );
+
+            // create the chain of hash for all state-sync
+            // dataHash = hash(dataHash, newStateSyncHash)
+            if (index != 0) {
+                dataHash = keccak256(abi.encode(dataHash, _dataHash));
+            }
+        }
+
+        // verify signatures` for provided sig data and sigs bytes
+        bool sigVerfied = false;
+        // solhint-disable-next-line avoid-low-level-calls
+        (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
+            gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
+        }(abi.encode(dataHash, sigs));
+        require(sigVerfied, "SIG_VERIFICATION_FAILED");
+    }
+
+    //
+    // Execute state sync
+    //
+
+    function _executeStateSync(StateSync calldata obj) internal {
+        // increament the counter
+        counter++;
+
+        // validate state id order
+        require(counter == obj.id, "ID_NOT_SEQUENTIAL");
+        // check sender
+        require(obj.sender != address(0), "INVALID_SENDER");
+        // check receiver
+        require(obj.receiver != address(0), "INVALID_RECEIVER");
+
         // Skip transaction if necessary
-        if (obj.result) {
+        if (obj.skip) {
             emit ResultEvent(counter, ResultStatus.SKIP, "");
             return;
         }
