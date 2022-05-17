@@ -24,38 +24,47 @@ contract StateReceiver is ReentrancyGuard, System {
         bytes extra
     );
 
-    function stateSync(
-        uint256 id,
-        address sender,
-        address receiver,
-        bytes calldata data,
-        bool skip,
-        bytes calldata sigs
-    ) external nonReentrant {
+    struct StateSync {
+        uint256 id;
+        address sender;
+        address receiver;
+        bytes data;
+        bool result;
+    }
+
+    function stateSync(StateSync calldata obj, bytes calldata sigs)
+        external
+        nonReentrant
+    {
         // validate state id order
-        require(counter + 1 == id, "ID_NOT_SEQUENTIAL");
+        require(counter + 1 == obj.id, "ID_NOT_SEQUENTIAL");
         // check sender
-        require(sender != address(0), "INVALID_SENDER");
+        require(obj.sender != address(0), "INVALID_SENDER");
         // check receiver
-        require(receiver != address(0), "INVALID_RECEIVER");
+        require(obj.receiver != address(0), "INVALID_RECEIVER");
 
         // increament the counter
         counter++;
 
         // create sig data for verification
-        // data = hash(counter, skip)
-        bytes32 sigData = keccak256(abi.encode(counter, skip));
+        // counter, sender, receiver, data and result should be
+        // part of the dataHash. Otherwise data can be manipulated for same sigs
+        //
+        // dataHash = hash(counter, sender, receiver, data, result)
+        bytes32 dataHash = keccak256(
+            abi.encode(obj.id, obj.sender, obj.receiver, obj.data, obj.result)
+        );
 
-        // verify signatures for provided sig data and sigs bytes
+        // verify signatures` for provided sig data and sigs bytes
         bool sigVerfied = false;
         // solhint-disable-next-line avoid-low-level-calls
         (sigVerfied, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.call{
             gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
-        }(abi.encode(sigData, sigs));
+        }(abi.encode(dataHash, sigs));
         require(sigVerfied, "SIG_VERIFICATION_FAILED");
 
         // Skip transaction if necessary
-        if (skip) {
+        if (obj.result) {
             emit ResultEvent(counter, ResultStatus.SKIP, "");
             return;
         }
@@ -65,11 +74,11 @@ contract StateReceiver is ReentrancyGuard, System {
         bytes memory paramData = abi.encodeWithSignature(
             "onStateReceive(uint256,address,bytes)",
             counter,
-            sender,
-            data
+            obj.sender,
+            obj.data
         );
         // solhint-disable-next-line avoid-low-level-calls
-        (success, ) = receiver.call{gas: MAX_GAS}(paramData);
+        (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData);
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
