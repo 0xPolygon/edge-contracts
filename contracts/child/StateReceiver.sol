@@ -13,8 +13,10 @@ contract StateReceiver is System {
         bool skip;
     }
     // Maximum gas provided for each message call
+    // slither-disable-next-line too-many-digits
     uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed
+    /// @custom:security write-protection="onlySystemCall()"
     uint256 public counter;
 
     // 0=success, 1=failure, 2=skip
@@ -30,7 +32,7 @@ contract StateReceiver is System {
         bytes message
     );
 
-    function stateSync(StateSync calldata obj, bytes calldata sigs)
+    function stateSync(StateSync calldata obj, bytes calldata signature)
         external
         onlySystemCall
     {
@@ -41,19 +43,13 @@ contract StateReceiver is System {
         // dataHash = hash(counter, sender, receiver, data, result)
         bytes32 dataHash = keccak256(abi.encode(obj));
 
-        // verify signatures` for provided sig data and sigs bytes
-        bool success = false;
-        // solhint-disable-next-line avoid-low-level-calls
-        (success, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
-            gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
-        }(abi.encode(dataHash, sigs));
-        require(success, "SIG_VERIFICATION_FAILED");
+        _checkPubkeyAggregation(dataHash, signature);
 
         // execute state sync
         _executeStateSync(counter++, obj);
     }
 
-    function stateSyncBatch(StateSync[] calldata objs, bytes calldata sigs)
+    function stateSyncBatch(StateSync[] calldata objs, bytes calldata signature)
         external
         onlySystemCall
     {
@@ -64,15 +60,9 @@ contract StateReceiver is System {
         // part of the dataHash. Otherwise data can be manipulated for same sigs
         //
         // dataHash = hash(counter, sender, receiver, data, result)
-
-        // verify signatures` for provided sig data and sigs bytes
-        bool success = false;
         bytes32 dataHash = keccak256(abi.encode(objs));
-        // solhint-disable-next-line avoid-low-level-calls
-        (success, ) = PRECOMPILED_SIGS_VERIFICATION_CONTRACT.staticcall{
-            gas: PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS
-        }(abi.encode(dataHash, sigs));
-        require(success, "SIG_VERIFICATION_FAILED");
+
+        _checkPubkeyAggregation(dataHash, signature);
 
         uint256 currentId = counter;
         for (uint256 index = 0; index < objs.length; index++) {
@@ -105,10 +95,11 @@ contract StateReceiver is System {
             obj.data
         );
 
+        // if EOA, skip call
         if (obj.receiver.code.length != 0) {
-            // if EOA, skip call
-            // solhint-disable-next-line avoid-low-level-calls
-            (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData);
+            // this is not reentrant because of our system call modifier
+            // slither-disable-next-line calls-loop,low-level-calls
+            (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
         } else {
             emit StateSyncResult(counter, ResultStatus.SKIP, "");
             return;
@@ -116,9 +107,25 @@ contract StateReceiver is System {
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
+            // slither-disable-next-line reentrancy-events
             emit StateSyncResult(counter, ResultStatus.SUCCESS, "");
         } else {
+            // slither-disable-next-line reentrancy-events
             emit StateSyncResult(counter, ResultStatus.FAILURE, "");
         }
+    }
+
+    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
+        internal
+        view
+    {
+        bool success = false;
+        // verify signatures` for provided sig data and sigs bytes
+        // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line low-level-calls
+        (success, ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
+            gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
+        }(abi.encode(message, signature));
+        require(success, "SIGNATURE_VERIFICATION_FAILED");
     }
 }

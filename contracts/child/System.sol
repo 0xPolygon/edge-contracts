@@ -3,19 +3,25 @@ pragma solidity ^0.8.13;
 
 contract System {
     // pre-compiled contracts
-    address public constant PRECOMPILED_NATIVE_TRANSFER_CONTRACT =
+    // slither-disable-next-line too-many-digits
+    address public constant NATIVE_TRANSFER_PRECOMPILE =
         0x0000000000000000000000000000000000002020;
-    address public constant PRECOMPILED_SIGS_VERIFICATION_CONTRACT =
+    // slither-disable-next-line too-many-digits
+    address public constant VALIDATOR_PKCHECK_PRECOMPILE =
         0x0000000000000000000000000000000000002030;
 
     // internal addrs
+    // slither-disable-next-line too-many-digits
     address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
 
     // pre-compiled gas consumption
-    uint256 public constant PRECOMPILED_NATIVE_TRANSFER_CONTRACT_GAS = 21000;
-    uint256 public constant PRECOMPILED_SIGS_VERIFICATION_CONTRACT_GAS = 21000;
+    // slither-disable-next-line too-many-digits
+    uint256 public constant NATIVE_TRANSFER_PRECOMPILE_GAS = 21000;
+    // slither-disable-next-line too-many-digits
+    uint256 public constant VALIDATOR_PKCHECK_PRECOMPILE_GAS = 150000;
 
     // genesis contracts
+    // slither-disable-next-line too-many-digits
     address public constant NATIVE_TOKEN_CONTRACT =
         0x0000000000000000000000000000000000001010;
 
