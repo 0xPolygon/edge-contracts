@@ -21,15 +21,13 @@ contract ChildValidatorSet is IStateReceiver {
     using Arrays for uint256[];
 
     struct Validator {
-        uint256 id;
         address _address;
         uint256[4] blsKey;
         uint256 selfStake;
-        uint256 stake; // self-stake + delegation, store delegation separately?
+        uint256 totalStake; // self-stake + delegation
     }
 
     struct Epoch {
-        uint256 id;
         uint256 startBlock;
         uint256 endBlock;
         bytes32 epochRoot;
@@ -40,6 +38,7 @@ contract ChildValidatorSet is IStateReceiver {
         0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
+    uint256 public constant MAX_VALIDATOR_SET_SIZE = 100;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
@@ -67,7 +66,6 @@ contract ChildValidatorSet is IStateReceiver {
     );
 
     modifier initializer() {
-        // OZ initializer is too bulky...
         require(initialized == 0, "ALREADY_INITIALIZED");
         _;
         initialized = 1;
@@ -99,11 +97,10 @@ contract ChildValidatorSet is IStateReceiver {
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[++currentId];
-            newValidator.id = currentId;
             newValidator._address = validatorAddresses[i];
             newValidator.blsKey = validatorPubkeys[i];
             newValidator.selfStake = validatorStakes[i];
-            newValidator.stake = validatorStakes[i];
+            newValidator.totalStake = validatorStakes[i];
 
             validatorIdByAddress[validatorAddresses[i]] = currentId;
         }
@@ -128,21 +125,20 @@ contract ChildValidatorSet is IStateReceiver {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
-        require((endBlock - startBlock + 1) % SPRINT == 0, "INCOMPLETE_SPRINT");
+        require((endBlock - startBlock + 1) % SPRINT == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_64");
         require(
-            epochs[newEpochId - 1].endBlock < startBlock,
-            "BLOCK_IN_COMMITTED_EPOCH"
+            epochs[newEpochId - 1].endBlock + 1 == startBlock,
+            "INVALID_START_BLOCK"
         );
 
         Epoch storage newEpoch = epochs[newEpochId];
-        newEpoch.id = newEpochId;
         newEpoch.endBlock = endBlock;
         newEpoch.startBlock = startBlock;
         newEpoch.epochRoot = epochRoot;
 
         epochEndBlocks.push(endBlock);
 
-        setNextValidatorSet(newEpochId + 1, epochRoot);
+        _setNextValidatorSet(newEpochId + 1, epochRoot);
 
         emit NewEpoch(id, startBlock, endBlock, epochRoot);
     }
@@ -175,17 +171,7 @@ contract ChildValidatorSet is IStateReceiver {
             decodedData,
             (uint256, address, uint256[4])
         );
-
-        Validator storage newValidator = validators[id];
-        newValidator.id = id;
-        newValidator._address = _address;
-        newValidator.blsKey = blsKey;
-
-        validatorIdByAddress[_address] = id;
-
-        currentValidatorId++; // we assume statesyncs are strictly ordered
-
-        emit NewValidator(id, _address, blsKey);
+        _addNewValidator(id, _address, blsKey);
     }
 
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
@@ -195,19 +181,18 @@ contract ChildValidatorSet is IStateReceiver {
     /**
      * @notice Look up an epoch by block number. Searches in O(log n) time.
      * @param blockNumber ID of epoch to be committed
-     * @return bool Returns true if the search was successful, else false
      * @return Epoch Returns epoch if found, or else, the last epoch
      */
     function getEpochByBlock(uint256 blockNumber)
         external
         view
-        returns (bool, Epoch memory)
+        returns (Epoch memory)
     {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
         if (ret == epochEndBlocks.length) {
-            return (false, epochs[currentEpochId]);
+            return epochs[ret];
         } else {
-            return (true, epochs[ret + 1]);
+            return epochs[ret + 1];
         }
     }
 
@@ -221,7 +206,7 @@ contract ChildValidatorSet is IStateReceiver {
         returns (uint256)
     {
         uint256 totalStake = calculateTotalStake();
-        uint256 validatorStake = validators[id].stake;
+        uint256 validatorStake = validators[id].totalStake;
         /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
            MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
         return (validatorStake * 100 * (10**6)) / totalStake;
@@ -233,31 +218,36 @@ contract ChildValidatorSet is IStateReceiver {
      */
     function calculateTotalStake() public view returns (uint256 stake) {
         for (uint256 i = 1; i <= currentValidatorId; i++) {
-            stake += validators[i].stake;
+            stake += validators[i].totalStake;
         }
     }
 
     /**
      * @notice Sets the validator set for an epoch using the previous root as seed
      */
-    function setNextValidatorSet(uint256 epochId, bytes32 epochRoot) internal {
+    function _setNextValidatorSet(uint256 epochId, bytes32 epochRoot) internal {
         uint256 currentId = currentValidatorId;
         uint256 validatorSetSize = ACTIVE_VALIDATOR_SET_SIZE;
+        // if current total set is less than wanted active validator set size, we include the entire set
         if (currentId <= validatorSetSize) {
             uint256[] memory validatorSet = new uint256[](currentId); // include all validators in set
             for (uint256 i = 0; i < currentId; i++) {
                 validatorSet[i] = i + 1; // validators are one-indexed
             }
             epochs[epochId].validatorSet = validatorSet;
+        // else, randomly pick active validator set from total validator set
         } else {
             uint256[] memory validatorSet = new uint256[](validatorSetSize);
             uint256 counter = 0;
             for (uint256 i = 0; ; i++) {
+                // use epoch root with seed and pick a random index
                 uint256 randomIndex = uint256(
                     keccak256(abi.encodePacked(epochRoot, i))
                 ) % currentId;
+                // if validator picked, skip iteration
                 if (validatorsByEpoch[epochId][randomIndex]) {
                     continue;
+                // else, add validator and include in set
                 } else {
                     validatorsByEpoch[epochId][randomIndex] = true;
                     validatorSet[counter++] = randomIndex;
@@ -268,5 +258,22 @@ contract ChildValidatorSet is IStateReceiver {
             }
             epochs[epochId].validatorSet = validatorSet;
         }
+    }
+
+    /**
+     * @notice Adds a new validator to our total validator set.
+     */
+    function _addNewValidator(uint256 id, address _address, uint256[4] memory blsKey) internal {
+        require(id <= MAX_VALIDATOR_SET_SIZE, "VALIDATOR_SET_FULL");
+
+        Validator storage newValidator = validators[id];
+        newValidator._address = _address;
+        newValidator.blsKey = blsKey;
+
+        validatorIdByAddress[_address] = id;
+
+        currentValidatorId++; // we assume statesyncs are strictly ordered
+
+        emit NewValidator(id, _address, blsKey);
     }
 }
