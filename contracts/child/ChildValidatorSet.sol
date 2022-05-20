@@ -94,17 +94,17 @@ contract ChildValidatorSet is IStateReceiver {
     ) external initializer onlySystemCall {
         // slither-disable-next-line missing-zero-check
         rootValidatorSet = newRootValidatorSet;
-        uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
-        for (uint256 i = 0; i < validatorAddresses.length; i++) {
-            Validator storage newValidator = validators[++currentId];
+        uint256 i = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
+        for (; i < validatorAddresses.length; i++) {
+            Validator storage newValidator = validators[i + 1];
             newValidator._address = validatorAddresses[i];
             newValidator.blsKey = validatorPubkeys[i];
             newValidator.selfStake = validatorStakes[i];
             newValidator.totalStake = validatorStakes[i];
 
-            validatorIdByAddress[validatorAddresses[i]] = currentId;
+            validatorIdByAddress[validatorAddresses[i]] = i + 1;
         }
-        currentValidatorId = currentId;
+        currentValidatorId = i;
 
         Epoch storage nextEpoch = epochs[++currentEpochId];
         nextEpoch.validatorSet = epochValidatorSet;
@@ -145,10 +145,6 @@ contract ChildValidatorSet is IStateReceiver {
 
         emit NewEpoch(id, startBlock, endBlock, epochRoot);
     }
-
-    // function modifyValidatorSetSize(uint256 _newSize) external onlySystemCall {
-    //     activeValidatorSetSize = _newSize;
-    // }
 
     /**
      * @notice Enables the RootValidatorSet to trustlessly update validator set on child chain.
