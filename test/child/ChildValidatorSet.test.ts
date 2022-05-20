@@ -90,13 +90,12 @@ describe("ChildValidatorSet", () => {
     );
     for (let i = 0; i < validatorSetSize; i++) {
       const validator = await childValidatorSet.validators(i + 1);
-      expect(validator.id).to.equal(i + 1);
       expect(validator._address).to.equal(addresses[i]);
       expect(validator.selfStake).to.equal(validatorStake);
-      expect(validator.stake).to.equal(validatorStake);
+      expect(validator.totalStake).to.equal(validatorStake);
       expect(
         await childValidatorSet.validatorIdByAddress(addresses[i])
-      ).to.equal(validator.id);
+      ).to.equal(i + 1);
     }
     // struct array is not available on typechain
     //expect(await childValidatorSet.epochs(1).validatorSet).to.deep.equal(validatorSet);
@@ -135,7 +134,7 @@ describe("ChildValidatorSet", () => {
         63,
         ethers.utils.randomBytes(32)
       )
-    ).to.be.revertedWith("INCOMPLETE_SPRINT");
+    ).to.be.revertedWith("EPOCH_MUST_BE_DIVISIBLE_BY_64");
   });
   it("Commit epoch", async () => {
     epoch = {
@@ -151,7 +150,6 @@ describe("ChildValidatorSet", () => {
       epoch.epochRoot
     );
     const storedEpoch: any = await childValidatorSet.epochs(epoch.id);
-    expect(storedEpoch.id).to.equal(epoch.id);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
     expect(storedEpoch.epochRoot).to.equal(epoch.epochRoot);
@@ -164,7 +162,7 @@ describe("ChildValidatorSet", () => {
         127,
         ethers.utils.randomBytes(32)
       )
-    ).to.be.revertedWith("BLOCK_IN_COMMITTED_EPOCH");
+    ).to.be.revertedWith("INVALID_START_BLOCK");
   });
   it("Validator registration state sync from wrong address", async () => {
     const wallet = ethers.Wallet.createRandom();
@@ -231,11 +229,10 @@ describe("ChildValidatorSet", () => {
       validatorSetSize + 1
     );
     const validator = await childValidatorSet.validators(validatorSetSize + 1);
-    expect(validator.id).to.equal(validatorSetSize + 1);
     expect(validator._address).to.equal(wallet.address);
     expect(
       await childValidatorSet.validatorIdByAddress(wallet.address)
-    ).to.equal(validator.id);
+    ).to.equal(validatorSetSize + 1);
     //expect(validator.blsKey).to.deep.equal(strippedPubkey);
   });
   it("Get current validators", async () => {
@@ -248,17 +245,13 @@ describe("ChildValidatorSet", () => {
     );
   });
   it("Get epoch by block", async () => {
-    const [success, storedEpoch] = await childValidatorSet.getEpochByBlock(64);
-    expect(success).to.be.true;
-    expect(storedEpoch.id).to.equal(epoch.id);
+    const storedEpoch = await childValidatorSet.getEpochByBlock(64);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
     expect(storedEpoch.epochRoot).to.equal(epoch.epochRoot);
   });
   it("Get non-existent epoch by block", async () => {
-    const [success, storedEpoch] = await childValidatorSet.getEpochByBlock(65);
-    expect(success).to.be.false;
-    expect(storedEpoch.id).to.equal(ethers.constants.Zero);
+    const storedEpoch = await childValidatorSet.getEpochByBlock(65);
     expect(storedEpoch.startBlock).to.equal(ethers.constants.Zero);
     expect(storedEpoch.endBlock).to.equal(ethers.constants.Zero);
     expect(storedEpoch.epochRoot).to.equal(ethers.constants.HashZero);

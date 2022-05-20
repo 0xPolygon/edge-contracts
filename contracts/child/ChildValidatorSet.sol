@@ -38,7 +38,7 @@ contract ChildValidatorSet is IStateReceiver {
         0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
-    uint256 public constant MAX_VALIDATOR_SET_SIZE = 100;
+    uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
@@ -125,7 +125,10 @@ contract ChildValidatorSet is IStateReceiver {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
-        require((endBlock - startBlock + 1) % SPRINT == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_64");
+        require(
+            (endBlock - startBlock + 1) % SPRINT == 0,
+            "EPOCH_MUST_BE_DIVISIBLE_BY_64"
+        );
         require(
             epochs[newEpochId - 1].endBlock + 1 == startBlock,
             "INVALID_START_BLOCK"
@@ -189,11 +192,7 @@ contract ChildValidatorSet is IStateReceiver {
         returns (Epoch memory)
     {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
-        if (ret == epochEndBlocks.length) {
-            return epochs[ret];
-        } else {
-            return epochs[ret + 1];
-        }
+        return epochs[ret + 1];
     }
 
     /**
@@ -235,7 +234,7 @@ contract ChildValidatorSet is IStateReceiver {
                 validatorSet[i] = i + 1; // validators are one-indexed
             }
             epochs[epochId].validatorSet = validatorSet;
-        // else, randomly pick active validator set from total validator set
+            // else, randomly pick active validator set from total validator set
         } else {
             uint256[] memory validatorSet = new uint256[](validatorSetSize);
             uint256 counter = 0;
@@ -247,7 +246,7 @@ contract ChildValidatorSet is IStateReceiver {
                 // if validator picked, skip iteration
                 if (validatorsByEpoch[epochId][randomIndex]) {
                     continue;
-                // else, add validator and include in set
+                    // else, add validator and include in set
                 } else {
                     validatorsByEpoch[epochId][randomIndex] = true;
                     validatorSet[counter++] = randomIndex;
@@ -263,7 +262,11 @@ contract ChildValidatorSet is IStateReceiver {
     /**
      * @notice Adds a new validator to our total validator set.
      */
-    function _addNewValidator(uint256 id, address _address, uint256[4] memory blsKey) internal {
+    function _addNewValidator(
+        uint256 id,
+        address _address,
+        uint256[4] memory blsKey
+    ) internal {
         require(id <= MAX_VALIDATOR_SET_SIZE, "VALIDATOR_SET_FULL");
 
         Validator storage newValidator = validators[id];
