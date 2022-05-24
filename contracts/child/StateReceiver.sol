@@ -82,7 +82,7 @@ contract StateReceiver is System {
 
         // Skip transaction if necessary
         if (obj.skip) {
-            emit StateSyncResult(counter, ResultStatus.SKIP, "");
+            emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
             return;
         }
 
@@ -101,17 +101,17 @@ contract StateReceiver is System {
             // slither-disable-next-line calls-loop,low-level-calls
             (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
         } else {
-            emit StateSyncResult(counter, ResultStatus.SKIP, "");
+            emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
             return;
         }
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
             // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(counter, ResultStatus.SUCCESS, "");
+            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, "");
         } else {
             // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(counter, ResultStatus.FAILURE, "");
+            emit StateSyncResult(obj.id, ResultStatus.FAILURE, "");
         }
     }
 
