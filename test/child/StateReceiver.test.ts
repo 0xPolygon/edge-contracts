@@ -51,6 +51,11 @@ describe("StateReceiver", () => {
       "ONLY_SYSTEMCALL"
     );
   });
+  it("Empty state sync batch", async () => {
+    await expect(systemStateReceiver.stateSyncBatch([], [])).to.be.revertedWith(
+      "NO_STATESYNC_DATA"
+    );
+  });
   it("State sync", async () => {
     const increment = Math.floor(Math.random() * (10 - 1) + 1);
     const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
@@ -61,11 +66,35 @@ describe("StateReceiver", () => {
       data,
       skip: false,
     };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
+    await systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero);
     expect(await stateReceiver.counter()).to.equal(1);
     expect(await stateReceivingContract.counter()).to.equal(increment);
+  });
+  it("State sync batch", async () => {
+    let currentSum = await stateReceivingContract.counter();
+    const stateSyncs: any[] = [];
+    const batchSize = Math.floor(Math.random() * (10 - 2) + 2);
+    for (let i = 1; i <= batchSize; i++) {
+      const increment = Math.floor(Math.random() * (10 - 1) + 1);
+      currentSum = currentSum.add(BigNumber.from(increment));
+      const data = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [increment]
+      );
+      const stateSync = {
+        id: i + 1,
+        sender: ethers.constants.AddressZero,
+        receiver: stateReceivingContract.address,
+        data,
+        skip: false,
+      };
+      stateSyncs.push(stateSync);
+    }
+    await systemStateReceiver.stateSyncBatch(
+      stateSyncs,
+      ethers.constants.HashZero
+    );
+    expect(await stateReceiver.counter()).to.equal(batchSize + 1);
+    expect(await stateReceivingContract.counter()).to.equal(currentSum);
   });
 });
