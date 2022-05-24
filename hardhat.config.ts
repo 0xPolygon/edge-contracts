@@ -30,6 +30,11 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 99999,
       },
+      outputSelection: {
+        "*": {
+          "*": ["storageLayout"],
+        },
+      },
     },
   },
   networks: {

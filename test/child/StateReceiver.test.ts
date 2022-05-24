@@ -87,7 +87,7 @@ describe("StateReceiver", () => {
     const log = receipt?.events as any[];
     expect(log[0]?.args?.counter).to.equal(1);
     expect(log[0]?.args?.status).to.equal(0);
-    expect(log[0]?.args?.message).to.equal("0x");
+    expect(log[0]?.args?.message).to.equal(data);
     expect(await stateReceiver.counter()).to.equal(1);
     expect(await stateReceivingContract.counter()).to.equal(increment);
   });
@@ -122,10 +122,14 @@ describe("StateReceiver", () => {
       const stateSync = stateSyncs[i];
       expect(log[i]?.args?.counter).to.equal(i + 2);
       expect(log[i]?.args?.status).to.equal(0);
-      expect(log[i]?.args?.message).to.equal("0x");
     }
     expect(await stateReceiver.counter()).to.equal(stateSyncCounter);
     expect(await stateReceivingContract.counter()).to.equal(currentSum);
+    const data = ethers.utils.defaultAbiCoder.encode(
+      ["uint256"],
+      [await stateReceivingContract.counter()]
+    );
+    expect(log[batchSize - 1]?.args?.message).to.equal(data);
   });
   it("State sync skip", async () => {
     stateSyncCounter += 1;
@@ -144,13 +148,15 @@ describe("StateReceiver", () => {
     const log = receipt?.events as any[];
     expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
     expect(log[0]?.args?.status).to.equal(2);
-    expect(log[0]?.args?.message).to.equal("0x");
+    expect(log[0]?.args?.message).to.equal(ethers.constants.HashZero);
   });
   it("State sync fail", async () => {
     stateSyncCounter += 1;
-    const fakeStateReceivingContract = await smock.fake(
+    const fakeStateReceivingContractFactory = await smock.mock(
       "StateReceivingContract"
     );
+    const fakeStateReceivingContract =
+      await fakeStateReceivingContractFactory.deploy();
     fakeStateReceivingContract.onStateReceive.reverts();
     const stateSync = {
       id: stateSyncCounter,
@@ -167,7 +173,7 @@ describe("StateReceiver", () => {
     const log = receipt?.events as any[];
     expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
     expect(log[0]?.args?.status).to.equal(1);
-    expect(log[0]?.args?.message).to.equal("0x");
+    expect(log[0]?.args?.message).to.equal(ethers.constants.HashZero);
   });
   it("State sync bad signature", async () => {
     await hre.network.provider.send("hardhat_setCode", [

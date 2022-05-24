@@ -29,7 +29,7 @@ contract StateReceiver is System {
     event StateSyncResult(
         uint256 indexed counter,
         ResultStatus indexed status,
-        bytes message
+        bytes32 message
     );
 
     function stateSync(StateSync calldata obj, bytes calldata signature)
@@ -80,14 +80,13 @@ contract StateReceiver is System {
     {
         require(prevId + 1 == obj.id, "ID_NOT_SEQUENTIAL");
 
-        // Skip transaction if necessary
-        if (obj.skip) {
+        // Skip transaction if client has added flag, or receiver has no code
+        if (obj.skip || obj.receiver.code.length == 0) {
             emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
             return;
         }
 
         // Execute `onStateReceive` method on target using max gas limit
-        bool success = false;
         bytes memory paramData = abi.encodeWithSignature(
             "onStateReceive(uint256,address,bytes)",
             obj.id,
@@ -95,23 +94,20 @@ contract StateReceiver is System {
             obj.data
         );
 
-        // if EOA, skip call
-        if (obj.receiver.code.length != 0) {
-            // this is not reentrant because of our system call modifier
-            // slither-disable-next-line calls-loop,low-level-calls
-            (success, ) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
-        } else {
-            emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
-            return;
-        }
+        // slither-disable-next-line calls-loop,low-level-calls
+        (bool success, bytes memory returnData) = obj.receiver.call{
+            gas: MAX_GAS
+        }(paramData); // solhint-disable-line avoid-low-level-calls
+
+        bytes32 message = bytes32(returnData);
 
         // emit a ResultEvent indicating whether invocation of bridge was successful or not
         if (success) {
             // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, "");
+            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, message);
         } else {
             // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.FAILURE, "");
+            emit StateSyncResult(obj.id, ResultStatus.FAILURE, message);
         }
     }
 
