@@ -10,6 +10,7 @@ describe("StateReceiver", () => {
   let stateReceiver: StateReceiver,
     systemStateReceiver: StateReceiver,
     stateReceivingContract: StateReceivingContract,
+    stateSyncCounter: number,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     accounts = await ethers.getSigners();
@@ -70,6 +71,7 @@ describe("StateReceiver", () => {
   it("State sync", async () => {
     const increment = Math.floor(Math.random() * (10 - 1) + 1);
     const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
+    stateSyncCounter = 1;
     const stateSync = {
       id: 1,
       sender: ethers.constants.AddressZero,
@@ -93,6 +95,7 @@ describe("StateReceiver", () => {
     let currentSum = await stateReceivingContract.counter();
     const stateSyncs: any[] = [];
     const batchSize = Math.floor(Math.random() * (10 - 2) + 2);
+    stateSyncCounter += batchSize;
     for (let i = 1; i <= batchSize; i++) {
       const increment = Math.floor(Math.random() * (10 - 1) + 1);
       currentSum = currentSum.add(BigNumber.from(increment));
@@ -121,8 +124,50 @@ describe("StateReceiver", () => {
       expect(log[i]?.args?.status).to.equal(0);
       expect(log[i]?.args?.message).to.equal("0x");
     }
-    expect(await stateReceiver.counter()).to.equal(batchSize + 1);
+    expect(await stateReceiver.counter()).to.equal(stateSyncCounter);
     expect(await stateReceivingContract.counter()).to.equal(currentSum);
+  });
+  it("State sync skip", async () => {
+    stateSyncCounter += 1;
+    const stateSync = {
+      id: stateSyncCounter,
+      sender: ethers.constants.AddressZero,
+      receiver: stateReceivingContract.address,
+      data: ethers.constants.HashZero,
+      skip: true,
+    };
+    const tx = await systemStateReceiver.stateSync(
+      stateSync,
+      ethers.constants.HashZero
+    );
+    const receipt = await tx.wait();
+    const log = receipt?.events as any[];
+    expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
+    expect(log[0]?.args?.status).to.equal(2);
+    expect(log[0]?.args?.message).to.equal("0x");
+  });
+  it("State sync fail", async () => {
+    stateSyncCounter += 1;
+    const fakeStateReceivingContract = await smock.fake(
+      "StateReceivingContract"
+    );
+    fakeStateReceivingContract.onStateReceive.reverts();
+    const stateSync = {
+      id: stateSyncCounter,
+      sender: ethers.constants.AddressZero,
+      receiver: fakeStateReceivingContract.address,
+      data: ethers.constants.HashZero,
+      skip: false,
+    };
+    const tx = await systemStateReceiver.stateSync(
+      stateSync,
+      ethers.constants.HashZero
+    );
+    const receipt = await tx.wait();
+    const log = receipt?.events as any[];
+    expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
+    expect(log[0]?.args?.status).to.equal(1);
+    expect(log[0]?.args?.message).to.equal("0x");
   });
   it("State sync bad signature", async () => {
     await hre.network.provider.send("hardhat_setCode", [
