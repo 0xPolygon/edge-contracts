@@ -119,13 +119,16 @@ contract StateReceiver is System {
         internal
         view
     {
-        bool success = false;
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
-        (success, ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
-            gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-        }(abi.encode(message, signature));
-        require(success, "SIGNATURE_VERIFICATION_FAILED");
+        (
+            bool callSuccess,
+            bytes memory returnData
+        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
+                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
+            }(abi.encode(message, signature));
+        bool verified = abi.decode(returnData, (bool));
+        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }
