@@ -4,6 +4,7 @@ import { ethers } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { StateReceiver, StateReceivingContract } from "../../typechain";
+import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 
 describe("StateReceiver", () => {
   let stateReceiver: StateReceiver,
@@ -43,10 +44,20 @@ describe("StateReceiver", () => {
 
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002030",
-      "0x600160005260206000F3",
+      alwaysTrueBytecode,
     ]);
   });
   it("State sync without system call", async () => {
+    const stateSync = {
+      id: 0,
+      sender: ethers.constants.AddressZero,
+      receiver: ethers.constants.AddressZero,
+      data: ethers.constants.HashZero,
+      skip: false,
+    };
+    await expect(stateReceiver.stateSync(stateSync, [])).to.be.revertedWith(
+      "ONLY_SYSTEMCALL"
+    );
     await expect(stateReceiver.stateSyncBatch([], [])).to.be.revertedWith(
       "ONLY_SYSTEMCALL"
     );
@@ -66,7 +77,15 @@ describe("StateReceiver", () => {
       data,
       skip: false,
     };
-    await systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero);
+    const tx = await systemStateReceiver.stateSync(
+      stateSync,
+      ethers.constants.HashZero
+    );
+    const receipt = await tx.wait();
+    const log = receipt?.events as any[];
+    expect(log[0]?.args?.counter).to.equal(1);
+    expect(log[0]?.args?.status).to.equal(0);
+    expect(log[0]?.args?.message).to.equal("0x");
     expect(await stateReceiver.counter()).to.equal(1);
     expect(await stateReceivingContract.counter()).to.equal(increment);
   });
@@ -90,11 +109,35 @@ describe("StateReceiver", () => {
       };
       stateSyncs.push(stateSync);
     }
-    await systemStateReceiver.stateSyncBatch(
+    const tx = await systemStateReceiver.stateSyncBatch(
       stateSyncs,
       ethers.constants.HashZero
     );
+    const receipt = await tx.wait();
+    const log = receipt?.events as any[];
+    for (let i = 0; i < batchSize; i++) {
+      const stateSync = stateSyncs[i];
+      expect(log[i]?.args?.counter).to.equal(i + 2);
+      expect(log[i]?.args?.status).to.equal(0);
+      expect(log[i]?.args?.message).to.equal("0x");
+    }
     expect(await stateReceiver.counter()).to.equal(batchSize + 1);
     expect(await stateReceivingContract.counter()).to.equal(currentSum);
+  });
+  it("State sync bad signature", async () => {
+    await hre.network.provider.send("hardhat_setCode", [
+      "0x0000000000000000000000000000000000002030",
+      alwaysFalseBytecode,
+    ]);
+    const stateSync = {
+      id: 0,
+      sender: ethers.constants.AddressZero,
+      receiver: ethers.constants.AddressZero,
+      data: ethers.constants.HashZero,
+      skip: false,
+    };
+    await expect(
+      systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)
+    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 });
