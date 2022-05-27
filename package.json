@@ -43,7 +43,10 @@
   },
   "scripts": {
     "compile": "npx hardhat compile",
-    "test": "npx hardhat test",
+    "test": "TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel",
+    "test:gas": "TS_NODE_TRANSPILE_ONLY=1 REPORT_GAS=true npx hardhat test",
+    "test:types": "npx hardhat test --parallel",
+    "test:all": "REPORT_GAS=true npx hardhat test",
     "lint:sol": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w .",
     "lint:ts": "npx prettier -w . && npx eslint --fix .",
     "lint": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w . && npx eslint --fix .",
