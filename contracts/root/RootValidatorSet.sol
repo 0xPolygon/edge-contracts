@@ -3,14 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IBLS {
-    function verifySingle(
-        uint256[2] calldata signature,
-        uint256[4] calldata pubkey,
-        uint256[2] calldata message
-    ) external view returns (bool, bool);
-}
+import "../interfaces/IBLS.sol";
 
 /**
     @title RootValidatorSet
