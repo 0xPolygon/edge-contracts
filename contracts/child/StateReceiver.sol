@@ -95,9 +95,9 @@ contract StateReceiver is System {
         );
 
         // slither-disable-next-line calls-loop,low-level-calls
-        (bool success, bytes memory returnData) = obj.receiver.call{
+        (bool success, bytes memory returnData) = obj.receiver.call{ // solhint-disable-line avoid-low-level-calls
             gas: MAX_GAS
-        }(paramData); // solhint-disable-line avoid-low-level-calls
+        }(paramData);
 
         bytes32 message = bytes32(returnData);
 
