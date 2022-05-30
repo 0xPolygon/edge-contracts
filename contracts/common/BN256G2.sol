@@ -26,8 +26,10 @@ contract BN256G2 {
         0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2;
     uint256 public constant G2_NEG_X_IM =
         0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED;
+    // slither-disable-next-line similar-names
     uint256 public constant G2_NEG_Y_RE =
         0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec;
+    // slither-disable-next-line similar-names
     uint256 public constant G2_NEG_Y_IM =
         0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d;
 
@@ -237,16 +239,16 @@ contract BN256G2 {
      * @param xy First FQ2 operands second coordinate
      * @param yx Second FQ2 operands first coordinate
      * @param yy Second FQ2 operands second coordinate
-     * @return [xx+yx, xy+yy]f
+     * @return [xx+yx, xy+yy]
      */
-    function _fq2add(
-        uint256 xx,
-        uint256 xy,
-        uint256 yx,
-        uint256 yy
-    ) internal pure returns (uint256, uint256) {
-        return (addmod(xx, yx, FIELD_MODULUS), addmod(xy, yy, FIELD_MODULUS));
-    }
+    // function _fq2add(
+    //     uint256 xx,
+    //     uint256 xy,
+    //     uint256 yx,
+    //     uint256 yy
+    // ) internal pure returns (uint256, uint256) {
+    //     return (addmod(xx, yx, FIELD_MODULUS), addmod(xy, yy, FIELD_MODULUS));
+    // }
 
     /**
      * @notice FQ2-FQ2 substraction operation
@@ -273,15 +275,15 @@ contract BN256G2 {
      * @param yy Second FQ2 operands second coordinate
      * @return [xx, xy] * Inv([yx, yy])
      */
-    function _fq2div(
-        uint256 xx,
-        uint256 xy,
-        uint256 yx,
-        uint256 yy
-    ) internal view returns (uint256, uint256) {
-        (yx, yy) = _fq2inv(yx, yy);
-        return _fq2mul(xx, xy, yx, yy);
-    }
+    // function _fq2div(
+    //     uint256 xx,
+    //     uint256 xy,
+    //     uint256 yx,
+    //     uint256 yy
+    // ) internal view returns (uint256, uint256) {
+    //     (yx, yy) = _fq2inv(yx, yy);
+    //     return _fq2mul(xx, xy, yx, yy);
+    // }
 
     /**
      * @notice 1/FQ2 inverse operation
@@ -346,8 +348,9 @@ contract BN256G2 {
         returns (uint256 result)
     {
         bool success;
-        // solhint-disable-next-line no-inline-assembly
+        // slither-disable-next-line assembly
         assembly {
+            // solhint-disable-line no-inline-assembly
             let freemem := mload(0x40)
             mstore(freemem, 0x20)
             mstore(add(freemem, 0x20), 0x20)
@@ -576,7 +579,7 @@ contract BN256G2 {
      * @param pt1yy Point y imaginary coordinate
      * @param pt1zx Point z real coordinate
      * @param pt1zy Point z imaginary coordinate
-     * @return a point representing pt2 = d*pt1 in jacobian coordinates
+     * @return pt2 a point representing pt2 = d*pt1 in jacobian coordinates
      **/
     function _ecTwistMulJacobian(
         uint256 d,
@@ -586,8 +589,7 @@ contract BN256G2 {
         uint256 pt1yy,
         uint256 pt1zx,
         uint256 pt1zy
-    ) internal pure returns (uint256[6] memory) {
-        uint256[6] memory pt2;
+    ) internal pure returns (uint256[6] memory pt2) {
         while (d != 0) {
             if ((d & 1) != 0) {
                 pt2 = ecTwistAddJacobian(

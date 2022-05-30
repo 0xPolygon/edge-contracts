@@ -91,6 +91,7 @@ contract CheckpointManager is Initializable {
                 validatorSet[1][3]
             );
         for (uint256 i = 2; i < length; ++i) {
+            // slither-disable-next-line calls-loop
             (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2
                 .ecTwistAdd(
                     aggPubkey[0],
