@@ -51,8 +51,8 @@ describe("StateReceiver", () => {
   });
   it("State sync commit", async () => {
     let currentSum = await stateReceivingContract.counter();
-    const batchSize = 277;
-    // 299 executed
+    const batchSize = 359;
+    // 277 executed
     // 359 calldata limit
     stateSyncs = [];
     stateSyncCounter += batchSize;
