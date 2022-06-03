@@ -9,7 +9,9 @@ contract StateReceivingContract {
         address, /* sender */
         bytes calldata data
     ) external returns (bytes32) {
-        counter += abi.decode(data, (uint256));
+        while (true) {
+            counter++;
+        }
         return bytes32(counter);
     }
 }

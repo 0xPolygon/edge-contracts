@@ -11,6 +11,7 @@ describe("StateReceiver", () => {
     systemStateReceiver: StateReceiver,
     stateReceivingContract: StateReceivingContract,
     stateSyncCounter: number,
+    stateSyncs: any[],
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     accounts = await ethers.getSigners();
@@ -48,53 +49,12 @@ describe("StateReceiver", () => {
       alwaysTrueBytecode,
     ]);
   });
-  it("State sync without system call", async () => {
-    const stateSync = {
-      id: 0,
-      sender: ethers.constants.AddressZero,
-      receiver: ethers.constants.AddressZero,
-      data: ethers.constants.HashZero,
-      skip: false,
-    };
-    await expect(stateReceiver.stateSync(stateSync, [])).to.be.revertedWith(
-      "ONLY_SYSTEMCALL"
-    );
-    await expect(stateReceiver.stateSyncBatch([], [])).to.be.revertedWith(
-      "ONLY_SYSTEMCALL"
-    );
-  });
-  it("Empty state sync batch", async () => {
-    await expect(systemStateReceiver.stateSyncBatch([], [])).to.be.revertedWith(
-      "NO_STATESYNC_DATA"
-    );
-  });
-  it("State sync", async () => {
-    const increment = Math.floor(Math.random() * (10 - 1) + 1);
-    const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
-    stateSyncCounter = 1;
-    const stateSync = {
-      id: 1,
-      sender: ethers.constants.AddressZero,
-      receiver: stateReceivingContract.address,
-      data,
-      skip: false,
-    };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
-    const receipt = await tx.wait();
-    const log = receipt?.events as any[];
-    expect(log[0]?.args?.counter).to.equal(1);
-    expect(log[0]?.args?.status).to.equal(0);
-    expect(log[0]?.args?.message).to.equal(data);
-    expect(await stateReceiver.counter()).to.equal(1);
-    expect(await stateReceivingContract.counter()).to.equal(increment);
-  });
-  it("State sync batch", async () => {
+  it("State sync commit", async () => {
     let currentSum = await stateReceivingContract.counter();
-    const stateSyncs: any[] = [];
-    const batchSize = Math.floor(Math.random() * (10 - 2) + 2);
+    const batchSize = 277;
+    // 299 executed
+    // 359 calldata limit
+    stateSyncs = [];
     stateSyncCounter += batchSize;
     for (let i = 1; i <= batchSize; i++) {
       const increment = Math.floor(Math.random() * (10 - 1) + 1);
@@ -104,7 +64,7 @@ describe("StateReceiver", () => {
         [increment]
       );
       const stateSync = {
-        id: i + 1,
+        id: i,
         sender: ethers.constants.AddressZero,
         receiver: stateReceivingContract.address,
         data,
@@ -112,11 +72,33 @@ describe("StateReceiver", () => {
       };
       stateSyncs.push(stateSync);
     }
-    const tx = await systemStateReceiver.stateSyncBatch(
-      stateSyncs,
+    const hash = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "tuple(uint id,address sender,address receiver,bytes data,bool skip)[]",
+        ],
+        [stateSyncs]
+      )
+    );
+    console.log(hash);
+    const bundle = {
+      startId: 0,
+      endId: batchSize - 1,
+      hash,
+    };
+    const tx = await systemStateReceiver.commit(
+      bundle,
       ethers.constants.HashZero
     );
     const receipt = await tx.wait();
+    console.log(tx);
+  });
+  it("State sync execute", async () => {
+    let currentSum = await stateReceivingContract.counter();
+    //console.log(stateSyncs);
+    const tx = await systemStateReceiver.execute(stateSyncs);
+    const receipt = await tx.wait();
+    console.log(tx);
     const log = receipt?.events as any[];
     for (let i = 0; i < batchSize; i++) {
       const stateSync = stateSyncs[i];
@@ -129,66 +111,6 @@ describe("StateReceiver", () => {
       ["uint256"],
       [await stateReceivingContract.counter()]
     );
-    expect(log[batchSize - 1]?.args?.message).to.equal(data);
-  });
-  it("State sync skip", async () => {
-    stateSyncCounter += 1;
-    const stateSync = {
-      id: stateSyncCounter,
-      sender: ethers.constants.AddressZero,
-      receiver: stateReceivingContract.address,
-      data: ethers.constants.HashZero,
-      skip: true,
-    };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
-    const receipt = await tx.wait();
-    const log = receipt?.events as any[];
-    expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
-    expect(log[0]?.args?.status).to.equal(2);
-    expect(log[0]?.args?.message).to.equal(ethers.constants.HashZero);
-  });
-  it("State sync fail", async () => {
-    stateSyncCounter += 1;
-    const fakeStateReceivingContractFactory = await smock.mock(
-      "StateReceivingContract"
-    );
-    const fakeStateReceivingContract =
-      await fakeStateReceivingContractFactory.deploy();
-    fakeStateReceivingContract.onStateReceive.reverts();
-    const stateSync = {
-      id: stateSyncCounter,
-      sender: ethers.constants.AddressZero,
-      receiver: fakeStateReceivingContract.address,
-      data: ethers.constants.HashZero,
-      skip: false,
-    };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
-    const receipt = await tx.wait();
-    const log = receipt?.events as any[];
-    expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
-    expect(log[0]?.args?.status).to.equal(1);
-    expect(log[0]?.args?.message).to.equal(ethers.constants.HashZero);
-  });
-  it("State sync bad signature", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysFalseBytecode,
-    ]);
-    const stateSync = {
-      id: 0,
-      sender: ethers.constants.AddressZero,
-      receiver: ethers.constants.AddressZero,
-      data: ethers.constants.HashZero,
-      skip: false,
-    };
-    await expect(
-      systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)
-    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
+    //expect(log[batchSize - 1]?.args?.message).to.equal(data);
   });
 });

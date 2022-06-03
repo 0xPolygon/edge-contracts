@@ -12,12 +12,22 @@ contract StateReceiver is System {
         bytes data;
         bool skip;
     }
+
+    struct StateSyncBundle {
+        uint256 startId;
+        uint256 endId;
+        bytes32 hash;
+    }
     // Maximum gas provided for each message call
     // slither-disable-next-line too-many-digits
-    uint256 public constant MAX_GAS = 300000;
+    uint256 public constant MAX_GAS = 100000;
     // Index of the next event which needs to be processed
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public counter;
+    uint256 public bundleCounter;
+    uint256 public lastExecutedBundleCounter;
+
+    mapping(uint256 => StateSyncBundle) bundles;
 
     // 0=success, 1=failure, 2=skip
     enum ResultStatus {
@@ -32,7 +42,7 @@ contract StateReceiver is System {
         bytes32 message
     );
 
-    function stateSync(StateSync calldata obj, bytes calldata signature)
+    function commit(StateSyncBundle calldata bundle, bytes calldata signature)
         external
         onlySystemCall
     {
@@ -41,30 +51,26 @@ contract StateReceiver is System {
         // part of the dataHash. Otherwise data can be manipulated for same sigs
         //
         // dataHash = hash(counter, sender, receiver, data, result)
-        bytes32 dataHash = keccak256(abi.encode(obj));
+        bytes32 dataHash = keccak256(abi.encode(bundle));
 
         _checkPubkeyAggregation(dataHash, signature);
 
-        // execute state sync
-        _executeStateSync(counter++, obj);
+        bundles[bundleCounter++] = bundle;
     }
 
-    function stateSyncBatch(StateSync[] calldata objs, bytes calldata signature)
-        external
-        onlySystemCall
-    {
-        require(objs.length != 0, "NO_STATESYNC_DATA");
-
-        // create sig data for verification
-        // counter, sender, receiver, data and result (skip) should be
-        // part of the dataHash. Otherwise data can be manipulated for same sigs
-        //
-        // dataHash = hash(counter, sender, receiver, data, result)
+    function execute(StateSync[] calldata objs) external {
         bytes32 dataHash = keccak256(abi.encode(objs));
 
-        _checkPubkeyAggregation(dataHash, signature);
+        StateSyncBundle memory currentBundle = bundles[
+            lastExecutedBundleCounter
+        ];
+
+        require(currentBundle.hash == dataHash, "INVALID_HASH");
 
         uint256 currentId = counter;
+
+        //uint256 estimatedBatchSize = (gasleft() - 3100) / MAX_GAS; // 2900 warm SSTORE + misc.
+
         for (uint256 index = 0; index < objs.length; index++) {
             _executeStateSync(currentId++, objs[index]);
         }
