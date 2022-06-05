@@ -2,9 +2,11 @@
 pragma solidity ^0.8.13;
 
 import {System} from "./System.sol";
+import {Merkle} from "../common/Merkle.sol";
 
 // StateReceiver is the contract which executes and relays the state data on Polygon
 contract StateReceiver is System {
+    using Merkle for bytes32;
     struct StateSync {
         uint256 id;
         address sender;
@@ -16,7 +18,8 @@ contract StateReceiver is System {
     struct StateSyncBundle {
         uint256 startId;
         uint256 endId;
-        bytes32 hash;
+        uint256 leaves;
+        bytes32 root;
     }
     // Maximum gas provided for each message call
     // slither-disable-next-line too-many-digits
@@ -26,8 +29,9 @@ contract StateReceiver is System {
     uint256 public counter;
     uint256 public bundleCounter;
     uint256 public lastExecutedBundleCounter;
+    uint256 public currentLeafIndex;
 
-    mapping(uint256 => StateSyncBundle) bundles;
+    mapping(uint256 => StateSyncBundle) public bundles;
 
     // 0=success, 1=failure, 2=skip
     enum ResultStatus {
@@ -58,14 +62,34 @@ contract StateReceiver is System {
         bundles[bundleCounter++] = bundle;
     }
 
-    function execute(StateSync[] calldata objs) external {
+    function execute(
+        bytes32[] calldata proof,
+        bytes32 leaf,
+        StateSync[] calldata objs
+    ) external {
+        require(
+            lastExecutedBundleCounter < bundleCounter,
+            "NOTHING_TO_EXECUTE"
+        );
+
         bytes32 dataHash = keccak256(abi.encode(objs));
 
-        StateSyncBundle memory currentBundle = bundles[
-            lastExecutedBundleCounter
-        ];
+        require(dataHash == leaf, "NOT_LEAF");
 
-        require(currentBundle.hash == dataHash, "INVALID_HASH");
+        StateSyncBundle memory bundle = bundles[lastExecutedBundleCounter];
+
+        uint256 leafIndex = currentLeafIndex;
+
+        bool verify = leaf.checkMembership(++leafIndex, bundle.root, proof);
+
+        if (leafIndex == bundle.leaves) {
+            currentLeafIndex = 0;
+            delete bundles[lastExecutedBundleCounter++];
+        } else {
+            currentLeafIndex++;
+        }
+
+        require(verify, "INVALID_PROOF");
 
         uint256 currentId = counter;
 
