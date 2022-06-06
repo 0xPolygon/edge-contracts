@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
 
+import "hardhat/console.sol";
+
 // StateReceiver is the contract which executes and relays the state data on Polygon
 contract StateReceiver is System {
     using Merkle for bytes32;
@@ -62,11 +64,9 @@ contract StateReceiver is System {
         bundles[bundleCounter++] = bundle;
     }
 
-    function execute(
-        bytes32[] calldata proof,
-        bytes32 leaf,
-        StateSync[] calldata objs
-    ) external {
+    function execute(bytes32[] calldata proof, StateSync[] calldata objs)
+        external
+    {
         require(
             lastExecutedBundleCounter < bundleCounter,
             "NOTHING_TO_EXECUTE"
@@ -74,13 +74,13 @@ contract StateReceiver is System {
 
         bytes32 dataHash = keccak256(abi.encode(objs));
 
-        require(dataHash == leaf, "NOT_LEAF");
-
         StateSyncBundle memory bundle = bundles[lastExecutedBundleCounter];
 
         uint256 leafIndex = currentLeafIndex;
 
-        bool verify = leaf.checkMembership(++leafIndex, bundle.root, proof);
+        console.log(leafIndex);
+
+        bool verify = dataHash.checkMembership(leafIndex++, bundle.root, proof);
 
         if (leafIndex == bundle.leaves) {
             currentLeafIndex = 0;
@@ -92,7 +92,6 @@ contract StateReceiver is System {
         require(verify, "INVALID_PROOF");
 
         uint256 currentId = counter;
-
         //uint256 estimatedBatchSize = (gasleft() - 3100) / MAX_GAS; // 2900 warm SSTORE + misc.
 
         for (uint256 index = 0; index < objs.length; index++) {
