@@ -18,6 +18,16 @@ describe("StateSender", () => {
     expect(await stateSender.counter()).to.equal(0);
   });
 
+  it("should check reciever address", async () => {
+    const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
+    const moreThanMaxData = "0x" + "00".repeat(dataMaxLength + 1); // notice `+ 1` here (it creates more than max data)
+    const receiver = "0x0000000000000000000000000000000000000000";
+
+    await expect(
+      stateSender.syncState(receiver, moreThanMaxData)
+    ).to.be.revertedWith("INVALID_RECEIVER");
+  });
+
   it("should check data length", async () => {
     const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
     const moreThanMaxData = "0x" + "00".repeat(dataMaxLength + 1); // notice `+ 1` here (it creates more than max data)

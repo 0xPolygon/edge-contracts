@@ -68,6 +68,21 @@ describe("StateReceiver", () => {
       "NO_STATESYNC_DATA"
     );
   });
+  it("State sync with not sequential id", async () => {
+    const increment = Math.floor(Math.random() * (10 - 1) + 1);
+    const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
+    stateSyncCounter = 1;
+    const stateSync = {
+      id: 2,
+      sender: ethers.constants.AddressZero,
+      receiver: stateReceivingContract.address,
+      data,
+      skip: false,
+    };
+    await expect(
+      systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)
+    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
+  });
   it("State sync", async () => {
     const increment = Math.floor(Math.random() * (10 - 1) + 1);
     const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
