@@ -79,11 +79,8 @@ describe("StateReceiver", () => {
       data,
       skip: false,
     };
-    await expect (
-      systemStateReceiver.stateSync(
-        stateSync,
-        ethers.constants.HashZero
-      )
+    await expect(
+      systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)
     ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
   it("State sync", async () => {

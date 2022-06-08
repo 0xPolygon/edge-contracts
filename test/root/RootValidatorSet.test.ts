@@ -52,12 +52,7 @@ describe("RootValidatorSet", () => {
     }
     addresses.push(accounts[0].address);
     await expect(
-      rootValidatorSet.initialize(
-        bls.address,
-        addresses,
-        pubkeys,
-        messagePoint
-      )
+      rootValidatorSet.initialize(bls.address, addresses, pubkeys, messagePoint)
     ).to.be.revertedWith("LENGTH_MISMATCH");
   });
   it("Initialize and validate initialization", async () => {
@@ -121,10 +116,7 @@ describe("RootValidatorSet", () => {
     const newRootValidatorSet = rootValidatorSet.connect(signer);
     parsedPubkey = mcl.g2ToHex(pubkey);
     await expect(
-      newRootValidatorSet.register(
-        mcl.g1ToHex(signature),
-        parsedPubkey
-      )
+      newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
     ).to.be.revertedWith("INVALID_SIGNATURE");
   });
   it("Register a validator: whitelisted address", async () => {

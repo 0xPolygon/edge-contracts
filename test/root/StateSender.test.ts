@@ -27,7 +27,7 @@ describe("StateSender", () => {
       stateSender.syncState(receiver, moreThanMaxData)
     ).to.be.revertedWith("INVALID_RECEIVER");
   });
-  
+
   it("should check data length", async () => {
     const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
     const moreThanMaxData = "0x" + "00".repeat(dataMaxLength + 1); // notice `+ 1` here (it creates more than max data)
