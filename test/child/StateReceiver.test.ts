@@ -68,7 +68,7 @@ describe("StateReceiver", () => {
       "NO_STATESYNC_DATA"
     );
   });
-  it("State sync with not sequential id", async () => {
+  it("State sync with non-sequential id", async () => {
     const increment = Math.floor(Math.random() * (10 - 1) + 1);
     const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
     stateSyncCounter = 1;

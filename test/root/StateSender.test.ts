@@ -14,13 +14,13 @@ describe("StateSender", () => {
     await stateSender.deployed();
   });
 
-  it("should set initial params properly", async () => {
+  it("Should set initial params properly", async () => {
     expect(await stateSender.counter()).to.equal(0);
   });
 
-  it("should check reciever address", async () => {
-    const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
-    const moreThanMaxData = "0x" + "00".repeat(dataMaxLength + 1); // notice `+ 1` here (it creates more than max data)
+  it("Should check receiver address", async () => {
+    const maxDataLength = (await stateSender.MAX_LENGTH()).toNumber();
+    const moreThanMaxData = "0x" + "00".repeat(maxDataLength + 1); // notice `+ 1` here (it creates more than max data)
     const receiver = "0x0000000000000000000000000000000000000000";
 
     await expect(
@@ -28,9 +28,9 @@ describe("StateSender", () => {
     ).to.be.revertedWith("INVALID_RECEIVER");
   });
 
-  it("should check data length", async () => {
-    const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
-    const moreThanMaxData = "0x" + "00".repeat(dataMaxLength + 1); // notice `+ 1` here (it creates more than max data)
+  it("Should check data length", async () => {
+    const maxDataLength = (await stateSender.MAX_LENGTH()).toNumber();
+    const moreThanMaxData = "0x" + "00".repeat(maxDataLength + 1); // notice `+ 1` here (it creates more than max data)
     const receiver = accounts[2].address;
 
     await expect(
@@ -38,9 +38,9 @@ describe("StateSender", () => {
     ).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
   });
 
-  it("should emit event properly", async () => {
-    const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
-    const maxData = "0x" + "00".repeat(dataMaxLength);
+  it("Should emit event properly", async () => {
+    const maxDataLength = (await stateSender.MAX_LENGTH()).toNumber();
+    const maxData = "0x" + "00".repeat(maxDataLength);
     const sender = accounts[0].address;
     const receiver = accounts[1].address;
 
@@ -55,10 +55,10 @@ describe("StateSender", () => {
     expect(event?.args?.data).to.equal(maxData);
   });
 
-  it("should increase counter properly", async () => {
-    const dataMaxLength = (await stateSender.MAX_LENGTH()).toNumber();
-    const maxData = "0x" + "00".repeat(dataMaxLength);
-    const moreThanMaxData = "0x" + "00".repeat(dataMaxLength + 1);
+  it("Should increase counter properly", async () => {
+    const maxDataLength = (await stateSender.MAX_LENGTH()).toNumber();
+    const maxData = "0x" + "00".repeat(maxDataLength);
+    const moreThanMaxData = "0x" + "00".repeat(maxDataLength + 1);
     const receiver = accounts[1].address;
 
     const initialCounter = (await stateSender.counter()).toNumber();
