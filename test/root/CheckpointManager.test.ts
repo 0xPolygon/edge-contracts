@@ -4,13 +4,19 @@ import { BigNumberish } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
-import { BLS, BN256G2, CheckpointManager } from "../../typechain";
+import {
+  BLS,
+  BN256G2,
+  RootValidatorSet,
+  CheckpointManager,
+} from "../../typechain";
 
 const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 
 describe("CheckpointManager", () => {
   let bls: BLS,
     bn256G2: BN256G2,
+    rootValidatorSet: RootValidatorSet,
     checkpointManager: CheckpointManager,
     submitCounter: number,
     validatorSetSize: number,
@@ -18,25 +24,40 @@ describe("CheckpointManager", () => {
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
+
     const BLS = await ethers.getContractFactory("BLS");
     bls = await BLS.deploy();
+    await bls.deployed();
+
     const BN256G2 = await ethers.getContractFactory("BN256G2");
     bn256G2 = await BN256G2.deploy();
+    await bn256G2.deployed();
 
-    await bls.deployed();
+    const RootValidatorSet = await ethers.getContractFactory(
+      "RootValidatorSet"
+    );
+    rootValidatorSet = await RootValidatorSet.deploy();
+    await rootValidatorSet.deployed();
 
     const CheckpointManager = await ethers.getContractFactory(
       "CheckpointManager"
     );
     checkpointManager = await CheckpointManager.deploy();
-
     await checkpointManager.deployed();
   });
 
   it("Initialize and validate initialization", async () => {
-    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN);
+    await checkpointManager.initialize(
+      bls.address,
+      bn256G2.address,
+      rootValidatorSet.address,
+      DOMAIN
+    );
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
+    expect(await checkpointManager.rootValidatorSet()).to.equal(
+      rootValidatorSet.address
+    );
     expect(await checkpointManager.domain()).to.equal(DOMAIN);
   });
 
