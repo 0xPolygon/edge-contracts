@@ -70,6 +70,45 @@ contract CheckpointManager is Initializable {
         uint256[2] calldata signature,
         uint256[] calldata validatorIds
     ) external {
+        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
+        uint256[2] memory message = bls.hashToPoint(domain, hash);
+
+        require(
+            _verifySignature(message, signature, validatorIds),
+            "SIGNATURE_VERIFICATION_FAILED"
+        );
+
+        _storeCheckpoint(id, checkpoint);
+    }
+
+    function submitBatch(
+        uint256[] calldata ids,
+        Checkpoint[] calldata checkpointBatch,
+        uint256[2] calldata signature,
+        uint256[] calldata validatorIds
+    ) external {
+        bytes memory hash = abi.encode(
+            keccak256(abi.encode(ids, checkpointBatch))
+        );
+        uint256[2] memory message = bls.hashToPoint(domain, hash);
+
+        require(
+            _verifySignature(message, signature, validatorIds),
+            "SIGNATURE_VERIFICATION_FAILED"
+        );
+
+        uint256 length = ids.length;
+
+        require(length == checkpointBatch.length, "LENGTH_MISMATCH");
+
+        for (uint256 i = 0; i < length; ++i) {
+            _storeCheckpoint(ids[i], checkpointBatch[i]);
+        }
+    }
+
+    function _storeCheckpoint(uint256 id, Checkpoint calldata checkpoint)
+        internal
+    {
         uint256 currentId = currentCheckpointId;
         require(id == currentId + 1, "ID_NOT_SEQUENTIAL");
         Checkpoint memory oldCheckpoint = checkpoints[currentId];
@@ -81,15 +120,6 @@ contract CheckpointManager is Initializable {
             checkpoint.endBlock > checkpoint.startBlock,
             "EMPTY_CHECKPOINT"
         );
-
-        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
-        uint256[2] memory message = bls.hashToPoint(domain, hash);
-
-        require(
-            _verifySignature(message, signature, validatorIds),
-            "SIGNATURE_VERIFICATION_FAILED"
-        );
-
         checkpoints[currentCheckpointId++] = checkpoint;
     }
 
