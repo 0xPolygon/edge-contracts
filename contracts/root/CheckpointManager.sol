@@ -81,6 +81,23 @@ contract CheckpointManager is Initializable {
             checkpoint.endBlock > checkpoint.startBlock,
             "EMPTY_CHECKPOINT"
         );
+
+        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
+        uint256[2] memory message = bls.hashToPoint(domain, hash);
+
+        require(
+            _verifySignature(message, signature, validatorIds),
+            "SIGNATURE_VERIFICATION_FAILED"
+        );
+
+        checkpoints[currentCheckpointId++] = checkpoint;
+    }
+
+    function _verifySignature(
+        uint256[2] memory message,
+        uint256[2] calldata signature,
+        uint256[] calldata validatorIds
+    ) internal returns (bool) {
         uint256 length = validatorIds.length;
         // we assume here that length will always be more than 2 since validator set at genesis is larger than 6
         require(
@@ -107,14 +124,12 @@ contract CheckpointManager is Initializable {
                     blsKey[3]
                 );
         }
-        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
-        uint256[2] memory message = bls.hashToPoint(domain, hash);
+
         (bool callSuccess, bool result) = bls.verifySingle(
             signature,
             aggPubkey,
             message
         );
-        require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
-        checkpoints[currentCheckpointId++] = checkpoint;
+        return callSuccess && result;
     }
 }
