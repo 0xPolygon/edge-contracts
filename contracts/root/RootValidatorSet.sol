@@ -26,6 +26,8 @@ contract RootValidatorSet is Initializable, Ownable {
     mapping(address => uint256) public validatorIdByAddress;
     mapping(address => bool) public whitelist;
 
+    uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
+
     event NewValidator(
         uint256 indexed id,
         address indexed validator,
@@ -131,5 +133,13 @@ contract RootValidatorSet is Initializable, Ownable {
         validatorIdByAddress[msg.sender] = currentId;
 
         emit NewValidator(currentId, msg.sender, pubkey);
+    }
+
+    function activeValidatorSetSize() external view returns (uint256) {
+        if (currentValidatorId < ACTIVE_VALIDATOR_SET_SIZE) {
+            return currentValidatorId;
+        } else {
+            return ACTIVE_VALIDATOR_SET_SIZE;
+        }
     }
 }

@@ -12,6 +12,8 @@ interface IRootValidatorSet {
     }
 
     function validators(uint256 id) external returns (Validator memory);
+
+    function activeValidatorSetSize() external returns (uint256);
 }
 
 interface IBN256G2 {
@@ -46,16 +48,19 @@ contract CheckpointManager is Initializable {
     bytes32 public domain;
     IBLS public bls;
     IBN256G2 public bn256G2;
+    IRootValidatorSet public rootValidatorSet;
 
     mapping(uint256 => Checkpoint) public checkpoints;
 
     function initialize(
         IBLS newBls,
-        IBN256G2 newbn256G2,
+        IBN256G2 newBn256G2,
+        IRootValidatorSet newRootValidatorSet,
         bytes32 newDomain
     ) external initializer {
         bls = newBls;
-        bn256G2 = newbn256G2;
+        bn256G2 = newBn256G2;
+        rootValidatorSet = newRootValidatorSet;
         domain = newDomain;
     }
 
@@ -63,7 +68,7 @@ contract CheckpointManager is Initializable {
         uint256 id,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,
-        uint256[4][] calldata validatorSet
+        uint256[] calldata validatorIds
     ) external {
         uint256 currentId = currentCheckpointId;
         require(id == currentId + 1, "ID_NOT_SEQUENTIAL");
@@ -76,21 +81,19 @@ contract CheckpointManager is Initializable {
             checkpoint.endBlock > checkpoint.startBlock,
             "EMPTY_CHECKPOINT"
         );
-        uint256 length = validatorSet.length;
-        require(length >= 2, "INVALID_LENGTH");
-        uint256[4] memory aggPubkey;
-        (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2
-            .ecTwistAdd(
-                validatorSet[0][0],
-                validatorSet[0][1],
-                validatorSet[0][2],
-                validatorSet[0][3],
-                validatorSet[1][0],
-                validatorSet[1][1],
-                validatorSet[1][2],
-                validatorSet[1][3]
-            );
-        for (uint256 i = 2; i < length; ++i) {
+        uint256 length = validatorIds.length;
+        // we assume here that length will always be more than 2 since validator set at genesis is larger than 6
+        require(
+            length > ((2 * rootValidatorSet.activeValidatorSetSize()) / 3),
+            "NOT_ENOUGH_SIGNATURES"
+        );
+        uint256[4] memory aggPubkey = rootValidatorSet
+            .validators(validatorIds[0])
+            .blsKey;
+        for (uint256 i = 1; i < length; ++i) {
+            uint256[4] memory blsKey = rootValidatorSet
+                .validators(validatorIds[i])
+                .blsKey;
             // slither-disable-next-line calls-loop
             (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2
                 .ecTwistAdd(
@@ -98,10 +101,10 @@ contract CheckpointManager is Initializable {
                     aggPubkey[1],
                     aggPubkey[2],
                     aggPubkey[3],
-                    validatorSet[1][0],
-                    validatorSet[1][1],
-                    validatorSet[1][2],
-                    validatorSet[1][3]
+                    blsKey[0],
+                    blsKey[1],
+                    blsKey[2],
+                    blsKey[3]
                 );
         }
         bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
