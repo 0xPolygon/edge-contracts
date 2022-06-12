@@ -37,6 +37,12 @@ interface IBN256G2 {
         );
 }
 
+/**
+    @title CheckpointManager
+    @author Polygon Technology
+    @notice Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
+    @dev The contract is used to submit checkpoints and verify that they have been signed as expected.
+ */
 contract CheckpointManager is Initializable {
     struct Checkpoint {
         uint256 startBlock;
@@ -52,6 +58,14 @@ contract CheckpointManager is Initializable {
 
     mapping(uint256 => Checkpoint) public checkpoints;
 
+    /**
+     * @notice Initialization function for CheckpointManager
+     * @dev Contract can only be initialized once
+     * @param newBls Address of the BLS library contract
+     * @param newBn256G2 Address of the BLS library contract
+     * @param newRootValidatorSet Array of validator addresses to seed the contract with
+     * @param newDomain Domain to use when hashing messages to a point
+     */
     function initialize(
         IBLS newBls,
         IBN256G2 newBn256G2,
@@ -64,6 +78,14 @@ contract CheckpointManager is Initializable {
         domain = newDomain;
     }
 
+    /**
+     * @notice Function to submit a single checkpoint to CheckpointManager
+     * @dev Contract internally verifies provided signature against stored validator set
+     * @param id ID of the checkpoint
+     * @param checkpoint The checkpoint to store
+     * @param signature The aggregated signature submitted by proposer
+     * @param validatorIds Array of the IDs of validators who have signed the checkpoint
+     */
     function submit(
         uint256 id,
         Checkpoint calldata checkpoint,
@@ -81,6 +103,14 @@ contract CheckpointManager is Initializable {
         _storeCheckpoint(id, checkpoint);
     }
 
+    /**
+     * @notice Function to submit a batch of checkpoints to CheckpointManager
+     * @dev Contract internally verifies provided signature against stored validator set
+     * @param ids IDs of the checkpoint batch
+     * @param checkpointBatch The checkpoint batch to store
+     * @param signature The aggregated signature submitted by the proposer
+     * @param validatorIds Array of the IDs of validators who have signed the checkpoint
+     */
     function submitBatch(
         uint256[] calldata ids,
         Checkpoint[] calldata checkpointBatch,
@@ -106,6 +136,11 @@ contract CheckpointManager is Initializable {
         }
     }
 
+    /**
+     * @notice Internal function that performs some checks and stores the checkpoint
+     * @param id ID of the checkpoint
+     * @param checkpoint The checkpoint to store
+     */
     function _storeCheckpoint(uint256 id, Checkpoint calldata checkpoint)
         internal
     {
@@ -123,6 +158,12 @@ contract CheckpointManager is Initializable {
         checkpoints[currentCheckpointId++] = checkpoint;
     }
 
+    /**
+     * @notice Internal function that asserts that the signature is valid and that the required threshold is met
+     * @param message The message that was signed by validators (i.e. checkpoint hash)
+     * @param signature The aggregated signature submitted by the proposer
+     * @param validatorIds Array of the IDs of validators who have signed the checkpoint
+     */
     function _verifySignature(
         uint256[2] memory message,
         uint256[2] calldata signature,
