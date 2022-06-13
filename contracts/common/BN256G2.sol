@@ -348,9 +348,9 @@ contract BN256G2 {
         returns (uint256 result)
     {
         bool success;
+        // prettier-ignore
         // slither-disable-next-line assembly
-        assembly {
-            // solhint-disable-line no-inline-assembly
+        assembly { // solhint-disable-line no-inline-assembly
             let freemem := mload(0x40)
             mstore(freemem, 0x20)
             mstore(add(freemem, 0x20), 0x20)
