@@ -93,14 +93,18 @@ contract CheckpointManager is Initializable {
         uint256[] calldata validatorIds
     ) external {
         bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
+
         uint256[2] memory message = bls.hashToPoint(domain, hash);
 
+        // slither-disable-next-line reentrancy-benign
         require(
             _verifySignature(message, signature, validatorIds),
             "SIGNATURE_VERIFICATION_FAILED"
         );
 
-        _storeCheckpoint(id, checkpoint);
+        _verifyCheckpoint(currentCheckpointId, id, checkpoint);
+
+        checkpoints[currentCheckpointId++] = checkpoint;
     }
 
     /**
@@ -120,8 +124,10 @@ contract CheckpointManager is Initializable {
         bytes memory hash = abi.encode(
             keccak256(abi.encode(ids, checkpointBatch))
         );
+
         uint256[2] memory message = bls.hashToPoint(domain, hash);
 
+        // slither-disable-next-line reentrancy-benign
         require(
             _verifySignature(message, signature, validatorIds),
             "SIGNATURE_VERIFICATION_FAILED"
@@ -131,22 +137,29 @@ contract CheckpointManager is Initializable {
 
         require(length == checkpointBatch.length, "LENGTH_MISMATCH");
 
+        uint256 prevId = currentCheckpointId;
+
         for (uint256 i = 0; i < length; ++i) {
-            _storeCheckpoint(ids[i], checkpointBatch[i]);
+            _verifyCheckpoint(prevId++, ids[i], checkpointBatch[i]);
+            checkpoints[ids[i]] = checkpointBatch[i];
         }
+
+        currentCheckpointId = prevId;
     }
 
     /**
-     * @notice Internal function that performs some checks and stores the checkpoint
+     * @notice Internal function that performs checks on the checkpoint
+     * @param prevId Current checkpoint ID
      * @param id ID of the checkpoint
      * @param checkpoint The checkpoint to store
      */
-    function _storeCheckpoint(uint256 id, Checkpoint calldata checkpoint)
-        internal
-    {
-        uint256 currentId = currentCheckpointId;
-        require(id == currentId + 1, "ID_NOT_SEQUENTIAL");
-        Checkpoint memory oldCheckpoint = checkpoints[currentId];
+    function _verifyCheckpoint(
+        uint256 prevId,
+        uint256 id,
+        Checkpoint calldata checkpoint
+    ) internal view {
+        require(id == prevId + 1, "ID_NOT_SEQUENTIAL");
+        Checkpoint memory oldCheckpoint = checkpoints[prevId];
         require(
             oldCheckpoint.endBlock + 1 == checkpoint.startBlock,
             "INVALID_START_BLOCK"
@@ -155,7 +168,6 @@ contract CheckpointManager is Initializable {
             checkpoint.endBlock > checkpoint.startBlock,
             "EMPTY_CHECKPOINT"
         );
-        checkpoints[currentCheckpointId++] = checkpoint;
     }
 
     /**
