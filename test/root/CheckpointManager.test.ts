@@ -115,4 +115,61 @@ describe("CheckpointManager", () => {
       )
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
+
+  it("Submit with invalid length", async () => {
+    submitCounter = 1;
+    const checkPoint = {
+      startBlock: 1,
+      endBlock: 100,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    await expect(
+      checkpointManager.submit(
+        submitCounter,
+        checkPoint,
+        [
+          ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+          ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+        ],
+        []
+      )
+    ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
+  });
+
+  it("Submit", async () => {
+    submitCounter = 1;
+    const checkPoint = {
+      startBlock: 1,
+      endBlock: 100,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 2); // Randomly pick 2-6
+    const validatorSet: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ][] = [];
+
+    for (let i = 0; i < validatorSetSize; i++) {
+      validatorSet.push([
+        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ]);
+    }
+
+    // await checkpointManager.submit(
+    //   submitCounter,
+    //   checkPoint,
+    //   [
+    //     ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    //     ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    //   ],
+    //   validatorSet
+    // );
+  });
 });
