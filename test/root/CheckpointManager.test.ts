@@ -13,10 +13,6 @@ import {
 
 const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 
-const DOMAIN_ROOTVALIDATOR = ethers.utils.arrayify(
-  ethers.utils.hexlify(ethers.utils.randomBytes(32))
-);
-
 describe("CheckpointManager", () => {
   let bls: BLS,
     bn256G2: BN256G2,
@@ -68,7 +64,7 @@ describe("CheckpointManager", () => {
 
   it("Submit with invalid length", async () => {
     submitCounter = 1;
-    const checkPoint = {
+    const checkpoint = {
       startBlock: 1,
       endBlock: 100,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -77,7 +73,7 @@ describe("CheckpointManager", () => {
     await expect(
       checkpointManager.submit(
         submitCounter,
-        checkPoint,
+        checkpoint,
         [
           ethers.utils.hexlify(ethers.utils.randomBytes(32)),
           ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -87,11 +83,11 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
   });
 
-  it("Initialize RootValidator and validate initialization", async () => {
+  it("Initialize RootValidatorSet and validate initialization", async () => {
     const messagePoint = mcl.g1ToHex(
       mcl.hashToPoint(
         ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")),
-        DOMAIN_ROOTVALIDATOR
+        ethers.utils.arrayify(DOMAIN)
       )
     );
     // validatorSetSize = Math.floor(Math.random() * (5 - 1) + 4); // Randomly pick 1-5
@@ -134,22 +130,27 @@ describe("CheckpointManager", () => {
 
   it("Submit with non-sequential id", async () => {
     submitCounter = 2;
-    const checkPoint = {
+    const checkpoint = {
       startBlock: 100,
       endBlock: 200,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
-    console.log("validator size")
+    console.log("validator size");
     console.log(await rootValidatorSet.activeValidatorSetSize());
     await expect(
-      checkpointManager.submit(submitCounter, checkPoint, [DOMAIN, DOMAIN], [1, 2, 3])
+      checkpointManager.submit(
+        submitCounter,
+        checkpoint,
+        [DOMAIN, DOMAIN],
+        [1, 2, 3]
+      )
     ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 
   it("Submit with invalid start block", async () => {
     submitCounter = 1;
-    const checkPoint = {
+    const checkpoint = {
       startBlock: 100,
       endBlock: 200,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -158,7 +159,7 @@ describe("CheckpointManager", () => {
     await expect(
       checkpointManager.submit(
         submitCounter,
-        checkPoint,
+        checkpoint,
         [
           ethers.utils.hexlify(ethers.utils.randomBytes(32)),
           ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -170,7 +171,7 @@ describe("CheckpointManager", () => {
 
   it("Submit with empty checkpoint", async () => {
     submitCounter = 1;
-    const checkPoint = {
+    const checkpoint = {
       startBlock: 1,
       endBlock: 0,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -179,7 +180,7 @@ describe("CheckpointManager", () => {
     await expect(
       checkpointManager.submit(
         submitCounter,
-        checkPoint,
+        checkpoint,
         [
           ethers.utils.hexlify(ethers.utils.randomBytes(32)),
           ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -189,9 +190,9 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
-  it("Submit", async () => {
+  it("Submit checkpoint", async () => {
     submitCounter = 1;
-    const checkPoint = {
+    const checkpoint = {
       startBlock: 1,
       endBlock: 100,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -216,7 +217,7 @@ describe("CheckpointManager", () => {
 
     // await checkpointManager.submit(
     //   submitCounter,
-    //   checkPoint,
+    //   checkpoint,
     //   [
     //     ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     //     ethers.utils.hexlify(ethers.utils.randomBytes(32)),
