@@ -5,13 +5,10 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../interfaces/IBLS.sol";
 
 interface IRootValidatorSet {
-    struct Validator {
-        uint256 id;
-        address _address;
-        uint256[4] blsKey;
-    }
-
-    function validators(uint256 id) external returns (Validator memory);
+    function getValidatorBlsKey(uint256 id)
+        external
+        view
+        returns (uint256[4] memory);
 
     function activeValidatorSetSize() external returns (uint256);
 }
@@ -187,13 +184,13 @@ contract CheckpointManager is Initializable {
             length > ((2 * rootValidatorSet.activeValidatorSetSize()) / 3),
             "NOT_ENOUGH_SIGNATURES"
         );
-        uint256[4] memory aggPubkey = rootValidatorSet
-            .validators(validatorIds[0])
-            .blsKey;
+        uint256[4] memory aggPubkey = rootValidatorSet.getValidatorBlsKey(
+            validatorIds[0]
+        );
         for (uint256 i = 1; i < length; ++i) {
-            uint256[4] memory blsKey = rootValidatorSet
-                .validators(validatorIds[i])
-                .blsKey;
+            uint256[4] memory blsKey = rootValidatorSet.getValidatorBlsKey(
+                validatorIds[i]
+            );
             // slither-disable-next-line calls-loop
             (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2
                 .ecTwistAdd(
@@ -213,6 +210,7 @@ contract CheckpointManager is Initializable {
             aggPubkey,
             message
         );
+
         return callSuccess && result;
     }
 }

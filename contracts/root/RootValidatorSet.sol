@@ -135,6 +135,18 @@ contract RootValidatorSet is Initializable, Ownable {
         emit NewValidator(currentId, msg.sender, pubkey);
     }
 
+    function getValidator(uint256 id) external view returns (Validator memory) {
+        return validators[id];
+    }
+
+    function getValidatorBlsKey(uint256 id)
+        external
+        view
+        returns (uint256[4] memory)
+    {
+        return validators[id].blsKey;
+    }
+
     function activeValidatorSetSize() external view returns (uint256) {
         if (currentValidatorId < ACTIVE_VALIDATOR_SET_SIZE) {
             return currentValidatorId;
