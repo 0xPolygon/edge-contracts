@@ -20,6 +20,8 @@ describe("CheckpointManager", () => {
     checkpointManager: CheckpointManager,
     submitCounter: number,
     validatorSetSize: number,
+    eventRoot: any,
+    validatorSecretKeys: any[],
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     await mcl.init();
@@ -44,6 +46,8 @@ describe("CheckpointManager", () => {
     );
     checkpointManager = await CheckpointManager.deploy();
     await checkpointManager.deployed();
+
+    eventRoot = ethers.utils.randomBytes(32);
   });
 
   it("Initialize and validate initialization", async () => {
@@ -94,19 +98,22 @@ describe("CheckpointManager", () => {
     validatorSetSize = 3;
     let addresses = [];
     let pubkeys = [];
+    validatorSecretKeys = [];
+    let pubkeys2 = [];
     for (let i = 0; i < validatorSetSize; i++) {
       const { pubkey, secret } = mcl.newKeyPair();
+      validatorSecretKeys.push(secret);
       pubkeys.push(mcl.g2ToHex(pubkey));
+      pubkeys2.push(pubkey);
       addresses.push(accounts[i].address);
     }
+
     await rootValidatorSet.initialize(
       bls.address,
       addresses,
       pubkeys,
       messagePoint
     );
-
-    // console.log(await rootValidatorSet.validators(2));
 
     expect(await rootValidatorSet.currentValidatorId()).to.equal(
       validatorSetSize
@@ -133,16 +140,36 @@ describe("CheckpointManager", () => {
     const checkpoint = {
       startBlock: 100,
       endBlock: 200,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      eventRoot,
     };
 
-    console.log("validator size");
-    console.log(await rootValidatorSet.activeValidatorSetSize());
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
+        [submitCounter, checkpoint]
+      )
+    );
+
+    const signatures: mcl.Signature[] = [];
+
+    for (const key of validatorSecretKeys) {
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        key,
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
+
     await expect(
       checkpointManager.submit(
         submitCounter,
         checkpoint,
-        [DOMAIN, DOMAIN],
+        aggMessagePoint,
         [1, 2, 3]
       )
     ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
@@ -153,18 +180,37 @@ describe("CheckpointManager", () => {
     const checkpoint = {
       startBlock: 100,
       endBlock: 200,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      eventRoot,
     };
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
+        [submitCounter, checkpoint]
+      )
+    );
+
+    const signatures: mcl.Signature[] = [];
+
+    for (const key of validatorSecretKeys) {
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        key,
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
 
     await expect(
       checkpointManager.submit(
         submitCounter,
         checkpoint,
-        [
-          ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-          ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-        ],
-        []
+        aggMessagePoint,
+        [1, 2, 3]
       )
     ).to.be.revertedWith("INVALID_START_BLOCK");
   });
@@ -174,18 +220,37 @@ describe("CheckpointManager", () => {
     const checkpoint = {
       startBlock: 1,
       endBlock: 0,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      eventRoot,
     };
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
+        [submitCounter, checkpoint]
+      )
+    );
+
+    const signatures: mcl.Signature[] = [];
+
+    for (const key of validatorSecretKeys) {
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        key,
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
 
     await expect(
       checkpointManager.submit(
         submitCounter,
         checkpoint,
-        [
-          ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-          ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-        ],
-        []
+        aggMessagePoint,
+        [1, 2, 3]
       )
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
@@ -195,34 +260,36 @@ describe("CheckpointManager", () => {
     const checkpoint = {
       startBlock: 1,
       endBlock: 100,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      eventRoot,
     };
 
-    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 2); // Randomly pick 2-6
-    const validatorSet: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ][] = [];
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
+        [submitCounter, checkpoint]
+      )
+    );
 
-    for (let i = 0; i < validatorSetSize; i++) {
-      validatorSet.push([
-        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-        ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-      ]);
+    const signatures: mcl.Signature[] = [];
+
+    for (const key of validatorSecretKeys) {
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        key,
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
     }
 
-    // await checkpointManager.submit(
-    //   submitCounter,
-    //   checkpoint,
-    //   [
-    //     ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-    //     ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-    //   ],
-    //   validatorSet
-    // );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
+
+    await checkpointManager.submit(
+      submitCounter,
+      checkpoint,
+      aggMessagePoint,
+      [1, 2, 3]
+    );
   });
 });
