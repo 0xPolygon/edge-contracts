@@ -193,12 +193,7 @@ describe("CheckpointManager", () => {
     );
 
     await expect(
-      checkpointManager.submit(
-        id,
-        checkpoint,
-        aggMessagePoint,
-        validatorIds
-      )
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
     ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
@@ -240,19 +235,14 @@ describe("CheckpointManager", () => {
     );
 
     await expect(
-      checkpointManager.submit(
-        id,
-        checkpoint,
-        aggMessagePoint,
-        validatorIds
-      )
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
     ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 
   it("Submit checkpoint with invalid start block", async () => {
     const id = submitCounter;
     const checkpoint = {
-      startBlock: startBlock + 1,     
+      startBlock: startBlock + 1,
       endBlock: startBlock + 101,
       eventRoot,
     }; //invalid start block
@@ -287,12 +277,7 @@ describe("CheckpointManager", () => {
     );
 
     await expect(
-      checkpointManager.submit(
-        id,
-        checkpoint,
-        aggMessagePoint,
-        validatorIds
-      )
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
     ).to.be.revertedWith("INVALID_START_BLOCK");
   });
 
@@ -302,7 +287,7 @@ describe("CheckpointManager", () => {
       startBlock: startBlock,
       endBlock: 0,
       eventRoot,
-    };  //endBlock < startBlock for empty checkpoint
+    }; //endBlock < startBlock for empty checkpoint
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
@@ -334,12 +319,7 @@ describe("CheckpointManager", () => {
     );
 
     await expect(
-      checkpointManager.submit(
-        id,
-        checkpoint,
-        aggMessagePoint,
-        validatorIds
-      )
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
@@ -387,16 +367,17 @@ describe("CheckpointManager", () => {
       validatorIds
     );
 
-    submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    submitCounter =
+      (await checkpointManager.currentCheckpointId()).toNumber() + 1;
     expect(submitCounter).to.equal(2);
 
     const endBlock = (await checkpointManager.checkpoints(1)).endBlock;
     expect(endBlock).to.equal(101);
     startBlock = endBlock.toNumber() + 1;
   });
-  
+
   it("Submitbatch checkpoints with mismatch length", async () => {
-    const id  = submitCounter;
+    const id = submitCounter;
     const checkpoint1 = {
       startBlock: startBlock,
       endBlock: startBlock + 100,
@@ -552,7 +533,7 @@ describe("CheckpointManager", () => {
   });
 
   it("SubmitBatch empty checkpoint", async () => {
-    const id  = submitCounter;
+    const id = submitCounter;
     const checkpoint = {
       startBlock: 1,
       endBlock: 0,
@@ -632,17 +613,12 @@ describe("CheckpointManager", () => {
     );
 
     await expect(
-      checkpointManager.submitBatch(
-        [id],
-        [checkpoint],
-        aggMessagePoint,
-        []
-      )
+      checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, [])
     ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
   });
 
   it("Submitbatch checkpoint with signature failing verification", async () => {
-    const id  = submitCounter;
+    const id = submitCounter;
     const checkpoint = {
       startBlock: 100,
       endBlock: 200,
@@ -651,7 +627,10 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        ],
         [[id], [checkpoint]]
       )
     );
@@ -704,8 +683,14 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
-        [[id, id + 1], [checkpoint1, checkpoint2]]
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        ],
+        [
+          [id, id + 1],
+          [checkpoint1, checkpoint2],
+        ]
       )
     );
 
