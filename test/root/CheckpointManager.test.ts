@@ -19,6 +19,7 @@ describe("CheckpointManager", () => {
     rootValidatorSet: RootValidatorSet,
     checkpointManager: CheckpointManager,
     submitCounter: number,
+    startBlock: number,
     validatorSetSize: number,
     eventRoot: any,
     validatorSecretKeys: any[],
@@ -64,6 +65,11 @@ describe("CheckpointManager", () => {
     );
     expect(await rootValidatorSet.activeValidatorSetSize()).to.equal(0);
     expect(await checkpointManager.domain()).to.equal(DOMAIN);
+    const endBlock = (await checkpointManager.checkpoints(0)).endBlock;
+    expect(endBlock).to.equal(0);
+    startBlock = endBlock.toNumber() + 1;
+    const prevId = await checkpointManager.currentCheckpointId();
+    submitCounter = prevId.toNumber() + 1;
   });
 
   it("Initialize RootValidatorSet and validate initialization", async () => {
@@ -115,17 +121,17 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint with invalid length", async () => {
-    submitCounter = 1;
+    const id = submitCounter;
     const checkpoint = {
-      startBlock: 1,
-      endBlock: 100,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -145,22 +151,22 @@ describe("CheckpointManager", () => {
     );
 
     await expect(
-      checkpointManager.submit(submitCounter, checkpoint, aggMessagePoint, [])
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, [])
     ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
   });
 
   it("Submit checkpoint with signature failing verification", async () => {
-    submitCounter = 2;
+    const id = submitCounter;
     const checkpoint = {
-      startBlock: 100,
-      endBlock: 200,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot,
     };
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -188,7 +194,7 @@ describe("CheckpointManager", () => {
 
     await expect(
       checkpointManager.submit(
-        submitCounter,
+        id,
         checkpoint,
         aggMessagePoint,
         validatorIds
@@ -197,17 +203,17 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint with non-sequential id", async () => {
-    submitCounter = 2;
+    const id = submitCounter + 1; // for non-sequeantial id
     const checkpoint = {
-      startBlock: 100,
-      endBlock: 200,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot,
     };
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -235,7 +241,7 @@ describe("CheckpointManager", () => {
 
     await expect(
       checkpointManager.submit(
-        submitCounter,
+        id,
         checkpoint,
         aggMessagePoint,
         validatorIds
@@ -244,17 +250,17 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint with invalid start block", async () => {
-    submitCounter = 1;
+    const id = submitCounter;
     const checkpoint = {
-      startBlock: 100,
-      endBlock: 200,
+      startBlock: startBlock + 1,     
+      endBlock: startBlock + 101,
       eventRoot,
-    };
+    }; //invalid start block
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -282,7 +288,7 @@ describe("CheckpointManager", () => {
 
     await expect(
       checkpointManager.submit(
-        submitCounter,
+        id,
         checkpoint,
         aggMessagePoint,
         validatorIds
@@ -291,17 +297,17 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit empty checkpoint", async () => {
-    submitCounter = 1;
+    const id = submitCounter;
     const checkpoint = {
-      startBlock: 1,
+      startBlock: startBlock,
       endBlock: 0,
       eventRoot,
-    };
+    };  //endBlock < startBlock for empty checkpoint
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -329,7 +335,7 @@ describe("CheckpointManager", () => {
 
     await expect(
       checkpointManager.submit(
-        submitCounter,
+        id,
         checkpoint,
         aggMessagePoint,
         validatorIds
@@ -338,17 +344,17 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint", async () => {
-    submitCounter = 1;
+    const id = submitCounter;
     const checkpoint = {
-      startBlock: 1,
-      endBlock: 100,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot,
     };
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -375,15 +381,228 @@ describe("CheckpointManager", () => {
     );
 
     await checkpointManager.submit(
-      submitCounter,
+      id,
       checkpoint,
       aggMessagePoint,
       validatorIds
     );
+
+    submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    expect(submitCounter).to.equal(2);
+
+    const endBlock = (await checkpointManager.checkpoints(1)).endBlock;
+    expect(endBlock).to.equal(101);
+    startBlock = endBlock.toNumber() + 1;
+  });
+  
+  it("Submitbatch checkpoints with mismatch length", async () => {
+    const id  = submitCounter;
+    const checkpoint1 = {
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const checkpoint2 = {
+      startBlock: startBlock + 101,
+      endBlock: startBlock + 201,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        ],
+        [[id], [checkpoint1, checkpoint2]]
+      )
+    );
+
+    const validatorIds = [];
+    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
+    const signatures: mcl.Signature[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const validatorId = Math.floor(
+        Math.random() * (validatorSetSize - 1) + 1
+      ); // 1 - validatorSetSize
+      validatorIds.push(validatorId);
+
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId - 1],
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
+
+    await expect(
+      checkpointManager.submitBatch(
+        [id],
+        [checkpoint1, checkpoint2],
+        aggMessagePoint,
+        validatorIds
+      )
+    ).to.be.revertedWith("LENGTH_MISMATCH");
   });
 
-  it("Submit checkpoint with invalid length", async () => {
-    submitCounter = 1;
+  it("SubmitBatch checkpoints with non-sequential id", async () => {
+    const id = submitCounter + 1; // for non-sequential id
+    const checkpoint = {
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        ],
+        [[id], [checkpoint]]
+      )
+    );
+
+    const validatorIds = [];
+    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
+    const signatures: mcl.Signature[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const validatorId = Math.floor(
+        Math.random() * (validatorSetSize - 1) + 1
+      ); // 1 - validatorSetSize
+      validatorIds.push(validatorId);
+
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId - 1],
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
+
+    await expect(
+      checkpointManager.submitBatch(
+        [id],
+        [checkpoint],
+        aggMessagePoint,
+        validatorIds
+      )
+    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
+  });
+
+  it("SubmitBatch checkpoints with invalid start block", async () => {
+    const id = submitCounter;
+    const checkpoint = {
+      startBlock: startBlock + 1,
+      endBlock: startBlock + 100,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    }; //invalid startBlock
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        ],
+        [[id], [checkpoint]]
+      )
+    );
+
+    const validatorIds = [];
+    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
+    const signatures: mcl.Signature[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const validatorId = Math.floor(
+        Math.random() * (validatorSetSize - 1) + 1
+      ); // 1 - validatorSetSize
+      validatorIds.push(validatorId);
+
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId - 1],
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
+
+    await expect(
+      checkpointManager.submitBatch(
+        [id],
+        [checkpoint],
+        aggMessagePoint,
+        validatorIds
+      )
+    ).to.be.revertedWith("INVALID_START_BLOCK");
+  });
+
+  it("SubmitBatch empty checkpoint", async () => {
+    const id  = submitCounter;
+    const checkpoint = {
+      startBlock: 1,
+      endBlock: 0,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        ],
+        [[id], [checkpoint]]
+      )
+    );
+
+    const validatorIds = [];
+    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
+    const signatures: mcl.Signature[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const validatorId = Math.floor(
+        Math.random() * (validatorSetSize - 1) + 1
+      ); // 1 - validatorSetSize
+      validatorIds.push(validatorId);
+
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId - 1],
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
+      mcl.aggregateRaw(signatures)
+    );
+
+    await expect(
+      checkpointManager.submitBatch(
+        [id],
+        [checkpoint],
+        aggMessagePoint,
+        validatorIds
+      )
+    ).to.be.revertedWith("EMPTY_CHECKPOINT");
+  });
+
+  it("Submitbatch checkpoint with invalid length", async () => {
+    const id = submitCounter;
     const checkpoint = {
       startBlock: 1,
       endBlock: 100,
@@ -393,7 +612,7 @@ describe("CheckpointManager", () => {
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        [id, checkpoint]
       )
     );
 
@@ -414,7 +633,7 @@ describe("CheckpointManager", () => {
 
     await expect(
       checkpointManager.submitBatch(
-        [submitCounter],
+        [id],
         [checkpoint],
         aggMessagePoint,
         []
@@ -422,8 +641,8 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
   });
 
-  it("Submit checkpoint with signature failing verification", async () => {
-    submitCounter = 2;
+  it("Submitbatch checkpoint with signature failing verification", async () => {
+    const id  = submitCounter;
     const checkpoint = {
       startBlock: 100,
       endBlock: 200,
@@ -432,8 +651,8 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [submitCounter, checkpoint]
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
+        [[id], [checkpoint]]
       )
     );
 
@@ -461,7 +680,7 @@ describe("CheckpointManager", () => {
 
     await expect(
       checkpointManager.submitBatch(
-        [submitCounter],
+        [id],
         [checkpoint],
         aggMessagePoint,
         validatorIds
@@ -469,27 +688,24 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
-  it("Submitbatch checkpoints with mismatch length", async () => {
-    submitCounter = 1;
+  it("SubmitBatch checkpoint", async () => {
+    const id = submitCounter;
     const checkpoint1 = {
-      startBlock: 1,
-      endBlock: 100,
+      startBlock: 101,
+      endBlock: 200,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
     const checkpoint2 = {
-      startBlock: 1,
-      endBlock: 100,
+      startBlock: 201,
+      endBlock: 300,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
-        [[submitCounter], [checkpoint1, checkpoint2]]
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
+        [[id, id + 1], [checkpoint1, checkpoint2]]
       )
     );
 
@@ -515,163 +731,11 @@ describe("CheckpointManager", () => {
       mcl.aggregateRaw(signatures)
     );
 
-    await expect(
-      checkpointManager.submitBatch(
-        [submitCounter],
-        [checkpoint1, checkpoint2],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("LENGTH_MISMATCH");
-  });
-
-  it("SubmitBatch checkpoints with non-sequential id", async () => {
-    submitCounter = 3;
-    const checkpoint = {
-      startBlock: 100,
-      endBlock: 200,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-    };
-
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
-        [[submitCounter], [checkpoint]]
-      )
+    await checkpointManager.submitBatch(
+      [id, id + 1],
+      [checkpoint1, checkpoint2],
+      aggMessagePoint,
+      validatorIds
     );
-
-    const validatorIds = [];
-    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
-    const signatures: mcl.Signature[] = [];
-
-    for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
-      validatorIds.push(validatorId);
-
-      const { signature, messagePoint } = mcl.sign(
-        message,
-        validatorSecretKeys[validatorId - 1],
-        ethers.utils.arrayify(DOMAIN)
-      );
-      signatures.push(signature);
-    }
-
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
-
-    await expect(
-      checkpointManager.submitBatch(
-        [submitCounter],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
-  });
-
-  it("SubmitBatch checkpoints with invalid start block", async () => {
-    submitCounter = 2;
-    const checkpoint = {
-      startBlock: 100,
-      endBlock: 200,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-    };
-
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
-        [[submitCounter], [checkpoint]]
-      )
-    );
-
-    const validatorIds = [];
-    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
-    const signatures: mcl.Signature[] = [];
-
-    for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
-      validatorIds.push(validatorId);
-
-      const { signature, messagePoint } = mcl.sign(
-        message,
-        validatorSecretKeys[validatorId - 1],
-        ethers.utils.arrayify(DOMAIN)
-      );
-      signatures.push(signature);
-    }
-
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
-
-    await expect(
-      checkpointManager.submitBatch(
-        [submitCounter],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("INVALID_START_BLOCK");
-  });
-
-  it("SubmitBatch empty checkpoint", async () => {
-    submitCounter = 2;
-    const checkpoint = {
-      startBlock: 1,
-      endBlock: 0,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-    };
-
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
-        [[submitCounter], [checkpoint]]
-      )
-    );
-
-    const validatorIds = [];
-    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
-    const signatures: mcl.Signature[] = [];
-
-    for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
-      validatorIds.push(validatorId);
-
-      const { signature, messagePoint } = mcl.sign(
-        message,
-        validatorSecretKeys[validatorId - 1],
-        ethers.utils.arrayify(DOMAIN)
-      );
-      signatures.push(signature);
-    }
-
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
-
-    await expect(
-      checkpointManager.submitBatch(
-        [submitCounter],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 });
