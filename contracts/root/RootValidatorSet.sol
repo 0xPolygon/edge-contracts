@@ -11,6 +11,7 @@ import "../interfaces/IBLS.sol";
     @notice Validator set contract for Polygon PoS v3. This contract serves the purpose of validator registration.
     @dev The contract is used to onboard new validators and register their ECDSA and BLS public keys.
  */
+// slither-disable-next-line missing-inheritance
 contract RootValidatorSet is Initializable, Ownable {
     struct Validator {
         uint256 id;
