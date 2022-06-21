@@ -535,7 +535,7 @@ describe("CheckpointManager", () => {
   it("SubmitBatch empty checkpoint", async () => {
     const id = submitCounter;
     const checkpoint = {
-      startBlock: 1,
+      startBlock: startBlock,
       endBlock: 0,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
@@ -585,8 +585,8 @@ describe("CheckpointManager", () => {
   it("Submitbatch checkpoint with invalid length", async () => {
     const id = submitCounter;
     const checkpoint = {
-      startBlock: 1,
-      endBlock: 100,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
@@ -620,8 +620,8 @@ describe("CheckpointManager", () => {
   it("Submitbatch checkpoint with signature failing verification", async () => {
     const id = submitCounter;
     const checkpoint = {
-      startBlock: 100,
-      endBlock: 200,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot,
     };
 
