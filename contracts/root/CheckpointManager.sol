@@ -101,7 +101,7 @@ contract CheckpointManager is Initializable {
 
         _verifyCheckpoint(currentCheckpointId, id, checkpoint);
 
-        checkpoints[currentCheckpointId++] = checkpoint;
+        checkpoints[++currentCheckpointId] = checkpoint;
     }
 
     /**
