@@ -203,6 +203,29 @@ describe("ChildValidatorSet", () => {
       )
     ).to.be.revertedWith("INVALID_SIGNATURE");
   });
+  it("Validator registration state sync full sized data", async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const { pubkey, secret } = mcl.newKeyPair();
+    const MAX_VALIDATOR_SET_SIZE = 500;
+    const data = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "address", "uint256[4]"],
+      [MAX_VALIDATOR_SET_SIZE + 1, wallet.address, mcl.g2ToHex(pubkey)]
+    );
+    const encodedData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "bytes"],
+      [
+        "0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc",
+        data,
+      ]
+    );
+    await expect(
+      stateSyncChildValidatorSet.onStateReceive(
+        0,
+        rootValidatorSetAddress,
+        encodedData
+      )
+    ).to.be.revertedWith("VALIDATOR_SET_FULL");
+  });
   it("Validator registration state sync", async () => {
     const wallet = ethers.Wallet.createRandom();
     const { pubkey, secret } = mcl.newKeyPair();

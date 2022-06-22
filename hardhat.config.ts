@@ -30,6 +30,11 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 999999,
       },
+      outputSelection: {
+        "*": {
+          "*": ["storageLayout"],
+        },
+      },
     },
   },
   networks: {
@@ -55,7 +60,7 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
-    enabled: true,
+    enabled: (process.env.REPORT_GAS as unknown as boolean) || false,
     currency: "USD",
   },
   etherscan: {
