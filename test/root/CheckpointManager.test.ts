@@ -155,7 +155,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
   });
 
-  it("Submit checkpoint with signature failing verification", async () => {
+  it("Submit checkpoint with invalid signature", async () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock,
@@ -377,7 +377,7 @@ describe("CheckpointManager", () => {
     startBlock = endBlock.toNumber() + 1;
   });
 
-  it("Submitbatch checkpoints with mismatch length", async () => {
+  it("Submit batch checkpoint with mismatch length", async () => {
     const id = submitCounter;
     const checkpoint1 = {
       startBlock: startBlock,
@@ -433,7 +433,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("LENGTH_MISMATCH");
   });
 
-  it("SubmitBatch checkpoints with non-sequential id", async () => {
+  it("Submit batch checkpoint with non-sequential id", async () => {
     const id = submitCounter + 1; // for non-sequential id
     const checkpoint = {
       startBlock: startBlock,
@@ -483,7 +483,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 
-  it("SubmitBatch checkpoints with invalid start block", async () => {
+  it("Submit batch checkpoint with invalid start block", async () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock + 1,
@@ -533,7 +533,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("INVALID_START_BLOCK");
   });
 
-  it("SubmitBatch empty checkpoint", async () => {
+  it("Submit batch empty checkpoint", async () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock,
@@ -583,7 +583,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
-  it("Submitbatch checkpoint with invalid length", async () => {
+  it("Submit batch checkpoint with invalid length", async () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock,
@@ -618,7 +618,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
   });
 
-  it("Submitbatch checkpoint with signature failing verification", async () => {
+  it("Submit batch checkpoint with invalid signature", async () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock,
@@ -668,7 +668,7 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
-  it("SubmitBatch checkpoint", async () => {
+  it("Submit batch checkpoint", async () => {
     const id = submitCounter;
     const checkpoint1 = {
       startBlock: startBlock,

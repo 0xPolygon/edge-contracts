@@ -17,7 +17,17 @@ jobs:
           node-version: "16.x"
       - run: npm install
       - run: npx hardhat compile --show-stack-traces
-      - run: npx hardhat test
+      - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel
+  gas_report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - run: npm install
+      - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test
   lint:
     runs-on: ubuntu-latest
     steps:
