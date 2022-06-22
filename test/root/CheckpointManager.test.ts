@@ -371,7 +371,8 @@ describe("CheckpointManager", () => {
       (await checkpointManager.currentCheckpointId()).toNumber() + 1;
     expect(submitCounter).to.equal(2);
 
-    const endBlock = (await checkpointManager.checkpoints(1)).endBlock;
+    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1))
+      .endBlock;
     expect(endBlock).to.equal(101);
     startBlock = endBlock.toNumber() + 1;
   });
@@ -670,14 +671,14 @@ describe("CheckpointManager", () => {
   it("SubmitBatch checkpoint", async () => {
     const id = submitCounter;
     const checkpoint1 = {
-      startBlock: 101,
-      endBlock: 200,
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
     const checkpoint2 = {
-      startBlock: 201,
-      endBlock: 300,
+      startBlock: startBlock + 101,
+      endBlock: startBlock + 200,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
@@ -722,5 +723,14 @@ describe("CheckpointManager", () => {
       aggMessagePoint,
       validatorIds
     );
+
+    submitCounter =
+      (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    expect(submitCounter).to.equal(4);
+
+    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1))
+      .endBlock;
+    expect(endBlock).to.equal(302);
+    startBlock = endBlock.toNumber() + 1;
   });
 });
