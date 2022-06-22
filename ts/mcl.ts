@@ -161,6 +161,12 @@ export function randFr(): mclFR {
   return fr;
 }
 
+export function mulG2FrInt(point: mclG2, n: number): mclG2 {
+  let fr = new mcl.Fr();
+  fr.setInt(n);
+  return mcl.mul(point, fr);
+}
+
 export function randG1(): solG1 {
   const p: any = mcl.mul(g1(), randFr());
   p.normalize();
