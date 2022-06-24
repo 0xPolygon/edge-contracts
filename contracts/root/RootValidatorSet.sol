@@ -3,14 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IBLS {
-    function verifySingle(
-        uint256[2] calldata signature,
-        uint256[4] calldata pubkey,
-        uint256[2] calldata message
-    ) external view returns (bool, bool);
-}
+import "../interfaces/IBLS.sol";
 
 /**
     @title RootValidatorSet
@@ -18,6 +11,7 @@ interface IBLS {
     @notice Validator set contract for Polygon PoS v3. This contract serves the purpose of validator registration.
     @dev The contract is used to onboard new validators and register their ECDSA and BLS public keys.
  */
+// slither-disable-next-line missing-inheritance
 contract RootValidatorSet is Initializable, Ownable {
     struct Validator {
         uint256 id;
@@ -32,6 +26,8 @@ contract RootValidatorSet is Initializable, Ownable {
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
     mapping(address => bool) public whitelist;
+
+    uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
 
     event NewValidator(
         uint256 indexed id,
@@ -138,5 +134,25 @@ contract RootValidatorSet is Initializable, Ownable {
         validatorIdByAddress[msg.sender] = currentId;
 
         emit NewValidator(currentId, msg.sender, pubkey);
+    }
+
+    function getValidator(uint256 id) external view returns (Validator memory) {
+        return validators[id];
+    }
+
+    function getValidatorBlsKey(uint256 id)
+        external
+        view
+        returns (uint256[4] memory)
+    {
+        return validators[id].blsKey;
+    }
+
+    function activeValidatorSetSize() external view returns (uint256) {
+        if (currentValidatorId < ACTIVE_VALIDATOR_SET_SIZE) {
+            return currentValidatorId;
+        } else {
+            return ACTIVE_VALIDATOR_SET_SIZE;
+        }
     }
 }
