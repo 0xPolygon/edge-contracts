@@ -42,6 +42,7 @@ contract ChildValidatorSet is IStateReceiver {
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
+    address public stakeManager;
 
     uint256[] public epochEndBlocks;
 
@@ -79,6 +80,11 @@ contract ChildValidatorSet is IStateReceiver {
         _;
     }
 
+    modifier onlyStakeManager() {
+        require(msg.sender == stakeManager, "ONLY_STAKE_MANAGER");
+        _;
+    }
+
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
      * @param validatorAddresses Addresses of validators
@@ -87,6 +93,7 @@ contract ChildValidatorSet is IStateReceiver {
      */
     function initialize(
         address newRootValidatorSet,
+        address newStakeManager,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
@@ -94,6 +101,8 @@ contract ChildValidatorSet is IStateReceiver {
     ) external initializer onlySystemCall {
         // slither-disable-next-line missing-zero-check
         rootValidatorSet = newRootValidatorSet;
+        // slither-disable-next-line missing-zero-check
+        stakeManager = newStakeManager;
         uint256 i = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[i + 1];
@@ -171,6 +180,15 @@ contract ChildValidatorSet is IStateReceiver {
             (uint256, address, uint256[4])
         );
         _addNewValidator(id, _address, blsKey);
+    }
+
+    function modifySelfStake(uint256 id, uint256 amount)
+        external
+        onlyStakeManager
+    {
+        Validator storage validator = validators[id];
+
+        validator.selfStake += amount;
     }
 
     function getCurrentValidatorSet() external view returns (uint256[] memory) {

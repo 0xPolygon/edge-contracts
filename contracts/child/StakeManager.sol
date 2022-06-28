@@ -19,6 +19,8 @@ interface IChildValidatorSet {
         uint256[] validatorSet;
     }
 
+    function modifySelfStake(uint256 id, uint256 amount) external;
+
     function activeValidatorSetSize() external view returns (uint256);
 
     function validators(uint256 id) external view returns (Validator memory);
@@ -33,13 +35,15 @@ contract StakeManager is System, Initializable {
         uint256 totalUptime;
     }
 
-    uint256 epochReward;
-    uint256 targetEpochInterval;
-    uint256 lastRewardedEpochId;
-    IChildValidatorSet childValidatorSet;
+    uint256 public epochReward;
+    uint256 public targetEpochInterval;
+    uint256 public lastRewardedEpochId;
+    uint256 public minSelfStake;
+    IChildValidatorSet public childValidatorSet;
 
-    mapping(address => uint256) validatorRewards;
-    mapping(address => uint256) delegatorRewards;
+    mapping(address => uint256) public validatorRewards;
+    mapping(address => uint256) public delegatorRewards;
+    mapping(uint256 => uint256) public selfStakes;
 
     modifier onlyValidatorSet() {
         require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
@@ -50,10 +54,12 @@ contract StakeManager is System, Initializable {
     function initialize(
         uint256 newEpochReward,
         uint256 newTargetEpochInterval,
+        uint256 newMinSelfStake,
         IChildValidatorSet newChildValidatorSet
     ) external initializer {
         epochReward = newEpochReward;
         targetEpochInterval = newTargetEpochInterval;
+        minSelfStake = newMinSelfStake;
         childValidatorSet = newChildValidatorSet;
     }
 
@@ -104,6 +110,17 @@ contract StakeManager is System, Initializable {
                 (reward * uptime.uptimes[i]) /
                 uptime.totalUptime;
         }
+    }
+
+    function selfStake(uint256 id) external payable {
+        require(msg.value >= minSelfStake, "STAKE_TOO_LOW");
+
+        IChildValidatorSet.Validator memory validator = childValidatorSet
+            .validators(id);
+
+        require(msg.sender == validator._address, "INVALID_SENDER");
+
+        childValidatorSet.modifySelfStake(id, msg.value);
     }
 
     function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
