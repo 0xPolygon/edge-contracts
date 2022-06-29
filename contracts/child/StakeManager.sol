@@ -23,6 +23,8 @@ interface IChildValidatorSet {
 
     function addTotalStake(uint256 id, uint256 amount) external;
 
+    function currentEpochId() external view returns (uint256);
+
     function activeValidatorSetSize() external view returns (uint256);
 
     function calculateValidatorPower(uint256 id)
@@ -37,9 +39,15 @@ interface IChildValidatorSet {
 
 contract StakeManager is System, Initializable {
     struct Uptime {
+        uint256 epochId;
         uint256[] ids;
         uint256[] uptimes;
         uint256 totalUptime;
+    }
+
+    struct Delegation {
+        uint256 epochId;
+        uint256 amount;
     }
 
     uint256 public epochReward;
@@ -48,15 +56,9 @@ contract StakeManager is System, Initializable {
     uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
 
-    mapping(address => uint256) public validatorRewards;
-    mapping(address => uint256) public delegatorRewards;
-    mapping(uint256 => uint256) public selfStakes;
-
-    modifier onlyValidatorSet() {
-        require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
-
-        _;
-    }
+    mapping(address => mapping(uint256 => uint256)) public validatorRewards; // validator address -> epoch -> amount
+    mapping(address => Delegation) public delegations; // user address -> Delegation
+    mapping(address => uint256) public delegatorLastClaim; // user address -> epoch
 
     function initialize(
         uint256 newEpochReward,
@@ -70,16 +72,21 @@ contract StakeManager is System, Initializable {
         childValidatorSet = newChildValidatorSet;
     }
 
-    function distributeRewards(
-        uint256 epochId,
-        Uptime calldata uptime,
-        bytes calldata signature
-    ) external onlyValidatorSet {
+    function distributeRewards(Uptime calldata uptime, bytes calldata signature)
+        external
+        onlySystemCall
+    {
         bytes32 hash = keccak256(abi.encode(uptime));
 
         _checkPubkeyAggregation(hash, signature);
 
+        uint256 epochId = uptime.epochId;
+
         require(epochId == lastRewardedEpochId + 1, "INVALID_EPOCH_ID");
+
+        uint256 currentEpochId = childValidatorSet.currentEpochId();
+
+        require(epochId < currentEpochId, "EPOCH_NOT_COMMITTED");
 
         uint256 length = uptime.ids.length;
 
@@ -107,7 +114,7 @@ contract StakeManager is System, Initializable {
         for (uint256 i = 0; i < length; i++) {
             IChildValidatorSet.Validator memory validator = childValidatorSet
                 .validators(uptime.ids[i]);
-            validatorRewards[validator._address] +=
+            validatorRewards[validator._address][epochId] +=
                 (reward * weights[i]) /
                 aggWeight;
         }
@@ -126,6 +133,14 @@ contract StakeManager is System, Initializable {
 
     function delegate(uint256 id) external payable {
         require(msg.value >= minDelegation, "DELEGATION_TOO_LOW");
+
+        Delegation storage delegation = delegations[msg.sender];
+
+        delegation.epochId = childValidatorSet.currentEpochId() - 1;
+
+        // calculate previous reward and add
+
+        delegation.amount += msg.value;
 
         childValidatorSet.addTotalStake(id, msg.value);
     }
