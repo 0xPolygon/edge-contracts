@@ -19,9 +19,16 @@ interface IChildValidatorSet {
         uint256[] validatorSet;
     }
 
-    function modifySelfStake(uint256 id, uint256 amount) external;
+    function addSelfStake(uint256 id, uint256 amount) external;
+
+    function addTotalStake(uint256 id, uint256 amount) external;
 
     function activeValidatorSetSize() external view returns (uint256);
+
+    function calculateValidatorPower(uint256 id)
+        external
+        view
+        returns (uint256);
 
     function validators(uint256 id) external view returns (Validator memory);
 
@@ -36,9 +43,9 @@ contract StakeManager is System, Initializable {
     }
 
     uint256 public epochReward;
-    uint256 public targetEpochInterval;
     uint256 public lastRewardedEpochId;
     uint256 public minSelfStake;
+    uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
 
     mapping(address => uint256) public validatorRewards;
@@ -53,13 +60,13 @@ contract StakeManager is System, Initializable {
 
     function initialize(
         uint256 newEpochReward,
-        uint256 newTargetEpochInterval,
         uint256 newMinSelfStake,
+        uint256 newMinDelegation,
         IChildValidatorSet newChildValidatorSet
     ) external initializer {
         epochReward = newEpochReward;
-        targetEpochInterval = newTargetEpochInterval;
         minSelfStake = newMinSelfStake;
+        minDelegation = newMinDelegation;
         childValidatorSet = newChildValidatorSet;
     }
 
@@ -75,40 +82,34 @@ contract StakeManager is System, Initializable {
         require(epochId == lastRewardedEpochId + 1, "INVALID_EPOCH_ID");
 
         uint256 length = uptime.ids.length;
-        uint256 validatorSetSize = childValidatorSet.activeValidatorSetSize();
 
-        require(length > ((2 * validatorSetSize) / 3), "NOT_ENOUGH_CONSENSUS");
         require(length == uptime.uptimes.length, "LENGTH_MISMATCH");
 
-        IChildValidatorSet.Epoch memory epoch = childValidatorSet.epochs(
-            epochId
-        );
+        uint256[] memory weights;
+        uint256 aggStake = 0;
+        uint256 aggWeight = 0;
 
-        uint256 reward = epochReward;
-        uint256 targetInterval = targetEpochInterval;
-
-        uint256 blockInterval = epoch.endBlock - epoch.startBlock + 1;
-
-        if (blockInterval <= targetInterval) {
-            reward = (reward * blockInterval) / targetInterval;
-        } else {
-            for (uint256 i = 0; i < blockInterval; i += targetInterval) {
-                reward += (reward / 2);
-            }
-            reward +=
-                (reward * (targetInterval % blockInterval)) /
-                targetInterval;
+        for (uint256 i = 0; i < length; i++) {
+            uint256 power = childValidatorSet.calculateValidatorPower(
+                uptime.ids[i]
+            );
+            aggStake += power;
+            weights[i] = uptime.uptimes[i] * power;
+            aggWeight += weights[i];
         }
 
-        reward = (reward * length) / validatorSetSize;
+        require(aggStake > (66 * (10**6)), "NOT_ENOUGH_CONSENSUS");
 
-        for (uint256 i = 0; i < length; ++i) {
+        uint256 reward = epochReward;
+
+        reward = (reward * aggStake) / (100 * (10**6)); // scale reward to power staked
+
+        for (uint256 i = 0; i < length; i++) {
             IChildValidatorSet.Validator memory validator = childValidatorSet
                 .validators(uptime.ids[i]);
-
             validatorRewards[validator._address] +=
-                (reward * uptime.uptimes[i]) /
-                uptime.totalUptime;
+                (reward * weights[i]) /
+                aggWeight;
         }
     }
 
@@ -120,7 +121,13 @@ contract StakeManager is System, Initializable {
 
         require(msg.sender == validator._address, "INVALID_SENDER");
 
-        childValidatorSet.modifySelfStake(id, msg.value);
+        childValidatorSet.addSelfStake(id, msg.value);
+    }
+
+    function delegate(uint256 id) external payable {
+        require(msg.value >= minDelegation, "DELEGATION_TOO_LOW");
+
+        childValidatorSet.addTotalStake(id, msg.value);
     }
 
     function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)

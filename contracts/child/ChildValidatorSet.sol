@@ -182,13 +182,23 @@ contract ChildValidatorSet is IStateReceiver {
         _addNewValidator(id, _address, blsKey);
     }
 
-    function modifySelfStake(uint256 id, uint256 amount)
+    function addSelfStake(uint256 id, uint256 amount)
         external
         onlyStakeManager
     {
         Validator storage validator = validators[id];
 
         validator.selfStake += amount;
+        validator.totalStake += amount;
+    }
+
+    function addTotalStake(uint256 id, uint256 amount)
+        external
+        onlyStakeManager
+    {
+        Validator storage validator = validators[id];
+
+        validator.totalStake += amount;
     }
 
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
