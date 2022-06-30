@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Initializable} from "../libs/Initializable.sol";
 import {System} from "./System.sol";
 
@@ -44,7 +45,7 @@ interface IChildValidatorSet {
     function epochs(uint256 id) external view returns (Epoch memory);
 }
 
-contract StakeManager is System, Initializable {
+contract StakeManager is System, Initializable, ReentrancyGuard {
     struct Uptime {
         uint256 epochId;
         uint256[] ids;
@@ -160,8 +161,18 @@ contract StakeManager is System, Initializable {
         childValidatorSet.addTotalStake(id, msg.value);
     }
 
+    function claimDelegatorRewards(uint256 id) external payable nonReentrant {
+        uint256 reward = calculateRewardForDelegator(id, msg.sender);
+
+        delegatorLastClaim[msg.sender] = lastRewardedEpochId;
+
+        (bool success, ) = msg.sender.call{value: reward}("");
+
+        require(success, "TRANSFER_FAILED");
+    }
+
     function calculateRewardForDelegator(uint256 id, address delegator)
-        external
+        public
         view
         returns (uint256)
     {
@@ -176,7 +187,7 @@ contract StakeManager is System, Initializable {
             totalReward += delegation.amount * rewardShares[startIndex][id];
         }
 
-        return totalReward;
+        return totalReward / REWARD_PRECISION;
     }
 
     function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
