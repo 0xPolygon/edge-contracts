@@ -160,7 +160,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet.addTotalStake(id, msg.value);
     }
 
-    function claimDelegatorReward(uint256 id) external payable nonReentrant {
+    function claimDelegatorReward(uint256 id) external nonReentrant {
         uint256 reward = calculateDelegatorReward(id, msg.sender);
 
         Delegation storage delegation = delegations[msg.sender][id];
