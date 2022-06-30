@@ -69,7 +69,6 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     mapping(uint256 => mapping(uint256 => uint256)) public validatorRewards; // validator id -> epoch -> amount
     mapping(uint256 => mapping(uint256 => uint256)) public rewardShares; // epoch -> validatorId -> reward per share
     mapping(address => mapping(uint256 => Delegation)) public delegations; // user address -> validator id -> Delegation
-    mapping(address => uint256) public delegatorLastClaim; // user address -> epoch
 
     function initialize(
         uint256 newEpochReward,
@@ -161,17 +160,20 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet.addTotalStake(id, msg.value);
     }
 
-    function claimDelegatorRewards(uint256 id) external payable nonReentrant {
-        uint256 reward = calculateRewardForDelegator(id, msg.sender);
+    function claimDelegatorReward(uint256 id) external payable nonReentrant {
+        uint256 reward = calculateDelegatorReward(id, msg.sender);
 
-        delegatorLastClaim[msg.sender] = lastRewardedEpochId;
+        Delegation storage delegation = delegations[msg.sender][id];
 
+        delegation.epochId = lastRewardedEpochId;
+
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = msg.sender.call{value: reward}("");
 
         require(success, "TRANSFER_FAILED");
     }
 
-    function calculateRewardForDelegator(uint256 id, address delegator)
+    function calculateDelegatorReward(uint256 id, address delegator)
         public
         view
         returns (uint256)
