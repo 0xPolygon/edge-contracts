@@ -141,7 +141,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet.addSelfStake(id, msg.value);
     }
 
-    function delegate(uint256 id) external payable {
+    function delegate(uint256 id, bool restake) external payable {
         require(msg.value >= minDelegation, "DELEGATION_TOO_LOW");
 
         require(
@@ -153,14 +153,28 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         delegation.epochId = childValidatorSet.currentEpochId() - 1;
 
-        // calculate previous reward and add
+        uint256 reward = 0;
 
-        delegation.amount += msg.value;
+        if (delegation.amount == 0) {
+            // first-time delegation
+            delegation.epochId = childValidatorSet.currentEpochId() - 1;
+            delegation.amount = msg.value;
+        } else {
+            // re-delegating
+            if (restake) {
+                reward = calculateDelegatorReward(id, msg.sender);
+                delegation.amount += (msg.value + reward);
+            } else {
+                claimDelegatorReward(id);
+                delegation.amount += msg.value;
+            }
+            delegation.epochId = lastRewardedEpochId;
+        }
 
-        childValidatorSet.addTotalStake(id, msg.value);
+        childValidatorSet.addTotalStake(id, msg.value + reward);
     }
 
-    function claimDelegatorReward(uint256 id) external nonReentrant {
+    function claimDelegatorReward(uint256 id) public nonReentrant {
         uint256 reward = calculateDelegatorReward(id, msg.sender);
 
         Delegation storage delegation = delegations[msg.sender][id];
