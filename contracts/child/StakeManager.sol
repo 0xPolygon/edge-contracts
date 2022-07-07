@@ -11,6 +11,7 @@ interface IChildValidatorSet {
         //uint256[4] blsKey; // default mapping function does not return array
         uint256 selfStake;
         uint256 totalStake; // self-stake + delegation
+        uint256 commission;
     }
 
     struct Epoch {
@@ -66,8 +67,11 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
 
-    mapping(uint256 => mapping(uint256 => uint256)) public validatorRewards; // validator id -> epoch -> amount
-    mapping(uint256 => mapping(uint256 => uint256)) public rewardShares; // epoch -> validatorId -> reward per share
+    mapping(uint256 => mapping(uint256 => uint256)) public totalRewards; // validator id -> epoch -> amount
+    mapping(uint256 => mapping(uint256 => uint256))
+        public validatorRewardShares; // epoch -> validator id -> amount
+    mapping(uint256 => mapping(uint256 => uint256))
+        public delegatorRewardShares; // epoch -> validator id -> reward per share
     mapping(address => mapping(uint256 => Delegation)) public delegations; // user address -> validator id -> Delegation
 
     function initialize(
@@ -101,33 +105,39 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(length == uptime.uptimes.length, "LENGTH_MISMATCH");
 
         uint256[] memory weights;
-        uint256 aggStake = 0;
+        uint256 aggPower = 0;
         uint256 aggWeight = 0;
 
         for (uint256 i = 0; i < length; i++) {
             uint256 power = childValidatorSet.calculateValidatorPower(
                 uptime.ids[i]
             );
-            aggStake += power;
+            aggPower += power;
             weights[i] = uptime.uptimes[i] * power;
             aggWeight += weights[i];
         }
 
-        require(aggStake > (66 * (10**6)), "NOT_ENOUGH_CONSENSUS");
+        require(aggPower > (66 * (10**6)), "NOT_ENOUGH_CONSENSUS");
 
         uint256 reward = epochReward;
 
-        reward = (reward * aggStake) / (100 * (10**6)); // scale reward to power staked
+        reward = (reward * aggPower) / (100 * (10**6)); // scale reward to power staked
 
         for (uint256 i = 0; i < length; i++) {
-            IChildValidatorSet.Validator memory validator = childValidatorSet
-                .validators(uptime.ids[i]);
-            require(validator._address != address(0), "INVALID_VALIDATOR_ID");
             uint256 validatorReward = (reward * weights[i]) / aggWeight;
-            validatorRewards[uptime.ids[i]][uptime.epochId] = validatorReward;
-            rewardShares[uptime.epochId][uptime.ids[i]] =
-                (validatorReward * REWARD_PRECISION) /
-                validator.totalStake;
+            (
+                uint256 validatorShares,
+                uint256 delegatorShares
+            ) = _calculateValidatorAndDelegatorShares(
+                    uptime.ids[i],
+                    validatorReward
+                );
+            validatorRewardShares[uptime.epochId][
+                uptime.ids[i]
+            ] = validatorShares;
+            delegatorRewardShares[uptime.epochId][
+                uptime.ids[i]
+            ] = delegatorShares;
         }
     }
 
@@ -187,6 +197,26 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(success, "TRANSFER_FAILED");
     }
 
+    function _calculateValidatorAndDelegatorShares(
+        uint256 validatorId,
+        uint256 totalReward
+    ) internal view returns (uint256, uint256) {
+        IChildValidatorSet.Validator memory validator = childValidatorSet
+            .validators(validatorId);
+        require(validator._address != address(0), "INVALID_VALIDATOR_ID");
+
+        uint256 rewardShares = (totalReward * REWARD_PRECISION) /
+            validator.totalStake;
+        uint256 delegatorShares = (totalReward * REWARD_PRECISION) /
+            (validator.totalStake - validator.selfStake);
+        uint256 commission = (validator.commission * delegatorShares) / 100;
+
+        return (
+            delegatorShares - commission,
+            rewardShares - delegatorShares + commission
+        );
+    }
+
     function calculateDelegatorReward(uint256 id, address delegator)
         public
         view
@@ -200,7 +230,9 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 totalReward = 0;
 
         for (uint256 i = startIndex; i <= endIndex; i++) {
-            totalReward += delegation.amount * rewardShares[startIndex][id];
+            totalReward +=
+                delegation.amount *
+                delegatorRewardShares[startIndex][id];
         }
 
         return totalReward / REWARD_PRECISION;

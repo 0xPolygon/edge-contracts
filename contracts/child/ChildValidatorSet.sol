@@ -25,6 +25,7 @@ contract ChildValidatorSet is IStateReceiver {
         uint256[4] blsKey;
         uint256 selfStake;
         uint256 totalStake; // self-stake + delegation
+        uint256 commission;
     }
 
     struct Epoch {
@@ -39,6 +40,7 @@ contract ChildValidatorSet is IStateReceiver {
     uint256 public constant SPRINT = 64;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
     uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
+    uint256 public constant MAX_COMMISSION = 100;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
@@ -199,6 +201,15 @@ contract ChildValidatorSet is IStateReceiver {
         Validator storage validator = validators[id];
 
         validator.totalStake += amount;
+    }
+
+    function setCommission(uint256 id, uint256 newCommission) external {
+        Validator storage validator = validators[id];
+
+        require(msg.sender == validator._address, "ONLY_VALIDATOR");
+        require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
+
+        validator.commission = newCommission;
     }
 
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
