@@ -21,6 +21,9 @@ interface IChildValidatorSet {
         uint256[] validatorSet;
     }
 
+    // solhint-disable-next-line
+    function ACTIVE_VALIDATOR_SET_SIZE() external returns (uint256);
+
     function addSelfStake(uint256 id, uint256 amount) external;
 
     function addTotalStake(uint256 id, uint256 amount) external;
@@ -49,7 +52,6 @@ interface IChildValidatorSet {
 contract StakeManager is System, Initializable, ReentrancyGuard {
     struct Uptime {
         uint256 epochId;
-        uint256[] ids;
         uint256[] uptimes;
         uint256 totalUptime;
     }
@@ -100,18 +102,20 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             "EPOCH_NOT_COMMITTED"
         );
 
-        uint256 length = uptime.ids.length;
+        uint256 length = uptime.uptimes.length;
 
-        require(length == uptime.uptimes.length, "LENGTH_MISMATCH");
+        require(
+            length <= childValidatorSet.ACTIVE_VALIDATOR_SET_SIZE() &&
+                length < childValidatorSet.currentValidatorId(),
+            "INVALID_LENGTH"
+        );
 
         uint256[] memory weights;
         uint256 aggPower = 0;
         uint256 aggWeight = 0;
 
-        for (uint256 i = 0; i < length; i++) {
-            uint256 power = childValidatorSet.calculateValidatorPower(
-                uptime.ids[i]
-            );
+        for (uint256 i = 0; i < length; ++i) {
+            uint256 power = childValidatorSet.calculateValidatorPower(i + 1);
             aggPower += power;
             weights[i] = uptime.uptimes[i] * power;
             aggWeight += weights[i];
@@ -123,21 +127,14 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         reward = (reward * aggPower) / (100 * (10**6)); // scale reward to power staked
 
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; ++i) {
             uint256 validatorReward = (reward * weights[i]) / aggWeight;
             (
                 uint256 validatorShares,
                 uint256 delegatorShares
-            ) = _calculateValidatorAndDelegatorShares(
-                    uptime.ids[i],
-                    validatorReward
-                );
-            validatorRewardShares[uptime.epochId][
-                uptime.ids[i]
-            ] = validatorShares;
-            delegatorRewardShares[uptime.epochId][
-                uptime.ids[i]
-            ] = delegatorShares;
+            ) = _calculateValidatorAndDelegatorShares(i + 1, validatorReward);
+            validatorRewardShares[uptime.epochId][i + 1] = validatorShares;
+            delegatorRewardShares[uptime.epochId][i + 1] = delegatorShares;
         }
     }
 
@@ -197,26 +194,6 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(success, "TRANSFER_FAILED");
     }
 
-    function _calculateValidatorAndDelegatorShares(
-        uint256 validatorId,
-        uint256 totalReward
-    ) internal view returns (uint256, uint256) {
-        IChildValidatorSet.Validator memory validator = childValidatorSet
-            .validators(validatorId);
-        require(validator._address != address(0), "INVALID_VALIDATOR_ID");
-
-        uint256 rewardShares = (totalReward * REWARD_PRECISION) /
-            validator.totalStake;
-        uint256 delegatorShares = (totalReward * REWARD_PRECISION) /
-            (validator.totalStake - validator.selfStake);
-        uint256 commission = (validator.commission * delegatorShares) / 100;
-
-        return (
-            delegatorShares - commission,
-            rewardShares - delegatorShares + commission
-        );
-    }
-
     function calculateDelegatorReward(uint256 id, address delegator)
         public
         view
@@ -236,6 +213,26 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         }
 
         return totalReward / REWARD_PRECISION;
+    }
+
+    function _calculateValidatorAndDelegatorShares(
+        uint256 validatorId,
+        uint256 totalReward
+    ) internal view returns (uint256, uint256) {
+        IChildValidatorSet.Validator memory validator = childValidatorSet
+            .validators(validatorId);
+        require(validator._address != address(0), "INVALID_VALIDATOR_ID");
+
+        uint256 rewardShares = (totalReward * REWARD_PRECISION) /
+            validator.totalStake;
+        uint256 delegatorShares = (totalReward * REWARD_PRECISION) /
+            (validator.totalStake - validator.selfStake);
+        uint256 commission = (validator.commission * delegatorShares) / 100;
+
+        return (
+            delegatorShares - commission,
+            rewardShares - delegatorShares + commission
+        );
     }
 
     function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
