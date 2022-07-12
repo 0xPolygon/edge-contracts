@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
-import { BLS, ChildValidatorSet } from "../../typechain";
+import { BLS, ChildValidatorSet, StakeManager } from "../../typechain";
 
 const DOMAIN = ethers.utils.arrayify(
   ethers.utils.hexlify(ethers.utils.randomBytes(32))
@@ -13,6 +13,7 @@ const DOMAIN = ethers.utils.arrayify(
 describe("ChildValidatorSet", () => {
   let bls: BLS,
     rootValidatorSetAddress: string,
+    stakeManagerAddress: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
     stateSyncChildValidatorSet: ChildValidatorSet,
@@ -25,6 +26,7 @@ describe("ChildValidatorSet", () => {
     accounts = await ethers.getSigners();
 
     rootValidatorSetAddress = ethers.Wallet.createRandom().address;
+    stakeManagerAddress = ethers.Wallet.createRandom().address;
 
     const ChildValidatorSet = await ethers.getContractFactory(
       "ChildValidatorSet"
@@ -60,7 +62,14 @@ describe("ChildValidatorSet", () => {
   });
   it("Initialize without system call", async () => {
     await expect(
-      childValidatorSet.initialize(rootValidatorSetAddress, [], [], [], [])
+      childValidatorSet.initialize(
+        rootValidatorSetAddress,
+        stakeManagerAddress,
+        [],
+        [],
+        [],
+        []
+      )
     ).to.be.revertedWith("ONLY_SYSTEMCALL");
   });
   it("Initialize and validate initialization", async () => {
@@ -80,6 +89,7 @@ describe("ChildValidatorSet", () => {
     }
     await systemChildValidatorSet.initialize(
       rootValidatorSetAddress,
+      stakeManagerAddress,
       addresses,
       pubkeys,
       validatorStakes,
@@ -104,6 +114,7 @@ describe("ChildValidatorSet", () => {
     await expect(
       systemChildValidatorSet.initialize(
         rootValidatorSetAddress,
+        stakeManagerAddress,
         [],
         [],
         [],
