@@ -56,7 +56,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 totalUptime;
     }
 
-    struct Delegation {
+    struct Stake {
         uint256 epochId;
         uint256 amount;
     }
@@ -74,7 +74,8 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         public validatorRewardShares; // epoch -> validator id -> amount
     mapping(uint256 => mapping(uint256 => uint256))
         public delegatorRewardShares; // epoch -> validator id -> reward per share
-    mapping(address => mapping(uint256 => Delegation)) public delegations; // user address -> validator id -> Delegation
+    mapping(address => mapping(uint256 => Stake)) public delegations; // user address -> validator id -> Delegation
+    mapping(uint256 => Stake) public selfStakes; // validator id -> Delegation
 
     function initialize(
         uint256 newEpochReward,
@@ -156,7 +157,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             "INVALID_VALIDATOR_ID"
         );
 
-        Delegation storage delegation = delegations[msg.sender][id];
+        Stake storage delegation = delegations[msg.sender][id];
 
         delegation.epochId = childValidatorSet.currentEpochId() - 1;
 
@@ -184,7 +185,22 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     function claimDelegatorReward(uint256 id) public nonReentrant {
         uint256 reward = calculateDelegatorReward(id, msg.sender);
 
-        Delegation storage delegation = delegations[msg.sender][id];
+        Stake storage delegation = delegations[msg.sender][id];
+
+        delegation.epochId = lastRewardedEpochId;
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = msg.sender.call{value: reward}("");
+
+        require(success, "TRANSFER_FAILED");
+    }
+
+    function claimValidatorReward(uint256 id) public nonReentrant {
+        uint256 reward = calculateValidatorReward(id);
+
+        require(childValidatorSet.validatorIdByAddress(msg.sender) != 0, "ONLY_VALIDATOR");
+
+        Stake storage delegation = delegations[msg.sender][id];
 
         delegation.epochId = lastRewardedEpochId;
 
@@ -199,7 +215,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        Delegation memory delegation = delegations[delegator][id];
+        Stake memory delegation = delegations[delegator][id];
 
         uint256 startIndex = delegation.epochId;
         uint256 endIndex = lastRewardedEpochId;
@@ -210,6 +226,27 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             totalReward +=
                 delegation.amount *
                 delegatorRewardShares[startIndex][id];
+        }
+
+        return totalReward / REWARD_PRECISION;
+    }
+
+    function calculateValidatorReward(uint256 id)
+        public
+        view
+        returns (uint256)
+    {
+        Stake memory delegation = selfStakes[id];
+
+        uint256 startIndex = delegation.epochId;
+        uint256 endIndex = lastRewardedEpochId;
+
+        uint256 totalReward = 0;
+
+        for (uint256 i = startIndex; i <= endIndex; i++) {
+            totalReward +=
+                delegation.amount *
+                validatorRewardShares[startIndex][id];
         }
 
         return totalReward / REWARD_PRECISION;
