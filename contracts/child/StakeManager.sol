@@ -98,15 +98,11 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet = newChildValidatorSet;
     }
 
-    function distributeRewards(Uptime calldata uptime, bytes calldata signature)
-        external
-        onlySystemCall
-    {
-        bytes32 hash = keccak256(abi.encode(uptime));
-
-        _checkPubkeyAggregation(hash, signature);
+    function distributeRewards(Uptime calldata uptime) external {
+        require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
 
         require(uptime.epochId == lastRewardedEpochId + 1, "INVALID_EPOCH_ID");
+
         require(
             uptime.epochId < childValidatorSet.currentEpochId(),
             "EPOCH_NOT_COMMITTED"
@@ -277,22 +273,5 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             delegatorShares - commission,
             rewardShares - delegatorShares + commission
         );
-    }
-
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
-        internal
-        view
-    {
-        // verify signatures for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
-        (
-            bool callSuccess,
-            bytes memory returnData
-        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
-                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-            }(abi.encode(message, signature));
-        bool verified = abi.decode(returnData, (bool));
-        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Arrays.sol";
+import {System} from "./System.sol";
 
 interface IStateReceiver {
     function onStateReceive(
@@ -27,7 +28,7 @@ interface IStakeManager {
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is IStateReceiver {
+contract ChildValidatorSet is IStateReceiver, System {
     using Arrays for uint256[];
 
     struct Validator {
@@ -84,14 +85,6 @@ contract ChildValidatorSet is IStateReceiver {
         initialized = 1;
     }
 
-    modifier onlySystemCall() {
-        require(
-            msg.sender == 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE,
-            "ONLY_SYSTEMCALL"
-        );
-        _;
-    }
-
     modifier onlyStakeManager() {
         require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
         _;
@@ -140,7 +133,8 @@ contract ChildValidatorSet is IStateReceiver {
     function commitEpoch(
         uint256 id,
         Epoch calldata epoch,
-        IStakeManager.Uptime calldata uptime
+        IStakeManager.Uptime calldata uptime,
+        bytes calldata signature
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
@@ -153,6 +147,10 @@ contract ChildValidatorSet is IStateReceiver {
             epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock,
             "INVALID_START_BLOCK"
         );
+
+        bytes32 hash = keccak256(abi.encode(id, epoch, uptime));
+
+        _checkPubkeyAggregation(hash, signature);
 
         Epoch storage newEpoch = epochs[newEpochId];
         newEpoch.endBlock = epoch.endBlock;
@@ -324,5 +322,22 @@ contract ChildValidatorSet is IStateReceiver {
         currentValidatorId++; // we assume statesyncs are strictly ordered
 
         emit NewValidator(id, _address, blsKey);
+    }
+
+    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
+        internal
+        view
+    {
+        // verify signatures for provided sig data and sigs bytes
+        // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line low-level-calls
+        (
+            bool callSuccess,
+            bytes memory returnData
+        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
+                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
+            }(abi.encode(message, signature));
+        bool verified = abi.decode(returnData, (bool));
+        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }
