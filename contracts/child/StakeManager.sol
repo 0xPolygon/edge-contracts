@@ -77,6 +77,15 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     mapping(address => mapping(uint256 => Stake)) public delegations; // user address -> validator id -> Delegation
     mapping(uint256 => Stake) public selfStakes; // validator id -> Delegation
 
+    modifier onlyValidator() {
+        require(
+            childValidatorSet.validatorIdByAddress(msg.sender) != 0,
+            "ONLY_VALIDATOR"
+        );
+
+        _;
+    }
+
     function initialize(
         uint256 newEpochReward,
         uint256 newMinSelfStake,
@@ -139,12 +148,8 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         }
     }
 
-    function selfStake() external payable {
+    function selfStake(uint256 id) external payable onlyValidator {
         require(msg.value >= minSelfStake, "STAKE_TOO_LOW");
-
-        uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
-
-        require(id != 0, "INVALID_SENDER");
 
         childValidatorSet.addSelfStake(id, msg.value);
     }
@@ -195,13 +200,12 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(success, "TRANSFER_FAILED");
     }
 
-    function claimValidatorReward(uint256 id) public nonReentrant {
+    function claimValidatorReward(uint256 id)
+        public
+        onlyValidator
+        nonReentrant
+    {
         uint256 reward = calculateValidatorReward(id);
-
-        require(
-            childValidatorSet.validatorIdByAddress(msg.sender) != 0,
-            "ONLY_VALIDATOR"
-        );
 
         Stake storage delegation = delegations[msg.sender][id];
 
