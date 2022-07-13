@@ -4,9 +4,7 @@ import { BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import * as hre from "hardhat";
 
-import { BLS, ChildValidatorSet, StakeManager } from "../../typechain";
-
-const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+import { ChildValidatorSet, StakeManager } from "../../typechain";
 
 describe("StakeManager", () => {
   let rootValidatorSetAddress: string,
@@ -112,6 +110,28 @@ describe("StakeManager", () => {
   });
 
   it("SelfStake less amount than minSelfStake", async () => {
-    
+    await expect(stakeManager.selfStake({ value: 100 })).to.be.revertedWith(
+      "STAKE_TOO_LOW"
+    );
+  });
+
+  it("SelfStake with invalid sender", async () => {
+    await expect(
+      stakeManager
+        .connect(accounts[validatorSetSize + 1])
+        .selfStake({ value: minSelfStake + 1 })
+    ).to.be.revertedWith("INVALID_SENDER");
+  });
+
+  it("SelfStake", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+    const beforeSelfStake = (await childValidatorSet.validators(id)).selfStake;
+
+    await stakeManager.selfStake({ value: minSelfStake + 1 });
+
+    const afterSelfStake = (await childValidatorSet.validators(id)).selfStake;
+    expect(afterSelfStake.sub(beforeSelfStake)).to.equal(minSelfStake + 1);
   });
 });
