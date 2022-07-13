@@ -198,7 +198,10 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     function claimValidatorReward(uint256 id) public nonReentrant {
         uint256 reward = calculateValidatorReward(id);
 
-        require(childValidatorSet.validatorIdByAddress(msg.sender) != 0, "ONLY_VALIDATOR");
+        require(
+            childValidatorSet.validatorIdByAddress(msg.sender) != 0,
+            "ONLY_VALIDATOR"
+        );
 
         Stake storage delegation = delegations[msg.sender][id];
 
