@@ -11,6 +11,16 @@ interface IStateReceiver {
     ) external;
 }
 
+interface IStakeManager {
+    struct Uptime {
+        uint256 epochId;
+        uint256[] uptimes;
+        uint256 totalUptime;
+    }
+
+    function distributeRewards(Uptime calldata uptime) external;
+}
+
 /**
     @title ChildValidatorSet
     @author Polygon Technology
@@ -44,7 +54,7 @@ contract ChildValidatorSet is IStateReceiver {
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
-    address public stakeManager;
+    IStakeManager public stakeManager;
 
     uint256[] public epochEndBlocks;
 
@@ -83,7 +93,7 @@ contract ChildValidatorSet is IStateReceiver {
     }
 
     modifier onlyStakeManager() {
-        require(msg.sender == stakeManager, "ONLY_STAKE_MANAGER");
+        require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
         _;
     }
 
@@ -95,7 +105,7 @@ contract ChildValidatorSet is IStateReceiver {
      */
     function initialize(
         address newRootValidatorSet,
-        address newStakeManager,
+        IStakeManager newStakeManager,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
@@ -124,37 +134,38 @@ contract ChildValidatorSet is IStateReceiver {
     /**
      * @notice Allows the v3 client to commit epochs to this contract.
      * @param id ID of epoch to be committed
-     * @param startBlock First block in epoch
-     * @param endBlock Last block in epoch
+     * @param epoch New epoch data to be committed
+     * @param uptime Uptime data for the epoch being committed
      */
     function commitEpoch(
         uint256 id,
-        uint256 startBlock,
-        uint256 endBlock,
-        bytes32 epochRoot
+        Epoch calldata epoch,
+        IStakeManager.Uptime calldata uptime
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
-        require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
+        require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
         require(
-            (endBlock - startBlock + 1) % SPRINT == 0,
+            (epoch.endBlock - epoch.startBlock + 1) % SPRINT == 0,
             "EPOCH_MUST_BE_DIVISIBLE_BY_64"
         );
         require(
-            epochs[newEpochId - 1].endBlock + 1 == startBlock,
+            epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock,
             "INVALID_START_BLOCK"
         );
 
         Epoch storage newEpoch = epochs[newEpochId];
-        newEpoch.endBlock = endBlock;
-        newEpoch.startBlock = startBlock;
-        newEpoch.epochRoot = epochRoot;
+        newEpoch.endBlock = epoch.endBlock;
+        newEpoch.startBlock = epoch.startBlock;
+        newEpoch.epochRoot = epoch.epochRoot;
 
-        epochEndBlocks.push(endBlock);
+        epochEndBlocks.push(epoch.endBlock);
 
-        _setNextValidatorSet(newEpochId + 1, epochRoot);
+        _setNextValidatorSet(newEpochId + 1, epoch.epochRoot);
 
-        emit NewEpoch(id, startBlock, endBlock, epochRoot);
+        stakeManager.distributeRewards(uptime);
+
+        emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
     /**
