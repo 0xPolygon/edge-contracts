@@ -3,14 +3,21 @@ import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import * as hre from "hardhat";
+import { randHex } from "../../ts/utils";
+import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 
 import { ChildValidatorSet, StakeManager } from "../../typechain";
+
+const DOMAIN = ethers.utils.arrayify(
+  ethers.utils.hexlify(ethers.utils.randomBytes(32))
+);
 
 describe("StakeManager", () => {
   let rootValidatorSetAddress: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
     stakeManager: StakeManager,
+    systemStakeManager: StakeManager,
     epochReward: number,
     minSelfStake: number,
     minDelegation: number,
@@ -50,6 +57,7 @@ describe("StakeManager", () => {
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"
     );
     systemChildValidatorSet = childValidatorSet.connect(systemSigner);
+    systemStakeManager = stakeManager.connect(systemSigner);
   });
 
   it("Initialize and validate initialization", async () => {
@@ -70,7 +78,7 @@ describe("StakeManager", () => {
   });
 
   it("Initialize ChildValidatorSet and validate initialization", async () => {
-    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 3); // Randomly pick 3-7
     validatorStake = ethers.utils.parseEther(
       String(Math.floor(Math.random() * (10000 - 1000) + 1000))
     );
@@ -127,11 +135,208 @@ describe("StakeManager", () => {
     const id = await childValidatorSet.validatorIdByAddress(
       accounts[0].address
     );
+
+    const selfStakeAmount = minSelfStake + 1;
     const beforeSelfStake = (await childValidatorSet.validators(id)).selfStake;
 
-    await stakeManager.selfStake({ value: minSelfStake + 1 });
+    await stakeManager.selfStake({ value: selfStakeAmount });
 
     const afterSelfStake = (await childValidatorSet.validators(id)).selfStake;
-    expect(afterSelfStake.sub(beforeSelfStake)).to.equal(minSelfStake + 1);
+    expect(afterSelfStake.sub(beforeSelfStake)).to.equal(selfStakeAmount);
+  });
+
+  it("Delegate less amount than minDelegation", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const idToDelegate = id.add(1);
+    const restake = false;
+
+    await expect(
+      stakeManager.delegate(idToDelegate, restake, { value: 100 })
+    ).to.be.revertedWith("DELEGATION_TOO_LOW");
+  });
+
+  it("Delegate to invalid id", async () => {
+    const idToDelegate = await childValidatorSet.currentValidatorId();
+    const restake = false;
+
+    await expect(
+      stakeManager.delegate(idToDelegate, restake, { value: minDelegation + 1 })
+    ).to.be.revertedWith("INVALID_VALIDATOR_ID");
+  });
+
+  it("Delegate for the first time", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const delegateAmount = minDelegation + 1;
+    const idToDelegate = id.add(1);
+    const restake = false;
+
+    const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+      .totalStake;
+
+    await stakeManager.delegate(idToDelegate, restake, {
+      value: delegateAmount,
+    });
+
+    const delegation = await stakeManager.delegations(
+      accounts[0].address,
+      idToDelegate
+    );
+    const currentEpochId = await childValidatorSet.currentEpochId();
+    expect(delegation.epochId).to.equal(currentEpochId.sub(1));
+    expect(delegation.amount).to.equal(delegateAmount);
+
+    const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+      .totalStake;
+    expect(afterDelegate.sub(beforeDelegate)).to.equal(delegateAmount);
+  });
+
+  it("Delegate again without restake", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const delegateAmount = minDelegation + 1;
+    const idToDelegate = id.add(1);
+    const restake = false;
+
+    const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+      .totalStake;
+    const balanceBeforeReDelegate = await ethers.provider.getBalance(
+      accounts[0].address
+    );
+
+    const txResp = await stakeManager.delegate(idToDelegate, restake, {
+      value: delegateAmount,
+    });
+    const txReceipt = await txResp.wait();
+    const delegateGas = ethers.BigNumber.from(
+      txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+    ).add(10001);
+
+    const delegation = await stakeManager.delegations(
+      accounts[0].address,
+      idToDelegate
+    );
+    const currentEpochId = await childValidatorSet.currentEpochId();
+    expect(delegation.epochId).to.equal(currentEpochId.sub(1));
+    expect(delegation.amount).to.equal(delegateAmount * 2);
+
+    const delegatorReward = await stakeManager.calculateDelegatorReward(
+      idToDelegate,
+      accounts[0].address
+    );
+
+    const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+      .totalStake;
+    const balanceAfterReDelegate = await ethers.provider.getBalance(
+      accounts[0].address
+    );
+
+    expect(afterDelegate.sub(beforeDelegate)).to.equal(
+      delegatorReward.add(delegateAmount)
+    );
+    expect(
+      balanceBeforeReDelegate.sub(delegateGas).add(delegatorReward)
+    ).to.equal(balanceAfterReDelegate);
+  });
+
+  it("Delegate again with restake", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const delegateAmount = minDelegation + 1;
+    const idToDelegate = id.add(1);
+    const restake = false;
+
+    const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+      .totalStake;
+
+    await stakeManager.delegate(idToDelegate, restake, {
+      value: delegateAmount,
+    });
+
+    const delegation = await stakeManager.delegations(
+      accounts[0].address,
+      idToDelegate
+    );
+
+    const currentEpochId = await childValidatorSet.currentEpochId();
+    expect(delegation.epochId).to.equal(currentEpochId.sub(1));
+
+    const delegatorReward = await stakeManager.calculateDelegatorReward(
+      idToDelegate,
+      accounts[0].address
+    );
+    expect(delegation.amount).to.equal(delegatorReward.add(delegateAmount * 3));
+
+    const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+      .totalStake;
+    expect(afterDelegate.sub(beforeDelegate)).to.equal(
+      delegatorReward.add(delegateAmount)
+    );
+  });
+
+  it("Claim delegatorReward", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const idToDelegate = id.add(1);
+
+    const delegatorReward = await stakeManager.calculateDelegatorReward(
+      idToDelegate,
+      accounts[0].address
+    );
+
+    const balanceBeforeReDelegate = await ethers.provider.getBalance(
+      accounts[0].address
+    );
+
+    const txResp = await stakeManager.claimDelegatorReward(idToDelegate);
+    const txReceipt = await txResp.wait();
+    const claimGas = ethers.BigNumber.from(
+      txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+    );
+
+    const delegation = await stakeManager.delegations(
+      accounts[0].address,
+      idToDelegate
+    );
+
+    const currentEpochId = await stakeManager.lastRewardedEpochId();
+    expect(delegation.epochId).to.equal(currentEpochId);
+
+    const balanceAfterReDelegate = await ethers.provider.getBalance(
+      accounts[0].address
+    );
+    expect(balanceBeforeReDelegate.sub(claimGas).add(delegatorReward)).to.equal(
+      balanceAfterReDelegate
+    );
+  });
+
+  it("Distribute without system call", async () => {
+    const uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+        [uptime]
+      )
+    );
+
+    await expect(
+      stakeManager.distributeRewards(uptime, signature)
+    ).to.be.revertedWith("'ONLY_SYSTEMCALL");
   });
 });
