@@ -110,7 +110,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             "INVALID_LENGTH"
         );
 
-        uint256[] memory weights;
+        uint256[] memory weights = new uint256[](length);
         uint256 aggPower = 0;
         uint256 aggWeight = 0;
 
