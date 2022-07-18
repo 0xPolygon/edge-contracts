@@ -480,7 +480,7 @@ describe("StakeManager", () => {
     ).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
   });
 
-  it("Distribute with invalid length", async () => {
+  it("Distribute", async () => {
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002030",
       alwaysTrueBytecode,
@@ -499,12 +499,6 @@ describe("StakeManager", () => {
       uptime.uptimes.push(1);
     }
 
-    for (let i = 0; i < currentValidatorId.toNumber() - 1; i++) {
-      const power = await childValidatorSet.calculateValidatorPower(i + 1);
-      console.log(power);
-      console.log(uptime.uptimes[i]);
-    }
-
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
@@ -512,8 +506,6 @@ describe("StakeManager", () => {
       )
     );
 
-    // await expect(
-    //   systemStakeManager.distributeRewards(uptime, message)
-    // ).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
+    await systemStakeManager.distributeRewards(uptime, message);
   });
 });

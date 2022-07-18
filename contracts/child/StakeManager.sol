@@ -223,10 +223,22 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             .validators(validatorId);
         require(validator._address != address(0), "INVALID_VALIDATOR_ID");
 
-        uint256 rewardShares = (totalReward * REWARD_PRECISION) /
-            validator.totalStake;
-        uint256 delegatorShares = (totalReward * REWARD_PRECISION) /
-            (validator.totalStake - validator.selfStake);
+        // uint256 rewardShares = (totalReward * REWARD_PRECISION) /
+        //     validator.totalStake;
+        // uint256 delegatorShares = (totalReward * REWARD_PRECISION) /
+        //     (validator.totalStake - validator.selfStake);
+        uint256 rewardShares = 0;
+        if (validator.totalStake > 0) {
+            rewardShares =
+                (totalReward * REWARD_PRECISION) /
+                validator.totalStake;
+        }
+        uint256 delegatorShares = 0;
+        if (validator.totalStake - validator.selfStake > 0) {
+            delegatorShares =
+                (totalReward * REWARD_PRECISION) /
+                (validator.totalStake - validator.selfStake);
+        }
         uint256 commission = (validator.commission * delegatorShares) / 100;
 
         return (
