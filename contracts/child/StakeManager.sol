@@ -26,6 +26,8 @@ interface IChildValidatorSet {
 
     function addSelfStake(uint256 id, uint256 amount) external;
 
+    function unstake(uint256 id) external returns (uint256);
+
     function addTotalStake(uint256 id, uint256 amount) external;
 
     function validatorIdByAddress(address _address)
@@ -148,6 +150,13 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(msg.value >= minSelfStake, "STAKE_TOO_LOW");
 
         childValidatorSet.addSelfStake(id, msg.value);
+    }
+
+    function unstake() external onlyValidator {
+        uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
+        uint256 unstakedAmount = childValidatorSet.unstake(id);
+        (bool success, ) = msg.sender.call{value: unstakedAmount}("");
+        require(success, "TRANSFER_FAILED");
     }
 
     function delegate(uint256 id, bool restake) external payable {
