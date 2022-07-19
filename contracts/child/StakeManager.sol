@@ -151,9 +151,9 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet.addSelfStake(id, msg.value);
     }
 
-    function unstake(uint256 id) external onlyValidator(id) {
+    function unstake(uint256 id, address to) external onlyValidator(id) {
         uint256 unstakedAmount = childValidatorSet.unstake(id);
-        (bool success, ) = msg.sender.call{value: unstakedAmount}("");
+        (bool success, ) = to.call{value: unstakedAmount}("");
         require(success, "TRANSFER_FAILED");
     }
 
