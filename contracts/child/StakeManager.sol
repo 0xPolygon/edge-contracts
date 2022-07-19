@@ -79,12 +79,11 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     mapping(address => mapping(uint256 => Stake)) public delegations; // user address -> validator id -> Delegation
     mapping(uint256 => Stake) public selfStakes; // validator id -> Delegation
 
-    modifier onlyValidator() {
+    modifier onlyValidator(uint256 id) {
         require(
-            childValidatorSet.validatorIdByAddress(msg.sender) != 0,
+            id == childValidatorSet.validatorIdByAddress(msg.sender) && id != 0,
             "ONLY_VALIDATOR"
         );
-
         _;
     }
 
@@ -146,14 +145,13 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         }
     }
 
-    function selfStake(uint256 id) external payable onlyValidator {
+    function selfStake(uint256 id) external payable onlyValidator(id) {
         require(msg.value >= minSelfStake, "STAKE_TOO_LOW");
 
         childValidatorSet.addSelfStake(id, msg.value);
     }
 
-    function unstake() external onlyValidator {
-        uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
+    function unstake(uint256 id) external onlyValidator(id) {
         uint256 unstakedAmount = childValidatorSet.unstake(id);
         (bool success, ) = msg.sender.call{value: unstakedAmount}("");
         require(success, "TRANSFER_FAILED");
@@ -207,7 +205,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
     function claimValidatorReward(uint256 id)
         public
-        onlyValidator
+        onlyValidator(id)
         nonReentrant
     {
         uint256 reward = calculateValidatorReward(id);
