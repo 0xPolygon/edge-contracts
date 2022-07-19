@@ -221,6 +221,12 @@ contract ChildValidatorSet is IStateReceiver, System {
         validator.commission = newCommission;
     }
 
+    /**
+     * @notice Returns the full validator struct for a validator ID
+     * @dev There is no need to use this function unless you want the validator BLS key array
+     * @param id ID of the validator to return data for
+     * @return Validator Returns the full validator struct if exists, or an empty struct
+     */
     function getValidatorById(uint256 id)
         external
         view
