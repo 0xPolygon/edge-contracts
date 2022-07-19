@@ -221,6 +221,14 @@ contract ChildValidatorSet is IStateReceiver, System {
         validator.commission = newCommission;
     }
 
+    function getValidatorById(uint256 id)
+        external
+        view
+        returns (Validator memory)
+    {
+        return validators[id];
+    }
+
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
         return epochs[currentEpochId].validatorSet;
     }
