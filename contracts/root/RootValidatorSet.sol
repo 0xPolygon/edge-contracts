@@ -20,12 +20,9 @@ contract RootValidatorSet is Initializable, Ownable {
     }
 
     uint256 public currentValidatorId;
-    IBLS public bls;
 
-    uint256[2] public message;
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
-    mapping(address => bool) public whitelist;
 
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
 
@@ -35,32 +32,21 @@ contract RootValidatorSet is Initializable, Ownable {
         uint256[4] blsKey
     );
 
-    modifier isWhitelistedAndNotRegistered() {
-        require(whitelist[msg.sender], "NOT_WHITELISTED");
-        require(validatorIdByAddress[msg.sender] == 0, "ALREADY_REGISTERED");
-
-        _;
-    }
-
     /**
      * @notice Initialization function for RootValidatorSet
      * @dev Contract can only be initialized once, also transfers ownership to initializing address.
-     * @param newBls Address of the BLS library contract.
      * @param validatorAddresses Array of validator addresses to seed the contract with.
      * @param validatorAddresses Array of validator pubkeys to seed the contract with.
-     * @param newMessage Signed message to verify with BLS.
      */
     function initialize(
-        IBLS newBls,
+        address governance,
         address[] calldata validatorAddresses,
-        uint256[4][] calldata validatorPubkeys,
-        uint256[2] calldata newMessage
+        uint256[4][] calldata validatorPubkeys
     ) external initializer {
         require(
             validatorAddresses.length == validatorPubkeys.length,
             "LENGTH_MISMATCH"
         );
-        bls = newBls;
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[++currentId];
@@ -77,63 +63,7 @@ contract RootValidatorSet is Initializable, Ownable {
             );
         }
         currentValidatorId = currentId;
-        message = newMessage;
-        _transferOwnership(msg.sender);
-    }
-
-    /**
-     * @notice Adds addresses which are allowed to register as validators.
-     * @param whitelistAddreses Array of address to whitelist
-     */
-    function addToWhitelist(address[] calldata whitelistAddreses)
-        external
-        onlyOwner
-    {
-        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            whitelist[whitelistAddreses[i]] = true;
-        }
-    }
-
-    /**
-     * @notice Deletes addresses which are allowed to register as validators.
-     * @param whitelistAddreses Array of address to remove from whitelist
-     */
-    function deleteFromWhitelist(address[] calldata whitelistAddreses)
-        external
-        onlyOwner
-    {
-        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            whitelist[whitelistAddreses[i]] = false;
-        }
-    }
-
-    /**
-     * @notice Validates BLS signature with the provided pubkey and registers validators into the set.
-     * @param signature Signature to validate message against
-     * @param pubkey BLS public key of validator
-     */
-    function register(uint256[2] calldata signature, uint256[4] calldata pubkey)
-        external
-        isWhitelistedAndNotRegistered
-    {
-        (bool result, bool callSuccess) = bls.verifySingle(
-            signature,
-            pubkey,
-            message
-        );
-        require(callSuccess && result, "INVALID_SIGNATURE");
-
-        whitelist[msg.sender] = false;
-
-        uint256 currentId = ++currentValidatorId;
-
-        Validator storage newValidator = validators[currentId];
-        newValidator.id = currentId;
-        newValidator._address = msg.sender;
-        newValidator.blsKey = pubkey;
-        validatorIdByAddress[msg.sender] = currentId;
-
-        emit NewValidator(currentId, msg.sender, pubkey);
+        _transferOwnership(governance);
     }
 
     function getValidator(uint256 id) external view returns (Validator memory) {
