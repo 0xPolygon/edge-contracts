@@ -5,6 +5,13 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../interfaces/IBLS.sol";
 
 interface IRootValidatorSet {
+    struct Validator {
+        address _address;
+        uint256[4] blsKey;
+    }
+
+    function addValidators(Validator[] calldata newValidators) external;
+
     function getValidatorBlsKey(uint256 id)
         external
         view
@@ -87,9 +94,12 @@ contract CheckpointManager is Initializable {
         uint256 id,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,
-        uint256[] calldata validatorIds
+        uint256[] calldata validatorIds,
+        IRootValidatorSet.Validator[] calldata newValidators
     ) external {
-        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint)));
+        bytes memory hash = abi.encode(
+            keccak256(abi.encode(id, checkpoint, newValidators))
+        );
 
         uint256[2] memory message = bls.hashToPoint(domain, hash);
 
@@ -102,6 +112,10 @@ contract CheckpointManager is Initializable {
         _verifyCheckpoint(currentCheckpointId, id, checkpoint);
 
         checkpoints[++currentCheckpointId] = checkpoint;
+
+        if (newValidators.length != 0) {
+            rootValidatorSet.addValidators(newValidators);
+        }
     }
 
     /**
@@ -116,17 +130,20 @@ contract CheckpointManager is Initializable {
         uint256[] calldata ids,
         Checkpoint[] calldata checkpointBatch,
         uint256[2] calldata signature,
-        uint256[] calldata validatorIds
+        uint256[] calldata validatorIds,
+        IRootValidatorSet.Validator[] calldata newValidators
     ) external {
         bytes memory hash = abi.encode(
-            keccak256(abi.encode(ids, checkpointBatch))
+            keccak256(abi.encode(ids, checkpointBatch, newValidators))
         );
-
-        uint256[2] memory message = bls.hashToPoint(domain, hash);
 
         // slither-disable-next-line reentrancy-benign
         require(
-            _verifySignature(message, signature, validatorIds),
+            _verifySignature(
+                bls.hashToPoint(domain, hash),
+                signature,
+                validatorIds
+            ),
             "SIGNATURE_VERIFICATION_FAILED"
         );
 
@@ -142,6 +159,10 @@ contract CheckpointManager is Initializable {
         }
 
         currentCheckpointId = prevId;
+
+        if (newValidators.length != 0) {
+            rootValidatorSet.addValidators(newValidators);
+        }
     }
 
     /**
