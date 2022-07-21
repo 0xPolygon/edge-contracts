@@ -49,6 +49,7 @@ contract RootValidatorSet is Initializable, Ownable {
             validatorAddresses.length == validatorPubkeys.length,
             "LENGTH_MISMATCH"
         );
+        // slither-disable-next-line missing-zero-check
         checkpointManager = newCheckpointManager;
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {

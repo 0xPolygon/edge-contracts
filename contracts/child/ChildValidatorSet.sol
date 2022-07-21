@@ -4,14 +4,6 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/utils/Arrays.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-interface IStateReceiver {
-    function onStateReceive(
-        uint256 id,
-        address sender,
-        bytes calldata data
-    ) external;
-}
-
 interface IBLS {
     function verifySingle(
         uint256[2] calldata signature,
@@ -26,7 +18,7 @@ interface IBLS {
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is IStateReceiver, Ownable {
+contract ChildValidatorSet is Ownable {
     using Arrays for uint256[];
 
     struct Validator {
@@ -228,33 +220,6 @@ contract ChildValidatorSet is IStateReceiver, Ownable {
         emit NewEpoch(id, startBlock, endBlock, epochRoot);
     }
 
-    /**
-     * @notice Enables the RootValidatorSet to trustlessly update validator set on child chain.
-     * @param data Data received from RootValidatorSet
-     */
-    function onStateReceive(
-        uint256, /* id */
-        address sender,
-        bytes calldata data
-    ) external {
-        // slither-disable-next-line too-many-digits
-        require(
-            msg.sender == 0x0000000000000000000000000000000000001001,
-            "ONLY_STATESYNC"
-        );
-        require(sender == rootValidatorSet, "ONLY_ROOT");
-        (bytes32 signature, bytes memory decodedData) = abi.decode(
-            data,
-            (bytes32, bytes)
-        );
-        require(signature == NEW_VALIDATOR_SIG, "INVALID_SIGNATURE");
-        (uint256 id, address _address, uint256[4] memory blsKey) = abi.decode(
-            decodedData,
-            (uint256, address, uint256[4])
-        );
-        _addNewValidator(id, _address, blsKey);
-    }
-
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
         return epochs[currentEpochId].validatorSet;
     }
@@ -335,26 +300,5 @@ contract ChildValidatorSet is IStateReceiver, Ownable {
             }
             epochs[epochId].validatorSet = validatorSet;
         }
-    }
-
-    /**
-     * @notice Adds a new validator to our total validator set.
-     */
-    function _addNewValidator(
-        uint256 id,
-        address _address,
-        uint256[4] memory blsKey
-    ) internal {
-        require(id <= MAX_VALIDATOR_SET_SIZE, "VALIDATOR_SET_FULL");
-
-        Validator storage newValidator = validators[id];
-        newValidator._address = _address;
-        newValidator.blsKey = blsKey;
-
-        validatorIdByAddress[_address] = id;
-
-        currentValidatorId++; // we assume statesyncs are strictly ordered
-
-        emit NewValidator(id, _address, blsKey);
     }
 }
