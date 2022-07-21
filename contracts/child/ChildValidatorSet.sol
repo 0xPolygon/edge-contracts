@@ -44,7 +44,6 @@ contract ChildValidatorSet is Ownable {
     uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
-    address public rootValidatorSet;
 
     uint256[2] public message;
     uint256[] public epochEndBlocks;
@@ -98,7 +97,6 @@ contract ChildValidatorSet is Ownable {
      * @param epochValidatorSet First active validator set
      */
     function initialize(
-        address newRootValidatorSet,
         address governance,
         IBLS newBls,
         uint256[2] calldata newMessage,
@@ -108,8 +106,6 @@ contract ChildValidatorSet is Ownable {
         uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
         message = newMessage;
-        // slither-disable-next-line missing-zero-check
-        rootValidatorSet = newRootValidatorSet;
         bls = newBls;
         uint256 i = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (; i < validatorAddresses.length; i++) {
