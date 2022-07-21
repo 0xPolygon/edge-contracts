@@ -14,7 +14,6 @@ import "../interfaces/IBLS.sol";
 // slither-disable-next-line missing-inheritance
 contract RootValidatorSet is Initializable, Ownable {
     struct Validator {
-        uint256 id;
         address _address;
         uint256[4] blsKey;
     }
@@ -54,7 +53,6 @@ contract RootValidatorSet is Initializable, Ownable {
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[++currentId];
-            newValidator.id = currentId;
             newValidator._address = validatorAddresses[i];
             newValidator.blsKey = validatorPubkeys[i];
 
@@ -70,7 +68,7 @@ contract RootValidatorSet is Initializable, Ownable {
         _transferOwnership(governance);
     }
 
-    function addValidator(Validator[] calldata newValidators) external {
+    function addValidators(Validator[] calldata newValidators) external {
         require(msg.sender == checkpointManager, "ONLY_CHECKPOINT_MANAGER");
         uint256 length = newValidators.length;
         uint256 currentId = currentValidatorId;
