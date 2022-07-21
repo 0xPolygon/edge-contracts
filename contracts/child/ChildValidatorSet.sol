@@ -109,7 +109,7 @@ contract ChildValidatorSet is IStateReceiver, Ownable {
         address newRootValidatorSet,
         address governance,
         IBLS newBls,
-        uint[2] calldata newMessage,
+        uint256[2] calldata newMessage,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
@@ -137,7 +137,7 @@ contract ChildValidatorSet is IStateReceiver, Ownable {
         _transferOwnership(governance);
     }
 
-        /**
+    /**
      * @notice Adds addresses which are allowed to register as validators.
      * @param whitelistAddreses Array of address to whitelist
      */

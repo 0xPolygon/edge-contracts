@@ -73,7 +73,7 @@ contract RootValidatorSet is Initializable, Ownable {
         require(msg.sender == checkpointManager, "ONLY_CHECKPOINT_MANAGER");
         uint256 length = newValidators.length;
         uint256 currentId = currentValidatorId;
-        for(uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             validators[i + currentId + 1] = newValidators[i];
         }
     }
