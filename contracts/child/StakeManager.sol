@@ -151,8 +151,20 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet.addSelfStake(id, msg.value);
     }
 
-    function unstake(uint256 id, address to) external onlyValidator(id) {
+    function unstake(
+        uint256 id,
+        uint256 amount,
+        address to
+    ) external onlyValidator(id) {
+        IChildValidatorSet.Validator memory validator = childValidatorSet
+            .validators(id);
+        uint256 amountLeft = validator.selfStake - amount;
+        require(
+            amountLeft >= minSelfStake || amountLeft == 0,
+            "INVALID_UNSTAKE_AMOUNT"
+        );
         uint256 unstakedAmount = childValidatorSet.unstake(id);
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = to.call{value: unstakedAmount}("");
         require(success, "TRANSFER_FAILED");
     }
