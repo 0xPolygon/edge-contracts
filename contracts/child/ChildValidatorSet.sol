@@ -203,16 +203,10 @@ contract ChildValidatorSet is IStateReceiver, System {
         validator.totalStake += amount;
     }
 
-    function unstake(uint256 id)
-        external
-        onlyStakeManager
-        returns (uint256 amount)
-    {
+    function unstake(uint256 id, uint256 amount) external onlyStakeManager {
         Validator storage validator = validators[id];
-        uint256 stakedAmount = validator.selfStake;
-        validator.selfStake = 0;
-        validator.totalStake -= stakedAmount;
-        return stakedAmount;
+        validator.selfStake -= amount;
+        validator.totalStake -= amount;
     }
 
     function addTotalStake(uint256 id, uint256 amount)

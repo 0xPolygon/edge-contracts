@@ -26,7 +26,7 @@ interface IChildValidatorSet {
 
     function addSelfStake(uint256 id, uint256 amount) external;
 
-    function unstake(uint256 id) external returns (uint256);
+    function unstake(uint256 id, uint256 amount) external;
 
     function addTotalStake(uint256 id, uint256 amount) external;
 
@@ -163,9 +163,9 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             amountLeft >= minSelfStake || amountLeft == 0,
             "INVALID_UNSTAKE_AMOUNT"
         );
-        uint256 unstakedAmount = childValidatorSet.unstake(id);
+        childValidatorSet.unstake(id, amount);
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = to.call{value: unstakedAmount}("");
+        (bool success, ) = to.call{value: amount}("");
         require(success, "TRANSFER_FAILED");
     }
 
