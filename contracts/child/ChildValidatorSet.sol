@@ -92,6 +92,9 @@ contract ChildValidatorSet is Ownable {
 
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
+     * @param governance Governance address to set as owner of the contract
+     * @param newBls Address of BLS contract to check message signature
+     * @param newMessage Message to check BLS signature at time of registration
      * @param validatorAddresses Addresses of validators
      * @param validatorPubkeys BLS pubkeys of validators
      * @param epochValidatorSet First active validator set
