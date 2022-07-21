@@ -20,6 +20,7 @@ contract RootValidatorSet is Initializable, Ownable {
     }
 
     uint256 public currentValidatorId;
+    address public checkpointManager;
 
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
@@ -40,6 +41,7 @@ contract RootValidatorSet is Initializable, Ownable {
      */
     function initialize(
         address governance,
+        address newCheckpointManager,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys
     ) external initializer {
@@ -47,6 +49,7 @@ contract RootValidatorSet is Initializable, Ownable {
             validatorAddresses.length == validatorPubkeys.length,
             "LENGTH_MISMATCH"
         );
+        checkpointManager = newCheckpointManager;
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[++currentId];
@@ -64,6 +67,15 @@ contract RootValidatorSet is Initializable, Ownable {
         }
         currentValidatorId = currentId;
         _transferOwnership(governance);
+    }
+
+    function addValidator(Validator[] calldata newValidators) external {
+        require(msg.sender == checkpointManager, "ONLY_CHECKPOINT_MANAGER");
+        uint256 length = newValidators.length;
+        uint256 currentId = currentValidatorId;
+        for(uint256 i = 0; i < length; i++) {
+            validators[i + currentId + 1] = newValidators[i];
+        }
     }
 
     function getValidator(uint256 id) external view returns (Validator memory) {
