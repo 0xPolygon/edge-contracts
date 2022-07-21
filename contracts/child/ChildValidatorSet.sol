@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Arrays.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IStateReceiver {
     function onStateReceive(
@@ -11,13 +12,21 @@ interface IStateReceiver {
     ) external;
 }
 
+interface IBLS {
+    function verifySingle(
+        uint256[2] calldata signature,
+        uint256[4] calldata pubkey,
+        uint256[2] calldata message
+    ) external view returns (bool, bool);
+}
+
 /**
     @title ChildValidatorSet
     @author Polygon Technology
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is IStateReceiver {
+contract ChildValidatorSet is IStateReceiver, Ownable {
     using Arrays for uint256[];
 
     struct Validator {
@@ -34,6 +43,8 @@ contract ChildValidatorSet is IStateReceiver {
         uint256[] validatorSet;
     }
 
+    IBLS public bls;
+
     bytes32 public constant NEW_VALIDATOR_SIG =
         0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
@@ -43,12 +54,14 @@ contract ChildValidatorSet is IStateReceiver {
     uint256 public currentEpochId;
     address public rootValidatorSet;
 
+    uint256[2] public message;
     uint256[] public epochEndBlocks;
 
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
     mapping(uint256 => Epoch) public epochs;
     mapping(uint256 => mapping(uint256 => bool)) public validatorsByEpoch;
+    mapping(address => bool) public whitelist;
 
     uint8 private initialized;
 
@@ -79,6 +92,13 @@ contract ChildValidatorSet is IStateReceiver {
         _;
     }
 
+    modifier isWhitelistedAndNotRegistered() {
+        require(whitelist[msg.sender], "NOT_WHITELISTED");
+        require(validatorIdByAddress[msg.sender] == 0, "ALREADY_REGISTERED");
+
+        _;
+    }
+
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
      * @param validatorAddresses Addresses of validators
@@ -87,13 +107,18 @@ contract ChildValidatorSet is IStateReceiver {
      */
     function initialize(
         address newRootValidatorSet,
+        address governance,
+        IBLS newBls,
+        uint[2] calldata newMessage,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
         uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
+        message = newMessage;
         // slither-disable-next-line missing-zero-check
         rootValidatorSet = newRootValidatorSet;
+        bls = newBls;
         uint256 i = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[i + 1];
@@ -108,6 +133,63 @@ contract ChildValidatorSet is IStateReceiver {
 
         Epoch storage nextEpoch = epochs[++currentEpochId];
         nextEpoch.validatorSet = epochValidatorSet;
+
+        _transferOwnership(governance);
+    }
+
+        /**
+     * @notice Adds addresses which are allowed to register as validators.
+     * @param whitelistAddreses Array of address to whitelist
+     */
+    function addToWhitelist(address[] calldata whitelistAddreses)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            whitelist[whitelistAddreses[i]] = true;
+        }
+    }
+
+    /**
+     * @notice Deletes addresses which are allowed to register as validators.
+     * @param whitelistAddreses Array of address to remove from whitelist
+     */
+    function deleteFromWhitelist(address[] calldata whitelistAddreses)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            whitelist[whitelistAddreses[i]] = false;
+        }
+    }
+
+    /**
+     * @notice Validates BLS signature with the provided pubkey and registers validators into the set.
+     * @param signature Signature to validate message against
+     * @param pubkey BLS public key of validator
+     */
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey)
+        external
+        isWhitelistedAndNotRegistered
+    {
+        (bool result, bool callSuccess) = bls.verifySingle(
+            signature,
+            pubkey,
+            message
+        );
+        require(callSuccess && result, "INVALID_SIGNATURE");
+
+        whitelist[msg.sender] = false;
+
+        uint256 currentId = ++currentValidatorId;
+
+        Validator storage newValidator = validators[currentId];
+
+        newValidator._address = msg.sender;
+        newValidator.blsKey = pubkey;
+        validatorIdByAddress[msg.sender] = currentId;
+
+        emit NewValidator(currentId, msg.sender, pubkey);
     }
 
     /**
