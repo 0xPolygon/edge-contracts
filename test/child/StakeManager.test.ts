@@ -18,7 +18,7 @@ describe("StakeManager", () => {
     systemChildValidatorSet: ChildValidatorSet,
     stakeManager: StakeManager,
     systemStakeManager: StakeManager,
-    epochReward: number,
+    epochReward: BigNumber,
     minSelfStake: number,
     minDelegation: number,
     validatorSetSize: number,
@@ -40,7 +40,7 @@ describe("StakeManager", () => {
     stakeManager = await StakeManager.deploy();
     await stakeManager.deployed();
 
-    epochReward = 1;
+    epochReward = ethers.utils.parseEther("0.0000001");
     minSelfStake = 10000;
     minDelegation = 10000;
 
@@ -78,7 +78,7 @@ describe("StakeManager", () => {
   });
 
   it("Initialize ChildValidatorSet and validate initialization", async () => {
-    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 4); // Randomly pick 3-8
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
     // validatorSetSize = 4; // constnatly 4
     validatorStake = ethers.utils.parseEther(
       String(Math.floor(Math.random() * (10000 - 1000) + 1000))
@@ -93,6 +93,7 @@ describe("StakeManager", () => {
       addresses.push(accounts[i].address);
       validatorSet.push(i + 1);
     }
+
     await systemChildValidatorSet.initialize(
       rootValidatorSetAddress,
       stakeManager.address,
@@ -491,12 +492,12 @@ describe("StakeManager", () => {
 
     const uptime = {
       epochId,
-      uptimes: [1],
+      uptimes: [1000000000000],
       totalUptime: 0,
     };
 
     for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
-      uptime.uptimes.push(1);
+      uptime.uptimes.push(1000000000000);
     }
 
     const message = ethers.utils.keccak256(
@@ -506,6 +507,33 @@ describe("StakeManager", () => {
       )
     );
 
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const idToDelegate = id.add(1);
+    const delegateAmount = ethers.utils.parseEther(
+      String(Math.floor(Math.random() * (10000 - 1000) + 1000))
+    );
+    const restake = false;
+
+    await stakeManager.delegate(idToDelegate, restake, {
+      value: delegateAmount,
+    });
+
+    const validatorInfo = await childValidatorSet.validators(idToDelegate);
+    const totalStake = validatorInfo.totalStake;
+
+    const selfStake = validatorInfo.selfStake;
+
     await systemStakeManager.distributeRewards(uptime, message);
+
+    const delegatorReward = await stakeManager.calculateDelegatorReward(
+      idToDelegate,
+      accounts[0].address
+    );
+
+    console.log("Reward");
+    console.log(delegatorReward);
   });
 });

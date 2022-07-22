@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Initializable} from "../libs/Initializable.sol";
 import {System} from "./System.sol";
+import "hardhat/console.sol";
 
 interface IChildValidatorSet {
     struct Validator {
@@ -206,10 +207,19 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         uint256 totalReward = 0;
 
+        // console.logString("Debug");
+        // console.log(startIndex);
+        // console.log(endIndex);
+        // console.logUint(delegatorRewardShares[1][2]);
+        // console.log(id);
+
         for (uint256 i = startIndex; i <= endIndex; i++) {
+            // console.logUint(totalReward);
+            // console.logUint(delegatorRewardShares[startIndex][id]);
             totalReward +=
                 delegation.amount *
                 delegatorRewardShares[startIndex][id];
+            // console.logUint(totalReward);
         }
 
         return totalReward / REWARD_PRECISION;
@@ -239,12 +249,15 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
                 (totalReward * REWARD_PRECISION) /
                 (validator.totalStake - validator.selfStake);
         }
+
         uint256 commission = (validator.commission * delegatorShares) / 100;
 
-        return (
-            delegatorShares - commission,
-            rewardShares - delegatorShares + commission
-        );
+        // return (
+        //     delegatorShares - commission,
+        //     rewardShares - delegatorShares + commission
+        // );
+
+        return (rewardShares - commission, delegatorShares - commission);
     }
 
     function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
