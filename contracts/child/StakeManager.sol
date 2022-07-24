@@ -102,7 +102,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     function distributeRewards(Uptime calldata uptime) external {
         require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
 
-        require(uptime.epochId == lastRewardedEpochId + 1, "INVALID_EPOCH_ID");
+        require(uptime.epochId == ++lastRewardedEpochId, "INVALID_EPOCH_ID");
 
         require(
             uptime.epochId < childValidatorSet.currentEpochId(),
@@ -117,7 +117,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             "INVALID_LENGTH"
         );
 
-        uint256[] memory weights;
+        uint256[] memory weights = new uint256[](length);
         uint256 aggPower = 0;
         uint256 aggWeight = 0;
 
@@ -282,15 +282,22 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             .validators(validatorId);
         require(validator._address != address(0), "INVALID_VALIDATOR_ID");
 
+        if (validator.totalStake == 0) {
+            return (0, 0);
+        }
+
         uint256 rewardShares = (totalReward * REWARD_PRECISION) /
             validator.totalStake;
+
+        if ((validator.totalStake - validator.selfStake) == 0) {
+            return (rewardShares, 0);
+        }
+
         uint256 delegatorShares = (totalReward * REWARD_PRECISION) /
             (validator.totalStake - validator.selfStake);
+
         uint256 commission = (validator.commission * delegatorShares) / 100;
 
-        return (
-            delegatorShares - commission,
-            rewardShares - delegatorShares + commission
-        );
+        return (rewardShares - commission, delegatorShares - commission);
     }
 }

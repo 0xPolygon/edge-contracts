@@ -272,6 +272,7 @@ contract ChildValidatorSet is IStateReceiver, System {
     {
         uint256 totalStake = calculateTotalStake();
         uint256 validatorStake = validators[id].totalStake;
+
         /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
            MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
         return (validatorStake * 100 * (10**6)) / totalStake;
