@@ -97,7 +97,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         _checkPubkeyAggregation(hash, signature);
 
-        require(uptime.epochId == lastRewardedEpochId + 1, "INVALID_EPOCH_ID");
+        require(uptime.epochId == ++lastRewardedEpochId, "INVALID_EPOCH_ID");
         require(
             uptime.epochId < childValidatorSet.currentEpochId(),
             "EPOCH_NOT_COMMITTED"
