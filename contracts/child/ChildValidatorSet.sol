@@ -2,14 +2,15 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Arrays.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import {System} from "./System.sol";
 
-interface IStateReceiver {
-    function onStateReceive(
-        uint256 id,
-        address sender,
-        bytes calldata data
-    ) external;
+interface IBLS {
+    function verifySingle(
+        uint256[2] calldata signature,
+        uint256[4] calldata pubkey,
+        uint256[2] calldata message
+    ) external view returns (bool, bool);
 }
 
 interface IStakeManager {
@@ -28,7 +29,7 @@ interface IStakeManager {
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is IStateReceiver, System {
+contract ChildValidatorSet is System, Ownable {
     using Arrays for uint256[];
 
     struct Validator {
@@ -54,15 +55,18 @@ contract ChildValidatorSet is IStateReceiver, System {
     uint256 public constant MAX_COMMISSION = 100;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
-    address public rootValidatorSet;
-    IStakeManager public stakeManager;
 
+    IStakeManager public stakeManager;
+    IBLS public bls;
+
+    uint256[2] public message;
     uint256[] public epochEndBlocks;
 
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public validatorIdByAddress;
     mapping(uint256 => Epoch) public epochs;
     mapping(uint256 => mapping(uint256 => bool)) public validatorsByEpoch;
+    mapping(address => bool) public whitelist;
 
     uint8 private initialized;
 
@@ -90,24 +94,36 @@ contract ChildValidatorSet is IStateReceiver, System {
         _;
     }
 
+    modifier isWhitelistedAndNotRegistered() {
+        require(whitelist[msg.sender], "NOT_WHITELISTED");
+        require(validatorIdByAddress[msg.sender] == 0, "ALREADY_REGISTERED");
+
+        _;
+    }
+
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
+     * @param governance Governance address to set as owner of the contract
+     * @param newBls Address of BLS contract to check message signature
+     * @param newMessage Message to check BLS signature at time of registration
      * @param validatorAddresses Addresses of validators
      * @param validatorPubkeys BLS pubkeys of validators
      * @param epochValidatorSet First active validator set
      */
     function initialize(
-        address newRootValidatorSet,
         IStakeManager newStakeManager,
+        address governance,
+        IBLS newBls,
+        uint256[2] calldata newMessage,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
         uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
         // slither-disable-next-line missing-zero-check
-        rootValidatorSet = newRootValidatorSet;
-        // slither-disable-next-line missing-zero-check
         stakeManager = newStakeManager;
+        message = newMessage;
+        bls = newBls;
         uint256 i = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
         for (; i < validatorAddresses.length; i++) {
             Validator storage newValidator = validators[i + 1];
@@ -122,6 +138,63 @@ contract ChildValidatorSet is IStateReceiver, System {
 
         Epoch storage nextEpoch = epochs[++currentEpochId];
         nextEpoch.validatorSet = epochValidatorSet;
+
+        _transferOwnership(governance);
+    }
+
+    /**
+     * @notice Adds addresses which are allowed to register as validators.
+     * @param whitelistAddreses Array of address to whitelist
+     */
+    function addToWhitelist(address[] calldata whitelistAddreses)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            whitelist[whitelistAddreses[i]] = true;
+        }
+    }
+
+    /**
+     * @notice Deletes addresses which are allowed to register as validators.
+     * @param whitelistAddreses Array of address to remove from whitelist
+     */
+    function deleteFromWhitelist(address[] calldata whitelistAddreses)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            whitelist[whitelistAddreses[i]] = false;
+        }
+    }
+
+    /**
+     * @notice Validates BLS signature with the provided pubkey and registers validators into the set.
+     * @param signature Signature to validate message against
+     * @param pubkey BLS public key of validator
+     */
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey)
+        external
+        isWhitelistedAndNotRegistered
+    {
+        (bool result, bool callSuccess) = bls.verifySingle(
+            signature,
+            pubkey,
+            message
+        );
+        require(callSuccess && result, "INVALID_SIGNATURE");
+
+        whitelist[msg.sender] = false;
+
+        uint256 currentId = ++currentValidatorId;
+
+        Validator storage newValidator = validators[currentId];
+
+        newValidator._address = msg.sender;
+        newValidator.blsKey = pubkey;
+        validatorIdByAddress[msg.sender] = currentId;
+
+        emit NewValidator(currentId, msg.sender, pubkey);
     }
 
     /**
@@ -133,8 +206,7 @@ contract ChildValidatorSet is IStateReceiver, System {
     function commitEpoch(
         uint256 id,
         Epoch calldata epoch,
-        IStakeManager.Uptime calldata uptime,
-        bytes calldata signature
+        IStakeManager.Uptime calldata uptime
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
@@ -148,10 +220,6 @@ contract ChildValidatorSet is IStateReceiver, System {
             "INVALID_START_BLOCK"
         );
 
-        bytes32 hash = keccak256(abi.encode(id, epoch, uptime));
-
-        _checkPubkeyAggregation(hash, signature);
-
         Epoch storage newEpoch = epochs[newEpochId];
         newEpoch.endBlock = epoch.endBlock;
         newEpoch.startBlock = epoch.startBlock;
@@ -164,33 +232,6 @@ contract ChildValidatorSet is IStateReceiver, System {
         stakeManager.distributeRewards(uptime);
 
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
-    }
-
-    /**
-     * @notice Enables the RootValidatorSet to trustlessly update validator set on child chain.
-     * @param data Data received from RootValidatorSet
-     */
-    function onStateReceive(
-        uint256, /* id */
-        address sender,
-        bytes calldata data
-    ) external {
-        // slither-disable-next-line too-many-digits
-        require(
-            msg.sender == 0x0000000000000000000000000000000000001001,
-            "ONLY_STATESYNC"
-        );
-        require(sender == rootValidatorSet, "ONLY_ROOT");
-        (bytes32 signature, bytes memory decodedData) = abi.decode(
-            data,
-            (bytes32, bytes)
-        );
-        require(signature == NEW_VALIDATOR_SIG, "INVALID_SIGNATURE");
-        (uint256 id, address _address, uint256[4] memory blsKey) = abi.decode(
-            decodedData,
-            (uint256, address, uint256[4])
-        );
-        _addNewValidator(id, _address, blsKey);
     }
 
     function addSelfStake(uint256 id, uint256 amount)
@@ -324,43 +365,5 @@ contract ChildValidatorSet is IStateReceiver, System {
             }
             epochs[epochId].validatorSet = validatorSet;
         }
-    }
-
-    /**
-     * @notice Adds a new validator to our total validator set.
-     */
-    function _addNewValidator(
-        uint256 id,
-        address _address,
-        uint256[4] memory blsKey
-    ) internal {
-        require(id <= MAX_VALIDATOR_SET_SIZE, "VALIDATOR_SET_FULL");
-
-        Validator storage newValidator = validators[id];
-        newValidator._address = _address;
-        newValidator.blsKey = blsKey;
-
-        validatorIdByAddress[_address] = id;
-
-        currentValidatorId++; // we assume statesyncs are strictly ordered
-
-        emit NewValidator(id, _address, blsKey);
-    }
-
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
-        internal
-        view
-    {
-        // verify signatures for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
-        (
-            bool callSuccess,
-            bytes memory returnData
-        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
-                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-            }(abi.encode(message, signature));
-        bool verified = abi.decode(returnData, (bool));
-        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }
