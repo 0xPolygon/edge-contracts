@@ -26,6 +26,8 @@ interface IChildValidatorSet {
 
     function addSelfStake(uint256 id, uint256 amount) external;
 
+    function unstake(uint256 id, uint256 amount) external;
+
     function addTotalStake(uint256 id, uint256 amount) external;
 
     function validatorIdByAddress(address _address)
@@ -56,7 +58,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 totalUptime;
     }
 
-    struct Delegation {
+    struct Stake {
         uint256 epochId;
         uint256 amount;
     }
@@ -74,7 +76,16 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         public validatorRewardShares; // epoch -> validator id -> amount
     mapping(uint256 => mapping(uint256 => uint256))
         public delegatorRewardShares; // epoch -> validator id -> reward per share
-    mapping(address => mapping(uint256 => Delegation)) public delegations; // user address -> validator id -> Delegation
+    mapping(address => mapping(uint256 => Stake)) public delegations; // user address -> validator id -> Delegation
+    mapping(uint256 => Stake) public selfStakes; // validator id -> Delegation
+
+    modifier onlyValidator(uint256 id) {
+        require(
+            id == childValidatorSet.validatorIdByAddress(msg.sender) && id != 0,
+            "ONLY_VALIDATOR"
+        );
+        _;
+    }
 
     function initialize(
         uint256 newEpochReward,
@@ -88,15 +99,11 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         childValidatorSet = newChildValidatorSet;
     }
 
-    function distributeRewards(Uptime calldata uptime, bytes calldata signature)
-        external
-        onlySystemCall
-    {
-        bytes32 hash = keccak256(abi.encode(uptime));
-
-        _checkPubkeyAggregation(hash, signature);
+    function distributeRewards(Uptime calldata uptime) external {
+        require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
 
         require(uptime.epochId == ++lastRewardedEpochId, "INVALID_EPOCH_ID");
+
         require(
             uptime.epochId < childValidatorSet.currentEpochId(),
             "EPOCH_NOT_COMMITTED"
@@ -138,14 +145,28 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         }
     }
 
-    function selfStake() external payable {
+    function selfStake(uint256 id) external payable onlyValidator(id) {
         require(msg.value >= minSelfStake, "STAKE_TOO_LOW");
 
-        uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
-
-        require(id != 0, "INVALID_SENDER");
-
         childValidatorSet.addSelfStake(id, msg.value);
+    }
+
+    function unstake(
+        uint256 id,
+        uint256 amount,
+        address to
+    ) external onlyValidator(id) {
+        IChildValidatorSet.Validator memory validator = childValidatorSet
+            .validators(id);
+        uint256 amountLeft = validator.selfStake - amount;
+        require(
+            amountLeft >= minSelfStake || amountLeft == 0,
+            "INVALID_UNSTAKE_AMOUNT"
+        );
+        childValidatorSet.unstake(id, amount);
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "TRANSFER_FAILED");
     }
 
     function delegate(uint256 id, bool restake) external payable {
@@ -156,7 +177,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             "INVALID_VALIDATOR_ID"
         );
 
-        Delegation storage delegation = delegations[msg.sender][id];
+        Stake storage delegation = delegations[msg.sender][id];
 
         delegation.epochId = childValidatorSet.currentEpochId() - 1;
 
@@ -184,7 +205,24 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     function claimDelegatorReward(uint256 id) public nonReentrant {
         uint256 reward = calculateDelegatorReward(id, msg.sender);
 
-        Delegation storage delegation = delegations[msg.sender][id];
+        Stake storage delegation = delegations[msg.sender][id];
+
+        delegation.epochId = lastRewardedEpochId;
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = msg.sender.call{value: reward}("");
+
+        require(success, "TRANSFER_FAILED");
+    }
+
+    function claimValidatorReward(uint256 id)
+        public
+        onlyValidator(id)
+        nonReentrant
+    {
+        uint256 reward = calculateValidatorReward(id);
+
+        Stake storage delegation = delegations[msg.sender][id];
 
         delegation.epochId = lastRewardedEpochId;
 
@@ -199,7 +237,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        Delegation memory delegation = delegations[delegator][id];
+        Stake memory delegation = delegations[delegator][id];
 
         uint256 startIndex = delegation.epochId;
         uint256 endIndex = lastRewardedEpochId;
@@ -210,6 +248,27 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             totalReward +=
                 delegation.amount *
                 delegatorRewardShares[startIndex][id];
+        }
+
+        return totalReward / REWARD_PRECISION;
+    }
+
+    function calculateValidatorReward(uint256 id)
+        public
+        view
+        returns (uint256)
+    {
+        Stake memory delegation = selfStakes[id];
+
+        uint256 startIndex = delegation.epochId;
+        uint256 endIndex = lastRewardedEpochId;
+
+        uint256 totalReward = 0;
+
+        for (uint256 i = startIndex; i <= endIndex; i++) {
+            totalReward +=
+                delegation.amount *
+                validatorRewardShares[startIndex][id];
         }
 
         return totalReward / REWARD_PRECISION;
@@ -240,22 +299,5 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 commission = (validator.commission * delegatorShares) / 100;
 
         return (rewardShares - commission, delegatorShares - commission);
-    }
-
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
-        internal
-        view
-    {
-        // verify signatures for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
-        (
-            bool callSuccess,
-            bytes memory returnData
-        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
-                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-            }(abi.encode(message, signature));
-        bool verified = abi.decode(returnData, (bool));
-        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }

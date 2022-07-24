@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Arrays.sol";
+import {System} from "./System.sol";
 
 interface IStateReceiver {
     function onStateReceive(
@@ -11,13 +12,23 @@ interface IStateReceiver {
     ) external;
 }
 
+interface IStakeManager {
+    struct Uptime {
+        uint256 epochId;
+        uint256[] uptimes;
+        uint256 totalUptime;
+    }
+
+    function distributeRewards(Uptime calldata uptime) external;
+}
+
 /**
     @title ChildValidatorSet
     @author Polygon Technology
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is IStateReceiver {
+contract ChildValidatorSet is IStateReceiver, System {
     using Arrays for uint256[];
 
     struct Validator {
@@ -44,7 +55,7 @@ contract ChildValidatorSet is IStateReceiver {
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
     address public rootValidatorSet;
-    address public stakeManager;
+    IStakeManager public stakeManager;
 
     uint256[] public epochEndBlocks;
 
@@ -74,16 +85,8 @@ contract ChildValidatorSet is IStateReceiver {
         initialized = 1;
     }
 
-    modifier onlySystemCall() {
-        require(
-            msg.sender == 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE,
-            "ONLY_SYSTEMCALL"
-        );
-        _;
-    }
-
     modifier onlyStakeManager() {
-        require(msg.sender == stakeManager, "ONLY_STAKE_MANAGER");
+        require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
         _;
     }
 
@@ -95,7 +98,7 @@ contract ChildValidatorSet is IStateReceiver {
      */
     function initialize(
         address newRootValidatorSet,
-        address newStakeManager,
+        IStakeManager newStakeManager,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
@@ -124,37 +127,43 @@ contract ChildValidatorSet is IStateReceiver {
     /**
      * @notice Allows the v3 client to commit epochs to this contract.
      * @param id ID of epoch to be committed
-     * @param startBlock First block in epoch
-     * @param endBlock Last block in epoch
+     * @param epoch New epoch data to be committed
+     * @param uptime Uptime data for the epoch being committed
      */
     function commitEpoch(
         uint256 id,
-        uint256 startBlock,
-        uint256 endBlock,
-        bytes32 epochRoot
+        Epoch calldata epoch,
+        IStakeManager.Uptime calldata uptime,
+        bytes calldata signature
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
-        require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
+        require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
         require(
-            (endBlock - startBlock + 1) % SPRINT == 0,
+            (epoch.endBlock - epoch.startBlock + 1) % SPRINT == 0,
             "EPOCH_MUST_BE_DIVISIBLE_BY_64"
         );
         require(
-            epochs[newEpochId - 1].endBlock + 1 == startBlock,
+            epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock,
             "INVALID_START_BLOCK"
         );
 
+        bytes32 hash = keccak256(abi.encode(id, epoch, uptime));
+
+        _checkPubkeyAggregation(hash, signature);
+
         Epoch storage newEpoch = epochs[newEpochId];
-        newEpoch.endBlock = endBlock;
-        newEpoch.startBlock = startBlock;
-        newEpoch.epochRoot = epochRoot;
+        newEpoch.endBlock = epoch.endBlock;
+        newEpoch.startBlock = epoch.startBlock;
+        newEpoch.epochRoot = epoch.epochRoot;
 
-        epochEndBlocks.push(endBlock);
+        epochEndBlocks.push(epoch.endBlock);
 
-        _setNextValidatorSet(newEpochId + 1, epochRoot);
+        _setNextValidatorSet(newEpochId + 1, epoch.epochRoot);
 
-        emit NewEpoch(id, startBlock, endBlock, epochRoot);
+        stakeManager.distributeRewards(uptime);
+
+        emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
     /**
@@ -194,11 +203,19 @@ contract ChildValidatorSet is IStateReceiver {
         validator.totalStake += amount;
     }
 
+    function unstake(uint256 id, uint256 amount) external onlyStakeManager {
+        Validator storage validator = validators[id];
+        validator.selfStake -= amount;
+        validator.totalStake -= amount;
+    }
+
     function addTotalStake(uint256 id, uint256 amount)
         external
         onlyStakeManager
     {
         Validator storage validator = validators[id];
+
+        require(validator.selfStake != 0, "DELEGATIONS_LOCKED");
 
         validator.totalStake += amount;
     }
@@ -210,6 +227,20 @@ contract ChildValidatorSet is IStateReceiver {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
 
         validator.commission = newCommission;
+    }
+
+    /**
+     * @notice Returns the full validator struct for a validator ID
+     * @dev There is no need to use this function unless you want the validator BLS key array
+     * @param id ID of the validator to return data for
+     * @return Validator Returns the full validator struct if exists, or an empty struct
+     */
+    function getValidatorById(uint256 id)
+        external
+        view
+        returns (Validator memory)
+    {
+        return validators[id];
     }
 
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
@@ -314,5 +345,22 @@ contract ChildValidatorSet is IStateReceiver {
         currentValidatorId++; // we assume statesyncs are strictly ordered
 
         emit NewValidator(id, _address, blsKey);
+    }
+
+    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
+        internal
+        view
+    {
+        // verify signatures for provided sig data and sigs bytes
+        // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line low-level-calls
+        (
+            bool callSuccess,
+            bytes memory returnData
+        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
+                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
+            }(abi.encode(message, signature));
+        bool verified = abi.decode(returnData, (bool));
+        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }
