@@ -271,6 +271,15 @@ contract ChildValidatorSet is System, Ownable {
         validator.totalStake += amount;
     }
 
+    function updateValidatorStatus(uint256 id, ValidatorStatus newStatus)
+        external
+        onlyStakeManager
+    {
+        Validator storage validator = validators[id];
+
+        validator.status = newStatus;
+    }
+
     function setCommission(uint256 id, uint256 newCommission) external {
         Validator storage validator = validators[id];
 

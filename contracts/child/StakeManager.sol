@@ -38,6 +38,9 @@ interface IChildValidatorSet {
 
     function addTotalStake(uint256 id, uint256 amount) external;
 
+    function updateValidatorStatus(uint256 id, ValidatorStatus newStatus)
+        external;
+
     function validatorIdByAddress(address _address)
         external
         view
@@ -135,17 +138,23 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 aggWeight = 0;
 
         for (uint256 i = 0; i < length; ++i) {
-            if (
-                childValidatorSet.getValidatorStatus(i + 1) ==
-                IChildValidatorSet.ValidatorStatus.STAKED
-            ) {
+            IChildValidatorSet.ValidatorStatus status = childValidatorSet
+                .getValidatorStatus(i + 1);
+            if (status == IChildValidatorSet.ValidatorStatus.STAKED) {
                 uint256 power = childValidatorSet.calculateValidatorPower(
                     i + 1
                 );
                 aggPower += power;
                 weights[i] = uptime.uptimes[i] * power;
                 aggWeight += weights[i];
-            }
+            } else if (
+                status == IChildValidatorSet.ValidatorStatus.REGISTERED
+            ) {
+                childValidatorSet.updateValidatorStatus(
+                    i + 1,
+                    IChildValidatorSet.ValidatorStatus.STAKED
+                );
+            } // to-do: other cases
         }
 
         require(aggPower > (66 * (10**6)), "NOT_ENOUGH_CONSENSUS");
