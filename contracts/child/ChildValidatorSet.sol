@@ -38,6 +38,14 @@ contract ChildValidatorSet is System, Ownable {
         uint256 selfStake;
         uint256 totalStake; // self-stake + delegation
         uint256 commission;
+        ValidatorStatus status;
+    }
+
+    enum ValidatorStatus {
+        REGISTERED, // 0 -> will be staked next epock
+        STAKED, // 1 -> currently staked (i.e. validating)
+        UNSTAKING, // 2 -> currently unstaking (i.e. will stop validating)
+        UNSTAKED // 3 -> not staked (i.e. is not validating)
     }
 
     struct Epoch {
@@ -131,6 +139,7 @@ contract ChildValidatorSet is System, Ownable {
             newValidator.blsKey = validatorPubkeys[i];
             newValidator.selfStake = validatorStakes[i];
             newValidator.totalStake = validatorStakes[i];
+            newValidator.status = ValidatorStatus.STAKED;
 
             validatorIdByAddress[validatorAddresses[i]] = i + 1;
         }
@@ -192,6 +201,7 @@ contract ChildValidatorSet is System, Ownable {
 
         newValidator._address = msg.sender;
         newValidator.blsKey = pubkey;
+        newValidator.status = ValidatorStatus.REGISTERED;
         validatorIdByAddress[msg.sender] = currentId;
 
         emit NewValidator(currentId, msg.sender, pubkey);
@@ -300,6 +310,14 @@ contract ChildValidatorSet is System, Ownable {
     {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
         return epochs[ret + 1];
+    }
+
+    function getValidatorStatus(uint256 id)
+        external
+        view
+        returns (ValidatorStatus)
+    {
+        return validators[id].status;
     }
 
     /**
