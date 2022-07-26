@@ -357,7 +357,6 @@ contract ChildValidatorSet is IStateReceiver, System {
         // verify signatures for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
-        console.log("OKOK");
         (
             bool callSuccess,
             bytes memory returnData
@@ -365,7 +364,6 @@ contract ChildValidatorSet is IStateReceiver, System {
                 gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
             }(abi.encode(message, signature));
         bool verified = abi.decode(returnData, (bool));
-        console.log("OKOK");
         require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }
 }
