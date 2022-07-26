@@ -19,7 +19,9 @@ describe("ChildValidatorSet", () => {
     stateSyncChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     validatorStake: BigNumber,
+    id: number,
     epoch: any,
+    uptime: any,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     await mcl.init();
@@ -123,54 +125,176 @@ describe("ChildValidatorSet", () => {
     ).to.be.revertedWith("ALREADY_INITIALIZED");
   });
   it("Commit epoch without system call", async () => {
+    id = 0;
+    epoch = {
+      startBlock: 0,
+      endBlock: 0,
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [],
+    };
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint256",
+          "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+          "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+        ],
+        [id, epoch, uptime]
+      )
+    );
+
     await expect(
-      childValidatorSet.commitEpoch(0, 0, 0, ethers.utils.randomBytes(32))
+      childValidatorSet.commitEpoch(id, epoch, uptime, signature)
     ).to.be.revertedWith("ONLY_SYSTEMCALL");
   });
   it("Commit epoch with unexpected id", async () => {
+    id = 0;
+    epoch = {
+      startBlock: 0,
+      endBlock: 0,
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [],
+    };
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint256",
+          "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+          "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+        ],
+        [id, epoch, uptime]
+      )
+    );
+
     await expect(
-      systemChildValidatorSet.commitEpoch(0, 0, 0, ethers.utils.randomBytes(32))
+      systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
     ).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
   });
   it("Commit epoch with no blocks committed", async () => {
+    id = 1;
+    epoch = {
+      startBlock: 0,
+      endBlock: 0,
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [],
+    };
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint256",
+          "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+          "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+        ],
+        [id, epoch, uptime]
+      )
+    );
+
     await expect(
-      systemChildValidatorSet.commitEpoch(1, 0, 0, ethers.utils.randomBytes(32))
+      systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
     ).to.be.revertedWith("NO_BLOCKS_COMMITTED");
   });
   it("Commit epoch with incomplete sprint", async () => {
-    await expect(
-      systemChildValidatorSet.commitEpoch(
-        1,
-        1,
-        63,
-        ethers.utils.randomBytes(32)
+    id = 1;
+    epoch = {
+      startBlock: 1,
+      endBlock: 63,
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [],
+    };
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint256",
+          "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+          "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+        ],
+        [id, epoch, uptime]
       )
+    );
+
+    await expect(
+      systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
     ).to.be.revertedWith("EPOCH_MUST_BE_DIVISIBLE_BY_64");
   });
   it("Commit epoch", async () => {
+    id = 1;
     epoch = {
-      id: BigNumber.from(1),
       startBlock: BigNumber.from(1),
       endBlock: BigNumber.from(64),
-      epochRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [0],
     };
-    await systemChildValidatorSet.commitEpoch(
-      epoch.id,
-      epoch.startBlock,
-      epoch.endBlock,
-      epoch.epochRoot
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint256",
+          "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+          "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+        ],
+        [id, epoch, uptime]
+      )
     );
-    const storedEpoch: any = await childValidatorSet.epochs(epoch.id);
+
+    await systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature);
+    const storedEpoch: any = await childValidatorSet.epochs(1);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
     expect(storedEpoch.epochRoot).to.equal(epoch.epochRoot);
   });
   it("Commit epoch with old block", async () => {
+    epoch = {
+      startBlock: 64,
+      endBlock: 127,
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [],
+    };
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
     await expect(
       systemChildValidatorSet.commitEpoch(
         2,
-        64,
-        127,
+        epoch,
+        uptime,
         ethers.utils.randomBytes(32)
       )
     ).to.be.revertedWith("INVALID_START_BLOCK");
@@ -316,10 +440,23 @@ describe("ChildValidatorSet", () => {
         encodedData
       );
     }
+    epoch = {
+      startBlock: 65,
+      endBlock: 128,
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [],
+    };
+
+    uptime = {
+      epochId: 0,
+      uptimes: [0],
+      totalUptime: 0,
+    };
+
     await systemChildValidatorSet.commitEpoch(
       2,
-      65,
-      128,
+      epoch,
+      uptime,
       ethers.utils.randomBytes(32)
     ); // commit epoch to update validator set
     const newValidatorSet = await childValidatorSet.getCurrentValidatorSet();
