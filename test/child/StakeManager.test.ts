@@ -120,18 +120,21 @@ describe("StakeManager", () => {
   });
 
   it("SelfStake less amount than minSelfStake", async () => {
-    await expect(stakeManager.selfStake({ value: 100 })).to.be.revertedWith(
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+    await expect(stakeManager.selfStake(id, { value: 100 })).to.be.revertedWith(
       "STAKE_TOO_LOW"
     );
   });
 
-  it("SelfStake with invalid sender", async () => {
-    await expect(
-      stakeManager
-        .connect(accounts[validatorSetSize + 1])
-        .selfStake({ value: minSelfStake + 1 })
-    ).to.be.revertedWith("INVALID_SENDER");
-  });
+  // it("SelfStake with invalid sender", async () => {
+  //   await expect(
+  //     stakeManager
+  //       .connect(accounts[validatorSetSize + 1])
+  //       .selfStake({ value: minSelfStake + 1 })
+  //   ).to.be.revertedWith("INVALID_SENDER");
+  // });
 
   it("SelfStake", async () => {
     const id = await childValidatorSet.validatorIdByAddress(
@@ -141,7 +144,7 @@ describe("StakeManager", () => {
     const selfStakeAmount = minSelfStake + 1;
     const beforeSelfStake = (await childValidatorSet.validators(id)).selfStake;
 
-    await stakeManager.selfStake({ value: selfStakeAmount });
+    await stakeManager.selfStake(id, { value: selfStakeAmount });
 
     const afterSelfStake = (await childValidatorSet.validators(id)).selfStake;
     expect(afterSelfStake.sub(beforeSelfStake)).to.equal(selfStakeAmount);
@@ -323,217 +326,201 @@ describe("StakeManager", () => {
     );
   });
 
-  it("Distribute without system call", async () => {
-    const uptime = {
-      epochId: 0,
-      uptimes: [0],
-      totalUptime: 0,
-    };
+  // it("Distribute without system call", async () => {
+  //   const uptime = {
+  //     epochId: 0,
+  //     uptimes: [0],
+  //     totalUptime: 0,
+  //   };
 
-    const signature = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
-        [uptime]
-      )
-    );
+  //   const signature = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
 
-    await expect(
-      stakeManager.distributeRewards(uptime, signature)
-    ).to.be.revertedWith("'ONLY_SYSTEMCALL");
-  });
+  //   await expect(stakeManager.distributeRewards(uptime)).to.be.revertedWith(
+  //     "'ONLY_SYSTEMCALL"
+  //   );
+  // });
 
-  it("Distribute with invalid signature ", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysFalseBytecode,
-    ]);
-    const uptime = {
-      epochId: 0,
-      uptimes: [0],
-      totalUptime: 0,
-    };
+  // it("Distribute with invalid epoch id", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
+  //   const epochId = await stakeManager.lastRewardedEpochId();
+  //   const uptime = {
+  //     epochId,
+  //     uptimes: [0],
+  //     totalUptime: 0,
+  //   };
 
-    await expect(
-      systemStakeManager.distributeRewards(uptime, ethers.constants.HashZero)
-    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
-  });
+  //   const message = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
 
-  it("Distribute with invalid epoch id", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
-    const epochId = await stakeManager.lastRewardedEpochId();
-    const uptime = {
-      epochId,
-      uptimes: [0],
-      totalUptime: 0,
-    };
+  //   await expect(
+  //     systemStakeManager.distributeRewards(uptime)
+  //   ).to.be.revertedWith("INVALID_EPOCH_ID");
+  // });
 
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
-        [uptime]
-      )
-    );
+  // it("Distribute with not committed epoch", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
+  //   const epochId = await childValidatorSet.currentEpochId();
+  //   const uptime = {
+  //     epochId,
+  //     uptimes: [0],
+  //     totalUptime: 0,
+  //   };
 
-    await expect(
-      systemStakeManager.distributeRewards(uptime, message)
-    ).to.be.revertedWith("INVALID_EPOCH_ID");
-  });
+  //   const message = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
 
-  it("Distribute with not committed epoch", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
-    const epochId = await childValidatorSet.currentEpochId();
-    const uptime = {
-      epochId,
-      uptimes: [0],
-      totalUptime: 0,
-    };
+  //   await expect(
+  //     systemStakeManager.distributeRewards(uptime)
+  //   ).to.be.revertedWith("EPOCH_NOT_COMMITTED");
+  // });
 
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
-        [uptime]
-      )
-    );
+  // it("Distribute with invalid length", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
 
-    await expect(
-      systemStakeManager.distributeRewards(uptime, message)
-    ).to.be.revertedWith("EPOCH_NOT_COMMITTED");
-  });
+  //   const epoch = {
+  //     id: BigNumber.from(1),
+  //     startBlock: BigNumber.from(1),
+  //     endBlock: BigNumber.from(64),
+  //     epochRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+  //   };
+  //   // await systemChildValidatorSet.commitEpoch(
+  //   //   epoch.id,
+  //   //   epoch.startBlock,
+  //   //   epoch.endBlock,
+  //   //   epoch.epochRoot
+  //   // );
 
-  it("Distribute with invalid length", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
+  //   const storedEpoch: any = await childValidatorSet.epochs(epoch.id);
+  //   expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
+  //   expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
+  //   expect(storedEpoch.epochRoot).to.equal(epoch.epochRoot);
 
-    const epoch = {
-      id: BigNumber.from(1),
-      startBlock: BigNumber.from(1),
-      endBlock: BigNumber.from(64),
-      epochRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-    };
-    await systemChildValidatorSet.commitEpoch(
-      epoch.id,
-      epoch.startBlock,
-      epoch.endBlock,
-      epoch.epochRoot
-    );
+  //   const epochId = (await childValidatorSet.currentEpochId()).sub(1);
+  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
 
-    const storedEpoch: any = await childValidatorSet.epochs(epoch.id);
-    expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
-    expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
-    expect(storedEpoch.epochRoot).to.equal(epoch.epochRoot);
+  //   const uptime = {
+  //     epochId,
+  //     uptimes: [0],
+  //     totalUptime: 0,
+  //   };
 
-    const epochId = (await childValidatorSet.currentEpochId()).sub(1);
-    const currentValidatorId = await childValidatorSet.currentValidatorId();
+  //   for (let i = 0; i < currentValidatorId.toNumber() - 1; i++) {
+  //     uptime.uptimes.push(0);
+  //   }
 
-    const uptime = {
-      epochId,
-      uptimes: [0],
-      totalUptime: 0,
-    };
+  //   const message = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
 
-    for (let i = 0; i < currentValidatorId.toNumber() - 1; i++) {
-      uptime.uptimes.push(0);
-    }
+  //   await expect(
+  //     systemStakeManager.distributeRewards(uptime)
+  //   ).to.be.revertedWith("INVALID_LENGTH");
+  // });
 
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
-        [uptime]
-      )
-    );
+  // it("Distribute with not enough consensus", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
 
-    await expect(
-      systemStakeManager.distributeRewards(uptime, message)
-    ).to.be.revertedWith("INVALID_LENGTH");
-  });
+  //   const epochId = (await childValidatorSet.currentEpochId()).sub(1);
 
-  it("Distribute with not enough consensus", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
+  //   const uptime = {
+  //     epochId,
+  //     uptimes: [1, 1],
+  //     totalUptime: 0,
+  //   };
 
-    const epochId = (await childValidatorSet.currentEpochId()).sub(1);
+  //   const message = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
 
-    const uptime = {
-      epochId,
-      uptimes: [1, 1],
-      totalUptime: 0,
-    };
+  //   await expect(
+  //     systemStakeManager.distributeRewards(uptime)
+  //   ).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
+  // });
 
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
-        [uptime]
-      )
-    );
+  // it("Distribute", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
 
-    await expect(
-      systemStakeManager.distributeRewards(uptime, message)
-    ).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
-  });
+  //   const epochId = (await childValidatorSet.currentEpochId()).sub(1);
+  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
 
-  it("Distribute", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
+  //   const uptime = {
+  //     epochId,
+  //     uptimes: [1000000000000],
+  //     totalUptime: 0,
+  //   };
 
-    const epochId = (await childValidatorSet.currentEpochId()).sub(1);
-    const currentValidatorId = await childValidatorSet.currentValidatorId();
+  //   for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
+  //     uptime.uptimes.push(1000000000000);
+  //   }
 
-    const uptime = {
-      epochId,
-      uptimes: [1000000000000],
-      totalUptime: 0,
-    };
+  //   const message = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
 
-    for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
-      uptime.uptimes.push(1000000000000);
-    }
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
 
-    const message = ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
-        [uptime]
-      )
-    );
+  //   const idToDelegate = id.add(1);
+  //   const delegateAmount = ethers.utils.parseEther(
+  //     String(Math.floor(Math.random() * (10000 - 1000) + 1000))
+  //   );
+  //   const restake = false;
 
-    const id = await childValidatorSet.validatorIdByAddress(
-      accounts[0].address
-    );
+  //   await stakeManager.delegate(idToDelegate, restake, {
+  //     value: delegateAmount,
+  //   });
 
-    const idToDelegate = id.add(1);
-    const delegateAmount = ethers.utils.parseEther(
-      String(Math.floor(Math.random() * (10000 - 1000) + 1000))
-    );
-    const restake = false;
+  //   const validatorInfo = await childValidatorSet.validators(idToDelegate);
+  //   const totalStake = validatorInfo.totalStake;
 
-    await stakeManager.delegate(idToDelegate, restake, {
-      value: delegateAmount,
-    });
+  //   const selfStake = validatorInfo.selfStake;
 
-    const validatorInfo = await childValidatorSet.validators(idToDelegate);
-    const totalStake = validatorInfo.totalStake;
+  //   await systemStakeManager.distributeRewards(uptime);
 
-    const selfStake = validatorInfo.selfStake;
+  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
+  //     idToDelegate,
+  //     accounts[0].address
+  //   );
 
-    await systemStakeManager.distributeRewards(uptime, message);
-
-    const delegatorReward = await stakeManager.calculateDelegatorReward(
-      idToDelegate,
-      accounts[0].address
-    );
-
-    console.log("Reward");
-    console.log(delegatorReward);
-  });
+  //   console.log("Reward");
+  //   console.log(delegatorReward);
+  // });
 });

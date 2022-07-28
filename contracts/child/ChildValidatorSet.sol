@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Arrays.sol";
 import {System} from "./System.sol";
-import "hardhat/console.sol";
 
 interface IStateReceiver {
     function onStateReceive(
@@ -150,8 +149,6 @@ contract ChildValidatorSet is IStateReceiver, System {
         );
 
         bytes32 hash = keccak256(abi.encode(id, epoch, uptime));
-        console.logBytes(signature);
-        console.logBytes32(hash);
 
         _checkPubkeyAggregation(hash, signature);
 
