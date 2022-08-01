@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Initializable} from "../libs/Initializable.sol";
 import {System} from "./System.sol";
+import "hardhat/console.sol";
 
 interface IChildValidatorSet {
     struct Validator {
@@ -155,6 +156,9 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     ) external onlyValidator(id) {
         IChildValidatorSet.Validator memory validator = childValidatorSet
             .validators(id);
+
+        require(validator.selfStake >= amount, "UNSTAKE_GREATER_AMOUNT");
+
         uint256 amountLeft = validator.selfStake - amount;
         require(
             amountLeft >= minSelfStake || amountLeft == 0,
@@ -235,15 +239,25 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         Stake memory delegation = delegations[delegator][id];
 
         uint256 startIndex = delegation.epochId;
+
         uint256 endIndex = childValidatorSet.currentEpochId() - 1;
+
+        console.log("ID");
+        console.log(id);
+        console.log("Start Index");
+        console.log(startIndex);
+        console.log("End Index");
+        console.log(startIndex);
+        console.log("Delegation Amount");
+        console.log(delegation.amount);
 
         uint256 totalReward = 0;
 
-        for (uint256 i = startIndex; i <= endIndex; i++) {
-            totalReward +=
-                delegation.amount *
-                delegatorRewardShares[startIndex][id];
+        for (uint256 i = 0; i <= endIndex; i++) {
+            totalReward += delegation.amount * delegatorRewardShares[i][id];
         }
+
+        console.logUint(totalReward);
 
         return totalReward / REWARD_PRECISION;
     }
@@ -261,9 +275,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 totalReward = 0;
 
         for (uint256 i = startIndex; i <= endIndex; i++) {
-            totalReward +=
-                delegation.amount *
-                validatorRewardShares[startIndex][id];
+            totalReward += delegation.amount * validatorRewardShares[i][id];
         }
 
         return totalReward / REWARD_PRECISION;

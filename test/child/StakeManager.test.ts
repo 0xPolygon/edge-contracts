@@ -151,6 +151,42 @@ describe("StakeManager", () => {
     expect(afterSelfStake.sub(beforeSelfStake)).to.equal(selfStakeAmount);
   });
 
+  it("Unstake greater amount", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const amountToUnstake = (await childValidatorSet.validators(id)).selfStake;
+
+    await expect(
+      stakeManager.unstake(id, amountToUnstake.add(1), accounts[0].address)
+    ).to.be.revertedWith("UNSTAKE_GREATER_AMOUNT");
+  });
+
+  it("Unstake invalid amount", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const amountToUnstake = (await childValidatorSet.validators(id)).selfStake;
+
+    await expect(
+      stakeManager.unstake(id, amountToUnstake.sub(1), accounts[0].address)
+    ).to.be.revertedWith("INVALID_UNSTAKE_AMOUNT");
+  });
+
+  it("Unstake transfer failed", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const amountToUnstake = (await childValidatorSet.validators(id)).selfStake;
+
+    await expect(
+      stakeManager.unstake(id, amountToUnstake, accounts[0].address)
+    ).to.be.revertedWith("TRANSFER_FAILED");
+  });
+
   it("Delegate less amount than minDelegation", async () => {
     const id = await childValidatorSet.validatorIdByAddress(
       accounts[0].address
@@ -194,7 +230,7 @@ describe("StakeManager", () => {
       idToDelegate
     );
     const currentEpochId = await childValidatorSet.currentEpochId();
-    expect(delegation.epochId).to.equal(currentEpochId.sub(1));
+    expect(delegation.epochId).to.equal(currentEpochId);
     expect(delegation.amount).to.equal(delegateAmount);
 
     const afterDelegate = (await childValidatorSet.validators(idToDelegate))
@@ -230,7 +266,7 @@ describe("StakeManager", () => {
       idToDelegate
     );
     const currentEpochId = await childValidatorSet.currentEpochId();
-    expect(delegation.epochId).to.equal(currentEpochId.sub(1));
+    expect(delegation.epochId).to.equal(currentEpochId);
     expect(delegation.amount).to.equal(delegateAmount * 2);
 
     const delegatorReward = await stakeManager.calculateDelegatorReward(
@@ -274,7 +310,7 @@ describe("StakeManager", () => {
     );
 
     const currentEpochId = await childValidatorSet.currentEpochId();
-    expect(delegation.epochId).to.equal(currentEpochId.sub(1));
+    expect(delegation.epochId).to.equal(currentEpochId);
 
     const delegatorReward = await stakeManager.calculateDelegatorReward(
       idToDelegate,
@@ -316,9 +352,6 @@ describe("StakeManager", () => {
       idToDelegate
     );
 
-    const currentEpochId = await stakeManager.lastRewardedEpochId();
-    expect(delegation.epochId).to.equal(currentEpochId);
-
     const balanceAfterReDelegate = await ethers.provider.getBalance(
       accounts[0].address
     );
@@ -346,12 +379,15 @@ describe("StakeManager", () => {
     );
   });
 
-  it("Distribute with invalid epoch id", async () => {
+  it("Distribute with not committed epoch", async () => {
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002030",
       alwaysTrueBytecode,
     ]);
-    const id = 1;
+
+    const currentEpochId = await childValidatorSet.currentEpochId();
+
+    const id = currentEpochId;
     const epoch = {
       startBlock: BigNumber.from(1),
       endBlock: BigNumber.from(64),
@@ -359,11 +395,10 @@ describe("StakeManager", () => {
       validatorSet: [0],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     const uptime = {
-      epochId: epochId,
+      epochId: currentEpochId.add(1),
       uptimes: [1000000000000],
       totalUptime: 0,
     };
@@ -385,53 +420,8 @@ describe("StakeManager", () => {
 
     await expect(
       systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
-    ).to.be.revertedWith("INVALID_EPOCH_ID");
+    ).to.be.revertedWith("EPOCH_NOT_COMMITTED");
   });
-
-  // it("Distribute with not committed epoch", async () => {
-  //   await hre.network.provider.send("hardhat_setCode", [
-  //     "0x0000000000000000000000000000000000002030",
-  //     alwaysTrueBytecode,
-  //   ]);
-  //   const id = 1;
-  //   const epoch = {
-  //     startBlock: BigNumber.from(1),
-  //     endBlock: BigNumber.from(64),
-  //     epochRoot: ethers.utils.randomBytes(32),
-  //     validatorSet: [0],
-  //   };
-
-  //   const epochId = await childValidatorSet.currentEpochId();
-  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
-
-  //   console.log(await childValidatorSet.currentEpochId());
-  //   console.log(await stakeManager.lastRewardedEpochId());
-
-  //   const uptime = {
-  //     epochId: epochId,
-  //     uptimes: [1000000000000],
-  //     totalUptime: 0,
-  //   };
-
-  //   for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
-  //     uptime.uptimes.push(1000000000000);
-  //   }
-
-  //   const signature = ethers.utils.keccak256(
-  //     ethers.utils.defaultAbiCoder.encode(
-  //       [
-  //         "uint256",
-  //         "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
-  //         "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
-  //       ],
-  //       [id, epoch, uptime]
-  //     )
-  //   );
-
-  //   await expect(
-  //     systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
-  //   ).to.be.revertedWith("EPOCH_NOT_COMMITTED");
-  // });
 
   it("Distribute with invalid length", async () => {
     await hre.network.provider.send("hardhat_setCode", [
@@ -446,11 +436,11 @@ describe("StakeManager", () => {
       validatorSet: [0],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
+    const currentEpochId = await childValidatorSet.currentEpochId();
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     const uptime = {
-      epochId: epochId.add(1),
+      epochId: currentEpochId.sub(1),
       uptimes: [1000000000000],
       totalUptime: 0,
     };
@@ -488,11 +478,11 @@ describe("StakeManager", () => {
       validatorSet: [0],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
+    const currentEpochId = await childValidatorSet.currentEpochId();
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     const uptime = {
-      epochId: epochId.add(1),
+      epochId: currentEpochId.sub(1),
       uptimes: [1, 1],
       totalUptime: 0,
     };
@@ -518,7 +508,7 @@ describe("StakeManager", () => {
       "0x0000000000000000000000000000000000002030",
       alwaysTrueBytecode,
     ]);
-    const id = 1;
+
     const epoch = {
       startBlock: BigNumber.from(1),
       endBlock: BigNumber.from(64),
@@ -526,13 +516,14 @@ describe("StakeManager", () => {
       validatorSet: [0],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
+    const currentEpochId = await childValidatorSet.currentEpochId();
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
+    const id = currentEpochId;
     const uptime = {
-      epochId: epochId.add(1),
+      epochId: currentEpochId.sub(1),
       uptimes: [1000000000000],
-      totalUptime: 0,
+      totalUptime: 100,
     };
 
     for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
@@ -566,7 +557,25 @@ describe("StakeManager", () => {
       accounts[0].address
     );
 
-    console.log("Reward");
+    // console.log(await stakeManager.validatorRewardShares(0, 0));
+    // console.log("Reward");
     console.log(delegatorReward);
+  });
+
+  it("Unstake", async () => {
+    const id = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+
+    const amountToUnstake = minSelfStake + 1;
+
+    const selfStakeBefore = await (
+      await childValidatorSet.validators(id)
+    ).selfStake;
+    await stakeManager.unstake(id, amountToUnstake, accounts[0].address);
+    const selfStakeAfter = await (
+      await childValidatorSet.validators(id)
+    ).selfStake;
+    expect(selfStakeBefore.sub(selfStakeAfter)).to.equal(amountToUnstake);
   });
 });

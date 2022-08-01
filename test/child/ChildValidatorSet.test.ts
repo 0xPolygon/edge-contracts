@@ -283,10 +283,10 @@ describe("ChildValidatorSet", () => {
       validatorSet: [0],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
+    const currentEpochId = await childValidatorSet.currentEpochId();
 
     const uptime = {
-      epochId: epochId.add(1),
+      epochId: currentEpochId.sub(1),
       uptimes: [0],
       totalUptime: 0,
     };
@@ -313,11 +313,11 @@ describe("ChildValidatorSet", () => {
       validatorSet: [0],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
+    const currentEpochId = await childValidatorSet.currentEpochId();
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     uptime = {
-      epochId: epochId.add(1),
+      epochId: currentEpochId.sub(1),
       uptimes: [1000000000000],
       totalUptime: 0,
     };
@@ -530,10 +530,10 @@ describe("ChildValidatorSet", () => {
       validatorSet: [],
     };
 
-    const epochId = await stakeManager.lastRewardedEpochId();
+    const currentEpochId = await childValidatorSet.currentEpochId();
 
     uptime = {
-      epochId: epochId.add(1),
+      epochId: currentEpochId.sub(1),
       uptimes: [1000000000000],
       totalUptime: 0,
     };
