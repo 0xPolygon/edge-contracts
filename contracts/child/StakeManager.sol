@@ -12,6 +12,14 @@ interface IChildValidatorSet {
         uint256 selfStake;
         uint256 totalStake; // self-stake + delegation
         uint256 commission;
+        ValidatorStatus status;
+    }
+
+    enum ValidatorStatus {
+        REGISTERED, // 0 -> will be staked next epock
+        STAKED, // 1 -> currently staked (i.e. validating)
+        UNSTAKING, // 2 -> currently unstaking (i.e. will stop validating)
+        UNSTAKED // 3 -> not staked (i.e. is not validating)
     }
 
     struct Epoch {
@@ -30,6 +38,9 @@ interface IChildValidatorSet {
 
     function addTotalStake(uint256 id, uint256 amount) external;
 
+    function updateValidatorStatus(uint256 id, ValidatorStatus newStatus)
+        external;
+
     function validatorIdByAddress(address _address)
         external
         view
@@ -40,6 +51,11 @@ interface IChildValidatorSet {
     function currentValidatorId() external view returns (uint256);
 
     function activeValidatorSetSize() external view returns (uint256);
+
+    function getValidatorStatus(uint256 id)
+        external
+        view
+        returns (ValidatorStatus);
 
     function calculateValidatorPower(uint256 id)
         external
@@ -119,10 +135,23 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         uint256 aggWeight = 0;
 
         for (uint256 i = 0; i < length; ++i) {
-            uint256 power = childValidatorSet.calculateValidatorPower(i + 1);
-            aggPower += power;
-            weights[i] = uptime.uptimes[i] * power;
-            aggWeight += weights[i];
+            IChildValidatorSet.ValidatorStatus status = childValidatorSet
+                .getValidatorStatus(i + 1);
+            if (status == IChildValidatorSet.ValidatorStatus.STAKED) {
+                uint256 power = childValidatorSet.calculateValidatorPower(
+                    i + 1
+                );
+                aggPower += power;
+                weights[i] = uptime.uptimes[i] * power;
+                aggWeight += weights[i];
+            } else if (
+                status == IChildValidatorSet.ValidatorStatus.REGISTERED
+            ) {
+                childValidatorSet.updateValidatorStatus(
+                    i + 1,
+                    IChildValidatorSet.ValidatorStatus.STAKED
+                );
+            } // to-do: other cases
         }
 
         require(aggPower > (66 * (10**6)), "NOT_ENOUGH_CONSENSUS");
