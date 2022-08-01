@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Arrays.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {System} from "./System.sol";
 
 interface IBLS {
     function verifySingle(
@@ -12,13 +13,23 @@ interface IBLS {
     ) external view returns (bool, bool);
 }
 
+interface IStakeManager {
+    struct Uptime {
+        uint256 epochId;
+        uint256[] uptimes;
+        uint256 totalUptime;
+    }
+
+    function distributeRewards(Uptime calldata uptime) external;
+}
+
 /**
     @title ChildValidatorSet
     @author Polygon Technology
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is Ownable {
+contract ChildValidatorSet is System, Ownable {
     using Arrays for uint256[];
 
     struct Validator {
@@ -26,6 +37,15 @@ contract ChildValidatorSet is Ownable {
         uint256[4] blsKey;
         uint256 selfStake;
         uint256 totalStake; // self-stake + delegation
+        uint256 commission;
+        ValidatorStatus status;
+    }
+
+    enum ValidatorStatus {
+        REGISTERED, // 0 -> will be staked next epock
+        STAKED, // 1 -> currently staked (i.e. validating)
+        UNSTAKING, // 2 -> currently unstaking (i.e. will stop validating)
+        UNSTAKED // 3 -> not staked (i.e. is not validating)
     }
 
     struct Epoch {
@@ -35,15 +55,17 @@ contract ChildValidatorSet is Ownable {
         uint256[] validatorSet;
     }
 
-    IBLS public bls;
-
     bytes32 public constant NEW_VALIDATOR_SIG =
         0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
     uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
+    uint256 public constant MAX_COMMISSION = 100;
     uint256 public currentValidatorId;
     uint256 public currentEpochId;
+
+    IStakeManager public stakeManager;
+    IBLS public bls;
 
     uint256[2] public message;
     uint256[] public epochEndBlocks;
@@ -75,11 +97,8 @@ contract ChildValidatorSet is Ownable {
         initialized = 1;
     }
 
-    modifier onlySystemCall() {
-        require(
-            msg.sender == 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE,
-            "ONLY_SYSTEMCALL"
-        );
+    modifier onlyStakeManager() {
+        require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
         _;
     }
 
@@ -100,6 +119,7 @@ contract ChildValidatorSet is Ownable {
      * @param epochValidatorSet First active validator set
      */
     function initialize(
+        IStakeManager newStakeManager,
         address governance,
         IBLS newBls,
         uint256[2] calldata newMessage,
@@ -108,6 +128,8 @@ contract ChildValidatorSet is Ownable {
         uint256[] calldata validatorStakes,
         uint256[] calldata epochValidatorSet
     ) external initializer onlySystemCall {
+        // slither-disable-next-line missing-zero-check
+        stakeManager = newStakeManager;
         message = newMessage;
         bls = newBls;
         uint256 i = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
@@ -117,6 +139,7 @@ contract ChildValidatorSet is Ownable {
             newValidator.blsKey = validatorPubkeys[i];
             newValidator.selfStake = validatorStakes[i];
             newValidator.totalStake = validatorStakes[i];
+            newValidator.status = ValidatorStatus.STAKED;
 
             validatorIdByAddress[validatorAddresses[i]] = i + 1;
         }
@@ -178,6 +201,8 @@ contract ChildValidatorSet is Ownable {
 
         newValidator._address = msg.sender;
         newValidator.blsKey = pubkey;
+        newValidator.status = ValidatorStatus.REGISTERED;
+
         validatorIdByAddress[msg.sender] = currentId;
 
         emit NewValidator(currentId, msg.sender, pubkey);
@@ -186,37 +211,97 @@ contract ChildValidatorSet is Ownable {
     /**
      * @notice Allows the v3 client to commit epochs to this contract.
      * @param id ID of epoch to be committed
-     * @param startBlock First block in epoch
-     * @param endBlock Last block in epoch
+     * @param epoch New epoch data to be committed
+     * @param uptime Uptime data for the epoch being committed
      */
     function commitEpoch(
         uint256 id,
-        uint256 startBlock,
-        uint256 endBlock,
-        bytes32 epochRoot
+        Epoch calldata epoch,
+        IStakeManager.Uptime calldata uptime
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
-        require(endBlock > startBlock, "NO_BLOCKS_COMMITTED");
+        require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
         require(
-            (endBlock - startBlock + 1) % SPRINT == 0,
+            (epoch.endBlock - epoch.startBlock + 1) % SPRINT == 0,
             "EPOCH_MUST_BE_DIVISIBLE_BY_64"
         );
         require(
-            epochs[newEpochId - 1].endBlock + 1 == startBlock,
+            epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock,
             "INVALID_START_BLOCK"
         );
 
         Epoch storage newEpoch = epochs[newEpochId];
-        newEpoch.endBlock = endBlock;
-        newEpoch.startBlock = startBlock;
-        newEpoch.epochRoot = epochRoot;
+        newEpoch.endBlock = epoch.endBlock;
+        newEpoch.startBlock = epoch.startBlock;
+        newEpoch.epochRoot = epoch.epochRoot;
 
-        epochEndBlocks.push(endBlock);
+        epochEndBlocks.push(epoch.endBlock);
 
-        _setNextValidatorSet(newEpochId + 1, epochRoot);
+        _setNextValidatorSet(newEpochId + 1, epoch.epochRoot);
 
-        emit NewEpoch(id, startBlock, endBlock, epochRoot);
+        stakeManager.distributeRewards(uptime);
+
+        emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
+    }
+
+    function addSelfStake(uint256 id, uint256 amount)
+        external
+        onlyStakeManager
+    {
+        Validator storage validator = validators[id];
+
+        validator.selfStake += amount;
+        validator.totalStake += amount;
+    }
+
+    function unstake(uint256 id, uint256 amount) external onlyStakeManager {
+        Validator storage validator = validators[id];
+        validator.selfStake -= amount;
+        validator.totalStake -= amount;
+    }
+
+    function addTotalStake(uint256 id, uint256 amount)
+        external
+        onlyStakeManager
+    {
+        Validator storage validator = validators[id];
+
+        require(validator.selfStake != 0, "DELEGATIONS_LOCKED");
+
+        validator.totalStake += amount;
+    }
+
+    function updateValidatorStatus(uint256 id, ValidatorStatus newStatus)
+        external
+        onlyStakeManager
+    {
+        Validator storage validator = validators[id];
+
+        validator.status = newStatus;
+    }
+
+    function setCommission(uint256 id, uint256 newCommission) external {
+        Validator storage validator = validators[id];
+
+        require(msg.sender == validator._address, "ONLY_VALIDATOR");
+        require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
+
+        validator.commission = newCommission;
+    }
+
+    /**
+     * @notice Returns the full validator struct for a validator ID
+     * @dev There is no need to use this function unless you want the validator BLS key array
+     * @param id ID of the validator to return data for
+     * @return Validator Returns the full validator struct if exists, or an empty struct
+     */
+    function getValidatorById(uint256 id)
+        external
+        view
+        returns (Validator memory)
+    {
+        return validators[id];
     }
 
     function getCurrentValidatorSet() external view returns (uint256[] memory) {
@@ -237,6 +322,14 @@ contract ChildValidatorSet is Ownable {
         return epochs[ret + 1];
     }
 
+    function getValidatorStatus(uint256 id)
+        external
+        view
+        returns (ValidatorStatus)
+    {
+        return validators[id].status;
+    }
+
     /**
      * @notice Calculate validator power for a validator in percentage.
      * @return uint256 Returns validator power at 6 decimals. Therefore, a return value of 123456 is 0.123456%
@@ -248,6 +341,7 @@ contract ChildValidatorSet is Ownable {
     {
         uint256 totalStake = calculateTotalStake();
         uint256 validatorStake = validators[id].totalStake;
+
         /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
            MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
         return (validatorStake * 100 * (10**6)) / totalStake;
