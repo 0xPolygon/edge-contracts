@@ -119,7 +119,7 @@ describe("StakeManager", () => {
     }
   });
 
-  it("SelfStake less amount than minSelfStake", async () => {
+  it("Self-stake less amount than minSelfStake", async () => {
     const id = await childValidatorSet.validatorIdByAddress(
       accounts[0].address
     );
@@ -128,7 +128,7 @@ describe("StakeManager", () => {
     );
   });
 
-  it("SelfStake with invalid validator id", async () => {
+  it("Self-stake with invalid validator id", async () => {
     const id = await childValidatorSet.validatorIdByAddress(
       accounts[0].address
     );
@@ -137,7 +137,7 @@ describe("StakeManager", () => {
     ).to.be.revertedWith("ONLY_VALIDATOR");
   });
 
-  it("SelfStake", async () => {
+  it("Self-stake", async () => {
     const id = await childValidatorSet.validatorIdByAddress(
       accounts[0].address
     );
@@ -160,7 +160,7 @@ describe("StakeManager", () => {
 
     await expect(
       stakeManager.unstake(id, amountToUnstake.add(1), accounts[0].address)
-    ).to.be.revertedWith("UNSTAKE_GREATER_AMOUNT");
+    ).to.be.reverted;
   });
 
   it("Unstake invalid amount", async () => {
@@ -440,7 +440,7 @@ describe("StakeManager", () => {
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     const uptime = {
-      epochId: currentEpochId.sub(1),
+      epochId: currentEpochId,
       uptimes: [1000000000000],
       totalUptime: 0,
     };
@@ -482,7 +482,7 @@ describe("StakeManager", () => {
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     const uptime = {
-      epochId: currentEpochId.sub(1),
+      epochId: currentEpochId,
       uptimes: [1, 1],
       totalUptime: 0,
     };
@@ -521,7 +521,7 @@ describe("StakeManager", () => {
 
     const id = currentEpochId;
     const uptime = {
-      epochId: currentEpochId.sub(1),
+      epochId: currentEpochId,
       uptimes: [1000000000000],
       totalUptime: 100,
     };
@@ -556,10 +556,6 @@ describe("StakeManager", () => {
       idToDelegate.add(1),
       accounts[0].address
     );
-
-    // console.log(await stakeManager.validatorRewardShares(0, 0));
-    // console.log("Reward");
-    console.log(delegatorReward);
   });
 
   it("Unstake", async () => {
