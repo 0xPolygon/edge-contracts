@@ -202,6 +202,7 @@ contract ChildValidatorSet is System, Ownable {
         newValidator._address = msg.sender;
         newValidator.blsKey = pubkey;
         newValidator.status = ValidatorStatus.REGISTERED;
+
         validatorIdByAddress[msg.sender] = currentId;
 
         emit NewValidator(currentId, msg.sender, pubkey);
