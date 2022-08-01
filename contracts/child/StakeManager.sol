@@ -66,7 +66,6 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     uint256 public constant REWARD_PRECISION = 10**18;
 
     uint256 public epochReward;
-    uint256 public lastRewardedEpochId;
     uint256 public minSelfStake;
     uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
@@ -101,8 +100,6 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
     function distributeRewards(Uptime calldata uptime) external {
         require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
-
-        require(uptime.epochId == ++lastRewardedEpochId, "INVALID_EPOCH_ID");
 
         require(
             uptime.epochId < childValidatorSet.currentEpochId(),
@@ -179,13 +176,12 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         Stake storage delegation = delegations[msg.sender][id];
 
-        delegation.epochId = childValidatorSet.currentEpochId() - 1;
+        delegation.epochId = childValidatorSet.currentEpochId();
 
         uint256 reward = 0;
 
         if (delegation.amount == 0) {
             // first-time delegation
-            delegation.epochId = childValidatorSet.currentEpochId() - 1;
             delegation.amount = msg.value;
         } else {
             // re-delegating
@@ -196,7 +192,6 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
                 claimDelegatorReward(id);
                 delegation.amount += msg.value;
             }
-            delegation.epochId = lastRewardedEpochId;
         }
 
         childValidatorSet.addTotalStake(id, msg.value + reward);
@@ -207,7 +202,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         Stake storage delegation = delegations[msg.sender][id];
 
-        delegation.epochId = lastRewardedEpochId;
+        delegation.epochId = childValidatorSet.currentEpochId();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = msg.sender.call{value: reward}("");
@@ -224,7 +219,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
 
         Stake storage delegation = delegations[msg.sender][id];
 
-        delegation.epochId = lastRewardedEpochId;
+        delegation.epochId = childValidatorSet.currentEpochId();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = msg.sender.call{value: reward}("");
@@ -240,7 +235,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         Stake memory delegation = delegations[delegator][id];
 
         uint256 startIndex = delegation.epochId;
-        uint256 endIndex = lastRewardedEpochId;
+        uint256 endIndex = childValidatorSet.currentEpochId() - 1;
 
         uint256 totalReward = 0;
 
@@ -261,7 +256,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         Stake memory delegation = selfStakes[id];
 
         uint256 startIndex = delegation.epochId;
-        uint256 endIndex = lastRewardedEpochId;
+        uint256 endIndex = childValidatorSet.currentEpochId() - 1;
 
         uint256 totalReward = 0;
 
