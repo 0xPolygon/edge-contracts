@@ -10,11 +10,11 @@ contract MockValidatorStorage {
     uint256 public ACTIVE_VALIDATORS = 5;
 
     function balanceOf(address account) public view returns (uint256 balance) {
-        balance = validators.nodes[account].balance;
+        balance = validators.nodes[account].totalStake;
     }
 
     function insert(address account, uint256 amount) external {
-        validators.insert(account, amount);
+        validators.insert(account, 0, amount, 0);
     }
 
     function remove(address account) external {

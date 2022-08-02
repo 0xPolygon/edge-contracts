@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Initializable} from "../libs/Initializable.sol";
 import {System} from "./System.sol";
+import "../libs/ValidatorQueue.sol";
 
 interface IChildValidatorSet {
     struct Validator {
@@ -68,6 +69,8 @@ interface IChildValidatorSet {
 }
 
 contract StakeManager is System, Initializable, ReentrancyGuard {
+    using ValidatorQueueLib for ValidatorQueue;
+
     struct Uptime {
         uint256 epochId;
         uint256[] uptimes;
@@ -85,6 +88,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     uint256 public minSelfStake;
     uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
+    ValidatorQueue public queue;
 
     mapping(uint256 => mapping(uint256 => uint256)) public totalRewards; // validator id -> epoch -> amount
     mapping(uint256 => mapping(uint256 => uint256))

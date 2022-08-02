@@ -1,19 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-struct Node {
-    address parent;
-    address left;
-    address right;
-    uint256 balance;
-    bool red;
-}
-
-struct ValidatorTree {
-    address root;
-    uint256 count;
-    mapping(address => Node) nodes;
-}
+import "../interfaces/IValidator.sol";
 
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
@@ -116,7 +104,9 @@ library ValidatorStorageLib {
     function insert(
         ValidatorTree storage self,
         address key,
-        uint256 value
+        uint256 stake,
+        uint256 totalStake,
+        uint256 commission
     ) internal {
         require(key != EMPTY);
         require(!exists(self, key));
@@ -124,23 +114,25 @@ library ValidatorStorageLib {
         address probe = self.root;
         while (probe != EMPTY) {
             cursor = probe;
-            if (value < self.nodes[probe].balance) {
+            if (totalStake < self.nodes[probe].totalStake) {
                 probe = self.nodes[probe].left;
             } else {
                 probe = self.nodes[probe].right;
             }
         }
-        self.nodes[key] = Node({
+        self.nodes[key] = Validator({
             parent: cursor,
             left: EMPTY,
             right: EMPTY,
-            balance: value,
+            stake: stake,
+            totalStake: totalStake,
+            commission: commission,
             red: true
         });
 
         if (cursor == EMPTY) {
             self.root = key;
-        } else if (value < self.nodes[cursor].balance) {
+        } else if (totalStake < self.nodes[cursor].totalStake) {
             self.nodes[cursor].left = key;
         } else {
             self.nodes[cursor].right = key;
