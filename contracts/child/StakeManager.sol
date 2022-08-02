@@ -199,12 +199,14 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
             uint256 updatedTotalStake = uint256(
                 int256(totalStakeAmount) + item.stake + item.delegation
             );
-            _validators.insert(
-                validatorAddr,
-                updatedStake,
-                updatedTotalStake,
-                commission
-            );
+            if (updatedStake > 0) {
+                _validators.insert(
+                    validatorAddr,
+                    updatedStake,
+                    updatedTotalStake,
+                    commission
+                );
+            }
         }
     }
 

@@ -127,6 +127,7 @@ library ValidatorStorageLib {
         uint256 commission
     ) internal {
         assert(key != EMPTY);
+        assert(stake > 0 && totalStake >= stake);
         require(!exists(self, key));
         address cursor = EMPTY;
         address probe = self.root;
@@ -201,6 +202,7 @@ library ValidatorStorageLib {
         if (doFixup) {
             removeFixup(self, probe);
         }
+        // TODO don't delete delegation data
         delete self.nodes[cursor];
         self.count--;
     }
