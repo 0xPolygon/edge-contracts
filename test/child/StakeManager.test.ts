@@ -151,18 +151,6 @@ describe("StakeManager", () => {
     expect(afterSelfStake.sub(beforeSelfStake)).to.equal(selfStakeAmount);
   });
 
-  it("Unstake greater amount", async () => {
-    const id = await childValidatorSet.validatorIdByAddress(
-      accounts[0].address
-    );
-
-    const amountToUnstake = (await childValidatorSet.validators(id)).selfStake;
-
-    await expect(
-      stakeManager.unstake(id, amountToUnstake.add(1), accounts[0].address)
-    ).to.be.revertedWith("UNSTAKE_GREATER_AMOUNT");
-  });
-
   it("Unstake invalid amount", async () => {
     const id = await childValidatorSet.validatorIdByAddress(
       accounts[0].address
@@ -557,9 +545,74 @@ describe("StakeManager", () => {
       accounts[0].address
     );
 
-    // console.log(await stakeManager.validatorRewardShares(0, 0));
-    // console.log("Reward");
+    const validatorReward = await stakeManager.calculateValidatorReward(
+      idToDelegate.add(1)
+    );
+
+    expect(delegatorReward).to.equal(0);
+    expect(validatorReward).to.equal(0);
+  });
+
+  it("Distribute for epoch 1", async () => {
+    await hre.network.provider.send("hardhat_setCode", [
+      "0x0000000000000000000000000000000000002030",
+      alwaysTrueBytecode,
+    ]);
+
+    const epoch = {
+      startBlock: BigNumber.from(65),
+      endBlock: BigNumber.from(128),
+      epochRoot: ethers.utils.randomBytes(32),
+      validatorSet: [0],
+    };
+
+    const currentEpochId = await childValidatorSet.currentEpochId();
+    const currentValidatorId = await childValidatorSet.currentValidatorId();
+
+    const id = currentEpochId;
+    const uptime = {
+      epochId: currentEpochId.sub(1),
+      uptimes: [1000000000000],
+      totalUptime: 100,
+    };
+
+    for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
+      uptime.uptimes.push(1000000000000);
+    }
+
+    const signature = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint256",
+          "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+          "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+        ],
+        [id, epoch, uptime]
+      )
+    );
+
+    await systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature);
+    const storedEpoch: any = await childValidatorSet.epochs(2);
+    expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
+    expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
+    expect(storedEpoch.epochRoot).to.equal(
+      ethers.utils.hexlify(epoch.epochRoot)
+    );
+
+    const idToDelegate = await childValidatorSet.validatorIdByAddress(
+      accounts[0].address
+    );
+    const delegatorReward = await stakeManager.calculateDelegatorReward(
+      idToDelegate.add(1),
+      accounts[0].address
+    );
+
+    const validatorReward = await stakeManager.calculateValidatorReward(
+      idToDelegate.add(1)
+    );
+
     console.log(delegatorReward);
+    console.log(validatorReward);
   });
 
   it("Unstake", async () => {
