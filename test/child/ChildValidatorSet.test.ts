@@ -286,7 +286,7 @@ describe("ChildValidatorSet", () => {
     const currentEpochId = await childValidatorSet.currentEpochId();
 
     const uptime = {
-      epochId: currentEpochId.sub(1),
+      epochId: currentEpochId,
       uptimes: [0],
       totalUptime: 0,
     };
@@ -317,7 +317,7 @@ describe("ChildValidatorSet", () => {
     const currentValidatorId = await childValidatorSet.currentValidatorId();
 
     uptime = {
-      epochId: currentEpochId.sub(1),
+      epochId: currentEpochId,
       uptimes: [1000000000000],
       totalUptime: 0,
     };
@@ -533,7 +533,7 @@ describe("ChildValidatorSet", () => {
     const currentEpochId = await childValidatorSet.currentEpochId();
 
     uptime = {
-      epochId: currentEpochId.sub(1),
+      epochId: currentEpochId,
       uptimes: [1000000000000],
       totalUptime: 0,
     };

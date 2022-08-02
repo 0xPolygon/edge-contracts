@@ -70,7 +70,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
 
-    mapping(uint256 => mapping(uint256 => uint256)) public totalRewards; // validator id -> epoch -> amount
+    // mapping(uint256 => mapping(uint256 => uint256)) public totalRewards; // validator id -> epoch -> amount
     mapping(uint256 => mapping(uint256 => uint256))
         public validatorRewardShares; // epoch -> validator id -> amount
     mapping(uint256 => mapping(uint256 => uint256))
@@ -102,7 +102,7 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
 
         require(
-            uptime.epochId < childValidatorSet.currentEpochId(),
+            uptime.epochId == childValidatorSet.currentEpochId() - 1,
             "EPOCH_NOT_COMMITTED"
         );
 
