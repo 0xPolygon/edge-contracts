@@ -4,7 +4,10 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Initializable} from "../libs/Initializable.sol";
 import {System} from "./System.sol";
+import "../libs/ValidatorStorage.sol";
 import "../libs/ValidatorQueue.sol";
+
+error StakeRequirement(string src, string msg);
 
 interface IChildValidatorSet {
     struct Validator {
@@ -69,6 +72,7 @@ interface IChildValidatorSet {
 }
 
 contract StakeManager is System, Initializable, ReentrancyGuard {
+    using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
 
     struct Uptime {
@@ -88,7 +92,8 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     uint256 public minSelfStake;
     uint256 public minDelegation;
     IChildValidatorSet public childValidatorSet;
-    ValidatorQueue public queue;
+    ValidatorTree private _validators;
+    ValidatorQueue private _queue;
 
     mapping(uint256 => mapping(uint256 => uint256)) public totalRewards; // validator id -> epoch -> amount
     mapping(uint256 => mapping(uint256 => uint256))
@@ -98,9 +103,9 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
     mapping(address => mapping(uint256 => Stake)) public delegations; // user address -> validator id -> Delegation
     mapping(uint256 => Stake) public selfStakes; // validator id -> Delegation
 
-    modifier onlyValidator(uint256 id) {
+    modifier onlyValidator() {
         require(
-            id == childValidatorSet.validatorIdByAddress(msg.sender) && id != 0,
+            childValidatorSet.validatorIdByAddress(msg.sender) != 0,
             "ONLY_VALIDATOR"
         );
         _;
@@ -175,60 +180,97 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         }
     }
 
-    function selfStake(uint256 id) external payable onlyValidator(id) {
-        require(msg.value >= minSelfStake, "STAKE_TOO_LOW");
-
-        childValidatorSet.addSelfStake(id, msg.value);
+    function processQueue() external {
+        require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
+        QueuedValidator[] storage queue = _queue.get();
+        for (uint256 i = 0; i < queue.length; ++i) {
+            QueuedValidator memory item = queue[i];
+            address validatorAddr = item.validator;
+            Validator storage validator = _validators.get(validatorAddr);
+            // values will be zero for non existing validators
+            uint256 stakeAmount = validator.stake;
+            uint256 totalStakeAmount = validator.totalStake;
+            uint256 commission = validator.commission;
+            // if validator already present in tree, remove and reinsert to maintain sort
+            if (_validators.exists(validatorAddr)) {
+                _validators.remove(validatorAddr);
+            }
+            uint256 updatedStake = uint256(int256(stakeAmount) + item.stake);
+            uint256 updatedTotalStake = uint256(
+                int256(totalStakeAmount) + item.stake + item.delegation
+            );
+            _validators.insert(
+                validatorAddr,
+                updatedStake,
+                updatedTotalStake,
+                commission
+            );
+        }
     }
 
-    function unstake(
-        uint256 id,
-        uint256 amount,
-        address to
-    ) external onlyValidator(id) {
-        IChildValidatorSet.Validator memory validator = childValidatorSet
-            .validators(id);
-
-        uint256 amountLeft = validator.selfStake - amount;
-        require(
-            amountLeft >= minSelfStake || amountLeft == 0,
-            "INVALID_UNSTAKE_AMOUNT"
-        );
-        childValidatorSet.unstake(id, amount);
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = to.call{value: amount}("");
-        require(success, "TRANSFER_FAILED");
+    function stake() external payable onlyValidator {
+        // TODO check whitelist
+        uint256 currentStake = _validators.stakeOf(msg.sender);
+        if (msg.value + currentStake < minSelfStake)
+            revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
+        _queue.insert(msg.sender, int256(msg.value), 0);
+        // childValidatorSet.addSelfStake(id, msg.value);
     }
 
-    function delegate(uint256 id, bool restake) external payable {
+    function unstake(uint256 amount) external onlyValidator {
+        int256 totalStake = int256(_validators.stakeOf(msg.sender)) +
+            _queue.pendingStake(msg.sender);
+        int256 amountInt = int256(amount);
+        // prevent overflow
+        assert(amountInt > 0);
+        if (amountInt > totalStake)
+            revert StakeRequirement({src: "unstake", msg: "EXCEEDS_BALANCE"});
+        int256 amountAfterUnstake = totalStake - amountInt;
+        if (
+            amountAfterUnstake < int256(minSelfStake) && amountAfterUnstake != 0
+        ) revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
+        _queue.insert(msg.sender, amountInt * -1, 0);
+
+        // IChildValidatorSet.Validator memory validator = childValidatorSet
+        //     .validators(id);
+        // uint256 amountLeft = validator.selfStake - amount;
+        // require(
+        //     amountLeft >= minSelfStake || amountLeft == 0,
+        //     "INVALID_UNSTAKE_AMOUNT"
+        // );
+        // childValidatorSet.unstake(id, amount);
+        // // solhint-disable-next-line avoid-low-level-calls
+        // (bool success, ) = to.call{value: amount}("");
+        // require(success, "TRANSFER_FAILED");
+    }
+
+    // TODO undelegate
+    function delegate(address validator, bool restake) external payable {
+        // TODO validator verification
+        uint256 id = childValidatorSet.validatorIdByAddress(validator);
         require(msg.value >= minDelegation, "DELEGATION_TOO_LOW");
 
-        require(
-            id < childValidatorSet.currentValidatorId(),
-            "INVALID_VALIDATOR_ID"
-        );
+        // require(
+        //     id < childValidatorSet.currentValidatorId(),
+        //     "INVALID_VALIDATOR_ID"
+        // );
+
+        uint256 amount = msg.value;
 
         Stake storage delegation = delegations[msg.sender][id];
 
-        delegation.epochId = childValidatorSet.currentEpochId();
+        // delegation.epochId = childValidatorSet.currentEpochId();
 
-        uint256 reward = 0;
-
-        if (delegation.amount == 0) {
-            // first-time delegation
-            delegation.amount = msg.value;
+        if (restake) {
+            uint256 reward = calculateDelegatorReward(id, msg.sender);
+            amount += reward;
         } else {
-            // re-delegating
-            if (restake) {
-                reward = calculateDelegatorReward(id, msg.sender);
-                delegation.amount += (msg.value + reward);
-            } else {
-                claimDelegatorReward(id);
-                delegation.amount += msg.value;
-            }
+            claimDelegatorReward(id);
         }
 
-        childValidatorSet.addTotalStake(id, msg.value + reward);
+        delegation.amount += amount;
+
+        _queue.insert(msg.sender, 0, int256(amount));
     }
 
     function claimDelegatorReward(uint256 id) public nonReentrant {
@@ -244,11 +286,8 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(success, "TRANSFER_FAILED");
     }
 
-    function claimValidatorReward(uint256 id)
-        public
-        onlyValidator(id)
-        nonReentrant
-    {
+    function claimValidatorReward() public onlyValidator nonReentrant {
+        uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
         uint256 reward = calculateValidatorReward(id);
 
         Stake storage delegation = delegations[msg.sender][id];

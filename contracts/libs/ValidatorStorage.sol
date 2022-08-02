@@ -6,6 +6,24 @@ import "../interfaces/IValidator.sol";
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
 
+    function get(ValidatorTree storage self, address validator)
+        internal
+        view
+        returns (Validator storage)
+    {
+        // return empty validator object if validator doesn't exist
+        if (!exists(self, validator)) validator = EMPTY;
+        return self.nodes[validator];
+    }
+
+    function stakeOf(ValidatorTree storage self, address account)
+        internal
+        view
+        returns (uint256 balance)
+    {
+        balance = self.nodes[account].stake;
+    }
+
     function first(ValidatorTree storage self)
         internal
         view
@@ -108,7 +126,7 @@ library ValidatorStorageLib {
         uint256 totalStake,
         uint256 commission
     ) internal {
-        require(key != EMPTY);
+        assert(key != EMPTY);
         require(!exists(self, key));
         address cursor = EMPTY;
         address probe = self.root;
@@ -142,7 +160,7 @@ library ValidatorStorageLib {
     }
 
     function remove(ValidatorTree storage self, address key) internal {
-        require(key != EMPTY);
+        assert(key != EMPTY);
         require(exists(self, key));
         address probe;
         address cursor;

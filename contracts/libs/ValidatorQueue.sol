@@ -48,12 +48,12 @@ library ValidatorQueueLib {
         self.queue = new QueuedValidator[](0);
     }
 
-    function waiting(ValidatorQueue storage self, address validator)
+    function get(ValidatorQueue storage self)
         internal
         view
-        returns (bool)
+        returns (QueuedValidator[] storage)
     {
-        return self.indices[validator] != 0;
+        return self.queue;
     }
 
     function pendingStake(ValidatorQueue storage self, address validator)
