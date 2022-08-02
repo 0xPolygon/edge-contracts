@@ -207,7 +207,9 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
                     commission
                 );
             }
+            _queue.resetIndex(validatorAddr);
         }
+        _queue.reset();
     }
 
     function stake() external payable onlyValidator {

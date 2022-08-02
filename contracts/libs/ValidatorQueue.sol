@@ -45,7 +45,7 @@ library ValidatorQueueLib {
     }
 
     function reset(ValidatorQueue storage self) internal {
-        self.queue = new QueuedValidator[](0);
+        delete self.queue;
     }
 
     function get(ValidatorQueue storage self)
