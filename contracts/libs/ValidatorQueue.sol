@@ -12,7 +12,6 @@ struct QueuedValidator {
 struct ValidatorQueue {
     mapping(address => uint256) indices;
     QueuedValidator[] queue;
-    uint256 count;
 }
 
 library ValidatorQueueLib {
@@ -25,13 +24,15 @@ library ValidatorQueueLib {
         uint256 index = self.indices[validator];
         if (index == 0) {
             // insert into queue
-            // use index starting with 1
-            index = ++self.count;
+            // use index starting with 1, 0 is empty by default for easier checking of pending balances
+            index = self.queue.length + 1;
             self.indices[validator] = index;
-            self.queue[index] = QueuedValidator(validator, stake, delegation);
+            self.queue.push(QueuedValidator(validator, stake, delegation));
         } else {
             // update values
-            QueuedValidator storage queuedValidator = self.queue[index];
+            QueuedValidator storage queuedValidator = self.queue[
+                indexOf(self, validator)
+            ];
             queuedValidator.stake += stake;
             queuedValidator.delegation += delegation;
         }
@@ -45,6 +46,39 @@ library ValidatorQueueLib {
 
     function reset(ValidatorQueue storage self) internal {
         self.queue = new QueuedValidator[](0);
-        self.count = 0;
+    }
+
+    function waiting(ValidatorQueue storage self, address validator)
+        internal
+        view
+        returns (bool)
+    {
+        return self.indices[validator] != 0;
+    }
+
+    function pendingStake(ValidatorQueue storage self, address validator)
+        internal
+        view
+        returns (int256)
+    {
+        return self.queue[indexOf(self, validator)].stake;
+    }
+
+    function pendingDelegation(ValidatorQueue storage self, address validator)
+        internal
+        view
+        returns (int256)
+    {
+        return self.queue[indexOf(self, validator)].delegation;
+    }
+
+    function indexOf(ValidatorQueue storage self, address validator)
+        private
+        view
+        returns (uint256 index)
+    {
+        index = self.indices[validator];
+        assert(index != 0);
+        return index - 1;
     }
 }
