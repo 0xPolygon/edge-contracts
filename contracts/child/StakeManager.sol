@@ -300,6 +300,28 @@ contract StakeManager is System, Initializable, ReentrancyGuard {
         require(success, "TRANSFER_FAILED");
     }
 
+    // get first `amount` of validators sorted by stake from high to low
+    function sortedValidators(uint256 amount)
+        external
+        view
+        returns (address[] memory)
+    {
+        uint256 length = amount <= _validators.count
+            ? amount
+            : _validators.count;
+        address[] memory validatorAddresses = new address[](length);
+
+        address tmpValidator = _validators.last();
+        validatorAddresses[0] = tmpValidator;
+
+        for (uint256 i = 1; i < length; i++) {
+            tmpValidator = _validators.prev(tmpValidator);
+            validatorAddresses[i] = tmpValidator;
+        }
+
+        return validatorAddresses;
+    }
+
     function calculateDelegatorReward(uint256 id, address delegator)
         public
         view
