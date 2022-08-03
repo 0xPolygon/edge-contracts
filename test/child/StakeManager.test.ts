@@ -184,7 +184,7 @@ describe("StakeManager", () => {
       expect(await stakeManager.withdrawable(accounts[0].address)).to.equal(0);
     });
 
-    xit("should reflect balance after queue processing", async () => {
+    it("should reflect balance after queue processing", async () => {
       let validator = await stakeManager.getValidator(accounts[0].address);
       expect(validator.stake).to.equal(minStake * 2);
       await expect(stakeManager.connect(childValidatorSetImpersonator).processQueue()).to.not.be.reverted;

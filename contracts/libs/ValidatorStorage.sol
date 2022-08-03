@@ -8,7 +8,6 @@ library ValidatorStorageLib {
 
     function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
-        if (!exists(self, validator)) validator = EMPTY;
         return self.nodes[validator].validator;
     }
 
@@ -89,8 +88,12 @@ library ValidatorStorageLib {
         Validator memory validator
     ) internal {
         assert(key != EMPTY);
-        assert(validator.stake > 0 && validator.totalStake >= validator.stake);
+        assert(validator.totalStake >= validator.stake);
         require(!exists(self, key));
+        if (validator.stake == 0) {
+            self.nodes[key].validator = validator;
+            return;
+        }
         address cursor = EMPTY;
         address probe = self.root;
         while (probe != EMPTY) {
@@ -102,7 +105,6 @@ library ValidatorStorageLib {
             }
         }
         self.nodes[key] = Node({parent: cursor, left: EMPTY, right: EMPTY, red: true, validator: validator});
-
         if (cursor == EMPTY) {
             self.root = key;
         } else if (validator.totalStake < self.nodes[cursor].validator.totalStake) {
@@ -156,8 +158,10 @@ library ValidatorStorageLib {
         if (doFixup) {
             removeFixup(self, probe);
         }
-        // TODO don't delete delegation data
-        delete self.nodes[cursor];
+        self.nodes[cursor].parent = EMPTY;
+        self.nodes[cursor].left = EMPTY;
+        self.nodes[cursor].right = EMPTY;
+        self.nodes[cursor].red = false;
         self.count--;
     }
 

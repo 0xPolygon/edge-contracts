@@ -124,13 +124,13 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         // TODO transfer of funds?
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             _addToWhitelist(validatorAddresses[i]);
-            Validator memory data = Validator({
+            Validator memory validator = Validator({
                 blsKey: validatorPubkeys[i],
                 stake: validatorStakes[i],
                 totalStake: validatorStakes[i],
                 commission: 0
             });
-            _validators.insert(validatorAddresses[i], data);
+            _validators.insert(validatorAddresses[i], validator);
         }
     }
 
@@ -207,16 +207,14 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
             address validatorAddr = item.validator;
             // values will be zero for non existing validators
             Validator storage validator = _validators.get(validatorAddr);
-            // if validator already present in tree, remove and reinsert to maintain sort
+            // if validator already present in tree, remove andreinsert to maintain sort
             // TODO move reinsertion logic to library
             if (_validators.exists(validatorAddr)) {
                 _validators.remove(validatorAddr);
             }
             validator.stake = uint256(int256(validator.stake) + item.stake);
             validator.totalStake = uint256(int256(validator.totalStake) + item.stake + item.delegation);
-            if (validator.stake > 0) {
-                _validators.insert(validatorAddr, validator);
-            }
+            _validators.insert(validatorAddr, validator);
             _queue.resetIndex(validatorAddr);
         }
         _queue.reset();
