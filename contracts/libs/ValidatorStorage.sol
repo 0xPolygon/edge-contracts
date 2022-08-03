@@ -9,11 +9,11 @@ library ValidatorStorageLib {
     function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
         if (!exists(self, validator)) validator = EMPTY;
-        return self.nodes[validator];
+        return self.nodes[validator].validator;
     }
 
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
-        balance = self.nodes[account].data.stake;
+        balance = self.nodes[account].validator.stake;
     }
 
     function first(ValidatorTree storage self) internal view returns (address _key) {
@@ -86,26 +86,26 @@ library ValidatorStorageLib {
     function insert(
         ValidatorTree storage self,
         address key,
-        ValidatorData memory data
+        Validator memory validator
     ) internal {
         assert(key != EMPTY);
-        assert(data.stake > 0 && data.totalStake >= data.stake);
+        assert(validator.stake > 0 && validator.totalStake >= validator.stake);
         require(!exists(self, key));
         address cursor = EMPTY;
         address probe = self.root;
         while (probe != EMPTY) {
             cursor = probe;
-            if (data.totalStake < self.nodes[probe].data.totalStake) {
+            if (validator.totalStake < self.nodes[probe].validator.totalStake) {
                 probe = self.nodes[probe].left;
             } else {
                 probe = self.nodes[probe].right;
             }
         }
-        self.nodes[key] = Validator({parent: cursor, left: EMPTY, right: EMPTY, red: true, data: data});
+        self.nodes[key] = Node({parent: cursor, left: EMPTY, right: EMPTY, red: true, validator: validator});
 
         if (cursor == EMPTY) {
             self.root = key;
-        } else if (data.totalStake < self.nodes[cursor].data.totalStake) {
+        } else if (validator.totalStake < self.nodes[cursor].validator.totalStake) {
             self.nodes[cursor].left = key;
         } else {
             self.nodes[cursor].right = key;

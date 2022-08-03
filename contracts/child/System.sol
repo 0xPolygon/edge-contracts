@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "../interfaces/Errors.sol";
+
 contract System {
     // pre-compiled contracts
     // slither-disable-next-line too-many-digits
-    address public constant NATIVE_TRANSFER_PRECOMPILE =
-        0x0000000000000000000000000000000000002020;
+    address public constant NATIVE_TRANSFER_PRECOMPILE = 0x0000000000000000000000000000000000002020;
     // slither-disable-next-line too-many-digits
-    address public constant VALIDATOR_PKCHECK_PRECOMPILE =
-        0x0000000000000000000000000000000000002030;
+    address public constant VALIDATOR_PKCHECK_PRECOMPILE = 0x0000000000000000000000000000000000002030;
 
     // internal addrs
     // slither-disable-next-line too-many-digits
@@ -22,11 +22,10 @@ contract System {
 
     // genesis contracts
     // slither-disable-next-line too-many-digits
-    address public constant NATIVE_TOKEN_CONTRACT =
-        0x0000000000000000000000000000000000001010;
+    address public constant NATIVE_TOKEN_CONTRACT = 0x0000000000000000000000000000000000001010;
 
     modifier onlySystemCall() {
-        require(msg.sender == SYSTEM, "ONLY_SYSTEMCALL");
+        if (msg.sender != SYSTEM) revert Unauthorized("SYSTEMCALL");
         _;
     }
 }

@@ -30,17 +30,13 @@ library ValidatorQueueLib {
             self.queue.push(QueuedValidator(validator, stake, delegation));
         } else {
             // update values
-            QueuedValidator storage queuedValidator = self.queue[
-                indexOf(self, validator)
-            ];
+            QueuedValidator storage queuedValidator = self.queue[indexOf(self, validator)];
             queuedValidator.stake += stake;
             queuedValidator.delegation += delegation;
         }
     }
 
-    function resetIndex(ValidatorQueue storage self, address validator)
-        internal
-    {
+    function resetIndex(ValidatorQueue storage self, address validator) internal {
         self.indices[validator] = 0;
     }
 
@@ -48,35 +44,25 @@ library ValidatorQueueLib {
         delete self.queue;
     }
 
-    function get(ValidatorQueue storage self)
-        internal
-        view
-        returns (QueuedValidator[] storage)
-    {
+    function get(ValidatorQueue storage self) internal view returns (QueuedValidator[] storage) {
         return self.queue;
     }
 
-    function pendingStake(ValidatorQueue storage self, address validator)
-        internal
-        view
-        returns (int256)
-    {
+    function waiting(ValidatorQueue storage self, address validator) internal view returns (bool) {
+        return self.indices[validator] != 0;
+    }
+
+    function pendingStake(ValidatorQueue storage self, address validator) internal view returns (int256) {
+        if (!waiting(self, validator)) return 0;
         return self.queue[indexOf(self, validator)].stake;
     }
 
-    function pendingDelegation(ValidatorQueue storage self, address validator)
-        internal
-        view
-        returns (int256)
-    {
+    function pendingDelegation(ValidatorQueue storage self, address validator) internal view returns (int256) {
+        if (!waiting(self, validator)) return 0;
         return self.queue[indexOf(self, validator)].delegation;
     }
 
-    function indexOf(ValidatorQueue storage self, address validator)
-        private
-        view
-        returns (uint256 index)
-    {
+    function indexOf(ValidatorQueue storage self, address validator) private view returns (uint256 index) {
         index = self.indices[validator];
         assert(index != 0);
         return index - 1;

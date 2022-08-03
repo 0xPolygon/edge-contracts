@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/utils/Arrays.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {System} from "./System.sol";
 
 interface IBLS {
@@ -29,8 +29,8 @@ interface IStakeManager {
     @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
     @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  */
-contract ChildValidatorSet is System, Ownable {
-    using Arrays for uint256[];
+contract ChildValidatorSet is System, OwnableUpgradeable {
+    using ArraysUpgradeable for uint256[];
 
     struct Validator {
         address _address;
@@ -76,7 +76,7 @@ contract ChildValidatorSet is System, Ownable {
     mapping(uint256 => mapping(uint256 => bool)) public validatorsByEpoch;
     mapping(address => bool) public whitelist;
 
-    uint8 private initialized;
+    // uint8 private initialized;
 
     event NewValidator(
         uint256 indexed id,
@@ -91,11 +91,11 @@ contract ChildValidatorSet is System, Ownable {
         bytes32 epochRoot
     );
 
-    modifier initializer() {
-        require(initialized == 0, "ALREADY_INITIALIZED");
-        _;
-        initialized = 1;
-    }
+    // modifier initializer() {
+    //     require(initialized == 0, "ALREADY_INITIALIZED");
+    //     _;
+    //     initialized = 1;
+    // }
 
     modifier onlyStakeManager() {
         require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
@@ -149,32 +149,6 @@ contract ChildValidatorSet is System, Ownable {
         nextEpoch.validatorSet = epochValidatorSet;
 
         _transferOwnership(governance);
-    }
-
-    /**
-     * @notice Adds addresses which are allowed to register as validators.
-     * @param whitelistAddreses Array of address to whitelist
-     */
-    function addToWhitelist(address[] calldata whitelistAddreses)
-        external
-        onlyOwner
-    {
-        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            whitelist[whitelistAddreses[i]] = true;
-        }
-    }
-
-    /**
-     * @notice Deletes addresses which are allowed to register as validators.
-     * @param whitelistAddreses Array of address to remove from whitelist
-     */
-    function deleteFromWhitelist(address[] calldata whitelistAddreses)
-        external
-        onlyOwner
-    {
-        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            whitelist[whitelistAddreses[i]] = false;
-        }
     }
 
     /**
