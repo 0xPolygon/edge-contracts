@@ -10,19 +10,14 @@ describe("ValidatorStorage", async () => {
 
   before(async () => {
     accounts = await ethers.getSigners();
-    vs = await (
-      await ethers.getContractFactory("MockValidatorStorage")
-    ).deploy();
+    vs = await (await ethers.getContractFactory("MockValidatorStorage")).deploy();
   });
 
   it("should be able to insert values", async () => {
     await vs.insert(accounts[0].address, 100);
     await vs.insert(accounts[1].address, 200);
 
-    expect(await vs.activeValidators()).to.deep.equal([
-      accounts[1].address,
-      accounts[0].address,
-    ]);
+    expect(await vs.activeValidators()).to.deep.equal([accounts[1].address, accounts[0].address]);
   });
 
   it("should report min and max values correctly", async () => {

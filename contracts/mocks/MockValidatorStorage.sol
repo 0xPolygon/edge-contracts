@@ -4,17 +4,20 @@ pragma solidity ^0.8.13;
 import "../libs/ValidatorStorage.sol";
 
 contract MockValidatorStorage {
+    uint256[4] blsKey;
+
     using ValidatorStorageLib for ValidatorTree;
     ValidatorTree validators;
 
     uint256 public ACTIVE_VALIDATORS = 5;
 
     function balanceOf(address account) public view returns (uint256 balance) {
-        balance = validators.nodes[account].totalStake;
+        balance = validators.nodes[account].data.totalStake;
     }
 
     function insert(address account, uint256 amount) external {
-        validators.insert(account, 0, amount, 0);
+        ValidatorData memory data = ValidatorData({blsKey: blsKey, stake: amount, totalStake: amount, commission: 0});
+        validators.insert(account, data);
     }
 
     function remove(address account) external {
@@ -32,9 +35,7 @@ contract MockValidatorStorage {
     }
 
     function activeValidators() external view returns (address[] memory) {
-        uint256 validatorCount = validators.count >= ACTIVE_VALIDATORS
-            ? ACTIVE_VALIDATORS
-            : validators.count;
+        uint256 validatorCount = validators.count >= ACTIVE_VALIDATORS ? ACTIVE_VALIDATORS : validators.count;
 
         address[] memory validatorAddresses = new address[](validatorCount);
 

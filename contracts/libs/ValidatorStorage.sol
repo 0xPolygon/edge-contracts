@@ -6,29 +6,17 @@ import "../interfaces/IValidator.sol";
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
 
-    function get(ValidatorTree storage self, address validator)
-        internal
-        view
-        returns (Validator storage)
-    {
+    function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
         if (!exists(self, validator)) validator = EMPTY;
         return self.nodes[validator];
     }
 
-    function stakeOf(ValidatorTree storage self, address account)
-        internal
-        view
-        returns (uint256 balance)
-    {
-        balance = self.nodes[account].stake;
+    function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
+        balance = self.nodes[account].data.stake;
     }
 
-    function first(ValidatorTree storage self)
-        internal
-        view
-        returns (address _key)
-    {
+    function first(ValidatorTree storage self) internal view returns (address _key) {
         _key = self.root;
         if (_key != EMPTY) {
             while (self.nodes[_key].left != EMPTY) {
@@ -37,11 +25,7 @@ library ValidatorStorageLib {
         }
     }
 
-    function last(ValidatorTree storage self)
-        internal
-        view
-        returns (address _key)
-    {
+    function last(ValidatorTree storage self) internal view returns (address _key) {
         _key = self.root;
         if (_key != EMPTY) {
             while (self.nodes[_key].right != EMPTY) {
@@ -50,11 +34,7 @@ library ValidatorStorageLib {
         }
     }
 
-    function next(ValidatorTree storage self, address target)
-        internal
-        view
-        returns (address cursor)
-    {
+    function next(ValidatorTree storage self, address target) internal view returns (address cursor) {
         require(target != EMPTY);
         if (self.nodes[target].right != EMPTY) {
             cursor = treeMinimum(self, self.nodes[target].right);
@@ -67,11 +47,7 @@ library ValidatorStorageLib {
         }
     }
 
-    function prev(ValidatorTree storage self, address target)
-        internal
-        view
-        returns (address cursor)
-    {
+    function prev(ValidatorTree storage self, address target) internal view returns (address cursor) {
         require(target != EMPTY);
         if (self.nodes[target].left != EMPTY) {
             cursor = treeMaximum(self, self.nodes[target].left);
@@ -84,14 +60,8 @@ library ValidatorStorageLib {
         }
     }
 
-    function exists(ValidatorTree storage self, address key)
-        internal
-        view
-        returns (bool)
-    {
-        return
-            (key != EMPTY) &&
-            ((key == self.root) || (self.nodes[key].parent != EMPTY));
+    function exists(ValidatorTree storage self, address key) internal view returns (bool) {
+        return (key != EMPTY) && ((key == self.root) || (self.nodes[key].parent != EMPTY));
     }
 
     function isEmpty(address key) internal pure returns (bool) {
@@ -110,48 +80,32 @@ library ValidatorStorageLib {
         )
     {
         require(exists(self, key));
-        return (
-            key,
-            self.nodes[key].parent,
-            self.nodes[key].left,
-            self.nodes[key].right,
-            self.nodes[key].red
-        );
+        return (key, self.nodes[key].parent, self.nodes[key].left, self.nodes[key].right, self.nodes[key].red);
     }
 
     function insert(
         ValidatorTree storage self,
         address key,
-        uint256 stake,
-        uint256 totalStake,
-        uint256 commission
+        ValidatorData memory data
     ) internal {
         assert(key != EMPTY);
-        assert(stake > 0 && totalStake >= stake);
+        assert(data.stake > 0 && data.totalStake >= data.stake);
         require(!exists(self, key));
         address cursor = EMPTY;
         address probe = self.root;
         while (probe != EMPTY) {
             cursor = probe;
-            if (totalStake < self.nodes[probe].totalStake) {
+            if (data.totalStake < self.nodes[probe].data.totalStake) {
                 probe = self.nodes[probe].left;
             } else {
                 probe = self.nodes[probe].right;
             }
         }
-        self.nodes[key] = Validator({
-            parent: cursor,
-            left: EMPTY,
-            right: EMPTY,
-            stake: stake,
-            totalStake: totalStake,
-            commission: commission,
-            red: true
-        });
+        self.nodes[key] = Validator({parent: cursor, left: EMPTY, right: EMPTY, red: true, data: data});
 
         if (cursor == EMPTY) {
             self.root = key;
-        } else if (totalStake < self.nodes[cursor].totalStake) {
+        } else if (data.totalStake < self.nodes[cursor].data.totalStake) {
             self.nodes[cursor].left = key;
         } else {
             self.nodes[cursor].right = key;
@@ -207,22 +161,14 @@ library ValidatorStorageLib {
         self.count--;
     }
 
-    function treeMinimum(ValidatorTree storage self, address key)
-        private
-        view
-        returns (address)
-    {
+    function treeMinimum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].left != EMPTY) {
             key = self.nodes[key].left;
         }
         return key;
     }
 
-    function treeMaximum(ValidatorTree storage self, address key)
-        private
-        view
-        returns (address)
-    {
+    function treeMaximum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].right != EMPTY) {
             key = self.nodes[key].right;
         }
@@ -342,10 +288,7 @@ library ValidatorStorageLib {
                     rotateLeft(self, keyParent);
                     cursor = self.nodes[keyParent].right;
                 }
-                if (
-                    !self.nodes[self.nodes[cursor].left].red &&
-                    !self.nodes[self.nodes[cursor].right].red
-                ) {
+                if (!self.nodes[self.nodes[cursor].left].red && !self.nodes[self.nodes[cursor].right].red) {
                     self.nodes[cursor].red = true;
                     key = keyParent;
                 } else {
@@ -369,10 +312,7 @@ library ValidatorStorageLib {
                     rotateRight(self, keyParent);
                     cursor = self.nodes[keyParent].left;
                 }
-                if (
-                    !self.nodes[self.nodes[cursor].right].red &&
-                    !self.nodes[self.nodes[cursor].left].red
-                ) {
+                if (!self.nodes[self.nodes[cursor].right].red && !self.nodes[self.nodes[cursor].left].red) {
                     self.nodes[cursor].red = true;
                     key = keyParent;
                 } else {
