@@ -13,7 +13,7 @@ library Merkle {
         require(index < 2**proofHeight, "INVALID_LEAF_INDEX");
 
         bytes32 computedHash = leaf;
-        
+
         for (uint256 i = 0; i < proofHeight; ++i) {
             bytes32 proofElement = proof[i];
 

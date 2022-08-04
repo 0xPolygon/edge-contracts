@@ -47,7 +47,10 @@ contract StateReceiver is System {
         bytes32 message
     );
 
-    function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
+    function commit(StateSyncBundle calldata bundle, bytes calldata signature)
+        external
+        onlySystemCall
+    {
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be
         // part of the dataHash. Otherwise data can be manipulated for same sigs
@@ -74,7 +77,10 @@ contract StateReceiver is System {
 
         uint256 leafIndex = currentLeafIndex;
 
-        require(dataHash.checkMembership(leafIndex++, bundle.root, proof), "INVALID_PROOF");
+        require(
+            dataHash.checkMembership(leafIndex++, bundle.root, proof),
+            "INVALID_PROOF"
+        );
 
         if (leafIndex == bundle.leaves) {
             currentLeafIndex = 0;
