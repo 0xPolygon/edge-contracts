@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
+import { randHex } from "../../ts/utils";
 import { BLS, RootValidatorSet } from "../../typechain";
 
 const DOMAIN = ethers.utils.arrayify(
@@ -33,6 +34,26 @@ describe("RootValidatorSet", () => {
     rootValidatorSet = await RootValidatorSet.deploy();
 
     await rootValidatorSet.deployed();
+  });
+  it("Initialize with length mismatched data", async () => {
+    const messagePoint = mcl.g1ToHex(
+      mcl.hashToPoint(
+        ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")),
+        DOMAIN
+      )
+    );
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 1); // Randomly pick 1-5
+    let addresses = [];
+    let pubkeys = [];
+    for (let i = 0; i < validatorSetSize; i++) {
+      const { pubkey, secret } = mcl.newKeyPair();
+      pubkeys.push(mcl.g2ToHex(pubkey));
+      addresses.push(accounts[i].address);
+    }
+    addresses.push(accounts[0].address);
+    await expect(
+      rootValidatorSet.initialize(bls.address, addresses, pubkeys, messagePoint)
+    ).to.be.revertedWith("LENGTH_MISMATCH");
   });
   it("Initialize and validate initialization", async () => {
     const messagePoint = mcl.g1ToHex(
@@ -86,6 +107,17 @@ describe("RootValidatorSet", () => {
         true
       );
     }
+  });
+  it("Register a validator: invalid signature", async () => {
+    const signer = accounts[validatorSetSize];
+    const message = randHex(12);
+    const { pubkey, secret } = mcl.newKeyPair();
+    const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+    const newRootValidatorSet = rootValidatorSet.connect(signer);
+    parsedPubkey = mcl.g2ToHex(pubkey);
+    await expect(
+      newRootValidatorSet.register(mcl.g1ToHex(signature), parsedPubkey)
+    ).to.be.revertedWith("INVALID_SIGNATURE");
   });
   it("Register a validator: whitelisted address", async () => {
     const signer = accounts[validatorSetSize];

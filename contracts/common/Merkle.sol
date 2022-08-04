@@ -1,4 +1,4 @@
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.13;
 
 library Merkle {
     function checkMembership(
@@ -13,7 +13,7 @@ library Merkle {
         require(index < 2**proofHeight, "INVALID_LEAF_INDEX");
 
         bytes32 computedHash = leaf;
-        console.logBytes32(leaf);
+        
         for (uint256 i = 0; i < proofHeight; ++i) {
             bytes32 proofElement = proof[i];
 
