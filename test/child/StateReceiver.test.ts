@@ -5,10 +5,7 @@ import { Signer, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { StateReceiver, StateReceivingContract } from "../../typechain";
 import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
-
 import { MerkleTree } from "merkletreejs";
-import { keccak256 } from "keccak256";
-import { SHA256 } from "crypto-js/sha256";
 
 describe("StateReceiver", () => {
   let stateReceiver: StateReceiver,
@@ -16,6 +13,7 @@ describe("StateReceiver", () => {
     stateReceivingContract: StateReceivingContract,
     stateSyncCounter: number,
     batchSize: number,
+    currentSum: BigNumber,
     tree: any,
     hashes: any[],
     stateSyncBundle: any[],
@@ -57,23 +55,23 @@ describe("StateReceiver", () => {
     ]);
   });
   it("State sync commit", async () => {
-    let currentSum = await stateReceivingContract.counter();
-    const bundleSize = 128;
-    batchSize = 2;
+    currentSum = BigNumber.from(0);
+    const bundleSize = Math.floor(Math.random() * 5 + 1);
+    batchSize = 2 ** (Math.floor(Math.random() * 2 + 1));
     hashes = [];
     stateSyncBundle = [];
     for (let j = 0; j < bundleSize; j++) {
       const stateSyncs = [];
       stateSyncCounter += batchSize;
-      for (let i = 1; i <= batchSize; i++) {
-        const increment = Math.floor(Math.random() * (10 - 1) + 1);
+      for (let i = 0; i < batchSize; i++) {
+        const increment = Math.floor(Math.random() * 9 + 1);
         currentSum = currentSum.add(BigNumber.from(increment));
         const data = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [increment]
         );
         const stateSync = {
-          id: i,
+          id: (j * bundleSize) + i + 1,
           sender: ethers.constants.AddressZero,
           receiver: stateReceivingContract.address,
           data,
@@ -93,11 +91,8 @@ describe("StateReceiver", () => {
       hashes.push(hash);
     }
 
-    console.log(hashes);
-
     tree = new MerkleTree(hashes, ethers.utils.keccak256);
     const root = tree.getHexRoot();
-    console.log(tree.toString());
 
     const bundle = {
       startId: 0,
@@ -110,30 +105,26 @@ describe("StateReceiver", () => {
       ethers.constants.HashZero
     );
     const receipt = await tx.wait();
-    console.log(receipt);
   });
+
   it("State sync execute", async () => {
-    let currentSum = await stateReceivingContract.counter();
-    let i = 0;
+    let bundleCounter: number = 0
+    let stateSyncCounter: number = 0;
     for (const stateSyncs of stateSyncBundle) {
-      const proof = tree.getHexProof(hashes[i++]);
-      console.log(proof);
+      const proof = tree.getHexProof(hashes[bundleCounter++]);
       const tx = await systemStateReceiver.execute(proof, stateSyncs);
       const receipt = await tx.wait();
-      console.log(receipt.cumulativeGasUsed);
-      const log = receipt?.events as any[];
-      for (let i = 1; i <= batchSize; i++) {
+      const logs = receipt?.events?.filter((log) => log.event === "StateSyncResult") as any[];
+      expect(logs).to.exist;
+      for (let i = 0; i < batchSize; i++) {
+        stateSyncCounter++;
         const stateSync = stateSyncs[i];
-        expect(log[i]?.args?.counter).to.equal(i + 1);
-        expect(log[i]?.args?.status).to.equal(1);
+        expect(logs[i]?.args?.counter).to.equal(stateSyncCounter);
+        expect(logs[i]?.args?.status).to.equal(0);
       }
-      expect(await stateReceiver.counter()).to.equal(batchSize + 1);
-      expect(await stateReceivingContract.counter()).to.equal(currentSum);
-      const data = ethers.utils.defaultAbiCoder.encode(
-        ["uint256"],
-        [await stateReceivingContract.counter()]
-      );
-      expect(log[batchSize - 1]?.args?.message).to.equal(data);
+      expect(await stateReceiver.counter()).to.equal(batchSize * bundleCounter);
     }
+    expect(await stateReceivingContract.counter()).to.equal(currentSum);
+
   });
 });
