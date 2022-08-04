@@ -19,5 +19,6 @@ struct Node {
 struct ValidatorTree {
     address root;
     uint256 count;
+    uint256 totalStake;
     mapping(address => Node) nodes;
 }

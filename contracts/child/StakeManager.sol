@@ -12,6 +12,14 @@ import "hardhat/console.sol";
 
 error StakeRequirement(string src, string msg);
 
+interface IBLS {
+    function verifySingle(
+        uint256[2] calldata signature,
+        uint256[4] calldata pubkey,
+        uint256[2] calldata message
+    ) external view returns (bool, bool);
+}
+
 interface IChildValidatorSet {
     struct Validator {
         address _address;
@@ -70,9 +78,14 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
     using ValidatorQueueLib for ValidatorQueue;
     using WithdrawalQueueLib for WithdrawalQueue;
 
+    struct UptimeData {
+        address validator;
+        uint256 uptime;
+    }
+
     struct Uptime {
         uint256 epochId;
-        uint256[] uptimes;
+        UptimeData[] uptimeData;
         uint256 totalUptime;
     }
 
@@ -83,6 +96,10 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
 
     uint256 public constant REWARD_PRECISION = 10**18;
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
+    uint256 public constant MAX_COMMISSION = 100;
+
+    IBLS public bls;
+    uint256[2] public message;
 
     uint256 public epochReward;
     uint256 public minStake;
@@ -99,6 +116,8 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
     mapping(address => Stake) public selfStakes; // validator address -> Delegation
     mapping(address => bool) public whitelist;
 
+    event NewValidator(address indexed validator, uint256[4] blsKey);
+
     modifier onlyValidator() {
         if (!whitelist[msg.sender]) revert Unauthorized("VALIDATOR");
         // require(childValidatorSet.validatorIdByAddress(msg.sender) != 0, "ONLY_VALIDATOR");
@@ -112,7 +131,9 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         IChildValidatorSet newChildValidatorSet,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
-        uint256[] calldata validatorStakes
+        uint256[] calldata validatorStakes,
+        IBLS newBls,
+        uint256[2] calldata newMessage
     ) external initializer {
         epochReward = newEpochReward;
         minStake = newMinStake;
@@ -132,6 +153,8 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
             });
             _validators.insert(validatorAddresses[i], validator);
         }
+        bls = newBls;
+        message = newMessage;
     }
 
     /**
@@ -155,14 +178,14 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
     }
 
     function distributeRewards(Uptime calldata uptime) external {
-        require(msg.sender == address(childValidatorSet), "ONLY_VALIDATOR_SET");
+        if (msg.sender != address(childValidatorSet)) revert Unauthorized("VALIDATOR_SET");
 
         require(uptime.epochId == childValidatorSet.currentEpochId() - 1, "EPOCH_NOT_COMMITTED");
 
-        uint256 length = uptime.uptimes.length;
+        uint256 length = uptime.uptimeData.length;
 
         require(
-            length <= childValidatorSet.ACTIVE_VALIDATOR_SET_SIZE() && length < childValidatorSet.currentValidatorId(),
+            length <= childValidatorSet.ACTIVE_VALIDATOR_SET_SIZE() && length <= _validators.count,
             "INVALID_LENGTH"
         );
 
@@ -171,15 +194,10 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         uint256 aggWeight = 0;
 
         for (uint256 i = 0; i < length; ++i) {
-            IChildValidatorSet.ValidatorStatus status = childValidatorSet.getValidatorStatus(i + 1);
-            if (status == IChildValidatorSet.ValidatorStatus.STAKED) {
-                uint256 power = childValidatorSet.calculateValidatorPower(i + 1);
-                aggPower += power;
-                weights[i] = uptime.uptimes[i] * power;
-                aggWeight += weights[i];
-            } else if (status == IChildValidatorSet.ValidatorStatus.REGISTERED) {
-                childValidatorSet.updateValidatorStatus(i + 1, IChildValidatorSet.ValidatorStatus.STAKED);
-            } // to-do: other cases
+            uint256 power = childValidatorSet.calculateValidatorPower(i + 1);
+            aggPower += power;
+            weights[i] = uptime.uptimeData[i].uptime * power;
+            aggWeight += weights[i];
         }
 
         require(aggPower > (66 * (10**6)), "NOT_ENOUGH_CONSENSUS");
@@ -188,15 +206,16 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
 
         reward = (reward * aggPower) / (100 * (10**6)); // scale reward to power staked
 
-        // for (uint256 i = 0; i < length; ++i) {
-        //     uint256 validatorReward = (reward * weights[i]) / aggWeight;
-        //     (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
-        //         i + 1,
-        //         validatorReward
-        //     );
-        //     validatorRewardShares[uptime.epochId][i + 1] = validatorShares;
-        //     delegatorRewardShares[uptime.epochId][i + 1] = delegatorShares;
-        // }
+        for (uint256 i = 0; i < length; ++i) {
+            address validator = uptime.uptimeData[i].validator;
+            uint256 validatorReward = (reward * weights[i]) / aggWeight;
+            (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
+                validator,
+                validatorReward
+            );
+            validatorRewardShares[uptime.epochId][validator] = validatorShares;
+            delegatorRewardShares[uptime.epochId][validator] = delegatorShares;
+        }
     }
 
     function processQueue() external {
@@ -220,7 +239,33 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         _queue.reset();
     }
 
+    /**
+     * @notice Validates BLS signature with the provided pubkey and registers validators into the set.
+     * @param signature Signature to validate message against
+     * @param pubkey BLS public key of validator
+     */
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external onlyValidator {
+        (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message);
+        require(callSuccess && result, "INVALID_SIGNATURE");
+
+        _validators.insert(msg.sender, Validator({blsKey: pubkey, stake: 0, totalStake: 0, commission: 0}));
+        // whitelist[msg.sender] = false;
+
+        emit NewValidator(msg.sender, pubkey);
+    }
+
+    // function updateValidatorStatus(uint256 id, ValidatorStatus newStatus) external onlyStakeManager {
+    //     Validator storage validator = validators[id];
+
+    //     validator.status = newStatus;
+    // }
+
+    //     function getValidatorStatus(uint256 id) external view returns (ValidatorStatus) {
+    //     return validators[id].status;
+    // }
+
     function stake() external payable onlyValidator {
+        // TODO check for BLS key or introduce additional variable to check if validator is registered
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
         _queue.insert(msg.sender, int256(msg.value), 0);
@@ -271,6 +316,12 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         }
     }
 
+    function setCommission(uint256 newCommission) external onlyValidator {
+        require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
+        Validator storage validator = _validators.get(msg.sender);
+        validator.commission = newCommission;
+    }
+
     function claimValidatorReward() public onlyValidator {
         // uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
         uint256 reward = calculateValidatorReward(msg.sender);
@@ -297,6 +348,24 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         }
 
         return validatorAddresses;
+    }
+
+    /**
+     * @notice Calculate validator power for a validator in percentage.
+     * @return uint256 Returns validator power at 6 decimals. Therefore, a return value of 123456 is 0.123456%
+     */
+    function calculateValidatorPower(address validator) external view returns (uint256) {
+        /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
+           MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
+        return (_validators.get(validator).stake * 100 * (10**6)) / _validators.totalStake;
+    }
+
+    /**
+     * @notice Calculate total stake in the network (self-stake + delegation)
+     * @return stake Returns total stake (in MATIC wei)
+     */
+    function totalStake() public view returns (uint256) {
+        return _validators.totalStake;
     }
 
     function withdrawable(address account) public view returns (uint256) {

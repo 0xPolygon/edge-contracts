@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber, Signer } from "ethers";
+import { BigNumber, ContractFactory, Signer } from "ethers";
 import * as mcl from "../../ts/mcl";
 import * as hre from "hardhat";
 import { randHex } from "../../ts/utils";
@@ -36,6 +36,8 @@ describe("StakeManager", () => {
     childValidatorSet = await ChildValidatorSet.deploy();
     await childValidatorSet.deployed();
 
+    const bls = await (await ethers.getContractFactory("BLS")).deploy();
+
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [childValidatorSet.address],
@@ -56,6 +58,8 @@ describe("StakeManager", () => {
       [accounts[0].address],
       [[0, 0, 0, 0]],
       [minStake * 2],
+      bls.address,
+      [0, 0],
     ])) as StakeManager;
     await stakeManager.deployed();
 

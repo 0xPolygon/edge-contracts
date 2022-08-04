@@ -114,6 +114,7 @@ library ValidatorStorageLib {
         }
         insertFixup(self, key);
         self.count++;
+        self.totalStake += validator.stake;
     }
 
     function remove(ValidatorTree storage self, address key) internal {
@@ -163,6 +164,7 @@ library ValidatorStorageLib {
         self.nodes[cursor].right = EMPTY;
         self.nodes[cursor].red = false;
         self.count--;
+        self.totalStake -= self.nodes[cursor].validator.stake;
     }
 
     function treeMinimum(ValidatorTree storage self, address key) private view returns (address) {
