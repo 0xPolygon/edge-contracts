@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../interfaces/IBLS.sol";
 
 /**
@@ -12,7 +12,7 @@ import "../interfaces/IBLS.sol";
     @dev The contract is used to onboard new validators and register their ECDSA and BLS public keys.
  */
 // slither-disable-next-line missing-inheritance
-contract RootValidatorSet is Initializable, Ownable {
+contract RootValidatorSet is Initializable, OwnableUpgradeable {
     struct Validator {
         address _address;
         uint256[4] blsKey;
