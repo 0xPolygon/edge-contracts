@@ -57,7 +57,7 @@ describe("StateReceiver", () => {
   it("State sync commit", async () => {
     currentSum = BigNumber.from(0);
     const bundleSize = Math.floor(Math.random() * 5 + 1);
-    batchSize = 2 ** (Math.floor(Math.random() * 2 + 1));
+    batchSize = 2 ** Math.floor(Math.random() * 2 + 1);
     hashes = [];
     stateSyncBundle = [];
     for (let j = 0; j < bundleSize; j++) {
@@ -71,7 +71,7 @@ describe("StateReceiver", () => {
           [increment]
         );
         const stateSync = {
-          id: (j * bundleSize) + i + 1,
+          id: j * bundleSize + i + 1,
           sender: ethers.constants.AddressZero,
           receiver: stateReceivingContract.address,
           data,
@@ -108,13 +108,15 @@ describe("StateReceiver", () => {
   });
 
   it("State sync execute", async () => {
-    let bundleCounter: number = 0
+    let bundleCounter: number = 0;
     let stateSyncCounter: number = 0;
     for (const stateSyncs of stateSyncBundle) {
       const proof = tree.getHexProof(hashes[bundleCounter++]);
       const tx = await systemStateReceiver.execute(proof, stateSyncs);
       const receipt = await tx.wait();
-      const logs = receipt?.events?.filter((log) => log.event === "StateSyncResult") as any[];
+      const logs = receipt?.events?.filter(
+        (log) => log.event === "StateSyncResult"
+      ) as any[];
       expect(logs).to.exist;
       for (let i = 0; i < batchSize; i++) {
         stateSyncCounter++;
@@ -125,6 +127,5 @@ describe("StateReceiver", () => {
       expect(await stateReceiver.counter()).to.equal(batchSize * bundleCounter);
     }
     expect(await stateReceivingContract.counter()).to.equal(currentSum);
-
   });
 });
