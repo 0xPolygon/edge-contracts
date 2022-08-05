@@ -175,4 +175,8 @@ contract ChildValidatorSet is System, OwnableUpgradeable {
         //     epochs[epochId].validatorSet = validatorSet;
         // }
     }
+
+    function getEpoch(uint256 id) external view returns (Epoch memory) {
+        return epochs[id];
+    }
 }
