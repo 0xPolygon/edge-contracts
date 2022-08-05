@@ -26,11 +26,7 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
 
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
 
-    event NewValidator(
-        uint256 indexed id,
-        address indexed validator,
-        uint256[4] blsKey
-    );
+    event NewValidator(uint256 indexed id, address indexed validator, uint256[4] blsKey);
 
     /**
      * @notice Initialization function for RootValidatorSet
@@ -44,10 +40,7 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys
     ) external initializer {
-        require(
-            validatorAddresses.length == validatorPubkeys.length,
-            "LENGTH_MISMATCH"
-        );
+        require(validatorAddresses.length == validatorPubkeys.length, "LENGTH_MISMATCH");
         // slither-disable-next-line missing-zero-check
         checkpointManager = newCheckpointManager;
         uint256 currentId = 0; // set counter to 0 assuming validatorId is currently at 0 which it should be...
@@ -58,11 +51,7 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
 
             validatorIdByAddress[validatorAddresses[i]] = currentId;
 
-            emit NewValidator(
-                currentId,
-                validatorAddresses[i],
-                validatorPubkeys[i]
-            );
+            emit NewValidator(currentId, validatorAddresses[i], validatorPubkeys[i]);
         }
         currentValidatorId = currentId;
         _transferOwnership(governance);
@@ -76,11 +65,7 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
         for (uint256 i = 0; i < length; i++) {
             validators[i + currentId + 1] = newValidators[i];
 
-            emit NewValidator(
-                currentId + i + 1,
-                newValidators[i]._address,
-                newValidators[i].blsKey
-            );
+            emit NewValidator(currentId + i + 1, newValidators[i]._address, newValidators[i].blsKey);
         }
 
         currentValidatorId += length;
@@ -90,11 +75,7 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
         return validators[id];
     }
 
-    function getValidatorBlsKey(uint256 id)
-        external
-        view
-        returns (uint256[4] memory)
-    {
+    function getValidatorBlsKey(uint256 id) external view returns (uint256[4] memory) {
         return validators[id].blsKey;
     }
 

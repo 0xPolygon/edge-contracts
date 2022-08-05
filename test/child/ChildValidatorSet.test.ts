@@ -7,9 +7,7 @@ import { expandMsg } from "../../ts/hashToField";
 import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet, StakeManager } from "../../typechain";
 
-const DOMAIN = ethers.utils.arrayify(
-  ethers.utils.hexlify(ethers.utils.randomBytes(32))
-);
+const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
 const MAX_COMMISSION = 100;
 
@@ -42,9 +40,7 @@ describe("ChildValidatorSet", () => {
     minStake = 10000;
     minDelegation = 10000;
 
-    const ChildValidatorSet = await ethers.getContractFactory(
-      "ChildValidatorSet"
-    );
+    const ChildValidatorSet = await ethers.getContractFactory("ChildValidatorSet");
     childValidatorSet = await ChildValidatorSet.deploy();
 
     await childValidatorSet.deployed();
@@ -66,8 +62,6 @@ describe("ChildValidatorSet", () => {
     ])) as StakeManager;
     await stakeManager.deployed();
 
-    
-
     await hre.network.provider.send("hardhat_setBalance", [
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE",
       "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
@@ -84,12 +78,8 @@ describe("ChildValidatorSet", () => {
       method: "hardhat_impersonateAccount",
       params: ["0x0000000000000000000000000000000000001001"],
     });
-    const systemSigner = await ethers.getSigner(
-      "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"
-    );
-    const stateSyncSigner = await ethers.getSigner(
-      "0x0000000000000000000000000000000000001001"
-    );
+    const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
+    const stateSyncSigner = await ethers.getSigner("0x0000000000000000000000000000000000001001");
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002030",
       alwaysTrueBytecode,
@@ -98,29 +88,19 @@ describe("ChildValidatorSet", () => {
     stateSyncChildValidatorSet = childValidatorSet.connect(stateSyncSigner);
   });
   it("Initialize without system call", async () => {
-    await expect(
-      childValidatorSet.initialize(
-        stakeManager.address,
-        governance,
-        [],
-      )
-    ).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
+    await expect(childValidatorSet.initialize(stakeManager.address, governance, [])).to.be.revertedWith(
+      'Unauthorized("SYSTEMCALL")'
+    );
   });
   it("Initialize and validate initialization", async () => {
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
-    validatorStake = ethers.utils.parseEther(
-      String(Math.floor(Math.random() * (10000 - 1000) + 1000))
-    );
+    validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));
     const epochValidatorSet = [];
 
     for (let i = 0; i < validatorSetSize; i++) {
       epochValidatorSet.push(accounts[i].address);
     }
-    await systemChildValidatorSet.initialize(
-      stakeManager.address,
-      governance,
-      epochValidatorSet
-    );
+    await systemChildValidatorSet.initialize(stakeManager.address, governance, epochValidatorSet);
 
     const currentEpochId = await childValidatorSet.currentEpochId();
     expect(currentEpochId).to.equal(1);
@@ -129,17 +109,13 @@ describe("ChildValidatorSet", () => {
     for (let i = 0; i < currentEpochId.toNumber(); i++) {
       const epoch = await childValidatorSet.getEpoch(i + 1);
       const validatorSet = epoch.validatorSet;
-      expect(validatorSet).to.deep.equal(epochValidatorSet);  
-    }    
+      expect(validatorSet).to.deep.equal(epochValidatorSet);
+    }
   });
   it("Attempt reinitialization", async () => {
-    await expect(
-      systemChildValidatorSet.initialize(
-        stakeManager.address,
-        governance,
-        []
-      )
-    ).to.be.revertedWith("Initializable: contract is already initialized");
+    await expect(systemChildValidatorSet.initialize(stakeManager.address, governance, [])).to.be.revertedWith(
+      "Initializable: contract is already initialized"
+    );
   });
   it("Commit epoch without system call", async () => {
     id = 0;
@@ -156,9 +132,7 @@ describe("ChildValidatorSet", () => {
       totalUptime: 0,
     };
 
-    await expect(
-      childValidatorSet.commitEpoch(id, epoch, uptime)
-    ).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
+    await expect(childValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
   });
   it("Commit epoch with unexpected id", async () => {
     id = 0;
@@ -175,9 +149,7 @@ describe("ChildValidatorSet", () => {
       totalUptime: 0,
     };
 
-    await expect(
-      systemChildValidatorSet.commitEpoch(id, epoch, uptime)
-    ).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
+    await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
   });
   it("Commit epoch with no blocks committed", async () => {
     id = 1;
@@ -194,9 +166,7 @@ describe("ChildValidatorSet", () => {
       totalUptime: 0,
     };
 
-    await expect(
-      systemChildValidatorSet.commitEpoch(id, epoch, uptime)
-    ).to.be.revertedWith("NO_BLOCKS_COMMITTED");
+    await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("NO_BLOCKS_COMMITTED");
   });
   it("Commit epoch with incomplete sprint", async () => {
     id = 1;
@@ -213,9 +183,9 @@ describe("ChildValidatorSet", () => {
       totalUptime: 0,
     };
 
-    await expect(
-      systemChildValidatorSet.commitEpoch(id, epoch, uptime)
-    ).to.be.revertedWith("EPOCH_MUST_BE_DIVISIBLE_BY_64");
+    await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith(
+      "EPOCH_MUST_BE_DIVISIBLE_BY_64"
+    );
   });
   it("Commit epoch", async () => {
     await hre.network.provider.send("hardhat_setCode", [

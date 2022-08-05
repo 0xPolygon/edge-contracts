@@ -7,9 +7,7 @@ import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
 import { expandMsg, hashToField } from "../../ts/hashToField";
 import { BN256G2 } from "../../typechain";
 
-const DOMAIN = ethers.utils.arrayify(
-  ethers.utils.hexlify(ethers.utils.randomBytes(32))
-);
+const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
 describe("BN256G2", async () => {
   let bn256G2: BN256G2;
@@ -27,20 +25,9 @@ describe("BN256G2", async () => {
       rawPks.push(pubkey);
       pks.push(mcl.g2ToHex(pubkey));
     }
-    const bignumberPk = mcl
-      .g2ToHex(mcl.aggregatePks(rawPks))
-      .map((elem) => BigNumber.from(elem));
+    const bignumberPk = mcl.g2ToHex(mcl.aggregatePks(rawPks)).map((elem) => BigNumber.from(elem));
     assert.deepEqual(
-      await bn256G2.ecTwistAdd(
-        pks[0][0],
-        pks[0][1],
-        pks[0][2],
-        pks[0][3],
-        pks[1][0],
-        pks[1][1],
-        pks[1][2],
-        pks[1][3]
-      ),
+      await bn256G2.ecTwistAdd(pks[0][0], pks[0][1], pks[0][2], pks[0][3], pks[1][0], pks[1][1], pks[1][2], pks[1][3]),
       bignumberPk
     );
   });
@@ -52,9 +39,7 @@ describe("BN256G2", async () => {
       rawPks.push(pubkey);
       pks.push(mcl.g2ToHex(pubkey));
     }
-    const bignumberPk = mcl
-      .g2ToHex(mcl.aggregatePks(rawPks))
-      .map((elem) => BigNumber.from(elem));
+    const bignumberPk = mcl.g2ToHex(mcl.aggregatePks(rawPks)).map((elem) => BigNumber.from(elem));
     let aggPk: mcl.PublicKey = pks[0];
     for (let i = 1; i < 10; i++) {
       aggPk = await bn256G2.ecTwistAdd(
@@ -76,13 +61,8 @@ describe("BN256G2", async () => {
       const pk = mcl.g2ToHex(pubkey);
       const scalar = Math.floor(Math.random() * (9999 - 1) + 1); // pick a random number from 1 - 9999
       const pubkeyMultiplied = mcl.mulG2FrInt(pubkey, scalar);
-      const bigNumberG2 = mcl
-        .g2ToHex(pubkeyMultiplied)
-        .map((elem) => BigNumber.from(elem));
-      assert.deepEqual(
-        await bn256G2.ecTwistMul(scalar, pk[0], pk[1], pk[2], pk[3]),
-        bigNumberG2
-      );
+      const bigNumberG2 = mcl.g2ToHex(pubkeyMultiplied).map((elem) => BigNumber.from(elem));
+      assert.deepEqual(await bn256G2.ecTwistMul(scalar, pk[0], pk[1], pk[2], pk[3]), bigNumberG2);
     }
   });
 });
