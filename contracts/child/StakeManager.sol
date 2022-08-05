@@ -65,8 +65,6 @@ interface IChildValidatorSet {
 
     function getValidatorStatus(uint256 id) external view returns (ValidatorStatus);
 
-    function calculateValidatorPower(uint256 id) external view returns (uint256);
-
     function validators(uint256 id) external view returns (Validator memory);
 
     function epochs(uint256 id) external view returns (Epoch memory);
@@ -194,7 +192,7 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         uint256 aggWeight = 0;
 
         for (uint256 i = 0; i < length; ++i) {
-            uint256 power = childValidatorSet.calculateValidatorPower(i + 1);
+            uint256 power = calculateValidatorPower(msg.sender);
             aggPower += power;
             weights[i] = uptime.uptimeData[i].uptime * power;
             aggWeight += weights[i];
@@ -354,7 +352,7 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
      * @notice Calculate validator power for a validator in percentage.
      * @return uint256 Returns validator power at 6 decimals. Therefore, a return value of 123456 is 0.123456%
      */
-    function calculateValidatorPower(address validator) external view returns (uint256) {
+    function calculateValidatorPower(address validator) public view returns (uint256) {
         /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
            MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
         return (_validators.get(validator).stake * 100 * (10**6)) / _validators.totalStake;
