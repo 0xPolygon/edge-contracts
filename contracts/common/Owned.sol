@@ -10,8 +10,7 @@ abstract contract Owned is IOwned, Initializable {
 
     /// @dev initializes the contract setting the deployer as the initial owner
     function __Owned_init() internal initializer {
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
+        _transferOwnership(msg.sender);
     }
 
     /// @dev throws if called by any account other than the owner
@@ -21,15 +20,20 @@ abstract contract Owned is IOwned, Initializable {
     }
 
     /// @dev can only be called by the new current owner
-    function proposeOwner(address payable _newOwner) external onlyOwner {
+    function proposeOwner(address payable _newOwner) external virtual onlyOwner {
         proposedOwner = _newOwner;
         emit OwnershipProposed(_newOwner);
     }
 
     /// @dev can only be called by the new proposed owner
-    function claimOwnership() external {
+    function claimOwnership() external virtual {
         if (msg.sender != proposedOwner) revert Unauthorized("PROPOSED_OWNER");
-        emit OwnershipTransferred(owner, proposedOwner);
-        owner = proposedOwner;
+        _transferOwnership(proposedOwner);
+    }
+
+    /// @dev Transfers ownership of the contract to a new account (`newOwner`).
+    function _transferOwnership(address newOwner) internal virtual {
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 }

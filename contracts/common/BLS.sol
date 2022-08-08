@@ -26,6 +26,7 @@ SOFTWARE.
 
 pragma solidity ^0.8.13;
 
+import "../interfaces/IBLS.sol";
 import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
 
 /**
@@ -33,7 +34,7 @@ import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
     @notice We use BLS signature aggregation to reduce the size of signature data to store on chain.
     @dev We use G1 points for signatures and messages, and G2 points for public keys
  */
-contract BLS {
+contract BLS is IBLS {
     // Field order
     // prettier-ignore
     uint256 private constant N = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -101,10 +102,7 @@ contract BLS {
         // solhint-disable-next-line reason-string
         require(size > 0, "BLS: number of public key is zero");
         // solhint-disable-next-line reason-string
-        require(
-            size == messages.length,
-            "BLS: number of public keys and messages must be equal"
-        );
+        require(size == messages.length, "BLS: number of public keys and messages must be equal");
         uint256 inputSize = (size + 1) * 6;
         uint256[] memory input = new uint256[](inputSize);
         input[0] = signature[0];
@@ -125,14 +123,7 @@ contract BLS {
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            callSuccess := staticcall(
-                gas(),
-                8,
-                add(input, 0x20),
-                mul(inputSize, 0x20),
-                out,
-                0x20
-            )
+            callSuccess := staticcall(gas(), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
         }
         if (!callSuccess) {
             return (false, false);
@@ -168,14 +159,7 @@ contract BLS {
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            callSuccess := staticcall(
-                gas(),
-                8,
-                add(input, 0x20),
-                mul(inputSize, 0x20),
-                out,
-                0x20
-            )
+            callSuccess := staticcall(gas(), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
         }
         if (!callSuccess) {
             return (false, false);
@@ -186,11 +170,7 @@ contract BLS {
     /**
     @notice Fouque-Tibouchi Hash to Curve
      */
-    function hashToPoint(bytes32 domain, bytes memory message)
-        external
-        view
-        returns (uint256[2] memory)
-    {
+    function hashToPoint(bytes32 domain, bytes memory message) external view returns (uint256[2] memory) {
         uint256[2] memory u = this.hashToField(domain, message);
         uint256[2] memory p0 = this.mapToPoint(u[0]);
         uint256[2] memory p1 = this.mapToPoint(u[1]);
@@ -212,11 +192,7 @@ contract BLS {
         return p0;
     }
 
-    function mapToPoint(uint256 _x)
-        external
-        pure
-        returns (uint256[2] memory p)
-    {
+    function mapToPoint(uint256 _x) external pure returns (uint256[2] memory p) {
         // solhint-disable-next-line reason-string
         require(_x < N, "mapToPointFT: invalid field element");
         uint256 x = _x;
@@ -280,11 +256,7 @@ contract BLS {
         return [x, a1];
     }
 
-    function isValidSignature(uint256[2] memory signature)
-        external
-        view
-        returns (bool)
-    {
+    function isValidSignature(uint256[2] memory signature) external view returns (bool) {
         if ((signature[0] >= N) || (signature[1] >= N)) {
             return false;
         } else {
@@ -292,11 +264,7 @@ contract BLS {
         }
     }
 
-    function isOnCurveG1(uint256[2] memory point)
-        external
-        pure
-        returns (bool _isOnCurve)
-    {
+    function isOnCurveG1(uint256[2] memory point) external pure returns (bool _isOnCurve) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let t0 := mload(point)
@@ -309,11 +277,7 @@ contract BLS {
         }
     }
 
-    function isOnCurveG2(uint256[4] memory point)
-        external
-        pure
-        returns (bool _isOnCurve)
-    {
+    function isOnCurveG2(uint256[4] memory point) external pure returns (bool _isOnCurve) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // x0, x1
@@ -333,16 +297,8 @@ contract BLS {
             t3 := mulmod(add(t4, sub(N, t3)), t1, N)
 
             // x ^ 3 + b
-            t0 := addmod(
-                t2,
-                0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5,
-                N
-            )
-            t1 := addmod(
-                t3,
-                0x009713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2,
-                N
-            )
+            t0 := addmod(t2, 0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5, N)
+            t1 := addmod(t3, 0x009713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2, N)
 
             // y0, y1
             t2 := mload(add(point, 64))
@@ -365,11 +321,7 @@ contract BLS {
         return ModexpInverse.run(a);
     }
 
-    function hashToField(bytes32 domain, bytes memory messages)
-        external
-        view
-        returns (uint256[2] memory)
-    {
+    function hashToField(bytes32 domain, bytes memory messages) external view returns (uint256[2] memory) {
         bytes memory _msg = this.expandMsgTo96(domain, messages);
         uint256 u0;
         uint256 u1;
@@ -391,11 +343,7 @@ contract BLS {
         return [a0, a1];
     }
 
-    function expandMsgTo96(bytes32 domain, bytes memory message)
-        external
-        pure
-        returns (bytes memory)
-    {
+    function expandMsgTo96(bytes32 domain, bytes memory message) external pure returns (bytes memory) {
         // zero<64>|msg<var>|lib_str<2>|I2OSP(0, 1)<1>|dst<var>|dst_len<1>
         uint256 t0 = message.length;
         bytes memory msg0 = new bytes(32 + t0 + 64 + 4);
