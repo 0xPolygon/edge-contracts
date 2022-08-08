@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "contracts/root/StateSender.sol";
+import {StateSender} from "contracts/root/StateSender.sol";
 
 import "../utils/TestPlus.sol";
 
