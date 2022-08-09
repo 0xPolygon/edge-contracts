@@ -192,7 +192,7 @@ contract StakeManager is Owned, System, ReentrancyGuardUpgradeable {
         uint256 aggWeight = 0;
 
         for (uint256 i = 0; i < length; ++i) {
-            uint256 power = calculateValidatorPower(msg.sender);
+            uint256 power = calculateValidatorPower(uptime.uptimeData[i].validator);
             aggPower += power;
             weights[i] = uptime.uptimeData[i].uptime * power;
             aggWeight += weights[i];
