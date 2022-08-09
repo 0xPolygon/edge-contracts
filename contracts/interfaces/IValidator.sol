@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+error AmountZero();
+error NotFound(address validator);
+error Exists(address validator);
+
 struct Validator {
     uint256[4] blsKey;
     uint256 stake;
