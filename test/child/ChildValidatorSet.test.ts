@@ -128,7 +128,7 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimes: [0],
+      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
       totalUptime: 0,
     };
 
@@ -145,7 +145,7 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimes: [0],
+      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
       totalUptime: 0,
     };
 
@@ -162,7 +162,7 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimes: [0],
+      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
       totalUptime: 0,
     };
 
@@ -179,7 +179,7 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimes: [0],
+      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
       totalUptime: 0,
     };
 
@@ -204,8 +204,8 @@ describe("ChildValidatorSet", () => {
     const currentValidatorId = await childValidatorSet.currentEpochId();
 
     uptime = {
-      epochId: currentEpochId.sub(1),
-      uptimes: [1000000000000],
+      epochId: currentEpochId,
+      uptimeData: [{ validator: accounts[0].address, uptime: 1000000000000 }],
       totalUptime: 0,
     };
 

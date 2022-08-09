@@ -6,9 +6,14 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {System} from "./System.sol";
 
 interface IStakeManager {
+    struct UptimeData {
+        address validator;
+        uint256 uptime;
+    }
+
     struct Uptime {
         uint256 epochId;
-        uint256[] uptimes;
+        UptimeData[] uptimeData;
         uint256 totalUptime;
     }
 
