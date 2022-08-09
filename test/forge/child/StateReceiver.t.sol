@@ -61,14 +61,18 @@ contract StateSenderTest is TestPlus, System {
         objFlagged.receiver = address(stateReceivingContract);
         objFlagged.skip = true;
 
+        // event
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(objNoCode.id, StateReceiver.ResultStatus.SKIP, "");
         stateReceiver.stateSync(objNoCode, "");
+        // counter
         assertEq(stateReceiver.counter(), 1);
 
+        // event
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(objFlagged.id, StateReceiver.ResultStatus.SKIP, "");
         stateReceiver.stateSync(objFlagged, "");
+        // counter
         assertEq(stateReceiver.counter(), 2);
     }
 
@@ -78,10 +82,13 @@ contract StateSenderTest is TestPlus, System {
         obj.receiver = address(stateReceivingContract);
         obj.data = abi.encode(uint256(1337));
 
+        // event
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(obj.id, StateReceiver.ResultStatus.SUCCESS, bytes32(obj.data));
         stateReceiver.stateSync(obj, "");
+        // counter
         assertEq(stateReceiver.counter(), 1);
+        // data
         assertEq(stateReceivingContract.counter(), 1337);
     }
 
@@ -91,9 +98,11 @@ contract StateSenderTest is TestPlus, System {
         obj.id = 1;
         obj.receiver = address(stateReceivingContract);
 
+        // event
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(obj.id, StateReceiver.ResultStatus.FAILURE, "");
         stateReceiver.stateSync(obj, "");
+        // counter
         assertEq(stateReceiver.counter(), 1);
     }
 
@@ -138,11 +147,13 @@ contract StateSenderTest is TestPlus, System {
         objs[1].receiver = address(stateReceivingContract);
         objs[1].skip = true;
 
+        // events
         for (uint256 i; i < objs.length; ++i) {
             vm.expectEmit(true, true, false, true);
             emit StateSyncResult(objs[i].id, StateReceiver.ResultStatus.SKIP, "");
         }
         stateReceiver.stateSyncBatch(objs, "");
+        // counter
         assertEq(stateReceiver.counter(), 2);
     }
 
@@ -156,6 +167,7 @@ contract StateSenderTest is TestPlus, System {
         objs[1].data = abi.encode(uint256(1338));
         uint256 dataSum;
 
+        // events
         for (uint256 i; i < objs.length; ++i) {
             dataSum += abi.decode(objs[i].data, (uint256));
 
@@ -163,7 +175,9 @@ contract StateSenderTest is TestPlus, System {
             emit StateSyncResult(objs[i].id, StateReceiver.ResultStatus.SUCCESS, bytes32(dataSum));
         }
         stateReceiver.stateSyncBatch(objs, "");
+        // counter
         assertEq(stateReceiver.counter(), 2);
+        // data
         assertEq(stateReceivingContract.counter(), dataSum);
     }
 
@@ -175,11 +189,13 @@ contract StateSenderTest is TestPlus, System {
         objs[1].id = 2;
         objs[1].receiver = address(stateReceivingContract);
 
+        // events
         for (uint256 i; i < objs.length; ++i) {
             vm.expectEmit(true, true, false, true);
             emit StateSyncResult(objs[i].id, StateReceiver.ResultStatus.FAILURE, "");
         }
         stateReceiver.stateSyncBatch(objs, "");
+        // counter
         assertEq(stateReceiver.counter(), 2);
     }
 }

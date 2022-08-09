@@ -32,9 +32,11 @@ contract OwnedTest is TestPlus {
     function testProposeOwner() public {
         address payable proposedOwner = payable(makeAddr("proposedOwner"));
 
+        // event
         vm.expectEmit(true, false, false, false);
         emit OwnershipProposed(proposedOwner);
         ownedMock.proposeOwner(proposedOwner);
+        // proposed owner
         assertEq(ownedMock.proposedOwner(), proposedOwner);
     }
 
@@ -52,9 +54,11 @@ contract OwnedTest is TestPlus {
         ownedMock.proposeOwner(proposedOwner);
         vm.startPrank(proposedOwner);
 
+        // event
         vm.expectEmit(true, true, false, false);
         emit OwnershipTransferred(address(this), proposedOwner);
         ownedMock.claimOwnership();
+        // owner
         assertEq(ownedMock.owner(), proposedOwner);
     }
 }
