@@ -9,7 +9,7 @@ abstract contract Owned is IOwned, Initializable {
     address public proposedOwner;
 
     /// @dev initializes the contract setting the deployer as the initial owner
-    function __Owned_init() internal initializer {
+    function __Owned_init() internal onlyInitializing {
         owner = msg.sender;
         emit OwnershipTransferred(address(0), msg.sender);
     }
