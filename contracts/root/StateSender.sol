@@ -5,12 +5,7 @@ contract StateSender {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
 
-    event StateSynced(
-        uint256 indexed id,
-        address indexed sender,
-        address indexed receiver,
-        bytes data
-    );
+    event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
 
     /**
      *

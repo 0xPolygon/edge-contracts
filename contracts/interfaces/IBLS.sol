@@ -8,8 +8,5 @@ interface IBLS {
         uint256[2] calldata message
     ) external view returns (bool, bool);
 
-    function hashToPoint(bytes32 domain, bytes memory message)
-        external
-        view
-        returns (uint256[2] memory);
+    function hashToPoint(bytes32 domain, bytes memory message) external view returns (uint256[2] memory);
 }

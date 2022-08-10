@@ -23,9 +23,7 @@ describe("StateSender", () => {
     const moreThanMaxData = "0x" + "00".repeat(maxDataLength + 1); // notice `+ 1` here (it creates more than max data)
     const receiver = "0x0000000000000000000000000000000000000000";
 
-    await expect(
-      stateSender.syncState(receiver, moreThanMaxData)
-    ).to.be.revertedWith("INVALID_RECEIVER");
+    await expect(stateSender.syncState(receiver, moreThanMaxData)).to.be.revertedWith("INVALID_RECEIVER");
   });
 
   it("Should check data length", async () => {
@@ -33,9 +31,7 @@ describe("StateSender", () => {
     const moreThanMaxData = "0x" + "00".repeat(maxDataLength + 1); // notice `+ 1` here (it creates more than max data)
     const receiver = accounts[2].address;
 
-    await expect(
-      stateSender.syncState(receiver, moreThanMaxData)
-    ).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
+    await expect(stateSender.syncState(receiver, moreThanMaxData)).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
   });
 
   it("Should emit event properly", async () => {
@@ -66,13 +62,9 @@ describe("StateSender", () => {
 
     await stateSender.syncState(receiver, maxData);
     await stateSender.syncState(receiver, maxData);
-    await expect(
-      stateSender.syncState(receiver, moreThanMaxData)
-    ).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
+    await expect(stateSender.syncState(receiver, moreThanMaxData)).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
     await stateSender.syncState(receiver, maxData);
-    await expect(
-      stateSender.syncState(receiver, moreThanMaxData)
-    ).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
+    await expect(stateSender.syncState(receiver, moreThanMaxData)).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
 
     expect(await stateSender.counter()).to.equal(initialCounter + 3);
   });

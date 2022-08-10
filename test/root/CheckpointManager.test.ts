@@ -4,12 +4,7 @@ import { BigNumberish } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
-import {
-  BLS,
-  BN256G2,
-  RootValidatorSet,
-  CheckpointManager,
-} from "../../typechain";
+import { BLS, BN256G2, RootValidatorSet, CheckpointManager } from "../../typechain";
 
 const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 
@@ -36,15 +31,11 @@ describe("CheckpointManager", () => {
     bn256G2 = await BN256G2.deploy();
     await bn256G2.deployed();
 
-    const RootValidatorSet = await ethers.getContractFactory(
-      "RootValidatorSet"
-    );
+    const RootValidatorSet = await ethers.getContractFactory("RootValidatorSet");
     rootValidatorSet = await RootValidatorSet.deploy();
     await rootValidatorSet.deployed();
 
-    const CheckpointManager = await ethers.getContractFactory(
-      "CheckpointManager"
-    );
+    const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
     checkpointManager = await CheckpointManager.deploy();
     await checkpointManager.deployed();
 
@@ -52,17 +43,10 @@ describe("CheckpointManager", () => {
   });
 
   it("Initialize and validate initialization", async () => {
-    await checkpointManager.initialize(
-      bls.address,
-      bn256G2.address,
-      rootValidatorSet.address,
-      DOMAIN
-    );
+    await checkpointManager.initialize(bls.address, bn256G2.address, rootValidatorSet.address, DOMAIN);
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
-    expect(await checkpointManager.rootValidatorSet()).to.equal(
-      rootValidatorSet.address
-    );
+    expect(await checkpointManager.rootValidatorSet()).to.equal(rootValidatorSet.address);
     expect(await rootValidatorSet.activeValidatorSetSize()).to.equal(0);
     expect(await checkpointManager.domain()).to.equal(DOMAIN);
     const endBlock = (await checkpointManager.checkpoints(0)).endBlock;
@@ -93,29 +77,16 @@ describe("CheckpointManager", () => {
       addresses.push(accounts[i].address);
     }
 
-    await rootValidatorSet.initialize(
-      bls.address,
-      addresses,
-      pubkeys,
-      messagePoint
-    );
+    await rootValidatorSet.initialize(bls.address, addresses, pubkeys, messagePoint);
 
-    expect(await rootValidatorSet.currentValidatorId()).to.equal(
-      validatorSetSize
-    );
-    expect(ethers.utils.hexValue(await rootValidatorSet.message(0))).to.equal(
-      ethers.utils.hexValue(messagePoint[0])
-    );
-    expect(ethers.utils.hexValue(await rootValidatorSet.message(1))).to.equal(
-      ethers.utils.hexValue(messagePoint[1])
-    );
+    expect(await rootValidatorSet.currentValidatorId()).to.equal(validatorSetSize);
+    expect(ethers.utils.hexValue(await rootValidatorSet.message(0))).to.equal(ethers.utils.hexValue(messagePoint[0]));
+    expect(ethers.utils.hexValue(await rootValidatorSet.message(1))).to.equal(ethers.utils.hexValue(messagePoint[1]));
     for (let i = 0; i < validatorSetSize; i++) {
       const validator = await rootValidatorSet.validators(i + 1);
       expect(validator.id).to.equal(i + 1);
       expect(validator._address).to.equal(addresses[i]);
-      expect(
-        await rootValidatorSet.validatorIdByAddress(addresses[i])
-      ).to.equal(i + 1);
+      expect(await rootValidatorSet.validatorIdByAddress(addresses[i])).to.equal(i + 1);
       // expect(validator.blsKey).to.equal(pubkeys[i]); //typings for this aren't generated...
     }
   });
@@ -138,21 +109,15 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (const key of validatorSecretKeys) {
-      const { signature, messagePoint } = mcl.sign(
-        message,
-        key,
-        ethers.utils.arrayify(DOMAIN)
-      );
+      const { signature, messagePoint } = mcl.sign(message, key, ethers.utils.arrayify(DOMAIN));
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, [])
-    ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
+    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, [])).to.be.revertedWith(
+      "NOT_ENOUGH_SIGNATURES"
+    );
   });
 
   it("Submit checkpoint with invalid signature", async () => {
@@ -175,9 +140,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -188,13 +151,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
-    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
+    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "SIGNATURE_VERIFICATION_FAILED"
+    );
   });
 
   it("Submit checkpoint with non-sequential id", async () => {
@@ -217,9 +178,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -230,13 +189,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
-    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
+    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "ID_NOT_SEQUENTIAL"
+    );
   });
 
   it("Submit checkpoint with invalid start block", async () => {
@@ -259,9 +216,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -272,13 +227,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
-    ).to.be.revertedWith("INVALID_START_BLOCK");
+    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "INVALID_START_BLOCK"
+    );
   });
 
   it("Submit empty checkpoint", async () => {
@@ -301,9 +254,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -314,13 +265,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)
-    ).to.be.revertedWith("EMPTY_CHECKPOINT");
+    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "EMPTY_CHECKPOINT"
+    );
   });
 
   it("Submit checkpoint", async () => {
@@ -343,9 +292,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -356,23 +303,14 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submit(
-      id,
-      checkpoint,
-      aggMessagePoint,
-      validatorIds
-    );
+    await checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds);
 
-    submitCounter =
-      (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
     expect(submitCounter).to.equal(2);
 
-    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1))
-      .endBlock;
+    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1)).endBlock;
     expect(endBlock).to.equal(101);
     startBlock = endBlock.toNumber() + 1;
   });
@@ -393,10 +331,7 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
         [[id], [checkpoint1, checkpoint2]]
       )
     );
@@ -406,9 +341,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -419,17 +352,10 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submitBatch(
-        [id],
-        [checkpoint1, checkpoint2],
-        aggMessagePoint,
-        validatorIds
-      )
+      checkpointManager.submitBatch([id], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds)
     ).to.be.revertedWith("LENGTH_MISMATCH");
   });
 
@@ -443,10 +369,7 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
         [[id], [checkpoint]]
       )
     );
@@ -456,9 +379,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -469,18 +390,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submitBatch(
-        [id],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
+    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "ID_NOT_SEQUENTIAL"
+    );
   });
 
   it("Submit batch checkpoint with invalid start block", async () => {
@@ -493,10 +407,7 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
         [[id], [checkpoint]]
       )
     );
@@ -506,9 +417,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -519,18 +428,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submitBatch(
-        [id],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("INVALID_START_BLOCK");
+    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "INVALID_START_BLOCK"
+    );
   });
 
   it("Submit batch empty checkpoint", async () => {
@@ -543,10 +445,7 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
         [[id], [checkpoint]]
       )
     );
@@ -556,9 +455,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -569,18 +466,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submitBatch(
-        [id],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("EMPTY_CHECKPOINT");
+    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "EMPTY_CHECKPOINT"
+    );
   });
 
   it("Submit batch checkpoint with invalid length", async () => {
@@ -601,21 +491,15 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (const key of validatorSecretKeys) {
-      const { signature, messagePoint } = mcl.sign(
-        message,
-        key,
-        ethers.utils.arrayify(DOMAIN)
-      );
+      const { signature, messagePoint } = mcl.sign(message, key, ethers.utils.arrayify(DOMAIN));
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, [])
-    ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
+    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, [])).to.be.revertedWith(
+      "NOT_ENOUGH_SIGNATURES"
+    );
   });
 
   it("Submit batch checkpoint with invalid signature", async () => {
@@ -628,10 +512,7 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
         [[id], [checkpoint]]
       )
     );
@@ -641,9 +522,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -654,18 +533,11 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submitBatch(
-        [id],
-        [checkpoint],
-        aggMessagePoint,
-        validatorIds
-      )
-    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
+    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
+      "SIGNATURE_VERIFICATION_FAILED"
+    );
   });
 
   it("Submit batch checkpoint", async () => {
@@ -684,10 +556,7 @@ describe("CheckpointManager", () => {
 
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        [
-          "uint[]",
-          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
-        ],
+        ["uint[]", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]"],
         [
           [id, id + 1],
           [checkpoint1, checkpoint2],
@@ -700,9 +569,7 @@ describe("CheckpointManager", () => {
     const signatures: mcl.Signature[] = [];
 
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(
-        Math.random() * (validatorSetSize - 1) + 1
-      ); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
       const { signature, messagePoint } = mcl.sign(
@@ -713,23 +580,14 @@ describe("CheckpointManager", () => {
       signatures.push(signature);
     }
 
-    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(
-      mcl.aggregateRaw(signatures)
-    );
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submitBatch(
-      [id, id + 1],
-      [checkpoint1, checkpoint2],
-      aggMessagePoint,
-      validatorIds
-    );
+    await checkpointManager.submitBatch([id, id + 1], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds);
 
-    submitCounter =
-      (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
     expect(submitCounter).to.equal(4);
 
-    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1))
-      .endBlock;
+    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1)).endBlock;
     expect(endBlock).to.equal(302);
     startBlock = endBlock.toNumber() + 1;
   });
