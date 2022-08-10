@@ -207,8 +207,7 @@ export function dumpG2(solG2: solG2): string {
 
 export function loadG1(hex: string): solG1 {
   const bytesarray = arrayify(hex);
-  if (bytesarray.length != 64)
-    throw new Error(`Expect length 64 but got ${bytesarray.length}`);
+  if (bytesarray.length != 64) throw new Error(`Expect length 64 but got ${bytesarray.length}`);
   const x = hexlify(bytesarray.slice(0, 32));
   const y = hexlify(bytesarray.slice(32));
   return [x, y];
@@ -216,8 +215,7 @@ export function loadG1(hex: string): solG1 {
 
 export function loadG2(hex: string): solG2 {
   const bytesarray = arrayify(hex);
-  if (bytesarray.length != 128)
-    throw new Error(`Expect length 128 but got ${bytesarray.length}`);
+  if (bytesarray.length != 128) throw new Error(`Expect length 128 but got ${bytesarray.length}`);
   const x0 = hexlify(bytesarray.slice(0, 32));
   const x1 = hexlify(bytesarray.slice(32, 64));
   const y0 = hexlify(bytesarray.slice(64, 96));
@@ -225,19 +223,10 @@ export function loadG2(hex: string): solG2 {
   return [x0, x1, y0, y1];
 }
 
-export function verifyRaw(
-  signature: Signature,
-  pubkey: PublicKey,
-  message: MessagePoint
-): boolean {
+export function verifyRaw(signature: Signature, pubkey: PublicKey, message: MessagePoint): boolean {
   const negG2 = new mcl.PrecomputedG2(negativeG2());
 
-  const pairings = mcl.precomputedMillerLoop2mixed(
-    message,
-    pubkey,
-    signature,
-    negG2
-  );
+  const pairings = mcl.precomputedMillerLoop2mixed(message, pubkey, signature, negG2);
   // call this function to avoid memory leak
   negG2.destroy();
   return mcl.finalExp(pairings).isOne();

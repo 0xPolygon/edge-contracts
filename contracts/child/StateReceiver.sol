@@ -26,16 +26,9 @@ contract StateReceiver is System {
         SKIP
     }
 
-    event StateSyncResult(
-        uint256 indexed counter,
-        ResultStatus indexed status,
-        bytes32 message
-    );
+    event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
-    function stateSync(StateSync calldata obj, bytes calldata signature)
-        external
-        onlySystemCall
-    {
+    function stateSync(StateSync calldata obj, bytes calldata signature) external onlySystemCall {
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be
         // part of the dataHash. Otherwise data can be manipulated for same sigs
@@ -49,10 +42,7 @@ contract StateReceiver is System {
         _executeStateSync(counter++, obj);
     }
 
-    function stateSyncBatch(StateSync[] calldata objs, bytes calldata signature)
-        external
-        onlySystemCall
-    {
+    function stateSyncBatch(StateSync[] calldata objs, bytes calldata signature) external onlySystemCall {
         require(objs.length != 0, "NO_STATESYNC_DATA");
 
         // create sig data for verification
@@ -75,9 +65,7 @@ contract StateReceiver is System {
     // Execute state sync
     //
 
-    function _executeStateSync(uint256 prevId, StateSync calldata obj)
-        internal
-    {
+    function _executeStateSync(uint256 prevId, StateSync calldata obj) internal {
         require(prevId + 1 == obj.id, "ID_NOT_SEQUENTIAL");
 
         // Skip transaction if client has added flag, or receiver has no code
@@ -95,9 +83,7 @@ contract StateReceiver is System {
         );
 
         // slither-disable-next-line calls-loop,low-level-calls
-        (bool success, bytes memory returnData) = obj.receiver.call{ // solhint-disable-line avoid-low-level-calls
-            gas: MAX_GAS
-        }(paramData);
+        (bool success, bytes memory returnData) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
 
         bytes32 message = bytes32(returnData);
 
@@ -111,19 +97,13 @@ contract StateReceiver is System {
         }
     }
 
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature)
-        internal
-        view
-    {
+    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
-        (
-            bool callSuccess,
-            bytes memory returnData
-        ) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
-                gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-            }(abi.encode(message, signature));
+        (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
+            gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
+        }(abi.encode(message, signature));
         bool verified = abi.decode(returnData, (bool));
         require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }

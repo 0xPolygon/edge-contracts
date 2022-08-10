@@ -11,8 +11,6 @@ import "../libs/WithdrawalQueue.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
-import "hardhat/console.sol";
-
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];

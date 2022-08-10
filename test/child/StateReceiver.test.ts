@@ -19,9 +19,7 @@ describe("StateReceiver", () => {
 
     await stateReceiver.deployed();
 
-    const StateReceivingContract = await ethers.getContractFactory(
-      "StateReceivingContract"
-    );
+    const StateReceivingContract = await ethers.getContractFactory("StateReceivingContract");
     stateReceivingContract = await StateReceivingContract.deploy();
 
     await stateReceivingContract.deployed();
@@ -38,9 +36,7 @@ describe("StateReceiver", () => {
       method: "hardhat_impersonateAccount",
       params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
     });
-    const systemSigner = await ethers.getSigner(
-      "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"
-    );
+    const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
     systemStateReceiver = await stateReceiver.connect(systemSigner);
 
     await hre.network.provider.send("hardhat_setCode", [
@@ -56,17 +52,11 @@ describe("StateReceiver", () => {
       data: ethers.constants.HashZero,
       skip: false,
     };
-    await expect(stateReceiver.stateSync(stateSync, [])).to.be.revertedWith(
-      "ONLY_SYSTEMCALL"
-    );
-    await expect(stateReceiver.stateSyncBatch([], [])).to.be.revertedWith(
-      "ONLY_SYSTEMCALL"
-    );
+    await expect(stateReceiver.stateSync(stateSync, [])).to.be.revertedWith("ONLY_SYSTEMCALL");
+    await expect(stateReceiver.stateSyncBatch([], [])).to.be.revertedWith("ONLY_SYSTEMCALL");
   });
   it("Empty state sync batch", async () => {
-    await expect(systemStateReceiver.stateSyncBatch([], [])).to.be.revertedWith(
-      "NO_STATESYNC_DATA"
-    );
+    await expect(systemStateReceiver.stateSyncBatch([], [])).to.be.revertedWith("NO_STATESYNC_DATA");
   });
   it("State sync with non-sequential id", async () => {
     const increment = Math.floor(Math.random() * (10 - 1) + 1);
@@ -79,9 +69,9 @@ describe("StateReceiver", () => {
       data,
       skip: false,
     };
-    await expect(
-      systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)
-    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
+    await expect(systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)).to.be.revertedWith(
+      "ID_NOT_SEQUENTIAL"
+    );
   });
   it("State sync", async () => {
     const increment = Math.floor(Math.random() * (10 - 1) + 1);
@@ -94,10 +84,7 @@ describe("StateReceiver", () => {
       data,
       skip: false,
     };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
+    const tx = await systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero);
     const receipt = await tx.wait();
     const log = receipt?.events as any[];
     expect(log[0]?.args?.counter).to.equal(1);
@@ -114,10 +101,7 @@ describe("StateReceiver", () => {
     for (let i = 1; i <= batchSize; i++) {
       const increment = Math.floor(Math.random() * (10 - 1) + 1);
       currentSum = currentSum.add(BigNumber.from(increment));
-      const data = ethers.utils.defaultAbiCoder.encode(
-        ["uint256"],
-        [increment]
-      );
+      const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [increment]);
       const stateSync = {
         id: i + 1,
         sender: ethers.constants.AddressZero,
@@ -127,10 +111,7 @@ describe("StateReceiver", () => {
       };
       stateSyncs.push(stateSync);
     }
-    const tx = await systemStateReceiver.stateSyncBatch(
-      stateSyncs,
-      ethers.constants.HashZero
-    );
+    const tx = await systemStateReceiver.stateSyncBatch(stateSyncs, ethers.constants.HashZero);
     const receipt = await tx.wait();
     const log = receipt?.events as any[];
     for (let i = 0; i < batchSize; i++) {
@@ -140,10 +121,7 @@ describe("StateReceiver", () => {
     }
     expect(await stateReceiver.counter()).to.equal(stateSyncCounter);
     expect(await stateReceivingContract.counter()).to.equal(currentSum);
-    const data = ethers.utils.defaultAbiCoder.encode(
-      ["uint256"],
-      [await stateReceivingContract.counter()]
-    );
+    const data = ethers.utils.defaultAbiCoder.encode(["uint256"], [await stateReceivingContract.counter()]);
     expect(log[batchSize - 1]?.args?.message).to.equal(data);
   });
   it("State sync skip", async () => {
@@ -155,10 +133,7 @@ describe("StateReceiver", () => {
       data: ethers.constants.HashZero,
       skip: true,
     };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
+    const tx = await systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero);
     const receipt = await tx.wait();
     const log = receipt?.events as any[];
     expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
@@ -167,11 +142,8 @@ describe("StateReceiver", () => {
   });
   it("State sync fail", async () => {
     stateSyncCounter += 1;
-    const fakeStateReceivingContractFactory = await smock.mock(
-      "StateReceivingContract"
-    );
-    const fakeStateReceivingContract =
-      await fakeStateReceivingContractFactory.deploy();
+    const fakeStateReceivingContractFactory = await smock.mock("StateReceivingContract");
+    const fakeStateReceivingContract = await fakeStateReceivingContractFactory.deploy();
     fakeStateReceivingContract.onStateReceive.reverts();
     const stateSync = {
       id: stateSyncCounter,
@@ -180,10 +152,7 @@ describe("StateReceiver", () => {
       data: ethers.constants.HashZero,
       skip: false,
     };
-    const tx = await systemStateReceiver.stateSync(
-      stateSync,
-      ethers.constants.HashZero
-    );
+    const tx = await systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero);
     const receipt = await tx.wait();
     const log = receipt?.events as any[];
     expect(log[0]?.args?.counter).to.equal(stateSyncCounter);
@@ -202,8 +171,8 @@ describe("StateReceiver", () => {
       data: ethers.constants.HashZero,
       skip: false,
     };
-    await expect(
-      systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)
-    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
+    await expect(systemStateReceiver.stateSync(stateSync, ethers.constants.HashZero)).to.be.revertedWith(
+      "SIGNATURE_VERIFICATION_FAILED"
+    );
   });
 });

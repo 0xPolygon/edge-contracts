@@ -6,9 +6,7 @@ import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
 import { expandMsg, hashToField } from "../../ts/hashToField";
 import { BLS } from "../../typechain";
 
-const DOMAIN = ethers.utils.arrayify(
-  ethers.utils.hexlify(ethers.utils.randomBytes(32))
-);
+const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
 const g2PointOnIncorrectSubgroup: mcl.solG2 = [
   "0x1ef4bf0d452e71f1fb23948695fa0a87a10f3d9dce9d32fadb94711f22566fb5",
@@ -88,11 +86,7 @@ describe("BLS", async () => {
       pubkeys.push(mcl.g2ToHex(pubkey));
       signatures.push(signature);
       const aggSignature = mcl.g1ToHex(mcl.aggregateRaw(signatures));
-      const res = await bls.verifyMultipleSameMsg(
-        aggSignature,
-        pubkeys,
-        mcl.g1ToHex(mcl.hashToPoint(message, DOMAIN))
-      );
+      const res = await bls.verifyMultipleSameMsg(aggSignature, pubkeys, mcl.g1ToHex(mcl.hashToPoint(message, DOMAIN)));
       assert.isTrue(res[0]);
       assert.isTrue(res[1]);
     }
@@ -109,11 +103,7 @@ describe("BLS", async () => {
       signatures.push(signature);
       const aggSignature = mcl.g1ToHex(mcl.aggregateRaw(signatures));
       const aggPublicKey = mcl.g2ToHex(mcl.aggregatePks(pubkeys));
-      const res = await bls.verifySingle(
-        aggSignature,
-        aggPublicKey,
-        mcl.g1ToHex(mcl.hashToPoint(message, DOMAIN))
-      );
+      const res = await bls.verifySingle(aggSignature, aggPublicKey, mcl.g1ToHex(mcl.hashToPoint(message, DOMAIN)));
       assert.isTrue(res[0]);
       assert.isTrue(res[1]);
     }
@@ -204,11 +194,7 @@ describe("BLS", async () => {
     const message = randHex(12);
     const { pubkey, secret } = mcl.newKeyPair();
     const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
-    let res = await bls.verifySingle(
-      mcl.g1ToHex(signature),
-      mcl.g2ToHex(pubkey),
-      mcl.g1ToHex(messagePoint)
-    );
+    let res = await bls.verifySingle(mcl.g1ToHex(signature), mcl.g2ToHex(pubkey), mcl.g1ToHex(messagePoint));
     assert.isTrue(res[0]);
     assert.isTrue(res[1]);
   });
@@ -217,11 +203,7 @@ describe("BLS", async () => {
     const { pubkey } = mcl.newKeyPair();
     const { secret } = mcl.newKeyPair();
     const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
-    let res = await bls.verifySingle(
-      mcl.g1ToHex(signature),
-      mcl.g2ToHex(pubkey),
-      mcl.g1ToHex(messagePoint)
-    );
+    let res = await bls.verifySingle(mcl.g1ToHex(signature), mcl.g2ToHex(pubkey), mcl.g1ToHex(messagePoint));
     assert.isFalse(res[0]);
     assert.isTrue(res[1]);
   });
@@ -230,11 +212,7 @@ describe("BLS", async () => {
     const { secret } = mcl.newKeyPair();
     const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
     const pubkey: mcl.solG2 = [3, 3, 3, 3];
-    let res = await bls.verifySingle(
-      mcl.g1ToHex(signature),
-      pubkey,
-      mcl.g1ToHex(messagePoint)
-    );
+    let res = await bls.verifySingle(mcl.g1ToHex(signature), pubkey, mcl.g1ToHex(messagePoint));
     assert.isFalse(res[0]);
     assert.isFalse(res[1]);
   });
@@ -243,11 +221,7 @@ describe("BLS", async () => {
     const { pubkey, secret } = mcl.newKeyPair();
     const { messagePoint } = mcl.sign(message, secret, DOMAIN);
     const signature: mcl.solG1 = [3, 3];
-    let res = await bls.verifySingle(
-      signature,
-      mcl.g2ToHex(pubkey),
-      mcl.g1ToHex(messagePoint)
-    );
+    let res = await bls.verifySingle(signature, mcl.g2ToHex(pubkey), mcl.g1ToHex(messagePoint));
     assert.isFalse(res[0]);
     assert.isFalse(res[1]);
   });
@@ -257,11 +231,7 @@ describe("BLS", async () => {
     const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
     const pubkey = g2PointOnIncorrectSubgroup;
     assert.isTrue(await bls.isOnCurveG2(pubkey));
-    let res = await bls.verifySingle(
-      mcl.g1ToHex(signature),
-      pubkey,
-      mcl.g1ToHex(messagePoint)
-    );
+    let res = await bls.verifySingle(mcl.g1ToHex(signature), pubkey, mcl.g1ToHex(messagePoint));
     assert.isFalse(res[0]);
     assert.isFalse(res[1]);
   });
@@ -284,12 +254,7 @@ describe("BLS", async () => {
       assert.isTrue(isOnCurve);
     }
     for (let i = 0; i < 20; i++) {
-      const point: mcl.solG2 = [
-        randomBytes(31),
-        randomBytes(31),
-        randomBytes(31),
-        randomBytes(31),
-      ];
+      const point: mcl.solG2 = [randomBytes(31), randomBytes(31), randomBytes(31), randomBytes(31)];
       const isOnCurve = await bls.isOnCurveG2(point);
       assert.isFalse(isOnCurve);
     }
