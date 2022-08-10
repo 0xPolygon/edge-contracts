@@ -10,7 +10,7 @@ abstract contract Owned is IOwned, Initializable {
 
     /// @dev initializes the contract setting the deployer as the initial owner
     // solhint-disable-next-line func-name-mixedcase
-    function __Owned_init() internal initializer {
+    function __Owned_init() internal onlyInitializing {
         _transferOwnership(msg.sender);
     }
 

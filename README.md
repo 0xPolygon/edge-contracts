@@ -12,6 +12,12 @@ nvm use # if you have `nvm` installed and want to use it, else skip if using oth
 npm install
 ```
 
+### Forge
+
+```bash
+forge install
+```
+
 ## Compile contracts
 
 ```bash
@@ -27,6 +33,12 @@ npx hardhat test
 ```
 
 Tests have gas reporting enabled by default, you can disable them from `hardhat.config.ts`
+
+### Forge
+
+```bash
+forge test
+```
 
 ## Linting
 
