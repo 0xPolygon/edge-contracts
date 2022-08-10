@@ -11,25 +11,6 @@ import "../libs/WithdrawalQueue.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
-interface IStakeManager {
-    struct UptimeData {
-        address validator;
-        uint256 uptime;
-    }
-
-    struct Uptime {
-        uint256 epochId;
-        UptimeData[] uptimeData;
-        uint256 totalUptime;
-    }
-
-    function distributeRewards(Uptime calldata uptime) external;
-
-    function processQueue() external;
-
-    function sortedValidators(uint256 n) external view returns (address[] memory);
-}
-
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];
@@ -423,9 +404,5 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 commission = (validator.commission * delegatorShares) / 100;
 
         return (rewardShares - commission, delegatorShares - commission);
-    }
-
-    function getEpoch(uint256 id) external view returns (Epoch memory) {
-        return epochs[id];
     }
 }
