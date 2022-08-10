@@ -6,7 +6,7 @@ import * as hre from "hardhat";
 import { randHex } from "../../ts/utils";
 import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 
-import { ChildValidatorSet, StakeManager } from "../../typechain";
+import { ChildValidatorSet } from "../../typechain";
 import { customError } from "../util";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -16,15 +16,14 @@ describe("StakeManager", () => {
   let rootValidatorSetAddress: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
-    stakeManager: StakeManager,
-    systemStakeManager: StakeManager,
+    stakeManager: ChildValidatorSet,
     epochReward: BigNumber,
     minStake: number,
     minDelegation: number,
     validatorSetSize: number,
     validatorStake: BigNumber,
     accounts: SignerWithAddress[],
-    childValidatorSetImpersonator: Signer; // we use any so we can access address directly from object
+    systemImpersonator: Signer; // we use any so we can access address directly from object
 
   before(async () => {
     await mcl.init();
@@ -32,45 +31,38 @@ describe("StakeManager", () => {
 
     rootValidatorSetAddress = ethers.Wallet.createRandom().address;
 
-    const ChildValidatorSet = await ethers.getContractFactory("ChildValidatorSet");
-    childValidatorSet = await ChildValidatorSet.deploy();
-    await childValidatorSet.deployed();
-
     const bls = await (await ethers.getContractFactory("BLS")).deploy();
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [childValidatorSet.address],
-    });
-
-    childValidatorSetImpersonator = await ethers.provider.getSigner(childValidatorSet.address);
 
     epochReward = ethers.utils.parseEther("0.0000001");
     minStake = 10000;
     minDelegation = 10000;
 
-    const StakeManager = await ethers.getContractFactory("StakeManager");
-    stakeManager = (await upgrades.deployProxy(StakeManager, [
-      epochReward,
-      minStake,
-      minDelegation,
-      childValidatorSet.address,
-      [accounts[0].address],
-      [[0, 0, 0, 0]],
-      [minStake * 2],
-      bls.address,
-      [0, 0],
-    ])) as StakeManager;
-    await stakeManager.deployed();
-
     // await hre.network.provider.send("hardhat_setBalance", [
     //   "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE",
     //   "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
     // ]);
-    // await hre.network.provider.request({
-    //   method: "hardhat_impersonateAccount",
-    //   params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
-    // });
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
+    });
+
+    systemImpersonator = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
+
+    const StakeManager = await ethers.getContractFactory("ChildValidatorSet");
+    stakeManager = (
+      await upgrades.deployProxy(StakeManager.connect(systemImpersonator), [
+        epochReward,
+        minStake,
+        minDelegation,
+        [accounts[0].address],
+        [[0, 0, 0, 0]],
+        [minStake * 2],
+        bls.address,
+        [0, 0],
+        accounts[0].address,
+      ])
+    ).connect(accounts[0]) as ChildValidatorSet;
+    await stakeManager.deployed();
 
     // const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
     // systemChildValidatorSet = childValidatorSet.connect(systemSigner);
@@ -81,7 +73,8 @@ describe("StakeManager", () => {
     expect(await stakeManager.epochReward()).to.equal(epochReward);
     expect(await stakeManager.minStake()).to.equal(minStake);
     expect(await stakeManager.minDelegation()).to.equal(minDelegation);
-    expect(await stakeManager.childValidatorSet()).to.equal(childValidatorSet.address);
+    expect(await stakeManager.currentEpochId()).to.equal(1);
+    expect(await stakeManager.owner()).to.equal(accounts[0].address);
   });
 
   describe("whitelist", async () => {
@@ -123,13 +116,18 @@ describe("StakeManager", () => {
   });
 
   describe("queue processing", async () => {
-    it("only child validator set should be able to trigger queue process", async () => {
-      await expect(stakeManager.processQueue()).to.be.revertedWith(customError("Unauthorized", "VALIDATOR_SET"));
-    });
     it("should be able to process queue", async () => {
       let validator = await stakeManager.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(0);
-      await expect(stakeManager.connect(childValidatorSetImpersonator).processQueue()).to.not.be.reverted;
+      await expect(
+        stakeManager
+          .connect(systemImpersonator)
+          .commitEpoch(
+            1,
+            { startBlock: 1, endBlock: 64, epochRoot: ethers.constants.HashZero },
+            { epochId: 1, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+          )
+      ).to.not.be.reverted;
       validator = await stakeManager.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(minStake);
     });
@@ -191,7 +189,16 @@ describe("StakeManager", () => {
     it("should reflect balance after queue processing", async () => {
       let validator = await stakeManager.getValidator(accounts[0].address);
       expect(validator.stake).to.equal(minStake * 2);
-      await expect(stakeManager.connect(childValidatorSetImpersonator).processQueue()).to.not.be.reverted;
+      await expect(
+        stakeManager
+          .connect(systemImpersonator)
+          .commitEpoch(
+            2,
+            { startBlock: 65, endBlock: 128, epochRoot: ethers.constants.HashZero },
+            { epochId: 2, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+          )
+      ).to.not.be.reverted;
+
       validator = await stakeManager.getValidator(accounts[0].address);
       expect(validator.stake).to.equal(0);
     });
