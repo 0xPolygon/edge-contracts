@@ -232,17 +232,13 @@ describe("ChildValidatorSet", () => {
     await expect(systemChildValidatorSet.commitEpoch(2, epoch, uptime)).to.be.revertedWith("INVALID_START_BLOCK");
   });
   it("Get current validators", async () => {
-    expect(await childValidatorSet.getCurrentValidatorSet()).to.deep.equal(
-      [accounts[0].address]
-    );
+    expect(await childValidatorSet.getCurrentValidatorSet()).to.deep.equal([accounts[0].address]);
   });
   it("Get epoch by block", async () => {
     const storedEpoch = await childValidatorSet.getEpochByBlock(64);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
-    expect(storedEpoch.epochRoot).to.equal(
-      ethers.utils.hexlify(epoch.epochRoot)
-    );
+    expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
   });
   it("Get non-existent epoch by block", async () => {
     const storedEpoch = await childValidatorSet.getEpochByBlock(65);
@@ -271,11 +267,7 @@ describe("ChildValidatorSet", () => {
       uptime.uptimes.push(1000000000000);
     }
 
-    await systemChildValidatorSet.commitEpoch(
-      2,
-      epoch,
-      uptime,
-    ); // commit epoch to update validator set
+    await systemChildValidatorSet.commitEpoch(2, epoch, uptime); // commit epoch to update validator set
     // const newValidatorSet = await childValidatorSet.getCurrentValidatorSet();
     // expect(newValidatorSet).to.have.lengthOf(
     //   (await childValidatorSet.ACTIVE_VALIDATOR_SET_SIZE()).toNumber()

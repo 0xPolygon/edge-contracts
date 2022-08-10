@@ -45,12 +45,17 @@ library WithdrawalQueueLib {
         return self.tail - self.head;
     }
 
-    function withdrawable(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {
-        for (uint256 i = self.head; i < self.tail; i++) {
-            Withdrawal memory withdrawal = self.withdrawals[i];
-            if (withdrawal.epoch > currentEpoch) break;
+    function withdrawable(WithdrawalQueue storage self, uint256 currentEpoch)
+        internal
+        view
+        returns (uint256 amount, uint256 newHead)
+    {
+        for (newHead = self.head; newHead < self.tail; newHead++) {
+            Withdrawal memory withdrawal = self.withdrawals[newHead];
+            if (withdrawal.epoch > currentEpoch) return (amount, newHead);
             amount += withdrawal.amount;
         }
+        newHead++;
     }
 
     function pending(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {

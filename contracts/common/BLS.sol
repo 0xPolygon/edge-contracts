@@ -26,6 +26,7 @@ SOFTWARE.
 
 pragma solidity ^0.8.13;
 
+import "../interfaces/IBLS.sol";
 import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
 
 /**
@@ -33,7 +34,7 @@ import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
     @notice We use BLS signature aggregation to reduce the size of signature data to store on chain.
     @dev We use G1 points for signatures and messages, and G2 points for public keys
  */
-contract BLS {
+contract BLS is IBLS {
     // Field order
     // prettier-ignore
     uint256 private constant N = 21888242871839275222246405745257275088696311157297823662689037894645226208583;

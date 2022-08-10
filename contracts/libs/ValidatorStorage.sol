@@ -34,7 +34,7 @@ library ValidatorStorageLib {
     }
 
     function next(ValidatorTree storage self, address target) internal view returns (address cursor) {
-        require(target != EMPTY);
+        if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].right != EMPTY) {
             cursor = treeMinimum(self, self.nodes[target].right);
         } else {
@@ -47,7 +47,7 @@ library ValidatorStorageLib {
     }
 
     function prev(ValidatorTree storage self, address target) internal view returns (address cursor) {
-        require(target != EMPTY);
+        if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].left != EMPTY) {
             cursor = treeMaximum(self, self.nodes[target].left);
         } else {
@@ -78,7 +78,7 @@ library ValidatorStorageLib {
             bool _red
         )
     {
-        require(exists(self, key));
+        if (!exists(self, key)) revert NotFound(key);
         return (key, self.nodes[key].parent, self.nodes[key].left, self.nodes[key].right, self.nodes[key].red);
     }
 
@@ -89,7 +89,7 @@ library ValidatorStorageLib {
     ) internal {
         assert(key != EMPTY);
         assert(validator.totalStake >= validator.stake);
-        require(!exists(self, key));
+        if (exists(self, key)) revert Exists(key);
         if (validator.stake == 0) {
             self.nodes[key].validator = validator;
             return;
@@ -119,7 +119,7 @@ library ValidatorStorageLib {
 
     function remove(ValidatorTree storage self, address key) internal {
         assert(key != EMPTY);
-        require(exists(self, key));
+        if (!exists(self, key)) revert NotFound(key);
         address probe;
         address cursor;
         if (self.nodes[key].left == EMPTY || self.nodes[key].right == EMPTY) {
