@@ -5,7 +5,7 @@ libs = ['node_modules', 'lib']
 out = 'out'
 cache_path  = 'forge-cache'
 verbosity = 2
-# should work fine; turn off if there are any weird errors
-sparse_mode = true
+# comment out if you notice any weird behavior
+#sparse_mode = true
 
 # See more config options https://book.getfoundry.sh/reference/config.html
