@@ -182,7 +182,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         delegation.amount += msg.value;
     }
 
-    function undelegate(address validator, uint256 amount) external payable {
+    function undelegate(address validator, uint256 amount) external {
         if (!whitelist[validator]) revert Unauthorized("INVALID_VALIDATOR");
 
         Stake storage delegation = delegations[msg.sender][validator];

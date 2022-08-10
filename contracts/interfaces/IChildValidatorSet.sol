@@ -79,7 +79,7 @@ interface IChildValidatorSet {
 
     function delegate(address validator, bool restake) external payable;
 
-    function undelegate(address validator) external;
+    function undelegate(address validator, uint256 amount) external;
 
     function withdraw(address to) external;
 
