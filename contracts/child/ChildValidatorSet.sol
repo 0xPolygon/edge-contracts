@@ -11,8 +11,6 @@ import "../libs/WithdrawalQueue.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
-import "hardhat/console.sol";
-
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];
@@ -173,12 +171,45 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         if (!whitelist[validator]) revert Unauthorized("INVALID_VALIDATOR");
 
         Stake storage delegation = delegations[msg.sender][validator];
-        require(delegation.amount + msg.value >= minDelegation, "DELEGATION_TOO_LOW");
+        if (delegation.amount + msg.value < minDelegation)
+            revert StakeRequirement({src: "delegate", msg: "DELEGATION_TOO_LOW"});
 
         claimDelegatorReward(validator, restake);
 
         _queue.insert(msg.sender, 0, int256(msg.value));
         delegation.amount += msg.value;
+    }
+
+    function undelegate(address validator, uint256 amount) external {
+        if (!whitelist[validator]) revert Unauthorized("INVALID_VALIDATOR");
+
+        Stake storage delegation = delegations[msg.sender][validator];
+        uint256 delegatedAmount = delegation.amount;
+
+        if (amount > delegatedAmount) revert StakeRequirement({src: "undelegate", msg: "INSUFFICIENT_BALANCE"});
+        uint256 amountAfterUndelegate = delegatedAmount - amount;
+
+        if (amountAfterUndelegate < minDelegation && amountAfterUndelegate != 0)
+            revert StakeRequirement({src: "undelegate", msg: "DELEGATION_TOO_LOW"});
+
+        claimDelegatorReward(validator, false);
+
+        int256 amountInt = int256(amount);
+        // prevent overflow
+        assert(amountInt > 0);
+
+        _queue.insert(msg.sender, 0, amountInt * -1);
+        delegation.amount -= amount;
+
+        _registerWithdrawal(msg.sender, amount);
+    }
+
+    function withdraw(address to) external {
+        WithdrawalQueue storage queue = _withdrawals[msg.sender];
+        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
+        queue.head = newHead;
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "WITHDRAWAL_FAILED");
     }
 
     function claimValidatorReward() public onlyValidator {
@@ -234,8 +265,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         return _validators.totalStake;
     }
 
-    function withdrawable(address account) public view returns (uint256) {
-        return _withdrawals[account].withdrawable(currentEpochId);
+    function withdrawable(address account) public view returns (uint256 amount) {
+        (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
     }
 
     function pendingWithdrawals(address account) public view returns (uint256) {

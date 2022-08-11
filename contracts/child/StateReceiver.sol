@@ -43,6 +43,7 @@ contract StateReceiver is System {
 
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
+
     function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be

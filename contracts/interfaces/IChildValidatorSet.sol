@@ -77,8 +77,11 @@ interface IChildValidatorSet {
 
     function unstake(uint256 amount) external;
 
-    // TODO undelegate
     function delegate(address validator, bool restake) external payable;
+
+    function undelegate(address validator, uint256 amount) external;
+
+    function withdraw(address to) external;
 
     function claimValidatorReward() external;
 

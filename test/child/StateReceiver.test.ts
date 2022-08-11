@@ -60,6 +60,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root: ethers.constants.HashZero,
     };
+
     await expect(stateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith(
       customError("Unauthorized", "SYSTEMCALL")
     );
@@ -130,6 +131,7 @@ describe("StateReceiver", () => {
       root,
     };
     const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero);
+
     const receipt = await tx.wait();
   });
 

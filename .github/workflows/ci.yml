@@ -18,6 +18,19 @@ jobs:
       - run: npm install
       - run: npx hardhat compile --show-stack-traces
       - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel
+  forge_tests:
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Run tests
+        run: forge test -vvv
   gas_report:
     runs-on: ubuntu-latest
     steps:
