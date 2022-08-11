@@ -5,7 +5,7 @@ import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
-import { BLS, ChildValidatorSet, StakeManager } from "../../typechain";
+import { BLS, ChildValidatorSet } from "../../typechain";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
@@ -15,7 +15,6 @@ describe("ChildValidatorSet", () => {
   let bls: BLS,
     rootValidatorSetAddress: string,
     governance: string,
-    stakeManager: StakeManager,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
     stakeManagerValidatorSet: ChildValidatorSet,
@@ -45,22 +44,8 @@ describe("ChildValidatorSet", () => {
 
     await childValidatorSet.deployed();
 
-    const bls = await (await ethers.getContractFactory("BLS")).deploy();
+    bls = await (await ethers.getContractFactory("BLS")).deploy();
     await bls.deployed();
-
-    const StakeManager = await ethers.getContractFactory("StakeManager");
-    stakeManager = (await upgrades.deployProxy(StakeManager, [
-      epochReward,
-      minStake,
-      minDelegation,
-      childValidatorSet.address,
-      [accounts[0].address],
-      [[0, 0, 0, 0]],
-      [minStake * 2],
-      bls.address,
-      [0, 0],
-    ])) as StakeManager;
-    await stakeManager.deployed();
 
     await hre.network.provider.send("hardhat_setBalance", [
       "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE",
@@ -88,9 +73,19 @@ describe("ChildValidatorSet", () => {
     stateSyncChildValidatorSet = childValidatorSet.connect(stateSyncSigner);
   });
   it("Initialize without system call", async () => {
-    await expect(childValidatorSet.initialize(stakeManager.address, governance, [])).to.be.revertedWith(
-      'Unauthorized("SYSTEMCALL")'
-    );
+    await expect(
+      childValidatorSet.initialize(
+        epochReward,
+        minStake,
+        minDelegation,
+        [accounts[0].address],
+        [[0, 0, 0, 0]],
+        [minStake * 2],
+        bls.address,
+        [0, 0],
+        governance
+      )
+    ).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
   });
   it("Initialize and validate initialization", async () => {
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
@@ -101,22 +96,45 @@ describe("ChildValidatorSet", () => {
       epochValidatorSet.push(accounts[i].address);
     }
 
-    await systemChildValidatorSet.initialize(stakeManager.address, governance, epochValidatorSet);
+    await systemChildValidatorSet.initialize(
+      epochReward,
+      minStake,
+      minDelegation,
+      [accounts[0].address],
+      [[0, 0, 0, 0]],
+      [minStake * 2],
+      bls.address,
+      [0, 0],
+      governance
+    );
 
     const currentEpochId = await childValidatorSet.currentEpochId();
     expect(currentEpochId).to.equal(1);
-    expect(await systemChildValidatorSet.stakeManager()).to.equal(stakeManager.address);
 
-    for (let i = 0; i < currentEpochId.toNumber(); i++) {
-      const epoch = await childValidatorSet.getEpoch(i + 1);
-      const validatorSet = epoch.validatorSet;
-      expect(validatorSet).to.deep.equal(epochValidatorSet);
-    }
+    expect(await childValidatorSet.whitelist(accounts[0].address)).to.equal(true);
+    const validator = await childValidatorSet.getValidator(accounts[0].address);
+    expect(validator.blsKey.toString()).to.equal("0,0,0,0");
+    expect(validator.stake).to.equal(minStake * 2);
+    expect(validator.totalStake).to.equal(minStake * 2);
+    expect(validator.commission).to.equal(0);
+    expect(await childValidatorSet.bls()).to.equal(bls.address);
+    expect(await childValidatorSet.message(0)).to.equal(0);
+    expect(await childValidatorSet.message(1)).to.equal(0);
   });
   it("Attempt reinitialization", async () => {
-    await expect(systemChildValidatorSet.initialize(stakeManager.address, governance, [])).to.be.revertedWith(
-      "Initializable: contract is already initialized"
-    );
+    await expect(
+      systemChildValidatorSet.initialize(
+        epochReward,
+        minStake,
+        minDelegation,
+        [accounts[0].address],
+        [[0, 0, 0, 0]],
+        [minStake * 2],
+        bls.address,
+        [0, 0],
+        governance
+      )
+    ).to.be.revertedWith("Initializable: contract is already initialized");
   });
   it("Commit epoch without system call", async () => {
     id = 0;
@@ -277,6 +295,5 @@ describe("ChildValidatorSet", () => {
     // let set = new Set();
     // newValidatorSet.map((elem: BigNumber) => set.add(elem));
     // expect(set).to.have.lengthOf(newValidatorSet.length); // assert each element is unique
-
   });
 });
