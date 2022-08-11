@@ -100,6 +100,7 @@ describe("ChildValidatorSet", () => {
     for (let i = 0; i < validatorSetSize; i++) {
       epochValidatorSet.push(accounts[i].address);
     }
+
     await systemChildValidatorSet.initialize(stakeManager.address, governance, epochValidatorSet);
 
     const currentEpochId = await childValidatorSet.currentEpochId();
@@ -248,6 +249,7 @@ describe("ChildValidatorSet", () => {
   });
   it("Get and set current validators when exceeds active validator set size", async () => {
     const currentValidatorId = await childValidatorSet.currentEpochId();
+
     epoch = {
       startBlock: 65,
       endBlock: 128,
@@ -275,5 +277,6 @@ describe("ChildValidatorSet", () => {
     // let set = new Set();
     // newValidatorSet.map((elem: BigNumber) => set.add(elem));
     // expect(set).to.have.lengthOf(newValidatorSet.length); // assert each element is unique
+
   });
 });

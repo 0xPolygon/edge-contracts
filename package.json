@@ -4,7 +4,9 @@
     "@openzeppelin/contracts": "^4.7.2",
     "@openzeppelin/contracts-upgradeable": "^4.7.2",
     "hardhat": "^2.9.3",
-    "mcl-wasm": "^1.0.2"
+    "keccak256": "^1.0.6",
+    "mcl-wasm": "^1.0.2",
+    "merkletreejs": "^0.2.31"
   },
   "name": "v3-contracts",
   "description": "",
