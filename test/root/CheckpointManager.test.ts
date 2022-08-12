@@ -11,6 +11,7 @@ const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 describe("CheckpointManager", () => {
   let bls: BLS,
     bn256G2: BN256G2,
+    governance: string,
     rootValidatorSet: RootValidatorSet,
     checkpointManager: CheckpointManager,
     submitCounter: number,
@@ -22,6 +23,8 @@ describe("CheckpointManager", () => {
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
+
+    governance = accounts[0].address;
 
     const BLS = await ethers.getContractFactory("BLS");
     bls = await BLS.deploy();
@@ -77,17 +80,15 @@ describe("CheckpointManager", () => {
       addresses.push(accounts[i].address);
     }
 
-    await rootValidatorSet.initialize(bls.address, addresses, pubkeys, messagePoint);
+    await rootValidatorSet.initialize(governance, checkpointManager.address, addresses, pubkeys);
 
     expect(await rootValidatorSet.currentValidatorId()).to.equal(validatorSetSize);
-    expect(ethers.utils.hexValue(await rootValidatorSet.message(0))).to.equal(ethers.utils.hexValue(messagePoint[0]));
-    expect(ethers.utils.hexValue(await rootValidatorSet.message(1))).to.equal(ethers.utils.hexValue(messagePoint[1]));
+    expect(await rootValidatorSet.checkpointManager()).to.equal(checkpointManager.address);
     for (let i = 0; i < validatorSetSize; i++) {
-      const validator = await rootValidatorSet.validators(i + 1);
-      expect(validator.id).to.equal(i + 1);
+      const validator = await rootValidatorSet.getValidator(i + 1);
       expect(validator._address).to.equal(addresses[i]);
+      expect(validator.blsKey.map(x => hexlify(x))).to.deep.equal(pubkeys[i]);
       expect(await rootValidatorSet.validatorIdByAddress(addresses[i])).to.equal(i + 1);
-      // expect(validator.blsKey).to.equal(pubkeys[i]); //typings for this aren't generated...
     }
   });
 
@@ -115,7 +116,7 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, [])).to.be.revertedWith(
+    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, [], [])).to.be.revertedWith(
       "NOT_ENOUGH_SIGNATURES"
     );
   });
@@ -153,9 +154,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "SIGNATURE_VERIFICATION_FAILED"
-    );
+    await expect(
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
   it("Submit checkpoint with non-sequential id", async () => {
@@ -191,9 +192,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "ID_NOT_SEQUENTIAL"
-    );
+    await expect(
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 
   it("Submit checkpoint with invalid start block", async () => {
@@ -229,9 +230,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "INVALID_START_BLOCK"
-    );
+    await expect(
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("INVALID_START_BLOCK");
   });
 
   it("Submit empty checkpoint", async () => {
@@ -267,9 +268,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "EMPTY_CHECKPOINT"
-    );
+    await expect(
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
   it("Submit checkpoint", async () => {
@@ -305,7 +306,7 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds);
+    await checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address]);
 
     submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
     expect(submitCounter).to.equal(2);
@@ -355,7 +356,9 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submitBatch([id], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds)
+      checkpointManager.submitBatch([id], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds, [
+        accounts[0].address,
+      ])
     ).to.be.revertedWith("LENGTH_MISMATCH");
   });
 
@@ -392,9 +395,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "ID_NOT_SEQUENTIAL"
-    );
+    await expect(
+      checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 
   it("Submit batch checkpoint with invalid start block", async () => {
@@ -430,9 +433,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "INVALID_START_BLOCK"
-    );
+    await expect(
+      checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("INVALID_START_BLOCK");
   });
 
   it("Submit batch empty checkpoint", async () => {
@@ -468,9 +471,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "EMPTY_CHECKPOINT"
-    );
+    await expect(
+      checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
   it("Submit batch checkpoint with invalid length", async () => {
@@ -497,7 +500,7 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, [])).to.be.revertedWith(
+    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, [], [])).to.be.revertedWith(
       "NOT_ENOUGH_SIGNATURES"
     );
   });
@@ -535,9 +538,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds)).to.be.revertedWith(
-      "SIGNATURE_VERIFICATION_FAILED"
-    );
+    await expect(
+      checkpointManager.submitBatch([id], [checkpoint], aggMessagePoint, validatorIds, [accounts[0].address])
+    ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
   it("Submit batch checkpoint", async () => {
@@ -582,7 +585,9 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submitBatch([id, id + 1], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds);
+    await checkpointManager.submitBatch([id, id + 1], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds, [
+      accounts[0].address,
+    ]);
 
     submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
     expect(submitCounter).to.equal(4);
