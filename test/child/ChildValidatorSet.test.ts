@@ -6,6 +6,7 @@ import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet } from "../../typechain";
+import { customError } from "../util";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
@@ -17,7 +18,7 @@ describe("ChildValidatorSet", () => {
     governance: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
-    stakeManagerValidatorSet: ChildValidatorSet,
+    childValidatorSetValidatorSet: ChildValidatorSet,
     stateSyncChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     validatorStake: BigNumber,
@@ -107,6 +108,12 @@ describe("ChildValidatorSet", () => {
       [0, 0],
       governance
     );
+
+    expect(await childValidatorSet.epochReward()).to.equal(epochReward);
+    expect(await childValidatorSet.minStake()).to.equal(minStake);
+    expect(await childValidatorSet.minDelegation()).to.equal(minDelegation);
+    expect(await childValidatorSet.currentEpochId()).to.equal(1);
+    expect(await childValidatorSet.owner()).to.equal(accounts[0].address);
 
     const currentEpochId = await childValidatorSet.currentEpochId();
     expect(currentEpochId).to.equal(1);
@@ -296,4 +303,518 @@ describe("ChildValidatorSet", () => {
     // newValidatorSet.map((elem: BigNumber) => set.add(elem));
     // expect(set).to.have.lengthOf(newValidatorSet.length); // assert each element is unique
   });
+
+
+  describe("whitelist", async () => {
+    it("only owner should be able to modify whitelist", async () => {
+      await expect(childValidatorSet.connect(accounts[1]).addToWhitelist([accounts[1].address])).to.be.revertedWith(
+        customError("Unauthorized", "OWNER")
+      );
+      await expect(childValidatorSet.connect(accounts[1]).removeFromWhitelist([accounts[1].address])).to.be.revertedWith(
+        customError("Unauthorized", "OWNER")
+      );
+    });
+    it("should be able to add to whitelist", async () => {
+      await expect(childValidatorSet.addToWhitelist([accounts[1].address, accounts[2].address])).to.not.be.reverted;
+      expect(await childValidatorSet.whitelist(accounts[1].address)).to.be.true;
+      expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.true;
+    });
+    it("should be able to remove from whitelist", async () => {
+      await expect(childValidatorSet.removeFromWhitelist([accounts[1].address])).to.not.be.reverted;
+      expect(await childValidatorSet.whitelist(accounts[1].address)).to.be.false;
+    });
+  });
+
+  describe("stake", async () => {
+    it("only whitelisted validators should be able to stake", async () => {
+      await expect(childValidatorSet.connect(accounts[1]).stake({ value: minStake })).to.be.revertedWith(
+        customError("Unauthorized", "VALIDATOR")
+      );
+    });
+
+    it("should revert if min amount not reached", async () => {
+      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake - 1 })).to.be.revertedWith(
+        customError("StakeRequirement", "stake", "STAKE_TOO_LOW")
+      );
+    });
+
+    it("should be able to stake", async () => {
+      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake })).to.not.be.reverted;
+    });
+  });
+
+  describe("queue processing", async () => {
+    it("should be able to process queue", async () => {
+      let validator = await childValidatorSet.getValidator(accounts[2].address);
+      expect(validator.stake).to.equal(0);
+      await expect(
+        systemChildValidatorSet
+          .commitEpoch(
+            3,
+            { startBlock: 129, endBlock: 192, epochRoot: ethers.constants.HashZero },
+            { epochId: 3, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+          )
+      ).to.not.be.reverted;
+      validator = await childValidatorSet.getValidator(accounts[2].address);
+      expect(validator.stake).to.equal(minStake);
+    });
+  });
+
+  describe("unstake", async () => {
+    it("non validators should not be able to unstake due to insufficient balance", async () => {
+      await expect(childValidatorSet.connect(accounts[1]).unstake(1)).to.be.revertedWith(
+        customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
+      );
+    });
+
+    it("should not be able to exploit int overflow", async () => {
+      await expect(childValidatorSet.connect(accounts[1]).unstake(ethers.constants.MaxInt256.add(1))).to.be.reverted;
+    });
+
+    it("should not be able to unstake more than staked", async () => {
+      await expect(childValidatorSet.unstake(minStake * 2 + 1)).to.be.revertedWith(
+        customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
+      );
+    });
+
+    it("should not be able to unstake so that less than minstake is left", async () => {
+      await expect(childValidatorSet.unstake(minStake + 1)).to.be.revertedWith(
+        customError("StakeRequirement", "unstake", "STAKE_TOO_LOW")
+      );
+    });
+
+    it("should be able to partially unstake", async () => {
+      await expect(childValidatorSet.unstake(minStake)).to.not.be.reverted;
+    });
+
+    it("should not remove from whitelist after partial unstake", async () => {
+      expect(await childValidatorSet.whitelist(accounts[0].address)).to.be.true;
+    });
+
+    it("should take pending unstakes into account", async () => {
+      await expect(childValidatorSet.unstake(minStake + 1)).to.be.revertedWith(
+        customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
+      );
+      await expect(childValidatorSet.unstake(1)).to.be.revertedWith(
+        customError("StakeRequirement", "unstake", "STAKE_TOO_LOW")
+      );
+    });
+
+    it("should be able to completely unstake", async () => {
+      await expect(childValidatorSet.unstake(minStake)).to.not.be.reverted;
+    });
+
+    it("should remove from whitelist after complete unstake", async () => {
+      expect(await childValidatorSet.whitelist(accounts[0].address)).to.be.false;
+    });
+
+    it("should place in withdrawal queue", async () => {
+      expect(await childValidatorSet.pendingWithdrawals(accounts[0].address)).to.equal(minStake * 2);
+      expect(await childValidatorSet.withdrawable(accounts[0].address)).to.equal(0);
+    });
+
+    it("should reflect balance after queue processing", async () => {
+      let validator = await childValidatorSet.getValidator(accounts[0].address);
+      expect(validator.stake).to.equal(minStake * 2);
+      await expect(
+        systemChildValidatorSet
+          .commitEpoch(
+            4,
+            { startBlock: 193, endBlock: 256, epochRoot: ethers.constants.HashZero },
+            { epochId: 4, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+          )
+      ).to.not.be.reverted;
+
+      validator = await childValidatorSet.getValidator(accounts[0].address);
+      expect(validator.stake).to.equal(0);
+    });
+  });
+
+  // it("Delegate less amount than minDelegation", async () => {
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+
+  //   const idToDelegate = id.add(1);
+  //   const restake = false;
+
+  //   await expect(
+  //     stakeManager.delegate(idToDelegate, restake, { value: 100 })
+  //   ).to.be.revertedWith("DELEGATION_TOO_LOW");
+  // });
+
+  // it("Delegate to invalid id", async () => {
+  //   const idToDelegate = await childValidatorSet.currentValidatorId();
+  //   const restake = false;
+
+  //   await expect(
+  //     stakeManager.delegate(idToDelegate, restake, { value: minDelegation + 1 })
+  //   ).to.be.revertedWith("INVALID_VALIDATOR_ID");
+  // });
+
+  // it("Delegate for the first time", async () => {
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+
+  //   const delegateAmount = minDelegation + 1;
+  //   const idToDelegate = id.add(1);
+  //   const restake = false;
+
+  //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+  //     .totalStake;
+
+  //   await stakeManager.delegate(idToDelegate, restake, {
+  //     value: delegateAmount,
+  //   });
+
+  //   const delegation = await stakeManager.delegations(
+  //     accounts[0].address,
+  //     idToDelegate
+  //   );
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+  //   expect(delegation.epochId).to.equal(currentEpochId);
+  //   expect(delegation.amount).to.equal(delegateAmount);
+
+  //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+  //     .totalStake;
+  //   expect(afterDelegate.sub(beforeDelegate)).to.equal(delegateAmount);
+  // });
+
+  // it("Delegate again without restake", async () => {
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+
+  //   const delegateAmount = minDelegation + 1;
+  //   const idToDelegate = id.add(1);
+  //   const restake = false;
+
+  //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+  //     .totalStake;
+  //   const balanceBeforeReDelegate = await ethers.provider.getBalance(
+  //     accounts[0].address
+  //   );
+
+  //   const txResp = await stakeManager.delegate(idToDelegate, restake, {
+  //     value: delegateAmount,
+  //   });
+  //   const txReceipt = await txResp.wait();
+  //   const delegateGas = ethers.BigNumber.from(
+  //     txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+  //   ).add(10001);
+
+  //   const delegation = await stakeManager.delegations(
+  //     accounts[0].address,
+  //     idToDelegate
+  //   );
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+  //   expect(delegation.epochId).to.equal(currentEpochId);
+  //   expect(delegation.amount).to.equal(delegateAmount * 2);
+
+  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
+  //     idToDelegate,
+  //     accounts[0].address
+  //   );
+
+  //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+  //     .totalStake;
+  //   const balanceAfterReDelegate = await ethers.provider.getBalance(
+  //     accounts[0].address
+  //   );
+
+  //   expect(afterDelegate.sub(beforeDelegate)).to.equal(
+  //     delegatorReward.add(delegateAmount)
+  //   );
+  //   expect(
+  //     balanceBeforeReDelegate.sub(delegateGas).add(delegatorReward)
+  //   ).to.equal(balanceAfterReDelegate);
+  // });
+
+  // it("Delegate again with restake", async () => {
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+
+  //   const delegateAmount = minDelegation + 1;
+  //   const idToDelegate = id.add(1);
+  //   const restake = false;
+
+  //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+  //     .totalStake;
+
+  //   await stakeManager.delegate(idToDelegate, restake, {
+  //     value: delegateAmount,
+  //   });
+
+  //   const delegation = await stakeManager.delegations(
+  //     accounts[0].address,
+  //     idToDelegate
+  //   );
+
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+  //   expect(delegation.epochId).to.equal(currentEpochId);
+
+  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
+  //     idToDelegate,
+  //     accounts[0].address
+  //   );
+  //   expect(delegation.amount).to.equal(delegatorReward.add(delegateAmount * 3));
+
+  //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+  //     .totalStake;
+  //   expect(afterDelegate.sub(beforeDelegate)).to.equal(
+  //     delegatorReward.add(delegateAmount)
+  //   );
+  // });
+
+  // it("Claim delegatorReward", async () => {
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+
+  //   const idToDelegate = id.add(1);
+
+  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
+  //     idToDelegate,
+  //     accounts[0].address
+  //   );
+
+  //   const balanceBeforeReDelegate = await ethers.provider.getBalance(
+  //     accounts[0].address
+  //   );
+
+  //   const txResp = await stakeManager.claimDelegatorReward(idToDelegate);
+  //   const txReceipt = await txResp.wait();
+  //   const claimGas = ethers.BigNumber.from(
+  //     txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+  //   );
+
+  //   const delegation = await stakeManager.delegations(
+  //     accounts[0].address,
+  //     idToDelegate
+  //   );
+
+  //   const balanceAfterReDelegate = await ethers.provider.getBalance(
+  //     accounts[0].address
+  //   );
+  //   expect(balanceBeforeReDelegate.sub(claimGas).add(delegatorReward)).to.equal(
+  //     balanceAfterReDelegate
+  //   );
+  // });
+
+  // it("Distribute without child validator set", async () => {
+  //   const uptime = {
+  //     epochId: 0,
+  //     uptimes: [0],
+  //     totalUptime: 0,
+  //   };
+
+  //   const signature = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       ["tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)"],
+  //       [uptime]
+  //     )
+  //   );
+
+  //   await expect(stakeManager.distributeRewards(uptime)).to.be.revertedWith(
+  //     "ONLY_VALIDATOR_SET"
+  //   );
+  // });
+
+  // it("Distribute with not committed epoch", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
+
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+
+  //   const id = currentEpochId;
+  //   const epoch = {
+  //     startBlock: BigNumber.from(1),
+  //     endBlock: BigNumber.from(64),
+  //     epochRoot: ethers.utils.randomBytes(32),
+  //     validatorSet: [0],
+  //   };
+
+  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
+
+  //   const uptime = {
+  //     epochId: currentEpochId.add(1),
+  //     uptimes: [1000000000000],
+  //     totalUptime: 0,
+  //   };
+
+  //   for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
+  //     uptime.uptimes.push(1000000000000);
+  //   }
+
+  //   const signature = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       [
+  //         "uint256",
+  //         "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+  //         "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+  //       ],
+  //       [id, epoch, uptime]
+  //     )
+  //   );
+
+  //   await expect(
+  //     systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
+  //   ).to.be.revertedWith("EPOCH_NOT_COMMITTED");
+  // });
+
+  // it("Distribute with invalid length", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
+  //   const id = 1;
+  //   const epoch = {
+  //     startBlock: BigNumber.from(1),
+  //     endBlock: BigNumber.from(64),
+  //     epochRoot: ethers.utils.randomBytes(32),
+  //     validatorSet: [0],
+  //   };
+
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
+
+  //   const uptime = {
+  //     epochId: currentEpochId,
+  //     uptimes: [1000000000000],
+  //     totalUptime: 0,
+  //   };
+
+  //   for (let i = 0; i < currentValidatorId.toNumber() - 1; i++) {
+  //     uptime.uptimes.push(1000000000000);
+  //   }
+
+  //   const signature = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       [
+  //         "uint256",
+  //         "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+  //         "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+  //       ],
+  //       [id, epoch, uptime]
+  //     )
+  //   );
+
+  //   await expect(
+  //     systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
+  //   ).to.be.revertedWith("INVALID_LENGTH");
+  // });
+
+  // it("Distribute with not enough consensus", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
+  //   const id = 1;
+  //   const epoch = {
+  //     startBlock: BigNumber.from(1),
+  //     endBlock: BigNumber.from(64),
+  //     epochRoot: ethers.utils.randomBytes(32),
+  //     validatorSet: [0],
+  //   };
+
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
+
+  //   const uptime = {
+  //     epochId: currentEpochId,
+  //     uptimes: [1, 1],
+  //     totalUptime: 0,
+  //   };
+
+  //   const signature = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       [
+  //         "uint256",
+  //         "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+  //         "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+  //       ],
+  //       [id, epoch, uptime]
+  //     )
+  //   );
+
+  //   await expect(
+  //     systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature)
+  //   ).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
+  // });
+
+  // it("Distribute", async () => {
+  //   await hre.network.provider.send("hardhat_setCode", [
+  //     "0x0000000000000000000000000000000000002030",
+  //     alwaysTrueBytecode,
+  //   ]);
+
+  //   const epoch = {
+  //     startBlock: BigNumber.from(1),
+  //     endBlock: BigNumber.from(64),
+  //     epochRoot: ethers.utils.randomBytes(32),
+  //     validatorSet: [0],
+  //   };
+
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+  //   const currentValidatorId = await childValidatorSet.currentValidatorId();
+
+  //   const id = currentEpochId;
+  //   const uptime = {
+  //     epochId: currentEpochId,
+  //     uptimes: [1000000000000],
+  //     totalUptime: 100,
+  //   };
+
+  //   for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
+  //     uptime.uptimes.push(1000000000000);
+  //   }
+
+  //   const signature = ethers.utils.keccak256(
+  //     ethers.utils.defaultAbiCoder.encode(
+  //       [
+  //         "uint256",
+  //         "tuple(uint256 startBlock, uint256 endBlock, bytes32 epochRoot, uint256[] validatorSet)",
+  //         "tuple(uint256 epochId, uint256[] uptimes, uint256 totalUptime)",
+  //       ],
+  //       [id, epoch, uptime]
+  //     )
+  //   );
+
+  //   await systemChildValidatorSet.commitEpoch(id, epoch, uptime, signature);
+  //   const storedEpoch: any = await childValidatorSet.epochs(1);
+  //   expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
+  //   expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
+  //   expect(storedEpoch.epochRoot).to.equal(
+  //     ethers.utils.hexlify(epoch.epochRoot)
+  //   );
+
+  //   const idToDelegate = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
+  //     idToDelegate.add(1),
+  //     accounts[0].address
+  //   );
+  // });
+
+  // it("Unstake", async () => {
+  //   const id = await childValidatorSet.validatorIdByAddress(
+  //     accounts[0].address
+  //   );
+
+  //   const amountToUnstake = minStake + 1;
+
+  //   const selfStakeBefore = await (
+  //     await childValidatorSet.validators(id)
+  //   ).selfStake;
+  //   await stakeManager.unstake(id, amountToUnstake, accounts[0].address);
+  //   const selfStakeAfter = await (
+  //     await childValidatorSet.validators(id)
+  //   ).selfStake;
+  //   expect(selfStakeBefore.sub(selfStakeAfter)).to.equal(amountToUnstake);
+  // });
 });
