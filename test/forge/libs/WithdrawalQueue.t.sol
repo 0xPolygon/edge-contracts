@@ -5,6 +5,7 @@ import {Withdrawal, WithdrawalQueue, WithdrawalQueueLib} from "contracts/libs/Wi
 
 import "../utils/TestPlus.sol";
 
+// TODO: improve
 contract WithdrawalQueueTest is TestPlus {
     using WithdrawalQueueLib for WithdrawalQueue;
 
@@ -38,8 +39,6 @@ contract WithdrawalQueueTest is TestPlus {
         vm.expectRevert(stdError.assertionError);
         withdrawalQueue.append(amount, epoch - 1);
     }
-
-    // TODO: improve
 
     /*function testAppend_NewWithdrawal() public {
         uint256 amount = 1 ether;
