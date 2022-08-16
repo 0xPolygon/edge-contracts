@@ -236,21 +236,38 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
         // remove from tree
         tree.remove(accountToRemove);
 
-        address __account = tree.first();
+        address _account = tree.first();
         address prevAccount;
         // tree balance
         if (stakesCount > 0) {
-            while (tree.next(__account) != address(0)) {
-                prevAccount = __account;
-                __account = tree.next(__account);
+            while (tree.next(_account) != address(0)) {
+                prevAccount = _account;
+                _account = tree.next(_account);
 
-                assertGe(amountOf[__account], amountOf[prevAccount], "Tree balance");
+                assertGe(amountOf[_account], amountOf[prevAccount], "Tree balance");
             }
         }
         // validator count
         assertEq(tree.count, stakesCount, "Validator count");
         // total stake
         assertEq(tree.totalStake, totalStake, "Total stake");
+    }
+
+    function testRemove_All(uint128[] memory amounts) public {
+        _populateTree(amounts);
+
+        // remove from tree
+        for (uint256 i; i < accounts.length; ++i) {
+            address _account = accounts[i];
+            if (amountOf[_account] > 0) tree.remove(_account);
+        }
+
+        // no root
+        assertEq(tree.root, address(0), "Root");
+        // validator count
+        assertEq(tree.count, 0, "Validator count");
+        // total stake
+        assertEq(tree.totalStake, 0, "Total stake");
     }
 
     /// @notice Populate tree with unique accounts
