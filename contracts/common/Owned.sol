@@ -37,4 +37,6 @@ abstract contract Owned is IOwned, Initializable {
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
+
+    uint256[50] private __gap;
 }

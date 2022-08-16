@@ -432,4 +432,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
         return (rewardShares - commission, delegatorShares - commission);
     }
+
+    uint256[50] private __gap;
 }
