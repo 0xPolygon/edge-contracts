@@ -28,7 +28,13 @@ abstract contract TestPlus is Test {
     ) internal virtual {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log_named_string("Error", err);
-            emit log("Error: a == b not satisfied [Validator]");
+            assertEq(a, b);
+        }
+    }
+
+    function assertEq(Node memory a, Node memory b) internal virtual {
+        if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
+            emit log("Error: a == b not satisfied [Node]");
             fail();
         }
     }

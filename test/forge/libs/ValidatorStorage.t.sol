@@ -48,14 +48,15 @@ contract ValidatorStorageTest_EmptyState is EmptyState {
             address _account = vm.addr(i + 1);
             uint128 amount = amounts[i];
             Validator memory _validator;
-            // if amount is 0, set commission to i + 1,
-            // so we can check if it was inserted
-            if (amount == 0) {
-                _validator.commission = i + 1; // + 1 guarantees uniqueness
-            } else {
+            if (amount > 0) {
                 _validator = _createValidator(amount);
+                ++stakesCount;
+            } else {
+                // if amount is 0, set commission to i + 1,
+                // so we can assert insertion
+                _validator.commission = i + 1; // + 1 guarantees uniqueness
             }
-            if (amount > 0) ++stakesCount;
+
             tree.insert(_account, _validator);
             totalStake += amount;
 
@@ -85,8 +86,6 @@ contract ValidatorStorageTest_EmptyState is EmptyState {
 }
 
 abstract contract NonEmptyState is EmptyState {
-    using ValidatorStorageLib for ValidatorTree;
-
     // saved data for assertion
     address[] accounts;
     mapping(address => uint128) amountOf;
@@ -205,9 +204,15 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
         tree.getNode(account);
     }
 
-    // TODO
-    function testGetNode() public {
-        require(false, "Test not written");
+    function testGetNode(uint128[] memory amounts, uint256 i) public {
+        _populateTree(amounts);
+        address accountToLookUp = accounts[i % accounts.length];
+        vm.assume(amountOf[accountToLookUp] > 0);
+
+        (address returnKey, address parent, address left, address right, bool red) = tree.getNode(accountToLookUp);
+        Node memory node = Node(parent, left, right, red, _createValidator(amountOf[returnKey]));
+
+        assertEq(node, tree.nodes[accountToLookUp]);
     }
 
     function testCannotRemove_ZeroAddress() public {
