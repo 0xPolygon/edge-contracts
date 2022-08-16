@@ -40,6 +40,23 @@ interface IChildValidatorSet {
     // TODO events
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
     event NewValidator(address indexed validator, uint256[4] blsKey);
+    event AddedToWhitelist(address indexed validator);
+    event RemovedFromWhitelist(address indexed validator);
+    event Staked(address indexed validator, uint256 amount);
+    event Unstaked(address indexed validator, uint256 amount);
+    event Delegated(address indexed delegator, address indexed validator, uint256 amount);
+    event Undelegated(address indexed delegator, address indexed validator, uint256 amount);
+    event ValidatorRewardClaimed(address indexed validator, uint256 amount);
+    event DelegatorRewardClaimed(
+        address indexed delegator,
+        address indexed validator,
+        bool indexed restake,
+        uint256 amount
+    );
+    event WithdrawalRegistered(address indexed account, uint256 amount);
+    event Withdrawal(address indexed account, address indexed to, uint256 amount);
+    event ValidatorRewardDistributed(address indexed validator, uint256 amount);
+    event DelegatorRewardDistributed(address indexed validator, uint256 amount);
 
     error StakeRequirement(string src, string msg);
 

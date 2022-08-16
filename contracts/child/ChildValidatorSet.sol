@@ -113,15 +113,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
-    function getCurrentValidatorSet() external view returns (address[] memory) {
-        return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
-    }
-
-    function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
-        uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
-        return epochs[ret + 1];
-    }
-
     function addToWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
         for (uint256 i = 0; i < whitelistAddreses.length; i++) {
             _addToWhitelist(whitelistAddreses[i]);
@@ -149,6 +140,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
         _queue.insert(msg.sender, int256(msg.value), 0);
+        emit Staked(msg.sender, msg.value);
     }
 
     function unstake(uint256 amount) external {
@@ -165,6 +157,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             _removeFromWhitelist(msg.sender);
         }
         _registerWithdrawal(msg.sender, amount);
+        emit Unstaked(msg.sender, amount);
     }
 
     function delegate(address validator, bool restake) external payable {
@@ -176,8 +169,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
         claimDelegatorReward(validator, restake);
 
-        _queue.insert(msg.sender, 0, int256(msg.value));
-        delegation.amount += msg.value;
+        _delegate(msg.sender, validator, msg.value);
     }
 
     function undelegate(address validator, uint256 amount) external {
@@ -198,18 +190,11 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         // prevent overflow
         assert(amountInt > 0);
 
-        _queue.insert(msg.sender, 0, amountInt * -1);
+        _queue.insert(validator, 0, amountInt * -1);
         delegation.amount -= amount;
 
         _registerWithdrawal(msg.sender, amount);
-    }
-
-    function withdraw(address to) external {
-        WithdrawalQueue storage queue = _withdrawals[msg.sender];
-        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
-        queue.head = newHead;
-        (bool success, ) = to.call{value: amount}("");
-        require(success, "WITHDRAWAL_FAILED");
+        emit Undelegated(msg.sender, validator, amount);
     }
 
     function claimValidatorReward() public onlyValidator {
@@ -218,6 +203,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         Stake storage delegation = delegations[msg.sender][msg.sender];
         delegation.epochId = currentEpochId;
         _registerWithdrawal(msg.sender, reward);
+        emit ValidatorRewardClaimed(msg.sender, reward);
     }
 
     function claimDelegatorReward(address validator, bool restake) public {
@@ -229,17 +215,36 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         if (reward == 0) return;
 
         if (restake) {
-            _queue.insert(msg.sender, 0, int256(reward));
-            delegation.amount += reward;
+            _delegate(msg.sender, validator, reward);
         } else {
             _registerWithdrawal(msg.sender, reward);
         }
+
+        emit DelegatorRewardClaimed(msg.sender, validator, restake, reward);
+    }
+
+    function withdraw(address to) external {
+        WithdrawalQueue storage queue = _withdrawals[msg.sender];
+        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
+        queue.head = newHead;
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "WITHDRAWAL_FAILED");
+        emit Withdrawal(msg.sender, to, amount);
     }
 
     function setCommission(uint256 newCommission) external onlyValidator {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
         Validator storage validator = _validators.get(msg.sender);
         validator.commission = newCommission;
+    }
+
+    function getCurrentValidatorSet() external view returns (address[] memory) {
+        return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
+    }
+
+    function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
+        uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
+        return epochs[ret + 1];
     }
 
     function getValidator(address validator) public view returns (Validator memory) {
@@ -336,7 +341,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
                 validatorReward
             );
             validatorRewardShares[uptime.epochId][validator] = validatorShares;
+            emit ValidatorRewardDistributed(validator, validatorReward);
             delegatorRewardShares[uptime.epochId][validator] = delegatorShares;
+            emit DelegatorRewardDistributed(validator, delegatorShares);
         }
     }
 
@@ -362,14 +369,28 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     function _registerWithdrawal(address account, uint256 amount) private {
         _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
+        emit WithdrawalRegistered(account, amount);
+    }
+
+    function _delegate(
+        address delegator,
+        address validator,
+        uint256 amount
+    ) private {
+        assert(int256(amount) > 0);
+        _queue.insert(validator, 0, int256(amount));
+        delegations[delegator][validator].amount += amount;
+        emit Delegated(delegator, validator, amount);
     }
 
     function _addToWhitelist(address account) private {
         whitelist[account] = true;
+        emit AddedToWhitelist(account);
     }
 
     function _removeFromWhitelist(address account) private {
         whitelist[account] = false;
+        emit RemovedFromWhitelist(account);
     }
 
     /// @notice Calculate validator power for a validator in percentage.
