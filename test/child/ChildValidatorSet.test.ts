@@ -4,7 +4,7 @@ import { ethers, upgrades } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
-import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
+// import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet } from "../../typechain";
 import { customError } from "../util";
 
@@ -66,10 +66,10 @@ describe("ChildValidatorSet", () => {
     });
     const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
     const stateSyncSigner = await ethers.getSigner("0x0000000000000000000000000000000000001001");
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
+    // await hre.network.provider.send("hardhat_setCode", [
+    //   "0x0000000000000000000000000000000000002030",
+    //   alwaysTrueBytecode,
+    // ]);
     systemChildValidatorSet = childValidatorSet.connect(systemSigner);
     stateSyncChildValidatorSet = childValidatorSet.connect(stateSyncSigner);
   });
@@ -214,10 +214,10 @@ describe("ChildValidatorSet", () => {
     );
   });
   it("Commit epoch", async () => {
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002030",
-      alwaysTrueBytecode,
-    ]);
+    // await hre.network.provider.send("hardhat_setCode", [
+    //   "0x0000000000000000000000000000000000002030",
+    //   alwaysTrueBytecode,
+    // ]);
     id = 1;
     epoch = {
       startBlock: BigNumber.from(1),
@@ -304,15 +304,14 @@ describe("ChildValidatorSet", () => {
     // expect(set).to.have.lengthOf(newValidatorSet.length); // assert each element is unique
   });
 
-
   describe("whitelist", async () => {
     it("only owner should be able to modify whitelist", async () => {
       await expect(childValidatorSet.connect(accounts[1]).addToWhitelist([accounts[1].address])).to.be.revertedWith(
         customError("Unauthorized", "OWNER")
       );
-      await expect(childValidatorSet.connect(accounts[1]).removeFromWhitelist([accounts[1].address])).to.be.revertedWith(
-        customError("Unauthorized", "OWNER")
-      );
+      await expect(
+        childValidatorSet.connect(accounts[1]).removeFromWhitelist([accounts[1].address])
+      ).to.be.revertedWith(customError("Unauthorized", "OWNER"));
     });
     it("should be able to add to whitelist", async () => {
       await expect(childValidatorSet.addToWhitelist([accounts[1].address, accounts[2].address])).to.not.be.reverted;
@@ -322,6 +321,68 @@ describe("ChildValidatorSet", () => {
     it("should be able to remove from whitelist", async () => {
       await expect(childValidatorSet.removeFromWhitelist([accounts[1].address])).to.not.be.reverted;
       expect(await childValidatorSet.whitelist(accounts[1].address)).to.be.false;
+    });
+  });
+
+  describe("register", async () => {
+    it("only whitelisted should be able to register", async () => {
+      const { pubkey, secret } = mcl.newKeyPair();
+
+      const signatures: mcl.Signature[] = [];
+      const message = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint"],
+          [await childValidatorSet.message(0), await childValidatorSet.message(1)]
+        )
+      );
+
+      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
+      signatures.push(signature);
+
+      const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+      await expect(
+        childValidatorSet.connect(accounts[1]).register(aggMessagePoint, mcl.g2ToHex(pubkey))
+      ).to.be.revertedWith(customError("Unauthorized", "WHITELIST"));
+    });
+    it("invalid signature", async () => {
+      const { pubkey, secret } = mcl.newKeyPair();
+
+      const signatures: mcl.Signature[] = [];
+      const message = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint"],
+          [await childValidatorSet.message(1), await childValidatorSet.message(0)] // For making invalid signature
+        )
+      );
+
+      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
+      signatures.push(signature);
+
+      const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+      await expect(
+        childValidatorSet.connect(accounts[2]).register(aggMessagePoint, mcl.g2ToHex(pubkey))
+      ).to.be.revertedWith("INVALID_SIGNATURE");
+    });
+    it("Register", async () => {
+      const { pubkey, secret } = mcl.newKeyPair();
+
+      const signatures: mcl.Signature[] = [];
+      const message = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint"],
+          [await childValidatorSet.message(0), await childValidatorSet.message(1)]
+        )
+      );
+
+      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
+      signatures.push(signature);
+
+      const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+      await childValidatorSet.connect(accounts[2]).register(aggMessagePoint, mcl.g2ToHex(pubkey));
+      expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.false;
     });
   });
 
@@ -348,12 +409,11 @@ describe("ChildValidatorSet", () => {
       let validator = await childValidatorSet.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(0);
       await expect(
-        systemChildValidatorSet
-          .commitEpoch(
-            3,
-            { startBlock: 129, endBlock: 192, epochRoot: ethers.constants.HashZero },
-            { epochId: 3, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
-          )
+        systemChildValidatorSet.commitEpoch(
+          3,
+          { startBlock: 129, endBlock: 192, epochRoot: ethers.constants.HashZero },
+          { epochId: 3, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+        )
       ).to.not.be.reverted;
       validator = await childValidatorSet.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(minStake);
@@ -417,12 +477,11 @@ describe("ChildValidatorSet", () => {
       let validator = await childValidatorSet.getValidator(accounts[0].address);
       expect(validator.stake).to.equal(minStake * 2);
       await expect(
-        systemChildValidatorSet
-          .commitEpoch(
-            4,
-            { startBlock: 193, endBlock: 256, epochRoot: ethers.constants.HashZero },
-            { epochId: 4, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
-          )
+        systemChildValidatorSet.commitEpoch(
+          4,
+          { startBlock: 193, endBlock: 256, epochRoot: ethers.constants.HashZero },
+          { epochId: 4, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+        )
       ).to.not.be.reverted;
 
       validator = await childValidatorSet.getValidator(accounts[0].address);

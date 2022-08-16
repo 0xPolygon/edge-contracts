@@ -87,7 +87,7 @@ describe("CheckpointManager", () => {
     for (let i = 0; i < validatorSetSize; i++) {
       const validator = await rootValidatorSet.getValidator(i + 1);
       expect(validator._address).to.equal(addresses[i]);
-      expect(validator.blsKey.map(x => hexlify(x))).to.deep.equal(pubkeys[i]);
+      expect(validator.blsKey.map((x) => hexlify(x))).to.deep.equal(pubkeys[i]);
       expect(await rootValidatorSet.validatorIdByAddress(addresses[i])).to.equal(i + 1);
     }
   });
