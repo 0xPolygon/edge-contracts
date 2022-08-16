@@ -16,7 +16,13 @@ contract MockValidatorStorage {
     }
 
     function insert(address account, uint256 amount) external {
-        Validator memory data = Validator({blsKey: blsKey, stake: amount, totalStake: amount, commission: 0});
+        Validator memory data = Validator({
+            blsKey: blsKey,
+            stake: amount,
+            totalStake: amount,
+            commission: 0,
+            active: true
+        });
         validators.insert(account, data);
     }
 

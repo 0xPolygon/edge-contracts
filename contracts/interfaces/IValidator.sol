@@ -10,6 +10,7 @@ struct Validator {
     uint256 stake;
     uint256 totalStake; // self-stake + delegation
     uint256 commission;
+    bool active;
 }
 
 struct Node {
