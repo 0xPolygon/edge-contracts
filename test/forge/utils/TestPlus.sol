@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import {QueuedValidator} from "contracts/libs/ValidatorQueue.sol";
 import "contracts/interfaces/IValidator.sol";
 
 abstract contract TestPlus is Test {
@@ -35,6 +36,20 @@ abstract contract TestPlus is Test {
     function assertEq(Node memory a, Node memory b) internal virtual {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [Node]");
+            fail();
+        }
+    }
+
+    function assertEq(QueuedValidator memory a, QueuedValidator memory b) internal virtual {
+        if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
+            emit log("Error: a == b not satisfied [QueuedValidator]");
+            fail();
+        }
+    }
+
+    function assertEq(QueuedValidator[] memory a, QueuedValidator[] memory b) internal virtual {
+        if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
+            emit log("Error: a == b not satisfied [QueuedValidator[]]");
             fail();
         }
     }
