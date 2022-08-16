@@ -92,6 +92,10 @@ abstract contract NonEmptyState is EmptyState {
     mapping(address => uint128) amountOf;
     address firstAccount;
     address lastAccount;
+
+    function setUp() public virtual override {
+        super.setUp();
+    }
 }
 
 contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
@@ -118,9 +122,9 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
         _populateTree(amounts);
 
         for (uint256 i; i < accounts.length; ++i) {
-            account = accounts[i];
+            address _account = accounts[i];
 
-            assertEq(tree.stakeOf(account), amountOf[account]);
+            assertEq(tree.stakeOf(_account), amountOf[_account]);
         }
     }
 
@@ -144,18 +148,18 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
     function testNext(uint128[] memory amounts) public {
         _populateTree(amounts);
         address prevAccount;
-        account = firstAccount;
+        address _account = firstAccount;
 
-        while (tree.next(account) != address(0)) {
-            prevAccount = account;
-            account = tree.next(account);
+        while (tree.next(_account) != address(0)) {
+            prevAccount = _account;
+            _account = tree.next(_account);
 
-            // assert address by first checking stake, then order
-            assertEq(tree.stakeOf(account), amountOf[account], "Stake");
-            assertGe(amountOf[account], amountOf[prevAccount], "Stake order");
+            // stake and order
+            assertEq(tree.stakeOf(_account), amountOf[_account], "Stake");
+            assertGe(amountOf[_account], amountOf[prevAccount], "Stake order");
         }
-        // last address
-        assertEq(account, lastAccount, "Last address");
+        // end address
+        assertEq(_account, lastAccount, "End address");
     }
 
     function testCannotPrev_ZeroAddress() public {
@@ -172,22 +176,22 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
             nextAccount = account;
             account = tree.prev(account);
 
-            // assert address by first checking stake, then order
-            assertEq(tree.stakeOf(account), amountOf[account]);
-            assertLe(amountOf[account], amountOf[nextAccount]);
+            // stake and order
+            assertEq(tree.stakeOf(account), amountOf[account], "Stake");
+            assertLe(amountOf[account], amountOf[nextAccount], "Stake order");
         }
-        // last address
-        assertEq(account, firstAccount);
+        // end address
+        assertEq(account, firstAccount, "End address");
     }
 
     function testExists(uint128[] memory amounts) public {
         _populateTree(amounts);
 
         for (uint256 i; i < accounts.length; ++i) {
-            account = accounts[i];
+            address _account = accounts[i];
 
-            if (amountOf[account] > 0) assertTrue(tree.exists(account), "Accounts with stake");
-            else assertFalse(tree.exists(account), "Accounts with no stake");
+            if (amountOf[_account] > 0) assertTrue(tree.exists(_account), "Accounts with stake");
+            else assertFalse(tree.exists(_account), "Accounts with no stake");
         }
     }
 
@@ -216,40 +220,32 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
         tree.remove(account);
     }
 
-    // TODO Remove only one validator to speed up test
-    function testRemove(uint128[] memory amounts) public {
+    function testRemove(uint128[] memory amounts, uint256 i) public {
         _populateTree(amounts);
-        uint256 stakesCount = tree.count;
-        uint256 totalStake = tree.totalStake;
+        address accountToRemove = accounts[i % accounts.length];
+        vm.assume(amountOf[accountToRemove] > 0);
+        // expected values
+        uint256 stakesCount = tree.count - 1;
+        uint256 totalStake = tree.totalStake - amountOf[accountToRemove];
 
-        for (uint256 i; i < accounts.length; ++i) {
-            address _account = accounts[i];
-            if (amountOf[_account] != 0) {
-                // modify expected values
-                --stakesCount;
-                totalStake -= amountOf[_account];
+        // remove from tree
+        tree.remove(accountToRemove);
 
-                // remove from tree
-                tree.remove(_account);
+        address __account = tree.first();
+        address prevAccount;
+        // tree balance
+        if (stakesCount > 0) {
+            while (tree.next(__account) != address(0)) {
+                prevAccount = __account;
+                __account = tree.next(__account);
+
+                assertGe(amountOf[__account], amountOf[prevAccount], "Tree balance");
             }
-
-            address __account = tree.first();
-            address prevAccount;
-
-            // tree balance
-            if (stakesCount > 0) {
-                while (tree.next(__account) != address(0)) {
-                    prevAccount = __account;
-                    __account = tree.next(__account);
-
-                    assertGe(amountOf[__account], amountOf[prevAccount], "Tree balance");
-                }
-            }
-            // validator count
-            assertEq(tree.count, stakesCount, "Validator count");
-            // total stake
-            assertEq(tree.totalStake, totalStake, "Total stake");
         }
+        // validator count
+        assertEq(tree.count, stakesCount, "Validator count");
+        // total stake
+        assertEq(tree.totalStake, totalStake, "Total stake");
     }
 
     /// @notice Populate tree with unique accounts
@@ -258,13 +254,12 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
         uint256 stakesCount;
         for (uint256 i; i < amounts.length; ) {
             address _account = vm.addr(i + 1);
-            console.log(_account);
             uint128 amount = amounts[i];
             Validator memory _validator = _createValidator(amount);
             accounts.push(_account);
             amountOf[_account] = amount;
-            if (amount > 0) ++stakesCount;
-            if (amount != 0) {
+            if (amount > 0) {
+                ++stakesCount;
                 // initialize saved data
                 if (stakesCount == 1) {
                     firstAccount = _account;
