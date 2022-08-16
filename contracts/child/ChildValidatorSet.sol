@@ -125,7 +125,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         }
     }
 
-    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external onlyValidator {
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
+        if (!whitelist[msg.sender]) revert Unauthorized("WHITELIST");
+
         (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message);
         require(callSuccess && result, "INVALID_SIGNATURE");
 
