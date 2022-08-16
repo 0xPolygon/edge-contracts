@@ -45,7 +45,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     mapping(uint256 => mapping(address => uint256)) public validatorRewardShares; // epoch -> validator address -> amount
     mapping(uint256 => mapping(address => uint256)) public delegatorRewardShares; // epoch -> validator address -> reward per share
     mapping(address => mapping(address => Stake)) public delegations; // user address -> validator address -> Delegation
-    mapping(address => Stake) public selfStakes; // validator address -> Delegation
     mapping(address => bool) public whitelist;
 
     modifier onlyValidator() {
@@ -139,9 +138,11 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewValidator(msg.sender, pubkey);
     }
 
+    // TODO: claim validator rewards before stake or unstake action
     function stake() external payable onlyValidator {
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
+        delegations[msg.sender][msg.sender].amount = currentStake + msg.value;
         _queue.insert(msg.sender, int256(msg.value), 0);
         emit Staked(msg.sender, msg.value);
     }
@@ -153,9 +154,12 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         // prevent overflow
         assert(amountInt > 0);
         if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
+
         int256 amountAfterUnstake = totalValidatorStake - amountInt;
         if (amountAfterUnstake < int256(minStake) && amountAfterUnstake != 0)
             revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
+
+        delegations[msg.sender][msg.sender].amount -= amount;
         _queue.insert(msg.sender, amountInt * -1, 0);
         if (amountAfterUnstake == 0) {
             _validators.get(msg.sender).active = false;
@@ -170,8 +174,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         Stake storage delegation = delegations[msg.sender][validator];
         if (delegation.amount + msg.value < minDelegation)
             revert StakeRequirement({src: "delegate", msg: "DELEGATION_TOO_LOW"});
-        _delegate(msg.sender, validator, msg.value);
         claimDelegatorReward(validator, restake);
+        _delegate(msg.sender, validator, msg.value);
     }
 
     function undelegate(address validator, uint256 amount) external {
@@ -297,7 +301,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function calculateValidatorReward(address validator) public view returns (uint256) {
-        Stake memory delegation = selfStakes[validator];
+        Stake storage delegation = delegations[msg.sender][msg.sender];
 
         uint256 startIndex = delegation.epochId;
         uint256 endIndex = currentEpochId - 1;
