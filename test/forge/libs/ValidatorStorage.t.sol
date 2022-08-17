@@ -86,6 +86,8 @@ contract ValidatorStorageTest_EmptyState is EmptyState {
 }
 
 abstract contract NonEmptyState is EmptyState {
+    using ValidatorStorageLib for ValidatorTree;
+
     // saved data for assertion
     address[] accounts;
     mapping(address => uint128) amountOf;
@@ -94,6 +96,36 @@ abstract contract NonEmptyState is EmptyState {
 
     function setUp() public virtual override {
         super.setUp();
+    }
+
+    /// @notice Populate tree with unique accounts
+    /// @dev Use in fuzz tests
+    function _populateTree(uint128[] memory amounts) internal {
+        uint256 stakesCount;
+        for (uint256 i; i < amounts.length; ) {
+            address _account = vm.addr(i + 1);
+            uint128 amount = amounts[i];
+            Validator memory _validator = _createValidator(amount);
+            accounts.push(_account);
+            amountOf[_account] = amount;
+            if (amount > 0) {
+                ++stakesCount;
+                // initialize saved data
+                if (stakesCount == 1) {
+                    firstAccount = _account;
+                    lastAccount = _account;
+                }
+                // update saved data
+                if (amount < amountOf[firstAccount]) firstAccount = _account;
+                if (amount >= amountOf[lastAccount]) lastAccount = _account;
+            }
+            tree.insert(_account, _validator);
+
+            unchecked {
+                ++i;
+            }
+        }
+        vm.assume(stakesCount > 0);
     }
 }
 
@@ -268,36 +300,6 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
         assertEq(tree.count, 0, "Validator count");
         // total stake
         assertEq(tree.totalStake, 0, "Total stake");
-    }
-
-    /// @notice Populate tree with unique accounts
-    /// @dev Use in fuzz tests
-    function _populateTree(uint128[] memory amounts) internal {
-        uint256 stakesCount;
-        for (uint256 i; i < amounts.length; ) {
-            address _account = vm.addr(i + 1);
-            uint128 amount = amounts[i];
-            Validator memory _validator = _createValidator(amount);
-            accounts.push(_account);
-            amountOf[_account] = amount;
-            if (amount > 0) {
-                ++stakesCount;
-                // initialize saved data
-                if (stakesCount == 1) {
-                    firstAccount = _account;
-                    lastAccount = _account;
-                }
-                // update saved data
-                if (amount < amountOf[firstAccount]) firstAccount = _account;
-                if (amount >= amountOf[lastAccount]) lastAccount = _account;
-            }
-            tree.insert(_account, _validator);
-
-            unchecked {
-                ++i;
-            }
-        }
-        vm.assume(stakesCount > 0);
     }
 }
 

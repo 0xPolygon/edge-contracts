@@ -5,89 +5,127 @@ import {Withdrawal, WithdrawalQueue, WithdrawalQueueLib} from "contracts/libs/Wi
 
 import "../utils/TestPlus.sol";
 
-// TODO: improve
-contract WithdrawalQueueTest is TestPlus {
+abstract contract EmptyState is TestPlus {
+    uint256 constant AMOUNT = 2 ether;
+    uint256 EPOCH = 1;
+
+    WithdrawalQueue queue;
+}
+
+contract WithdrawalQueueTest_EmptyState is EmptyState {
     using WithdrawalQueueLib for WithdrawalQueue;
 
-    WithdrawalQueue withdrawalQueue;
-
-    function setUp() public {}
-
-    function testCannotAppend_AmountZero() public {
+    function testCannotAppend_ZeroAmount() public {
         vm.expectRevert(stdError.assertionError);
-        withdrawalQueue.append(0, 0);
+        queue.append(0, 0);
     }
 
-    function testAppend_EmptyQueue() public {
-        uint256 amount = 1 ether;
-        uint256 epoch = 1;
+    function testAppend() public {
+        queue.append(AMOUNT, EPOCH);
 
-        withdrawalQueue.append(amount, epoch);
-        Withdrawal memory withdrawal = withdrawalQueue.withdrawals[0];
-
-        assertEq(withdrawalQueue.head, 0);
-        assertEq(withdrawalQueue.tail, 1);
-        assertEq(withdrawal.amount, amount);
-        assertEq(withdrawal.epoch, epoch);
+        assertEq(queue.head, 0);
+        assertEq(queue.tail, 1);
+        assertEq(queue.withdrawals[0], Withdrawal(AMOUNT, EPOCH));
     }
+}
 
-    function testCannotAppend_EndedEpoch() public {
-        uint256 amount = 1 ether;
-        uint256 epoch = 1;
-        withdrawalQueue.append(amount, epoch);
+abstract contract SingleState is EmptyState {
+    using WithdrawalQueueLib for WithdrawalQueue;
 
+    function setUp() public virtual {
+        queue.append(AMOUNT, EPOCH);
+    }
+}
+
+contract WithdrawalQueueTest_SingleState is SingleState {
+    using WithdrawalQueueLib for WithdrawalQueue;
+
+    function testCannotAppend_OldEpoch() public {
         vm.expectRevert(stdError.assertionError);
-        withdrawalQueue.append(amount, epoch - 1);
+        queue.append(AMOUNT, EPOCH - 1);
     }
 
-    /*function testAppend_NewWithdrawal() public {
-        uint256 amount = 1 ether;
-        uint256 epoch = 1;
-        uint256 laterEpoch = epoch + 1;
-        withdrawalQueue.append(amount, epoch);
+    function testAppend_SameEpoch() public {
+        queue.append(AMOUNT, EPOCH);
 
-        withdrawalQueue.append(amount, laterEpoch);
-        Withdrawal memory withdrawal = withdrawalQueue.withdrawals[1];
-
-        assertEq(withdrawalQueue.head, 0);
-        assertEq(withdrawalQueue.tail, 2);
-        assertEq(withdrawal.amount, amount);
-        assertEq(withdrawal.epoch, laterEpoch);
+        assertEq(queue.head, 0);
+        assertEq(queue.tail, 1);
+        assertEq(queue.withdrawals[0], Withdrawal(AMOUNT * 2, EPOCH));
     }
 
-    function testAppend_ExistingWithdrawal() public {
-        uint256 amount = 1 ether;
-        uint256 epoch = 1;
-        withdrawalQueue.append(amount, epoch);
+    function testAppend_NextEpoch() public {
+        queue.append(AMOUNT / 2, EPOCH + 1);
 
-        // this is for same epoch
-        withdrawalQueue.append(amount, epoch);
-        Withdrawal memory withdrawal = withdrawalQueue.withdrawals[0];
+        assertEq(queue.head, 0);
+        assertEq(queue.tail, 2);
+        assertEq(queue.withdrawals[1], Withdrawal(AMOUNT / 2, EPOCH + 1));
+    }
+}
 
-        assertEq(withdrawalQueue.head, 0);
-        assertEq(withdrawalQueue.tail, 1);
-        assertEq(withdrawal.amount, amount * 2);
-        assertEq(withdrawal.epoch, epoch);
+abstract contract MultipleState is SingleState {
+    using WithdrawalQueueLib for WithdrawalQueue;
+
+    function setUp() public virtual override {
+        // start with empty queue
     }
 
-    function testLength() public {
-        uint256 amount = 1 ether;
-        uint256 epoch = 1;
-        withdrawalQueue.append(amount, epoch);
+    /// @notice Fill queue and randomize head
+    /// @dev Use in fuzz tests
+    function _fillQueue(uint128[] memory amounts) internal {
+        for (uint256 i; i < amounts.length; ) {
+            uint256 amount = amounts[i];
+            if (amount > 0) queue.append(amount, i);
 
-        assertEq(withdrawalQueue.length(), 1);
+            unchecked {
+                ++i;
+            }
+        }
+        vm.assume(queue.tail > 0);
+        queue.head = type(uint256).max % queue.tail;
+    }
+}
+
+contract WithdrawalQueue_MultipleState is MultipleState {
+    using WithdrawalQueueLib for WithdrawalQueue;
+
+    function testLength(uint128[] memory amounts) public {
+        _fillQueue(amounts);
+
+        assertEq(queue.length(), queue.tail - queue.head);
     }
 
-    function testWithdrawable() public {
-        uint256 amount = 1 ether;
-        uint256 epoch = 0;
-        withdrawalQueue.append(amount, epoch);
-        withdrawalQueue.append(amount, epoch + 1);
+    function testWithdrawable(uint128[] memory amounts, uint256 currentEpoch) public {
+        _fillQueue(amounts);
+        uint256 expectedAmount;
+        uint256 expectedNewHead;
+        currentEpoch = bound(currentEpoch, queue.head, queue.tail - 1);
+        // calculate amount and newHead
+        expectedNewHead = queue.head;
+        Withdrawal memory withdrawal = queue.withdrawals[expectedNewHead];
+        while (expectedNewHead < queue.tail && withdrawal.epoch <= currentEpoch) {
+            expectedAmount += withdrawal.amount;
+            ++expectedNewHead;
 
-        assertEq(withdrawalQueue.withdrawable(epoch + 1), amount * 2);
+            withdrawal = queue.withdrawals[expectedNewHead];
+        }
+
+        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpoch);
+        assertEq(amount, expectedAmount, "Amount");
+        assertEq(newHead, expectedNewHead, "New head");
     }
 
-    function testPending() public {
-        
-    }*/
+    function testPending(uint128[] memory amounts, uint256 currentEpoch) public {
+        _fillQueue(amounts);
+        uint256 expectedAmount;
+        currentEpoch = bound(currentEpoch, queue.head, queue.tail - 1);
+        // calculate amount
+        uint256 headCursor = queue.head;
+        Withdrawal memory withdrawal = queue.withdrawals[headCursor];
+        while (headCursor < queue.tail) {
+            if (withdrawal.epoch > currentEpoch) expectedAmount += withdrawal.amount;
+            withdrawal = queue.withdrawals[++headCursor];
+        }
+
+        assertEq(queue.pending(currentEpoch), expectedAmount);
+    }
 }
