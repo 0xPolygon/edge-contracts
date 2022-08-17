@@ -469,12 +469,19 @@ describe("ChildValidatorSet", () => {
         systemChildValidatorSet.commitEpoch(
           4,
           { startBlock: 193, endBlock: 256, epochRoot: ethers.constants.HashZero },
-          { epochId: 4, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+          {
+            epochId: 4,
+            uptimeData: [
+              { validator: accounts[0].address, uptime: 1 },
+              { validator: accounts[2].address, uptime: 1 },
+            ],
+            totalUptime: 2,
+          }
         )
       ).to.not.be.reverted;
 
-      // validator = await childValidatorSet.getValidator(accounts[2].address);
-      // expect(validator.stake).to.equal(0);
+      validator = await childValidatorSet.getValidator(accounts[2].address);
+      expect(validator.stake).to.equal(0);
     });
   });
 
