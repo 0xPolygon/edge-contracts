@@ -138,6 +138,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         );
         _removeFromWhitelist(msg.sender);
 
+        delegations[msg.sender][msg.sender].epochId = currentEpochId;
+
         emit NewValidator(msg.sender, pubkey);
     }
 
