@@ -398,6 +398,12 @@ describe("ChildValidatorSet", () => {
         ethers.utils.hexValue(elem.toHexString())
       );
       expect(parsedValidatorBlsKey).to.deep.equal(strippedParsedPubkey);
+
+      const delegation = await childValidatorSet.delegations(
+        accounts[2].address,
+        accounts[2].address,
+      );
+      expect(delegation.epochId).to.equal(await childValidatorSet.currentEpochId());
     });
   });
 
@@ -459,7 +465,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to partially unstake", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      // await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      await childValidatorSet.connect(accounts[2]).unstake(minStake);
     });
 
     it("should take pending unstakes into account", async () => {
@@ -496,143 +503,116 @@ describe("ChildValidatorSet", () => {
     });
   });
 
-  // it("Delegate less amount than minDelegation", async () => {
-  //   const id = await childValidatorSet.validatorIdByAddress(
-  //     accounts[0].address
-  //   );
+  describe("delegate", async () => {
+    it("only validators can delegate", async () => {
+      const restake = false;
+  
+      await expect(
+        childValidatorSet.delegate(accounts[1].address, restake, { value: 100 })
+      ).to.be.revertedWith(customError("Unauthorized", "INVALID_VALIDATOR"));
+    });
 
-  //   const idToDelegate = id.add(1);
-  //   const restake = false;
+    it("Delegate less amount than minDelegation", async () => {
+      const restake = false;
+  
+      await expect(
+        childValidatorSet.delegate(accounts[0].address, restake, { value: 100 })
+      ).to.be.revertedWith("DELEGATION_TOO_LOW");
+    });
+    
+    it("Delegate for the first time", async () => {  
+      const delegateAmount = minDelegation + 1;
+      const restake = false;
 
-  //   await expect(
-  //     stakeManager.delegate(idToDelegate, restake, { value: 100 })
-  //   ).to.be.revertedWith("DELEGATION_TOO_LOW");
-  // });
+      const tx = await childValidatorSet.delegate(accounts[2].address, restake, {
+        value: delegateAmount,
+      });
+  
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "Delegated");
+      expect(event?.args?.delegator).to.equal(accounts[0].address);
+      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.amount).to.equal(delegateAmount);
 
-  // it("Delegate to invalid id", async () => {
-  //   const idToDelegate = await childValidatorSet.currentValidatorId();
-  //   const restake = false;
-
-  //   await expect(
-  //     stakeManager.delegate(idToDelegate, restake, { value: minDelegation + 1 })
-  //   ).to.be.revertedWith("INVALID_VALIDATOR_ID");
-  // });
-
-  // it("Delegate for the first time", async () => {
-  //   const id = await childValidatorSet.validatorIdByAddress(
-  //     accounts[0].address
-  //   );
-
-  //   const delegateAmount = minDelegation + 1;
-  //   const idToDelegate = id.add(1);
-  //   const restake = false;
-
-  //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
-  //     .totalStake;
-
-  //   await stakeManager.delegate(idToDelegate, restake, {
-  //     value: delegateAmount,
-  //   });
-
-  //   const delegation = await stakeManager.delegations(
-  //     accounts[0].address,
-  //     idToDelegate
-  //   );
-  //   const currentEpochId = await childValidatorSet.currentEpochId();
-  //   expect(delegation.epochId).to.equal(currentEpochId);
-  //   expect(delegation.amount).to.equal(delegateAmount);
-
-  //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
-  //     .totalStake;
-  //   expect(afterDelegate.sub(beforeDelegate)).to.equal(delegateAmount);
-  // });
-
-  // it("Delegate again without restake", async () => {
-  //   const id = await childValidatorSet.validatorIdByAddress(
-  //     accounts[0].address
-  //   );
-
-  //   const delegateAmount = minDelegation + 1;
-  //   const idToDelegate = id.add(1);
-  //   const restake = false;
-
-  //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
-  //     .totalStake;
-  //   const balanceBeforeReDelegate = await ethers.provider.getBalance(
-  //     accounts[0].address
-  //   );
-
-  //   const txResp = await stakeManager.delegate(idToDelegate, restake, {
-  //     value: delegateAmount,
-  //   });
-  //   const txReceipt = await txResp.wait();
-  //   const delegateGas = ethers.BigNumber.from(
-  //     txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
-  //   ).add(10001);
-
-  //   const delegation = await stakeManager.delegations(
-  //     accounts[0].address,
-  //     idToDelegate
-  //   );
-  //   const currentEpochId = await childValidatorSet.currentEpochId();
-  //   expect(delegation.epochId).to.equal(currentEpochId);
-  //   expect(delegation.amount).to.equal(delegateAmount * 2);
-
-  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
-  //     idToDelegate,
-  //     accounts[0].address
-  //   );
-
-  //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
-  //     .totalStake;
-  //   const balanceAfterReDelegate = await ethers.provider.getBalance(
-  //     accounts[0].address
-  //   );
-
-  //   expect(afterDelegate.sub(beforeDelegate)).to.equal(
-  //     delegatorReward.add(delegateAmount)
-  //   );
-  //   expect(
-  //     balanceBeforeReDelegate.sub(delegateGas).add(delegatorReward)
-  //   ).to.equal(balanceAfterReDelegate);
-  // });
-
-  // it("Delegate again with restake", async () => {
-  //   const id = await childValidatorSet.validatorIdByAddress(
-  //     accounts[0].address
-  //   );
-
-  //   const delegateAmount = minDelegation + 1;
-  //   const idToDelegate = id.add(1);
-  //   const restake = false;
-
-  //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
-  //     .totalStake;
-
-  //   await stakeManager.delegate(idToDelegate, restake, {
-  //     value: delegateAmount,
-  //   });
-
-  //   const delegation = await stakeManager.delegations(
-  //     accounts[0].address,
-  //     idToDelegate
-  //   );
-
-  //   const currentEpochId = await childValidatorSet.currentEpochId();
-  //   expect(delegation.epochId).to.equal(currentEpochId);
-
-  //   const delegatorReward = await stakeManager.calculateDelegatorReward(
-  //     idToDelegate,
-  //     accounts[0].address
-  //   );
-  //   expect(delegation.amount).to.equal(delegatorReward.add(delegateAmount * 3));
-
-  //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
-  //     .totalStake;
-  //   expect(afterDelegate.sub(beforeDelegate)).to.equal(
-  //     delegatorReward.add(delegateAmount)
-  //   );
-  // });
+      const delegation = await childValidatorSet.delegations(
+        accounts[0].address,
+        accounts[2].address,
+      );
+      expect(delegation.amount).to.equal(delegateAmount);
+    });
+  
+    it("Delegate again without restake", async () => { 
+      const delegateAmount = minDelegation + 1;
+      const restake = false;
+   
+      const txResp = await childValidatorSet.delegate(accounts[2].address, restake, {
+        value: delegateAmount,
+      });
+ 
+      // const delegation = await childValidatorSet.delegations(
+      //   accounts[0].address,
+      //   accounts[2].address
+      // );
+      // const currentEpochId = await childValidatorSet.currentEpochId();
+      // expect(delegation.epochId).to.equal(currentEpochId);
+      // expect(delegation.amount).to.equal(delegateAmount * 2);
+  
+      // const delegatorReward = await stakeManager.calculateDelegatorReward(
+      //   idToDelegate,
+      //   accounts[0].address
+      // );
+  
+      // const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+      //   .totalStake;
+      // const balanceAfterReDelegate = await ethers.provider.getBalance(
+      //   accounts[0].address
+      // );
+  
+      // expect(afterDelegate.sub(beforeDelegate)).to.equal(
+      //   delegatorReward.add(delegateAmount)
+      // );
+      // expect(
+      //   balanceBeforeReDelegate.sub(delegateGas).add(delegatorReward)
+      // ).to.equal(balanceAfterReDelegate);
+    });
+  
+    // it("Delegate again with restake", async () => {
+    //   const id = await childValidatorSet.validatorIdByAddress(
+    //     accounts[0].address
+    //   );
+  
+    //   const delegateAmount = minDelegation + 1;
+    //   const idToDelegate = id.add(1);
+    //   const restake = false;
+  
+    //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
+    //     .totalStake;
+  
+    //   await stakeManager.delegate(idToDelegate, restake, {
+    //     value: delegateAmount,
+    //   });
+  
+    //   const delegation = await stakeManager.delegations(
+    //     accounts[0].address,
+    //     idToDelegate
+    //   );
+  
+    //   const currentEpochId = await childValidatorSet.currentEpochId();
+    //   expect(delegation.epochId).to.equal(currentEpochId);
+  
+    //   const delegatorReward = await stakeManager.calculateDelegatorReward(
+    //     idToDelegate,
+    //     accounts[0].address
+    //   );
+    //   expect(delegation.amount).to.equal(delegatorReward.add(delegateAmount * 3));
+  
+    //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
+    //     .totalStake;
+    //   expect(afterDelegate.sub(beforeDelegate)).to.equal(
+    //     delegatorReward.add(delegateAmount)
+    //   );
+    // });
+  });  
 
   // it("Claim delegatorReward", async () => {
   //   const id = await childValidatorSet.validatorIdByAddress(
