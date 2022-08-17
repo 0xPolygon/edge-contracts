@@ -98,10 +98,7 @@ describe("ChildValidatorSet", () => {
     }
 
     const messagePoint = mcl.g1ToHex(
-      mcl.hashToPoint(
-        ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")),
-        DOMAIN
-      )
+      mcl.hashToPoint(ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")), DOMAIN)
     );
 
     await systemChildValidatorSet.initialize(
@@ -333,10 +330,7 @@ describe("ChildValidatorSet", () => {
 
   describe("register", async () => {
     it("only whitelisted should be able to register", async () => {
-
-      const message = ethers.utils.hexlify(
-        ethers.utils.toUtf8Bytes("polygon-v3-validator")
-      );
+      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
       const { pubkey, secret } = mcl.newKeyPair();
 
       const signatures: mcl.Signature[] = [];
@@ -352,11 +346,8 @@ describe("ChildValidatorSet", () => {
     });
     it("invalid signature", async () => {
       const { pubkey, secret } = mcl.newKeyPair();
-      const message = ethers.utils.hexlify(
-        ethers.utils.toUtf8Bytes("")
-      );
+      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(""));
       const signatures: mcl.Signature[] = [];
-      
 
       const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
       signatures.push(signature);
@@ -368,25 +359,16 @@ describe("ChildValidatorSet", () => {
       ).to.be.revertedWith("INVALID_SIGNATURE");
     });
     it("Register", async () => {
-      const message = ethers.utils.hexlify(
-        ethers.utils.toUtf8Bytes("polygon-v3-validator")
-      );
+      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
       const { pubkey, secret } = mcl.newKeyPair();
       const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
       const parsedPubkey = mcl.g2ToHex(pubkey);
-      const tx = await childValidatorSet.connect(accounts[2]).register(
-        mcl.g1ToHex(signature),
-        parsedPubkey
-      );
+      const tx = await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), parsedPubkey);
       const receipt = await tx.wait();
       const event = receipt.events?.find((log) => log.event === "NewValidator");
       expect(event?.args?.validator).to.equal(accounts[2].address);
-      const parsedEventBlsKey = event?.args?.blsKey.map((elem: BigNumber) =>
-        ethers.utils.hexValue(elem.toHexString())
-      );
-      const strippedParsedPubkey = parsedPubkey.map((elem) =>
-        ethers.utils.hexValue(elem)
-      );
+      const parsedEventBlsKey = event?.args?.blsKey.map((elem: BigNumber) => ethers.utils.hexValue(elem.toHexString()));
+      const strippedParsedPubkey = parsedPubkey.map((elem) => ethers.utils.hexValue(elem));
       expect(parsedEventBlsKey).to.deep.equal(strippedParsedPubkey);
       expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.false;
       const validator = await childValidatorSet.getValidator(accounts[2].address);

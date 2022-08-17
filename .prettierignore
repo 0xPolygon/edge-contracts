@@ -4,3 +4,6 @@ cache
 coverage*
 gasReporterOutput.json
 typechain
+typechain-types
+.husky
+.prettierignore
