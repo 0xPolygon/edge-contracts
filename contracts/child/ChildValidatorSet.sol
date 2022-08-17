@@ -215,6 +215,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         if (delegations[msg.sender][msg.sender].epochId == currentEpochId) return;
         uint256 reward = calculateValidatorReward(msg.sender);
         delegations[msg.sender][msg.sender].epochId = currentEpochId;
+        if (reward == 0) return;
         rewardModifiers[msg.sender] = 0;
         _registerWithdrawal(msg.sender, reward);
         emit ValidatorRewardClaimed(msg.sender, reward);
