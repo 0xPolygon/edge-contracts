@@ -97,6 +97,13 @@ describe("ChildValidatorSet", () => {
       epochValidatorSet.push(accounts[i].address);
     }
 
+    const messagePoint = mcl.g1ToHex(
+      mcl.hashToPoint(
+        ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")),
+        DOMAIN
+      )
+    );
+
     await systemChildValidatorSet.initialize(
       epochReward,
       minStake,
@@ -105,7 +112,7 @@ describe("ChildValidatorSet", () => {
       [[0, 0, 0, 0]],
       [minStake * 2],
       bls.address,
-      [0, 0],
+      messagePoint,
       governance
     );
 
@@ -125,8 +132,8 @@ describe("ChildValidatorSet", () => {
     expect(validator.totalStake).to.equal(minStake * 2);
     expect(validator.commission).to.equal(0);
     expect(await childValidatorSet.bls()).to.equal(bls.address);
-    expect(await childValidatorSet.message(0)).to.equal(0);
-    expect(await childValidatorSet.message(1)).to.equal(0);
+    expect(await childValidatorSet.message(0)).to.equal(messagePoint[0]);
+    expect(await childValidatorSet.message(1)).to.equal(messagePoint[1]);
   });
   it("Attempt reinitialization", async () => {
     await expect(
@@ -326,15 +333,13 @@ describe("ChildValidatorSet", () => {
 
   describe("register", async () => {
     it("only whitelisted should be able to register", async () => {
+
+      const message = ethers.utils.hexlify(
+        ethers.utils.toUtf8Bytes("polygon-v3-validator")
+      );
       const { pubkey, secret } = mcl.newKeyPair();
 
       const signatures: mcl.Signature[] = [];
-      const message = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint"],
-          [await childValidatorSet.message(0), await childValidatorSet.message(1)]
-        )
-      );
 
       const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
       signatures.push(signature);
@@ -347,14 +352,11 @@ describe("ChildValidatorSet", () => {
     });
     it("invalid signature", async () => {
       const { pubkey, secret } = mcl.newKeyPair();
-
-      const signatures: mcl.Signature[] = [];
-      const message = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint"],
-          [await childValidatorSet.message(1), await childValidatorSet.message(0)] // For making invalid signature
-        )
+      const message = ethers.utils.hexlify(
+        ethers.utils.toUtf8Bytes("")
       );
+      const signatures: mcl.Signature[] = [];
+      
 
       const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
       signatures.push(signature);
@@ -366,23 +368,36 @@ describe("ChildValidatorSet", () => {
       ).to.be.revertedWith("INVALID_SIGNATURE");
     });
     it("Register", async () => {
-      const { pubkey, secret } = mcl.newKeyPair();
-
-      const signatures: mcl.Signature[] = [];
-      const message = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint"],
-          [await childValidatorSet.message(0), await childValidatorSet.message(1)]
-        )
+      const message = ethers.utils.hexlify(
+        ethers.utils.toUtf8Bytes("polygon-v3-validator")
       );
-
-      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
-      signatures.push(signature);
-
-      const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
-
-      await childValidatorSet.connect(accounts[2]).register(aggMessagePoint, mcl.g2ToHex(pubkey));
+      const { pubkey, secret } = mcl.newKeyPair();
+      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+      const parsedPubkey = mcl.g2ToHex(pubkey);
+      const tx = await childValidatorSet.connect(accounts[2]).register(
+        mcl.g1ToHex(signature),
+        parsedPubkey
+      );
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "NewValidator");
+      expect(event?.args?.validator).to.equal(accounts[2].address);
+      const parsedEventBlsKey = event?.args?.blsKey.map((elem: BigNumber) =>
+        ethers.utils.hexValue(elem.toHexString())
+      );
+      const strippedParsedPubkey = parsedPubkey.map((elem) =>
+        ethers.utils.hexValue(elem)
+      );
+      expect(parsedEventBlsKey).to.deep.equal(strippedParsedPubkey);
       expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.false;
+      const validator = await childValidatorSet.getValidator(accounts[2].address);
+      expect(validator.stake).to.equal(0);
+      expect(validator.totalStake).to.equal(0);
+      expect(validator.commission).to.equal(0);
+      expect(validator.active).to.equal(true);
+      const parsedValidatorBlsKey = validator.blsKey.map((elem: BigNumber) =>
+        ethers.utils.hexValue(elem.toHexString())
+      );
+      expect(parsedValidatorBlsKey).to.deep.equal(strippedParsedPubkey);
     });
   });
 
@@ -400,7 +415,7 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to stake", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake })).to.not.be.reverted;
+      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
     });
   });
 
@@ -416,7 +431,7 @@ describe("ChildValidatorSet", () => {
         )
       ).to.not.be.reverted;
       validator = await childValidatorSet.getValidator(accounts[2].address);
-      expect(validator.stake).to.equal(minStake);
+      expect(validator.stake).to.equal(minStake * 2);
     });
   });
 
@@ -444,37 +459,29 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to partially unstake", async () => {
-      await expect(childValidatorSet.unstake(minStake)).to.not.be.reverted;
-    });
-
-    it("should not remove from whitelist after partial unstake", async () => {
-      expect(await childValidatorSet.whitelist(accounts[0].address)).to.be.true;
+      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
     });
 
     it("should take pending unstakes into account", async () => {
-      await expect(childValidatorSet.unstake(minStake + 1)).to.be.revertedWith(
+      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake + 1)).to.be.revertedWith(
         customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
       );
-      await expect(childValidatorSet.unstake(1)).to.be.revertedWith(
+      await expect(childValidatorSet.connect(accounts[2]).unstake(1)).to.be.revertedWith(
         customError("StakeRequirement", "unstake", "STAKE_TOO_LOW")
       );
     });
 
     it("should be able to completely unstake", async () => {
-      await expect(childValidatorSet.unstake(minStake)).to.not.be.reverted;
-    });
-
-    it("should remove from whitelist after complete unstake", async () => {
-      expect(await childValidatorSet.whitelist(accounts[0].address)).to.be.false;
+      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
     });
 
     it("should place in withdrawal queue", async () => {
-      expect(await childValidatorSet.pendingWithdrawals(accounts[0].address)).to.equal(minStake * 2);
-      expect(await childValidatorSet.withdrawable(accounts[0].address)).to.equal(0);
+      expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(minStake * 2);
+      expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(0);
     });
 
     it("should reflect balance after queue processing", async () => {
-      let validator = await childValidatorSet.getValidator(accounts[0].address);
+      let validator = await childValidatorSet.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(minStake * 2);
       await expect(
         systemChildValidatorSet.commitEpoch(
@@ -484,8 +491,8 @@ describe("ChildValidatorSet", () => {
         )
       ).to.not.be.reverted;
 
-      validator = await childValidatorSet.getValidator(accounts[0].address);
-      expect(validator.stake).to.equal(0);
+      // validator = await childValidatorSet.getValidator(accounts[2].address);
+      // expect(validator.stake).to.equal(0);
     });
   });
 
