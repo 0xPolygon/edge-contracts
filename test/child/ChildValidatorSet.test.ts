@@ -545,73 +545,43 @@ describe("ChildValidatorSet", () => {
       const delegateAmount = minDelegation + 1;
       const restake = false;
    
-      const txResp = await childValidatorSet.delegate(accounts[2].address, restake, {
+      const tx = await childValidatorSet.delegate(accounts[2].address, restake, {
         value: delegateAmount,
       });
  
-      // const delegation = await childValidatorSet.delegations(
-      //   accounts[0].address,
-      //   accounts[2].address
-      // );
-      // const currentEpochId = await childValidatorSet.currentEpochId();
-      // expect(delegation.epochId).to.equal(currentEpochId);
-      // expect(delegation.amount).to.equal(delegateAmount * 2);
-  
-      // const delegatorReward = await stakeManager.calculateDelegatorReward(
-      //   idToDelegate,
-      //   accounts[0].address
-      // );
-  
-      // const afterDelegate = (await childValidatorSet.validators(idToDelegate))
-      //   .totalStake;
-      // const balanceAfterReDelegate = await ethers.provider.getBalance(
-      //   accounts[0].address
-      // );
-  
-      // expect(afterDelegate.sub(beforeDelegate)).to.equal(
-      //   delegatorReward.add(delegateAmount)
-      // );
-      // expect(
-      //   balanceBeforeReDelegate.sub(delegateGas).add(delegatorReward)
-      // ).to.equal(balanceAfterReDelegate);
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "Delegated");
+      expect(event?.args?.delegator).to.equal(accounts[0].address);
+      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.amount).to.equal(delegateAmount);
+
+      const delegation = await childValidatorSet.delegations(
+        accounts[0].address,
+        accounts[2].address,
+      );
+      expect(delegation.amount).to.equal(delegateAmount * 2);
     });
   
-    // it("Delegate again with restake", async () => {
-    //   const id = await childValidatorSet.validatorIdByAddress(
-    //     accounts[0].address
-    //   );
-  
-    //   const delegateAmount = minDelegation + 1;
-    //   const idToDelegate = id.add(1);
-    //   const restake = false;
-  
-    //   const beforeDelegate = (await childValidatorSet.validators(idToDelegate))
-    //     .totalStake;
-  
-    //   await stakeManager.delegate(idToDelegate, restake, {
-    //     value: delegateAmount,
-    //   });
-  
-    //   const delegation = await stakeManager.delegations(
-    //     accounts[0].address,
-    //     idToDelegate
-    //   );
-  
-    //   const currentEpochId = await childValidatorSet.currentEpochId();
-    //   expect(delegation.epochId).to.equal(currentEpochId);
-  
-    //   const delegatorReward = await stakeManager.calculateDelegatorReward(
-    //     idToDelegate,
-    //     accounts[0].address
-    //   );
-    //   expect(delegation.amount).to.equal(delegatorReward.add(delegateAmount * 3));
-  
-    //   const afterDelegate = (await childValidatorSet.validators(idToDelegate))
-    //     .totalStake;
-    //   expect(afterDelegate.sub(beforeDelegate)).to.equal(
-    //     delegatorReward.add(delegateAmount)
-    //   );
-    // });
+    it("Delegate again with restake", async () => {
+      const delegateAmount = minDelegation + 1;
+      const restake = true;
+   
+      const tx = await childValidatorSet.delegate(accounts[2].address, restake, {
+        value: delegateAmount,
+      });
+ 
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "Delegated");
+      expect(event?.args?.delegator).to.equal(accounts[0].address);
+      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.amount).to.equal(delegateAmount);
+
+      const delegation = await childValidatorSet.delegations(
+        accounts[0].address,
+        accounts[2].address,
+      );
+      expect(delegation.amount).to.equal(delegateAmount * 3);
+    });
   });  
 
   // it("Claim delegatorReward", async () => {
