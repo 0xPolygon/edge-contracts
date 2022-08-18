@@ -109,7 +109,7 @@ contract StateReceiver is System {
 
         bytes32 message = bytes32(returnData);
 
-        // emit a ResultEvent indicating whether invocation of bridge was successful or not
+        // emit a ResultEvent indicating whether invocation of state sync was successful or not
         if (success) {
             // slither-disable-next-line reentrancy-events
             emit StateSyncResult(obj.id, ResultStatus.SUCCESS, message);
