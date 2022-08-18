@@ -381,10 +381,7 @@ describe("ChildValidatorSet", () => {
       );
       expect(parsedValidatorBlsKey).to.deep.equal(strippedParsedPubkey);
 
-      const delegation = await childValidatorSet.delegations(
-        accounts[2].address,
-        accounts[2].address,
-      );
+      const delegation = await childValidatorSet.delegations(accounts[2].address, accounts[2].address);
       expect(delegation.epochId).to.equal(await childValidatorSet.currentEpochId());
     });
   });
@@ -495,83 +492,82 @@ describe("ChildValidatorSet", () => {
   describe("delegate", async () => {
     it("only validators can delegate", async () => {
       const restake = false;
-  
-      await expect(
-        childValidatorSet.delegate(accounts[1].address, restake, { value: 100 })
-      ).to.be.revertedWith(customError("Unauthorized", "INVALID_VALIDATOR"));
+
+      await expect(childValidatorSet.delegate(accounts[1].address, restake, { value: 100 })).to.be.revertedWith(
+        customError("Unauthorized", "INVALID_VALIDATOR")
+      );
     });
 
     it("Delegate less amount than minDelegation", async () => {
       const restake = false;
-  
-      await expect(
-        childValidatorSet.delegate(accounts[0].address, restake, { value: 100 })
-      ).to.be.revertedWith("DELEGATION_TOO_LOW");
+
+      await expect(childValidatorSet.delegate(accounts[0].address, restake, { value: 100 })).to.be.revertedWith(
+        "DELEGATION_TOO_LOW"
+      );
     });
-    
-    it("Delegate for the first time", async () => {  
+
+    it("Delegate for the first time", async () => {
       const delegateAmount = minDelegation + 1;
       const restake = false;
+
+      //Register accounts[2] as validator
+      await childValidatorSet.addToWhitelist([accounts[2].address]);
+      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
+      const { pubkey, secret } = mcl.newKeyPair();
+      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+      const parsedPubkey = mcl.g2ToHex(pubkey);
+      await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), parsedPubkey);
 
       const tx = await childValidatorSet.delegate(accounts[2].address, restake, {
         value: delegateAmount,
       });
-  
+
       const receipt = await tx.wait();
       const event = receipt.events?.find((log) => log.event === "Delegated");
       expect(event?.args?.delegator).to.equal(accounts[0].address);
       expect(event?.args?.validator).to.equal(accounts[2].address);
       expect(event?.args?.amount).to.equal(delegateAmount);
 
-      const delegation = await childValidatorSet.delegations(
-        accounts[0].address,
-        accounts[2].address,
-      );
+      const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
       expect(delegation.amount).to.equal(delegateAmount);
     });
-  
-    it("Delegate again without restake", async () => { 
+
+    it("Delegate again without restake", async () => {
       const delegateAmount = minDelegation + 1;
       const restake = false;
-   
+
       const tx = await childValidatorSet.delegate(accounts[2].address, restake, {
         value: delegateAmount,
       });
- 
+
       const receipt = await tx.wait();
       const event = receipt.events?.find((log) => log.event === "Delegated");
       expect(event?.args?.delegator).to.equal(accounts[0].address);
       expect(event?.args?.validator).to.equal(accounts[2].address);
       expect(event?.args?.amount).to.equal(delegateAmount);
 
-      const delegation = await childValidatorSet.delegations(
-        accounts[0].address,
-        accounts[2].address,
-      );
+      const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
       expect(delegation.amount).to.equal(delegateAmount * 2);
     });
-  
+
     it("Delegate again with restake", async () => {
       const delegateAmount = minDelegation + 1;
       const restake = true;
-   
+
       const tx = await childValidatorSet.delegate(accounts[2].address, restake, {
         value: delegateAmount,
       });
- 
+
       const receipt = await tx.wait();
       const event = receipt.events?.find((log) => log.event === "Delegated");
       expect(event?.args?.delegator).to.equal(accounts[0].address);
       expect(event?.args?.validator).to.equal(accounts[2].address);
       expect(event?.args?.amount).to.equal(delegateAmount);
 
-      const delegation = await childValidatorSet.delegations(
-        accounts[0].address,
-        accounts[2].address,
-      );
+      const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
       expect(delegation.amount).to.equal(delegateAmount * 3);
     });
-  });  
+  });
 
   // it("Claim delegatorReward", async () => {
   //   const id = await childValidatorSet.validatorIdByAddress(
