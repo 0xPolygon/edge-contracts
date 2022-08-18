@@ -5,6 +5,7 @@ import "../common/Owned.sol";
 import "./System.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
+import "erc20-extensions/contracts-upgradeable/lib/SafeMathUpgradeable.sol";
 import "../libs/ValidatorStorage.sol";
 import "../libs/ValidatorQueue.sol";
 import "../libs/WithdrawalQueue.sol";
@@ -14,6 +15,8 @@ import "../interfaces/IChildValidatorSet.sol";
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];
+    using SafeMathUintUpgradeable for uint256;
+    using SafeMathIntUpgradeable for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
     using WithdrawalQueueLib for WithdrawalQueue;
@@ -156,9 +159,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     function unstake(uint256 amount) external {
         // TODO: check if balance requirement is sufficient for access control
         int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
-        int256 amountInt = int256(amount);
-        // prevent overflow
-        assert(amountInt > 0);
+        int256 amountInt = amount.toInt256Safe();
         if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
 
         int256 amountAfterUnstake = totalValidatorStake - amountInt;
@@ -198,9 +199,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
         claimDelegatorReward(validator, false);
 
-        int256 amountInt = int256(amount);
-        // prevent overflow
-        assert(amountInt > 0);
+        int256 amountInt = amount.toInt256Safe();
 
         _queue.insert(validator, 0, amountInt * -1);
         delegation.amount -= amount;
@@ -323,8 +322,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             if (i == startIndex) {
                 int256 rewardModifier = rewardModifiers[validator];
                 totalReward = rewardModifier < 0
-                    ? totalReward - uint256(rewardModifier * -1) * rewardShares
-                    : totalReward + uint256(rewardModifier) * rewardShares;
+                    ? totalReward - (rewardModifier * -1).toUint256Safe() * rewardShares
+                    : totalReward + (rewardModifier).toUint256Safe() * rewardShares;
             }
         }
 
@@ -381,8 +380,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             if (_validators.exists(validatorAddr)) {
                 _validators.remove(validatorAddr);
             }
-            validator.stake = uint256(int256(validator.stake) + item.stake);
-            validator.totalStake = uint256(int256(validator.totalStake) + item.stake + item.delegation);
+            validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
+            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
             _validators.insert(validatorAddr, validator);
             _queue.resetIndex(validatorAddr);
         }
@@ -399,8 +398,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         address validator,
         uint256 amount
     ) private {
-        assert(int256(amount) > 0);
-        _queue.insert(validator, 0, int256(amount));
+        _queue.insert(validator, 0, amount.toInt256Safe());
         delegations[delegator][validator].amount += amount;
         emit Delegated(delegator, validator, amount);
     }
