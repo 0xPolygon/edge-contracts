@@ -7,3 +7,10 @@ typechain
 typechain-types
 .husky
 .prettierignore
+foundry.toml
+lib
+forge-cache
+out
+!/broadcast
+/broadcast/*
+/broadcast/*/31337/
