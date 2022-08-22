@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+
+import {StateReceiver} from "contracts/child/StateReceiver.sol";
 import {QueuedValidator} from "contracts/libs/ValidatorQueue.sol";
 import {Withdrawal} from "contracts/libs/WithdrawalQueue.sol";
 import "contracts/interfaces/IValidator.sol";
@@ -58,6 +60,13 @@ abstract contract TestPlus is Test {
     function assertEq(Withdrawal memory a, Withdrawal memory b) internal virtual {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [Withdrawal]");
+            fail();
+        }
+    }
+
+    function assertEq(StateReceiver.StateSyncBundle memory a, StateReceiver.StateSyncBundle memory b) internal virtual {
+        if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
+            emit log("Error: a == b not satisfied [StateSyncBundle]");
             fail();
         }
     }

@@ -42,9 +42,6 @@ contract StateSenderTest is TestPlus {
     }
 
     function testSyncState_IncreasesCounter() public {
-        bytes memory maxData = new bytes(stateSender.MAX_LENGTH());
-        address receiver = makeAddr("receiver");
-
         stateSender.syncState(receiver, maxData);
         stateSender.syncState(receiver, maxData);
         vm.expectRevert("EXCEEDS_MAX_LENGTH");
