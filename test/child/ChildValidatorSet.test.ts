@@ -466,30 +466,6 @@ describe("ChildValidatorSet", () => {
     });
   });
 
-  describe("Withdraw", async () => {
-    it("withdrawal failed", async () => {
-      await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [childValidatorSet.address],
-      });
-
-      const balance = await ethers.provider.getBalance(childValidatorSet.address);
-      console.log(balance);
-      const childValidtorSetSigner = await ethers.getSigner(childValidatorSet.address);
-      await childValidtorSetSigner.sendTransaction({
-        to: "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
-        value: balance,
-      });
-
-      console.log(await ethers.provider.getBalance(childValidatorSet.address));
-      // await expect(childValidatorSet.withdraw(accounts[0].address)).to.be.revertedWith('WITHDRAWAL_FAILED');
-    });
-
-    // it("withdraw", async () => {
-    //   await childValidatorSet.withdraw(accounts[0].address);
-    // })
-  });
-
   describe("unstake", async () => {
     it("non validators should not be able to unstake due to insufficient balance", async () => {
       await expect(childValidatorSet.connect(accounts[1]).unstake(1)).to.be.revertedWith(
@@ -556,6 +532,45 @@ describe("ChildValidatorSet", () => {
 
       validator = await childValidatorSet.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(0);
+
+      expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(0);
+      expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(minStake * 2);
+    });
+  });
+
+  describe("Withdraw", async () => {
+    const balance = await ethers.provider.getBalance(childValidatorSet.address);
+    it("withdrawal failed", async () => {
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [childValidatorSet.address],
+      });
+
+      const childValidtorSetSigner = await ethers.getSigner(childValidatorSet.address);
+      await childValidtorSetSigner.sendTransaction({
+        to: "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
+        value: balance,
+      });
+
+      await expect(childValidatorSet.connect(accounts[2]).withdraw(accounts[0].address)).to.be.revertedWith(
+        "WITHDRAWAL_FAILED"
+      );
+    });
+
+    it("withdraw", async () => {
+      await accounts[0].sendTransaction({
+        to: childValidatorSet.address,
+        value: balance,
+      });
+      const tx = await childValidatorSet.connect(accounts[2]).withdraw(accounts[2].address);
+      expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(0);
+      expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(0);
+
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "NewValidator");
+      expect(event?.args?.account).to.equal(accounts[2].address);
+      expect(event?.args?.to).to.equal(accounts[2].address);
+      expect(event?.args?.amount).to.equal(minStake * 2);
     });
   });
 
@@ -639,6 +654,52 @@ describe("ChildValidatorSet", () => {
     });
   });
 
+  describe("Claim", async () => {
+    it("Claim validator reward", async () => {
+      const reward = await childValidatorSet.calculateValidatorReward(accounts[0].address);
+      const tx = await childValidatorSet.claimValidatorReward();
+
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "ValidatorRewardClaimed");
+      expect(event?.args?.validator).to.equal(accounts[0].address);
+      expect(event?.args?.amount).to.equal(reward);
+
+      const event1 = receipt.events?.find((log) => log.event === "WithdrawalRegistered");
+      expect(event1?.args?.account).to.equal(accounts[0].address);
+      expect(event1?.args?.amount).to.equal(reward);
+    });
+
+    it("Claim delegatorReward", async () => {
+      await expect(
+        systemChildValidatorSet.commitEpoch(
+          5,
+          { startBlock: 257, endBlock: 320, epochRoot: ethers.constants.HashZero },
+          {
+            epochId: 5,
+            uptimeData: [{ validator: accounts[0].address, uptime: 1 }],
+            totalUptime: 2,
+          }
+        )
+      ).to.not.be.reverted;
+
+      const reward = await childValidatorSet.calculateDelegatorReward(accounts[2].address, accounts[0].address);
+      const tx = await childValidatorSet.claimDelegatorReward(accounts[2].address, false);
+
+      console.log(reward);
+
+      // const receipt = await tx.wait();
+      // const event = receipt.events?.find((log) => log.event === "DelegatorRewardClaimed");
+      // expect(event?.args?.delegator).to.equal(accounts[0].address);
+      // expect(event?.args?.validator).to.equal(accounts[2].address);
+      // expect(event?.args?.restake).to.equal(false);
+      // expect(event?.args?.amount).to.equal(reward);
+
+      // const event1 = receipt.events?.find((log) => log.event === "WithdrawalRegistered");
+      // expect(event1?.args?.account).to.equal(accounts[0].address);
+      // expect(event1?.args?.amount).to.equal(reward);
+    });
+  });
+
   describe("undelegate", async () => {
     it("undelegate insufficient amount", async () => {
       await expect(childValidatorSet.undelegate(accounts[2].address, minDelegation * 10)).to.be.revertedWith(
@@ -652,20 +713,12 @@ describe("ChildValidatorSet", () => {
       );
     });
 
+    it("should not be able to exploit int overflow", async () => {
+      await expect(childValidatorSet.undelegate(accounts[2].address, ethers.constants.MaxInt256.add(1))).to.be.reverted;
+    });
+
     it("undelegate", async () => {
       await childValidatorSet.undelegate(accounts[2].address, minDelegation * 3 + 3);
-    });
-  });
-
-  describe("Claim", async () => {
-    it("Claim validator reward", async () => {
-      const reward = await childValidatorSet.calculateValidatorReward(accounts[0].address);
-      const tx = await childValidatorSet.claimValidatorReward();
-    });
-
-    it("Claim delegatorReward", async () => {
-      const reward = await childValidatorSet.calculateDelegatorReward(accounts[2].address, accounts[0].address);
-      const tx = await childValidatorSet.claimDelegatorReward(accounts[2].address, false);
     });
   });
 
