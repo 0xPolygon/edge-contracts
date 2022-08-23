@@ -108,13 +108,19 @@ contract StateReceiverTest_EmptyState is EmptyState {
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(state.id, ResultStatus.SUCCESS, bytes32(uint256(1337)));
         this.executeStateSyncHelper(0, state);
+        assertEq(stateReceivingContract.counter(), 1337);
     }
 
     function testExecuteStateSync_Failure() public {
         state.id = 1;
         state.receiver = receiver;
         state.data = "";
+        bytes memory callData = abi.encodeCall(
+            stateReceivingContract.onStateReceive,
+            (state.id, state.sender, state.data)
+        );
 
+        vm.expectCall(receiver, callData);
         // StateReceivingContract will revert on empty data
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(state.id, ResultStatus.FAILURE, "");
