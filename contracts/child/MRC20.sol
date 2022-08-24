@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
     @notice MATIC native token contract on Polygon V3 PoS chain
     @dev The contract exposes ERC20-like functions that are compatible with the MATIC native token
  */
+// solhint-disable reason-string
 contract MRC20 is Context, IERC20, IERC20Metadata {
     mapping(address => uint256) private _balances;
 
@@ -236,6 +237,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(from, to, amount));
         require(success, "PRECOMPILE_CALL_FAILED");
 
@@ -256,6 +258,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata {
 
         _totalSupply += amount;
 
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(ZERO_ADDRESS, account, amount));
         require(success, "PRECOMPILE_CALL_FAILED");
 
@@ -278,6 +281,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata {
 
         _totalSupply -= amount;
 
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(account, ZERO_ADDRESS, amount));
         require(success, "PRECOMPILE_CALL_FAILED");
 
