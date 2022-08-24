@@ -194,17 +194,24 @@ describe("CheckpointManager", () => {
       )
     );
 
+    // const domain = await checkpointManager.domain();
+    const pointedMessage = mcl.hashToPoint(message, ethers.utils.arrayify(DOMAIN));
+
     const validatorIds = [];
     const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
     const signatures: mcl.Signature[] = [];
 
-    const { pubkey, secret } = mcl.newKeyPair();
+    // const { pubkey, secret } = mcl.newKeyPair();
 
     for (let i = 0; i < minLength; i++) {
       const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
-      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.toUtf8Bytes("polygon-v3-validator"));
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId], // using wrong secret key to produce non-verifiable signature
+        ethers.utils.arrayify(DOMAIN)
+      );
       signatures.push(signature);
     }
 
