@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumberish } from "ethers";
+import { BigNumberish, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
 import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
@@ -129,10 +129,20 @@ describe("CheckpointManager", () => {
       eventRoot,
     };
 
+    const blsKey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish] = [0, 0, 0, 0];
+
+    const newValidator = {
+      _address: accounts[0].address,
+      blsKey: blsKey,
+    };
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [id, checkpoint]
+        [
+          "uint",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)",
+          "tuple[](address _address, uint[] blsKey)",
+        ],
+        [id, checkpoint, [newValidator]]
       )
     );
 
@@ -155,7 +165,7 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [newValidator])
     ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
@@ -167,10 +177,20 @@ describe("CheckpointManager", () => {
       eventRoot,
     };
 
+    const blsKey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish] = [0, 0, 0, 0];
+
+    const newValidator = {
+      _address: accounts[0].address,
+      blsKey: blsKey,
+    };
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["uint", "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)"],
-        [id, checkpoint]
+        [
+          "uint",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)",
+          "tuple[](address _address, uint[] blsKey)",
+        ],
+        [id, checkpoint, [newValidator]]
       )
     );
 
@@ -178,22 +198,20 @@ describe("CheckpointManager", () => {
     const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
     const signatures: mcl.Signature[] = [];
 
+    const { pubkey, secret } = mcl.newKeyPair();
+
     for (let i = 0; i < minLength; i++) {
       const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
       validatorIds.push(validatorId);
 
-      const { signature, messagePoint } = mcl.sign(
-        message,
-        validatorSecretKeys[validatorId - 1],
-        ethers.utils.arrayify(DOMAIN)
-      );
+      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.toUtf8Bytes("polygon-v3-validator"));
       signatures.push(signature);
     }
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [newValidator])
     ).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 
@@ -229,9 +247,15 @@ describe("CheckpointManager", () => {
     }
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+    const blsKey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish] = [0, 0, 0, 0];
+
+    const newValidator = {
+      _address: accounts[0].address,
+      blsKey: blsKey,
+    };
 
     await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [newValidator])
     ).to.be.revertedWith("INVALID_START_BLOCK");
   });
 
@@ -268,8 +292,15 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
+    const blsKey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish] = [0, 0, 0, 0];
+
+    const newValidator = {
+      _address: accounts[0].address,
+      blsKey: blsKey,
+    };
+
     await expect(
-      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [accounts[0].address])
+      checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [newValidator])
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
