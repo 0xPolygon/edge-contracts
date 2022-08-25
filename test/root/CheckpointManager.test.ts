@@ -71,12 +71,10 @@ describe("CheckpointManager", () => {
     let addresses = [];
     let pubkeys = [];
     validatorSecretKeys = [];
-    let pubkeys2 = [];
     for (let i = 0; i < validatorSetSize; i++) {
       const { pubkey, secret } = mcl.newKeyPair();
       validatorSecretKeys.push(secret);
       pubkeys.push(mcl.g2ToHex(pubkey));
-      pubkeys2.push(pubkey);
       addresses.push(accounts[i].address);
     }
 
@@ -86,8 +84,14 @@ describe("CheckpointManager", () => {
     expect(await rootValidatorSet.checkpointManager()).to.equal(checkpointManager.address);
     for (let i = 0; i < validatorSetSize; i++) {
       const validator = await rootValidatorSet.getValidator(i + 1);
+
+      const parsedValidatorBlsKey = validator.blsKey.map((elem: BigNumber) =>
+        ethers.utils.hexValue(elem.toHexString())
+      );
+      const strippedParsedPubkey = pubkeys[i].map((elem) => ethers.utils.hexValue(elem));
+
       expect(validator._address).to.equal(addresses[i]);
-      expect(validator.blsKey.map((x) => hexlify(x))).to.deep.equal(pubkeys[i]);
+      expect(parsedValidatorBlsKey).to.deep.equal(strippedParsedPubkey);
       expect(await rootValidatorSet.validatorIdByAddress(addresses[i])).to.equal(i + 1);
     }
   });
@@ -194,22 +198,19 @@ describe("CheckpointManager", () => {
       )
     );
 
-    // const domain = await checkpointManager.domain();
-    const pointedMessage = mcl.hashToPoint(message, ethers.utils.arrayify(DOMAIN));
-
     const validatorIds = [];
     const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
     const signatures: mcl.Signature[] = [];
 
-    // const { pubkey, secret } = mcl.newKeyPair();
-
+    console.log(Math.random());
     for (let i = 0; i < minLength; i++) {
-      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 - validatorSetSize
+      const validatorId = Math.floor(Math.random() * validatorSetSize); // 1 - validatorSetSize
       validatorIds.push(validatorId);
+      console.log(validatorIds);
 
       const { signature, messagePoint } = mcl.sign(
         message,
-        validatorSecretKeys[validatorId], // using wrong secret key to produce non-verifiable signature
+        validatorSecretKeys[validatorId - 1],
         ethers.utils.arrayify(DOMAIN)
       );
       signatures.push(signature);
