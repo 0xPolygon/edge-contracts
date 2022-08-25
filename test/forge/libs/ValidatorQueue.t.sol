@@ -48,11 +48,11 @@ contract ValidatorQueueTest_NonEmptyState is NonEmptyState {
     using ValidatorQueueLib for ValidatorQueue;
 
     function testInsert_Queued() public {
-        queue.insert(account, STAKE, DELEGATED);
+        queue.insert(account, -1, -1); // remove
 
         assertEq(queue.indices[account], 1);
         assertEq(queue.queue.length, 1);
-        assertEq(queue.queue[0], QueuedValidator(account, STAKE * 2, DELEGATED * 2));
+        assertEq(queue.queue[0], QueuedValidator(account, STAKE - 1, DELEGATED - 1));
     }
 
     function testInsert_New() public {
