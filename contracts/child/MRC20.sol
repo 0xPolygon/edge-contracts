@@ -3,6 +3,7 @@ pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "./IStateReceiver.sol";
 
 /**
     @title MRC20
@@ -11,15 +12,15 @@ import "@openzeppelin/contracts/utils/Context.sol";
     @dev The contract exposes ERC20-like functions that are compatible with the MATIC native token
  */
 // solhint-disable reason-string
-contract MRC20 is Context, IERC20, IERC20Metadata {
-    mapping(address => uint256) private _balances;
-
+contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
 
     string private _name;
     string private _symbol;
+
+    address public predicate;
 
     address private constant NATIVE_TRANSFER_PRECOMPILE = address(0x0000000000000000000000000000000000002020);
     address private constant ZERO_ADDRESS = address(0x0000000000000000000000000000000000000000);
@@ -33,20 +34,28 @@ contract MRC20 is Context, IERC20, IERC20Metadata {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    function initialize(string memory name_, string memory symbol_) external {
+    function initialize(
+        address predicate_,
+        string memory name_,
+        string memory symbol_
+    ) external {
+        predicate = predicate_;
         _name = name_;
         _symbol = symbol_;
     }
 
     /**
      * @notice Used to deposit tokens from L1 to V3 PoS chain
+     * @param sender Address of L1 message sender
      * @param data Data received via state sync
      */
     function onStateReceive(
         uint256, /* id */
+        address sender,
         bytes calldata data
     ) external {
         require(msg.sender == 0x0000000000000000000000000000000000001001, "ONLY_STATERECEIVER");
+        require(sender == predicate, "INVALID_SENDER");
 
         (address receiver, uint256 amount) = abi.decode(data, (address, uint256));
 
