@@ -5,12 +5,14 @@ import {Validator} from "../interfaces/IValidator.sol";
 
 struct UptimeData {
     address validator;
+    // Proposal: change name uptime => signedBlocks
     uint256 uptime;
 }
 
 struct Uptime {
     uint256 epochId;
     UptimeData[] uptimeData;
+    // Proposal: change name totalUptime => totalBlocks
     uint256 totalUptime;
 }
 
@@ -114,6 +116,8 @@ interface IChildValidatorSet {
     /// @notice Calculate total stake in the network (self-stake + delegation)
     /// @return stake Returns total stake (in MATIC wei)
     function totalStake() external view returns (uint256);
+
+    function totalActiveStake() external view returns (uint256);
 
     function withdrawable(address account) external view returns (uint256);
 

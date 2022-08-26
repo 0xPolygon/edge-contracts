@@ -21,6 +21,7 @@ contract MockValidatorStorage {
             stake: amount,
             totalStake: amount,
             commission: 0,
+            withdrawableRewards: 0,
             active: true
         });
         validators.insert(account, data);
