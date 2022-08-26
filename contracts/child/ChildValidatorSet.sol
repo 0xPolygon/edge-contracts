@@ -11,6 +11,7 @@ import "../libs/ValidatorQueue.sol";
 import "../libs/WithdrawalQueue.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IChildValidatorSet.sol";
+import "hardhat/console.sol";
 
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
@@ -266,6 +267,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function sortedValidators(uint256 n) public view returns (address[] memory) {
+        console.log(_validators.count);
         uint256 length = n <= _validators.count ? n : _validators.count;
         address[] memory validatorAddresses = new address[](length);
 

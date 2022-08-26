@@ -7,6 +7,7 @@ import { expandMsg } from "../../ts/hashToField";
 // import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet } from "../../typechain";
 import { customError } from "../util";
+import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
@@ -28,6 +29,7 @@ describe("ChildValidatorSet", () => {
     id: number,
     epoch: any,
     uptime: any,
+    childValidatorSetBalance: BigNumber,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     await mcl.init();
@@ -430,6 +432,13 @@ describe("ChildValidatorSet", () => {
       const delegation = await childValidatorSet.delegations(accounts[2].address, accounts[2].address);
       expect(delegation.epochId).to.equal(await childValidatorSet.currentEpochId());
     });
+
+    it("Get sortedValidators", async () => {
+      console.log(await childValidatorSet.getValidator(accounts[0].address));
+      console.log(await childValidatorSet.getValidator(accounts[2].address));
+      const validatorAddresses = await childValidatorSet.sortedValidators(3);
+      expect(validatorAddresses).to.deep.equal([accounts[0].address]);
+    });
   });
 
   describe("stake", async () => {
@@ -539,18 +548,9 @@ describe("ChildValidatorSet", () => {
   });
 
   describe("Withdraw", async () => {
-    const balance = await ethers.provider.getBalance(childValidatorSet.address);
     it("withdrawal failed", async () => {
-      await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [childValidatorSet.address],
-      });
-
-      const childValidtorSetSigner = await ethers.getSigner(childValidatorSet.address);
-      await childValidtorSetSigner.sendTransaction({
-        to: "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
-        value: balance,
-      });
+      childValidatorSetBalance = await ethers.provider.getBalance(childValidatorSet.address);
+      await setBalance(childValidatorSet.address, 0);
 
       await expect(childValidatorSet.connect(accounts[2]).withdraw(accounts[0].address)).to.be.revertedWith(
         "WITHDRAWAL_FAILED"
@@ -558,16 +558,13 @@ describe("ChildValidatorSet", () => {
     });
 
     it("withdraw", async () => {
-      await accounts[0].sendTransaction({
-        to: childValidatorSet.address,
-        value: balance,
-      });
+      await setBalance(childValidatorSet.address, childValidatorSetBalance);
       const tx = await childValidatorSet.connect(accounts[2]).withdraw(accounts[2].address);
       expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(0);
       expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(0);
 
       const receipt = await tx.wait();
-      const event = receipt.events?.find((log) => log.event === "NewValidator");
+      const event = receipt.events?.find((log) => log.event === "Withdrawal");
       expect(event?.args?.account).to.equal(accounts[2].address);
       expect(event?.args?.to).to.equal(accounts[2].address);
       expect(event?.args?.amount).to.equal(minStake * 2);
@@ -743,10 +740,12 @@ describe("ChildValidatorSet", () => {
     });
   });
 
-  it("Get sortedValidators", async () => {
-    const validatorAddresses = await childValidatorSet.sortedValidators(2);
-    expect(validatorAddresses).to.deep.equal([accounts[0].address]);
-  });
+  // it("Get sortedValidators", async () => {
+  //   console.log(await childValidatorSet.getValidator(accounts[0].address))
+  //   console.log(await childValidatorSet.getValidator(accounts[2].address))
+  //   const validatorAddresses = await childValidatorSet.sortedValidators(3);
+  //   expect(validatorAddresses).to.deep.equal([accounts[0].address]);
+  // });
 
   it("Get totalStake", async () => {
     const totalStake = await childValidatorSet.totalStake();

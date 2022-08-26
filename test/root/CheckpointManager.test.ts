@@ -334,7 +334,65 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
-  it("Submit checkpoint", async () => {
+  it("Submit checkpoint without new validators", async () => {
+    const id = submitCounter;
+    const checkpoint = {
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
+      eventRoot,
+    };
+
+    const blsKey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish] = [
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    ];
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)",
+          "tuple[](address _address, uint[4] blsKey)",
+        ],
+        [id, checkpoint, []]
+      )
+    );
+
+    const validatorIds = [];
+    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
+    const signatures: mcl.Signature[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 to validatorSetSize
+      validatorIds.push(validatorId);
+
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId - 1],
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+    const currentValidatorIdBeforeSubmit = await rootValidatorSet.currentValidatorId();
+    await checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, []);
+
+    submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    expect(submitCounter).to.equal(2);
+
+    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1)).endBlock;
+    expect(endBlock).to.equal(101);
+    startBlock = endBlock.toNumber() + 1;
+
+    const currentValidatorIdAfterSubmit = await rootValidatorSet.currentValidatorId();
+    expect(currentValidatorIdAfterSubmit).to.equal(currentValidatorIdBeforeSubmit);
+  });
+
+  it("Submit checkpoint with a new validator", async () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock,
@@ -387,10 +445,10 @@ describe("CheckpointManager", () => {
     await checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, [newValidator]);
 
     submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
-    expect(submitCounter).to.equal(2);
+    expect(submitCounter).to.equal(3);
 
     const endBlock = (await checkpointManager.checkpoints(submitCounter - 1)).endBlock;
-    expect(endBlock).to.equal(101);
+    expect(endBlock).to.equal(202);
     startBlock = endBlock.toNumber() + 1;
 
     const currentValidatorIdAfterSubmit = await rootValidatorSet.currentValidatorId();
@@ -577,7 +635,7 @@ describe("CheckpointManager", () => {
     const id = submitCounter;
     const checkpoint = {
       startBlock: startBlock,
-      endBlock: 0,
+      endBlock: startBlock,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
@@ -725,7 +783,72 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
-  it("Submit batch checkpoint", async () => {
+  it("Submit batch checkpoint without new validators", async () => {
+    const id = submitCounter;
+    const checkpoint1 = {
+      startBlock: startBlock,
+      endBlock: startBlock + 100,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const checkpoint2 = {
+      startBlock: startBlock + 101,
+      endBlock: startBlock + 200,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const blsKey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish] = [
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    ];
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        [
+          "uint[]",
+          "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+          "tuple[](address _address, uint[4] blsKey)",
+        ],
+        [[id, id + 1], [checkpoint1, checkpoint2], []]
+      )
+    );
+
+    const validatorIds = [];
+    const minLength = Math.ceil((validatorSetSize * 2) / 3) + 1;
+    const signatures: mcl.Signature[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const validatorId = Math.floor(Math.random() * (validatorSetSize - 1) + 1); // 1 to validatorSetSize
+      validatorIds.push(validatorId);
+
+      const { signature, messagePoint } = mcl.sign(
+        message,
+        validatorSecretKeys[validatorId - 1],
+        ethers.utils.arrayify(DOMAIN)
+      );
+      signatures.push(signature);
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+    const currentValidatorIdBeforeSubmit = await rootValidatorSet.currentValidatorId();
+
+    await checkpointManager.submitBatch([id, id + 1], [checkpoint1, checkpoint2], aggMessagePoint, validatorIds, []);
+
+    submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
+    expect(submitCounter).to.equal(5);
+
+    const endBlock = (await checkpointManager.checkpoints(submitCounter - 1)).endBlock;
+    expect(endBlock).to.equal(403);
+    startBlock = endBlock.toNumber() + 1;
+
+    const currentValidatorIdAfterSubmit = await rootValidatorSet.currentValidatorId();
+    expect(currentValidatorIdAfterSubmit).to.equal(currentValidatorIdBeforeSubmit);
+  });
+
+  it("Submit batch checkpoint with a new validator", async () => {
     const id = submitCounter;
     const checkpoint1 = {
       startBlock: startBlock,
@@ -787,10 +910,10 @@ describe("CheckpointManager", () => {
     ]);
 
     submitCounter = (await checkpointManager.currentCheckpointId()).toNumber() + 1;
-    expect(submitCounter).to.equal(4);
+    expect(submitCounter).to.equal(7);
 
     const endBlock = (await checkpointManager.checkpoints(submitCounter - 1)).endBlock;
-    expect(endBlock).to.equal(302);
+    expect(endBlock).to.equal(604);
     startBlock = endBlock.toNumber() + 1;
 
     const currentValidatorIdAfterSubmit = await rootValidatorSet.currentValidatorId();
