@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ValidatorStorageLib} from "contracts/libs/ValidatorStorage.sol";
-import "contracts/interfaces/IValidator.sol";
+import {ValidatorStorageLib, AmountZero, Exists, NotFound} from "contracts/libs/ValidatorStorage.sol";
+import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/IValidator.sol";
 
 import "../utils/TestPlus.sol";
 
@@ -147,6 +147,14 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
 
             assertEq(tree.get(_account), _validator);
         }
+    }
+
+    /// @notice A simple getDelegationPool test
+    /// @dev Update as neccessary in the future
+    function testGetDelegationPool() public {
+        tree.delegationPools[account].supply = 1; // // we set supply to 1 so we can assert retrieval
+
+        assertEq(tree.getDelegationPool(account).supply, 1);
     }
 
     function testStakeOf(uint128[] memory amounts) public {
