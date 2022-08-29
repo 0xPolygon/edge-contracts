@@ -12,7 +12,7 @@ describe("StateReceiver", () => {
   let stateReceiver: StateReceiver,
     systemStateReceiver: StateReceiver,
     stateReceivingContract: StateReceivingContract,
-    stateSyncCounter: number,
+    stateSyncCounter: BigNumber,
     bundleSize: number,
     batchSize: number,
     revertContractAddress: string,
@@ -92,15 +92,15 @@ describe("StateReceiver", () => {
 
   it("State sync commit", async () => {
     currentSum = BigNumber.from(0);
-    bundleSize = Math.floor(Math.random() * 5 + 1);
-    batchSize = 2 ** Math.floor(Math.random() * 1 + 2);
+    bundleSize = Math.floor(Math.random() * 5 + 1); // no. of txs per bundle
+    batchSize = 2 ** Math.floor(Math.random() + 2); // number of bundles
     hashes = [];
     stateSyncBundle = [];
-    stateSyncCounter = 0;
+    stateSyncCounter = await stateReceiver.counter();
     let counter: number = 1;
     for (let j = 0; j < batchSize; j++) {
       const stateSyncs = [];
-      stateSyncCounter += batchSize;
+      stateSyncCounter = stateSyncCounter.add(bundleSize);
       for (let i = 0; i < bundleSize; i++) {
         const increment = Math.floor(Math.random() * 9 + 1);
         currentSum = currentSum.add(BigNumber.from(increment));
@@ -129,14 +129,18 @@ describe("StateReceiver", () => {
     const root = tree.getHexRoot();
 
     const bundle = {
-      startId: 0,
-      endId: batchSize * bundleSize - 1,
+      startId: 1,
+      endId: batchSize * bundleSize,
       leaves: batchSize,
       root,
     };
     const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero);
 
     const receipt = await tx.wait();
+  });
+
+  it("State sync check last committed id: yet to execute", async () => {
+    expect(await stateReceiver.lastCommittedStateSyncId()).to.equal(stateSyncCounter);
   });
 
   it("State sync execute fail: invalid proof", async () => {
@@ -161,6 +165,10 @@ describe("StateReceiver", () => {
       expect(await stateReceiver.counter()).to.equal(stateSyncCounter - 1);
     }
     expect(await stateReceivingContract.counter()).to.equal(currentSum);
+  });
+
+  it("State sync check last committed id: all executed", async () => {
+    expect(await stateReceiver.lastCommittedStateSyncId()).to.equal(stateSyncCounter);
   });
 
   it("State sync commit: skipped", async () => {
