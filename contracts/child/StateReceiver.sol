@@ -83,6 +83,14 @@ contract StateReceiver is System {
         counter = currentId;
     }
 
+    function lastCommittedStateSyncId() external view returns (uint256) {
+        if (lastExecutedBundleCounter == bundleCounter) {
+            return counter; // return counter when all statesyncs have been executed
+        } else {
+            return bundles[bundleCounter - 1].endId; // return last committed id when statesyncs are remaining
+        }
+    }
+
     //
     // Execute state sync
     //
