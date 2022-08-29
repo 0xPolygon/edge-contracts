@@ -167,7 +167,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         rewardModifiers[msg.sender] += amountInt;
         _queue.insert(msg.sender, amountInt * -1, 0);
         if (amountAfterUnstake == 0) {
-            getValidator(msg.sender).active = false;
+            _validators.get(msg.sender).active = false;
         }
         _registerWithdrawal(msg.sender, amount);
         emit Unstaked(msg.sender, amount);
