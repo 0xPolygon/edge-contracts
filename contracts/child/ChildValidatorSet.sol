@@ -300,13 +300,11 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         return _withdrawals[account].pending(currentEpochId);
     }
 
-    // TODO: change name to getDelegatorReward
-    function calculateDelegatorReward(address validator, address delegator) public view returns (uint256) {
+    function getDelegatorReward(address validator, address delegator) public view returns (uint256) {
         return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
 
-    // TODO: change name to getValidatorReward
-    function calculateValidatorReward(address validator) public view returns (uint256) {
+    function getValidatorReward(address validator) public view returns (uint256) {
         return getValidator(validator).withdrawableRewards;
     }
 
@@ -323,8 +321,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
             Validator storage validator = _validators.get(uptimeData.validator);
-            uint256 validatorReward = (reward * validator.totalStake * uptimeData.uptime) /
-                (activeStake * uptime.totalUptime);
+            uint256 validatorReward = (reward * validator.totalStake * uptimeData.signedBlocks) /
+                (activeStake * uptime.totalBlocks);
             (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
                 uptimeData.validator,
                 validatorReward

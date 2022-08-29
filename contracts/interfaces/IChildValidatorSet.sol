@@ -5,15 +5,13 @@ import {Validator} from "../interfaces/IValidator.sol";
 
 struct UptimeData {
     address validator;
-    // Proposal: change name uptime => signedBlocks
-    uint256 uptime;
+    uint256 signedBlocks;
 }
 
 struct Uptime {
     uint256 epochId;
     UptimeData[] uptimeData;
-    // Proposal: change name totalUptime => totalBlocks
-    uint256 totalUptime;
+    uint256 totalBlocks;
 }
 
 struct Stake {
@@ -123,7 +121,7 @@ interface IChildValidatorSet {
 
     function pendingWithdrawals(address account) external view returns (uint256);
 
-    function calculateValidatorReward(address validator) external view returns (uint256);
+    function getValidatorReward(address validator) external view returns (uint256);
 
-    function calculateDelegatorReward(address validator, address delegator) external view returns (uint256);
+    function getDelegatorReward(address validator, address delegator) external view returns (uint256);
 }

@@ -160,8 +160,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
+      totalBlocks: 0,
     };
 
     await expect(childValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
@@ -177,8 +177,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
@@ -194,8 +194,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("NO_BLOCKS_COMMITTED");
@@ -211,8 +211,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith(
@@ -230,8 +230,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 2,
-      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("EPOCH_NOT_COMMITTED");
@@ -249,10 +249,10 @@ describe("ChildValidatorSet", () => {
     uptime = {
       epochId: currentEpochId,
       uptimeData: [
-        { validator: accounts[0].address, uptime: 0 },
-        { validator: accounts[0].address, uptime: 0 },
+        { validator: accounts[0].address, signedBlocks: 0 },
+        { validator: accounts[0].address, signedBlocks: 0 },
       ],
-      totalUptime: 0,
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("INVALID_LENGTH");
@@ -269,8 +269,8 @@ describe("ChildValidatorSet", () => {
     const currentEpochId = await childValidatorSet.currentEpochId();
     uptime = {
       epochId: currentEpochId,
-      uptimeData: [{ validator: accounts[1].address, uptime: 1 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[1].address, signedBlocks: 1 }],
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
@@ -289,8 +289,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: currentEpochId,
-      uptimeData: [{ validator: accounts[0].address, uptime: 1000000000000 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 1000000000000 }],
+      totalBlocks: 0,
     };
 
     await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
@@ -309,8 +309,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: 0,
-      uptimeData: [{ validator: accounts[0].address, uptime: 0 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
+      totalBlocks: 0,
     };
 
     await expect(systemChildValidatorSet.commitEpoch(2, epoch, uptime)).to.be.revertedWith("INVALID_START_BLOCK");
@@ -345,8 +345,8 @@ describe("ChildValidatorSet", () => {
 
     uptime = {
       epochId: currentEpochId,
-      uptimeData: [{ validator: accounts[0].address, uptime: 1000000000000 }],
-      totalUptime: 0,
+      uptimeData: [{ validator: accounts[0].address, signedBlocks: 1000000000000 }],
+      totalBlocks: 0,
     };
 
     for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
@@ -467,7 +467,7 @@ describe("ChildValidatorSet", () => {
         systemChildValidatorSet.commitEpoch(
           3,
           { startBlock: 129, endBlock: 192, epochRoot: ethers.constants.HashZero },
-          { epochId: 3, uptimeData: [{ validator: accounts[0].address, uptime: 1 }], totalUptime: 1 }
+          { epochId: 3, uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }], totalBlocks: 1 }
         )
       ).to.not.be.reverted;
       validator = await childValidatorSet.getValidator(accounts[2].address);
@@ -531,10 +531,10 @@ describe("ChildValidatorSet", () => {
           {
             epochId: 4,
             uptimeData: [
-              { validator: accounts[0].address, uptime: 1 },
-              { validator: accounts[2].address, uptime: 1 },
+              { validator: accounts[0].address, signedBlocks: 1 },
+              { validator: accounts[2].address, signedBlocks: 1 },
             ],
-            totalUptime: 2,
+            totalBlocks: 2,
           }
         )
       ).to.not.be.reverted;
@@ -653,7 +653,7 @@ describe("ChildValidatorSet", () => {
 
   describe("Claim", async () => {
     it("Claim validator reward", async () => {
-      const reward = await childValidatorSet.calculateValidatorReward(accounts[0].address);
+      const reward = await childValidatorSet.getValidatorReward(accounts[0].address);
       const tx = await childValidatorSet.claimValidatorReward();
 
       const receipt = await tx.wait();
@@ -673,13 +673,13 @@ describe("ChildValidatorSet", () => {
           { startBlock: 257, endBlock: 320, epochRoot: ethers.constants.HashZero },
           {
             epochId: 5,
-            uptimeData: [{ validator: accounts[0].address, uptime: 1 }],
-            totalUptime: 2,
+            uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
+            totalBlocks: 2,
           }
         )
       ).to.not.be.reverted;
 
-      const reward = await childValidatorSet.calculateDelegatorReward(accounts[2].address, accounts[0].address);
+      const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[0].address);
       const tx = await childValidatorSet.claimDelegatorReward(accounts[2].address, false);
 
       console.log(reward);
