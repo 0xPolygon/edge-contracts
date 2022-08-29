@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./IStateReceiver.sol";
+import "./System.sol";
 
 /**
     @title MRC20
@@ -12,7 +13,7 @@ import "./IStateReceiver.sol";
     @dev The contract exposes ERC20-like functions that are compatible with the MATIC native token
  */
 // solhint-disable reason-string
-contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver {
+contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
@@ -22,23 +23,21 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver {
 
     address public predicate;
 
-    address private constant NATIVE_TRANSFER_PRECOMPILE = address(0x0000000000000000000000000000000000002020);
     address private constant ZERO_ADDRESS = address(0x0000000000000000000000000000000000000000);
 
     /**
-     * @dev Sets the values for {name} and {symbol}.
+     * @dev Sets the values for {predicate}, {name} and {symbol}.
      *
-     * The default value of {decimals} is 18. To select a different value for
-     * {decimals} you should overload it.
+     * The default value of {decimals} is 18.
      *
-     * All two of these values are immutable: they can only be set once during
-     * construction.
+     * All three of these values are immutable: they can only be set once during
+     * initialization.
      */
     function initialize(
         address predicate_,
         string memory name_,
         string memory symbol_
-    ) external {
+    ) external onlySystemCall {
         predicate = predicate_;
         _name = name_;
         _symbol = symbol_;
@@ -247,8 +246,8 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver {
         require(to != address(0), "ERC20: transfer to the zero address");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(from, to, amount));
-        require(success, "PRECOMPILE_CALL_FAILED");
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(from, to, amount));
+        require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
         emit Transfer(from, to, amount);
     }
@@ -268,8 +267,10 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver {
         _totalSupply += amount;
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(ZERO_ADDRESS, account, amount));
-        require(success, "PRECOMPILE_CALL_FAILED");
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
+            abi.encode(ZERO_ADDRESS, account, amount)
+        );
+        require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
         emit Transfer(address(0), account, amount);
     }
@@ -291,8 +292,10 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver {
         _totalSupply -= amount;
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(account, ZERO_ADDRESS, amount));
-        require(success, "PRECOMPILE_CALL_FAILED");
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
+            abi.encode(account, ZERO_ADDRESS, amount)
+        );
+        require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
         emit Transfer(account, address(0), amount);
     }
