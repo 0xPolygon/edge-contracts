@@ -168,7 +168,7 @@ describe("StateReceiver", () => {
   });
 
   it("State sync check last committed id: all executed", async () => {
-    expect(await stateReceiver.lastCommittedStateSyncId()).to.equal(stateSyncCounter);
+    expect(await stateReceiver.lastCommittedStateSyncId()).to.equal(await stateReceiver.counter());
   });
 
   it("State sync commit: skipped", async () => {
