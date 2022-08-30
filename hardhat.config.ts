@@ -8,7 +8,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@openzeppelin/hardhat-upgrades";
-import '@primitivefi/hardhat-dodoc'
+import '@primitivefi/hardhat-dodoc';
 
 dotenv.config();
 
@@ -46,20 +46,20 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
-    goerli: {
-      url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API}` || "",
+    root: {
+      url: process.env.ROOT_RPC || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_API}` || "",
+    rootTest: {
+      url: process.env.ROOT_TEST_RPC || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API}` || "",
+    child: {
+      url: process.env.CHILD_RPC || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    polygon: {
-      url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API}` || "",
+    childTest: {
+      url: process.env.CHILD_TEST_RPC || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     hardhat: {
