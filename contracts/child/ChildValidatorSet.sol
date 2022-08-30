@@ -382,14 +382,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit RemovedFromWhitelist(account);
     }
 
-    /// @notice Calculate validator power for a validator in percentage.
-    /// @return uint256 Returns validator power at 6 decimals. Therefore, a return value of 123456 is 0.123456%
-    function _calculateValidatorPower(address validator) private view returns (uint256) {
-        /* 6 decimals is somewhat arbitrary selected, but if we work backwards:
-           MATIC total supply = 10 billion, smallest validator = 1997 MATIC, power comes to 0.00001997% */
-        return (getValidator(validator).stake * 100 * (10**6)) / _validators.totalStake;
-    }
-
     function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)
         private
         view
