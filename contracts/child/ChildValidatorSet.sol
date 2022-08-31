@@ -367,7 +367,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 amount
     ) private {
         Validator storage _validator = _validators.get(validator);
-        require(_validator.active, "INACTIVE_VALIDATOR");
+        // require(_validator.active, "INACTIVE_VALIDATOR");
         _queue.insert(validator, 0, amount.toInt256Safe());
         _validators.getDelegationPool(validator).deposit(delegator, amount);
         // delegations[delegator][validator].amount += amount;
