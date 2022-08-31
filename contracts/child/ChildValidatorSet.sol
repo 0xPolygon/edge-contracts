@@ -258,6 +258,10 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         return _validators.get(validator);
     }
 
+    function delegationOf(address validator, address delegator) external view returns (uint256) {
+        return _validators.getDelegationPool(validator).balanceOf(delegator);
+    }
+
     function sortedValidators(uint256 n) public view returns (address[] memory) {
         uint256 length = n <= _validators.count ? n : _validators.count;
         address[] memory validatorAddresses = new address[](length);

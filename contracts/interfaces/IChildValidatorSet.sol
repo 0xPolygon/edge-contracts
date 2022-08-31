@@ -108,6 +108,8 @@ interface IChildValidatorSet {
 
     function getValidator(address validator) external view returns (Validator memory);
 
+    function delegationOf(address validator, address delegator) external view returns (uint256);
+
     // get first `n` of validators sorted by stake from high to low
     function sortedValidators(uint256 n) external view returns (address[] memory);
 
