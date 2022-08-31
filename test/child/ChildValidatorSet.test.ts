@@ -103,6 +103,8 @@ describe("ChildValidatorSet", () => {
       mcl.hashToPoint(ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")), DOMAIN)
     );
 
+    expect(await childValidatorSet.totalActiveStake()).to.equal(0);
+
     await systemChildValidatorSet.initialize(
       epochReward,
       minStake,
@@ -133,6 +135,7 @@ describe("ChildValidatorSet", () => {
     expect(await childValidatorSet.bls()).to.equal(bls.address);
     expect(await childValidatorSet.message(0)).to.equal(messagePoint[0]);
     expect(await childValidatorSet.message(1)).to.equal(messagePoint[1]);
+    expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
   });
   it("Attempt reinitialization", async () => {
     await expect(
@@ -432,13 +435,6 @@ describe("ChildValidatorSet", () => {
       // const delegation = await childValidatorSet.delegations(accounts[2].address, accounts[2].address);
       // expect(delegation.epochId).to.equal(await childValidatorSet.currentEpochId());
     });
-
-    it("Get sortedValidators", async () => {
-      // console.log(await childValidatorSet.getValidator(accounts[0].address));
-      // console.log(await childValidatorSet.getValidator(accounts[2].address));
-      const validatorAddresses = await childValidatorSet.sortedValidators(3);
-      expect(validatorAddresses).to.deep.equal([accounts[0].address]);
-    });
   });
 
   describe("stake", async () => {
@@ -457,6 +453,22 @@ describe("ChildValidatorSet", () => {
     it("should be able to stake", async () => {
       await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
       expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
+    });
+
+    it("Get 2 sortedValidators ", async () => {
+      await childValidatorSet.stake({ value: minStake * 2 });
+      // console.log(await childValidatorSet.getValidator(accounts[0].address));
+      // console.log(await childValidatorSet.getValidator(accounts[2].address));
+      const validatorAddresses = await childValidatorSet.sortedValidators(3);
+      expect(validatorAddresses).to.deep.equal([accounts[0].address]);
+      await childValidatorSet.unstake(minStake * 2);
+    });
+
+    it("Get 0 sortedValidators", async () => {
+      // console.log(await childValidatorSet.getValidator(accounts[0].address));
+      // console.log(await childValidatorSet.getValidator(accounts[2].address));
+      const validatorAddresses = await childValidatorSet.sortedValidators(0);
+      expect(validatorAddresses).to.deep.equal([]);
     });
   });
 
@@ -748,7 +760,7 @@ describe("ChildValidatorSet", () => {
   //   expect(validatorAddresses).to.deep.equal([accounts[0].address]);
   // });
 
-  it("Get totalStake", async () => {
+  it("Get total stake", async () => {
     const totalStake = await childValidatorSet.totalStake();
     expect(totalStake).to.equal(minStake * 2);
   });

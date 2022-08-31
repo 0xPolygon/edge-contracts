@@ -262,6 +262,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     function sortedValidators(uint256 n) public view returns (address[] memory) {
         uint256 length = n <= _validators.count ? n : _validators.count;
         address[] memory validatorAddresses = new address[](length);
+
+        console.log(length);
         if (length == 0) return validatorAddresses;
 
         address tmpValidator = _validators.last();
