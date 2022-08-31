@@ -260,24 +260,6 @@ describe("ChildValidatorSet", () => {
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("INVALID_LENGTH");
   });
-  // it("Commit epoch with not enough consensus", async () => {
-  //   id = 1;
-  //   epoch = {
-  //     startBlock: 1,
-  //     endBlock: 64,
-  //     epochRoot: ethers.utils.randomBytes(32),
-  //     validatorSet: [],
-  //   };
-
-  //   const currentEpochId = await childValidatorSet.currentEpochId();
-  //   uptime = {
-  //     epochId: currentEpochId,
-  //     uptimeData: [{ validator: accounts[3].address, signedBlocks: 1 }],
-  //     totalBlocks: 1,
-  //   };
-
-  //   await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("NOT_ENOUGH_CONSENSUS");
-  // });
   it("Commit epoch", async () => {
     id = 1;
     epoch = {
@@ -302,6 +284,7 @@ describe("ChildValidatorSet", () => {
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
     expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
   });
+
   it("Commit epoch with old block", async () => {
     const epoch = {
       startBlock: 64,
@@ -334,30 +317,52 @@ describe("ChildValidatorSet", () => {
     expect(storedEpoch.endBlock).to.equal(ethers.constants.Zero);
     expect(storedEpoch.epochRoot).to.equal(ethers.constants.HashZero);
   });
-  it("Get and set current validators when exceeds active validator set size", async () => {
-    const currentValidatorId = await childValidatorSet.currentEpochId();
 
+  it("Commit epoch for validator without staking", async () => {
+    id = 2;
     epoch = {
       startBlock: 65,
       endBlock: 128,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
+      validatorSet: [accounts[1].address],
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
+    const currentValidatorId = await childValidatorSet.currentEpochId();
 
     uptime = {
       epochId: currentEpochId,
-      uptimeData: [{ validator: accounts[0].address, signedBlocks: 1000000000000 }],
+      uptimeData: [{ validator: accounts[1].address, signedBlocks: 1000000000000 }],
       totalBlocks: 1,
     };
 
-    for (let i = 0; i < currentValidatorId.toNumber() - 2; i++) {
-      uptime.uptimes.push(1000000000000);
-    }
-
-    await systemChildValidatorSet.commitEpoch(2, epoch, uptime); // commit epoch to update validator set
+    await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    const storedEpoch: any = await childValidatorSet.epochs(2);
+    expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
+    expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
+    expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
   });
+
+  // it("Get and set current validators when exceeds active validator set size", async () => {
+  //   const currentValidatorId = await childValidatorSet.currentEpochId();
+
+  //   epoch = {
+  //     startBlock: 129,
+  //     endBlock: 192,
+  //     epochRoot: ethers.utils.randomBytes(32),
+  //     validatorSet: [],
+  //   };
+
+  //   const currentEpochId = await childValidatorSet.currentEpochId();
+
+  //   uptime = {
+  //     epochId: currentEpochId,
+  //     uptimeData: [{ validator: accounts[0].address, signedBlocks: 1000000000000 }],
+  //     totalBlocks: 1,
+  //   };
+
+  //   await systemChildValidatorSet.commitEpoch(3, epoch, uptime); // commit epoch to update validator set
+  // });
 
   describe("whitelist", async () => {
     it("only owner should be able to modify whitelist", async () => {
@@ -455,15 +460,6 @@ describe("ChildValidatorSet", () => {
       expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
     });
 
-    it("Get 2 sortedValidators ", async () => {
-      await childValidatorSet.stake({ value: minStake * 2 });
-      // console.log(await childValidatorSet.getValidator(accounts[0].address));
-      // console.log(await childValidatorSet.getValidator(accounts[2].address));
-      const validatorAddresses = await childValidatorSet.sortedValidators(3);
-      expect(validatorAddresses).to.deep.equal([accounts[0].address]);
-      await childValidatorSet.unstake(minStake * 2);
-    });
-
     it("Get 0 sortedValidators", async () => {
       // console.log(await childValidatorSet.getValidator(accounts[0].address));
       // console.log(await childValidatorSet.getValidator(accounts[2].address));
@@ -485,6 +481,17 @@ describe("ChildValidatorSet", () => {
       ).to.not.be.reverted;
       validator = await childValidatorSet.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(minStake * 2);
+    });
+
+    it("Get 2 sortedValidators ", async () => {
+      // await childValidatorSet.stake({ value: minStake * 2 });
+      // console.log(await childValidatorSet.getValidator(accounts[0].address));
+      // console.log(await childValidatorSet.getValidator(accounts[2].address));
+      const validatorAddresses = await childValidatorSet.sortedValidators(3);
+      // console.log(validatorAddresses);
+      // console.log([accounts[2].address, accounts[0].address]);
+      expect(validatorAddresses).to.deep.equal([accounts[2].address, accounts[0].address]);
+      // await childValidatorSet.unstake(minStake * 2);
     });
   });
 
@@ -659,6 +666,8 @@ describe("ChildValidatorSet", () => {
       expect(event?.args?.validator).to.equal(accounts[2].address);
       expect(event?.args?.amount).to.equal(delegateAmount);
 
+      console.log(await childValidatorSet.getValidator(accounts[2].address));
+      console.log(await childValidatorSet.getValidator(accounts[0].address));
       // const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
       // expect(delegation.amount).to.equal(delegateAmount * 3);
     });
@@ -686,6 +695,18 @@ describe("ChildValidatorSet", () => {
           { startBlock: 257, endBlock: 320, epochRoot: ethers.constants.HashZero },
           {
             epochId: 5,
+            uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
+            totalBlocks: 2,
+          }
+        )
+      ).to.not.be.reverted;
+
+      await expect(
+        systemChildValidatorSet.commitEpoch(
+          6,
+          { startBlock: 321, endBlock: 384, epochRoot: ethers.constants.HashZero },
+          {
+            epochId: 6,
             uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
             totalBlocks: 2,
           }
