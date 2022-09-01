@@ -23,6 +23,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
 
     address public predicate;
 
+    // slither-disable-next-line too-many-digits
     address private constant ZERO_ADDRESS = address(0x0000000000000000000000000000000000000000);
 
     /**
@@ -38,6 +39,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         string memory name_,
         string memory symbol_
     ) external onlySystemCall {
+        // slither-disable-next-line missing-zero-check
         predicate = predicate_;
         _name = name_;
         _symbol = symbol_;
@@ -53,6 +55,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         address sender,
         bytes calldata data
     ) external {
+        // slither-disable-next-line too-many-digits
         require(msg.sender == 0x0000000000000000000000000000000000001001, "ONLY_STATERECEIVER");
         require(sender == predicate, "INVALID_SENDER");
 
@@ -246,6 +249,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         require(to != address(0), "ERC20: transfer to the zero address");
 
         // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line reentrancy-events,low-level-calls
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(from, to, amount));
         require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
@@ -267,6 +271,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         _totalSupply += amount;
 
         // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line reentrancy-events,low-level-calls
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
             abi.encode(ZERO_ADDRESS, account, amount)
         );
@@ -292,6 +297,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         _totalSupply -= amount;
 
         // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line reentrancy-events,low-level-calls
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
             abi.encode(account, ZERO_ADDRESS, amount)
         );
