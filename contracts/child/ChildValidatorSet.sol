@@ -188,7 +188,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         uint256 delegatedAmount = delegation.balanceOf(msg.sender);
 
-        if (amount > delegatedAmount) revert StakeRequirement({src: "undelegate", msg: "INSUFFICIENT_BALANCE"});
+        delegation.withdraw(msg.sender, amount);
+
         uint256 amountAfterUndelegate = delegatedAmount - amount;
 
         if (amountAfterUndelegate < minDelegation && amountAfterUndelegate != 0)
