@@ -28,4 +28,6 @@ contract System {
         if (msg.sender != SYSTEM) revert Unauthorized("SYSTEMCALL");
         _;
     }
+
+    uint256[50] private __gap;
 }

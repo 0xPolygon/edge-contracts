@@ -43,7 +43,6 @@ contract StateReceiver is System {
 
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
-
     function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be
@@ -110,7 +109,7 @@ contract StateReceiver is System {
 
         bytes32 message = bytes32(returnData);
 
-        // emit a ResultEvent indicating whether invocation of bridge was successful or not
+        // emit a ResultEvent indicating whether invocation of state sync was successful or not
         if (success) {
             // slither-disable-next-line reentrancy-events
             emit StateSyncResult(obj.id, ResultStatus.SUCCESS, message);

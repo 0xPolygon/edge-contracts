@@ -3,10 +3,42 @@
   "description": "smart contract suite for the Polygon POS v3 blockchain",
   "version": "1.0.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maticnetwork/v3-contracts.git"
+  },
+  "keywords": [
+    "maticnetwork",
+    "polygon",
+    "contracts",
+    "solidity"
+  ],
+  "author": "Polygon Technology",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/maticnetwork/v3-contracts/issues"
+  },
+  "homepage": "https://github.com/maticnetwork/v3-contracts#readme",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel",
+    "test:gas": "TS_NODE_TRANSPILE_ONLY=1 REPORT_GAS=true npx hardhat test",
+    "test:types": "npx hardhat test --parallel",
+    "test:all": "REPORT_GAS=true npx hardhat test",
+    "lint:sol": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w .",
+    "lint:ts": "npx prettier -w . && npx eslint --fix .",
+    "lint": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w . && npx eslint --fix .",
+    "prettier": "npx prettier -w .",
+    "slither": "slither .",
+    "coverage": "npx hardhat coverage",
+    "prepare": "husky install",
+    "husky:pre-commit": "npm run prettier && git add ."
+  },
   "dependencies": {
     "@defi-wonderland/smock": "^2.0.7",
     "@openzeppelin/contracts": "^4.7.2",
     "@openzeppelin/contracts-upgradeable": "^4.7.2",
+    "erc20-extensions": "^1.1.1",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "hardhat": "^2.9.3",
     "keccak256": "^1.0.6",
@@ -37,6 +69,7 @@
     "ethereum-waffle": "^3.4.4",
     "ethers": "^5.6.4",
     "hardhat-gas-reporter": "^1.0.8",
+    "husky": "^8.0.0",
     "mocha": "^9.2.2",
     "prettier": "^2.6.2",
     "prettier-plugin-solidity": "^1.0.0-beta.30",
@@ -45,33 +78,5 @@
     "ts-node": "^10.7.0",
     "typechain": "^5.2.0",
     "typescript": "^4.6.3"
-  },
-  "scripts": {
-    "compile": "npx hardhat compile",
-    "test": "TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel",
-    "test:gas": "TS_NODE_TRANSPILE_ONLY=1 REPORT_GAS=true npx hardhat test",
-    "test:types": "npx hardhat test --parallel",
-    "test:all": "REPORT_GAS=true npx hardhat test",
-    "lint:sol": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w .",
-    "lint:ts": "npx prettier -w . && npx eslint --fix .",
-    "lint": "npx solhint --fix \"contracts/**/*.sol\" && npx prettier -w . && npx eslint --fix .",
-    "slither": "slither .",
-    "coverage": "npx hardhat coverage"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/maticnetwork/v3-contracts.git"
-  },
-  "keywords": [
-    "maticnetwork",
-    "polygon",
-    "contracts",
-    "solidity"
-  ],
-  "author": "Polygon Technology",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/maticnetwork/v3-contracts/issues"
-  },
-  "homepage": "https://github.com/maticnetwork/v3-contracts#readme"
+  }
 }

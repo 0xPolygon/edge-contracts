@@ -2,65 +2,84 @@
 pragma solidity ^0.8.13;
 
 import {Owned} from "contracts/common/Owned.sol";
-import {MockOwned} from "contracts/mocks/MockOwner.sol";
 import "contracts/interfaces/Errors.sol";
 
 import "../utils/TestPlus.sol";
 
-contract OwnedTest is TestPlus {
+abstract contract InitializedState is TestPlus {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event OwnershipProposed(address indexed proposedOwner);
 
-    MockOwned mockOwned;
+    OwnedMock ownedMock;
 
-    function setUp() public {
-        mockOwned = new MockOwned();
-        mockOwned.initialize();
+    address alien;
+    address payable owner;
+
+    function setUp() public virtual {
+        ownedMock = new OwnedMock();
+        ownedMock.initialize();
+
+        alien = makeAddr("alien");
+        owner = payable(makeAddr("owner"));
     }
+}
 
+contract OwnedTest_InitializedState is InitializedState {
     function testInitializer() public {
-        assertEq(mockOwned.owner(), address(this));
-        assertEq(mockOwned.proposedOwner(), address(0));
+        assertEq(ownedMock.owner(), address(this));
+        assertEq(ownedMock.proposedOwner(), address(0));
     }
 
     function testCannotProposeOwner_Unauthorized() public {
-        vm.startPrank(makeAddr("notOwner"));
-        address payable proposedOwner = payable(makeAddr("proposedOwner"));
+        vm.startPrank(alien);
 
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "OWNER"));
-        mockOwned.proposeOwner(proposedOwner);
+        ownedMock.proposeOwner(owner);
     }
 
     function testProposeOwner() public {
-        address payable proposedOwner = payable(makeAddr("proposedOwner"));
-
         // event
         vm.expectEmit(true, false, false, false);
-        emit OwnershipProposed(proposedOwner);
-        mockOwned.proposeOwner(proposedOwner);
+        emit OwnershipProposed(owner);
+        ownedMock.proposeOwner(owner);
         // proposed owner
-        assertEq(mockOwned.proposedOwner(), proposedOwner);
+        assertEq(ownedMock.proposedOwner(), owner);
     }
+}
 
+abstract contract ProposedState is InitializedState {
+    function setUp() public override {
+        super.setUp();
+        ownedMock.proposeOwner(owner);
+    }
+}
+
+contract OwnedTest_ProposedState is ProposedState {
     function testCannotClaimOwnership_Unauthorized() public {
-        address payable proposedOwner = payable(makeAddr("proposedOwner"));
-        mockOwned.proposeOwner(proposedOwner);
-        vm.startPrank(makeAddr("notProposedOwner"));
+        vm.startPrank(alien);
 
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "PROPOSED_OWNER"));
-        mockOwned.claimOwnership();
+        ownedMock.claimOwnership();
     }
 
     function testClaimOwnership() public {
-        address payable proposedOwner = payable(makeAddr("proposedOwner"));
-        mockOwned.proposeOwner(proposedOwner);
-        vm.startPrank(proposedOwner);
+        vm.startPrank(owner);
 
         // event
         vm.expectEmit(true, true, false, false);
-        emit OwnershipTransferred(address(this), proposedOwner);
-        mockOwned.claimOwnership();
+        emit OwnershipTransferred(address(this), owner);
+        ownedMock.claimOwnership();
         // owner
-        assertEq(mockOwned.owner(), proposedOwner);
+        assertEq(ownedMock.owner(), owner);
+    }
+}
+
+/*//////////////////////////////////////////////////////////////////////////
+                                MOCKS
+//////////////////////////////////////////////////////////////////////////*/
+
+contract OwnedMock is Owned {
+    function initialize() public initializer {
+        __Owned_init();
     }
 }

@@ -5,6 +5,7 @@ import "../common/Owned.sol";
 import "./System.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
+import "erc20-extensions/contracts-upgradeable/lib/SafeMathUpgradeable.sol";
 import "../libs/ValidatorStorage.sol";
 import "../libs/ValidatorQueue.sol";
 import "../libs/WithdrawalQueue.sol";
@@ -14,6 +15,8 @@ import "../interfaces/IChildValidatorSet.sol";
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];
+    using SafeMathUintUpgradeable for uint256;
+    using SafeMathIntUpgradeable for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
     using WithdrawalQueueLib for WithdrawalQueue;
@@ -45,11 +48,11 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     mapping(uint256 => mapping(address => uint256)) public validatorRewardShares; // epoch -> validator address -> amount
     mapping(uint256 => mapping(address => uint256)) public delegatorRewardShares; // epoch -> validator address -> reward per share
     mapping(address => mapping(address => Stake)) public delegations; // user address -> validator address -> Delegation
-    mapping(address => Stake) public selfStakes; // validator address -> Delegation
     mapping(address => bool) public whitelist;
+    mapping(address => int256) rewardModifiers;
 
     modifier onlyValidator() {
-        if (!whitelist[msg.sender]) revert Unauthorized("VALIDATOR");
+        if (!_validators.get(msg.sender).active) revert Unauthorized("VALIDATOR");
         _;
     }
 
@@ -81,7 +84,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
                 blsKey: validatorPubkeys[i],
                 stake: validatorStakes[i],
                 totalStake: validatorStakes[i],
-                commission: 0
+                commission: 0,
+                active: true
             });
             _validators.insert(validatorAddresses[i], validator);
         }
@@ -113,15 +117,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
-    function getCurrentValidatorSet() external view returns (address[] memory) {
-        return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
-    }
-
-    function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
-        uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
-        return epochs[ret + 1];
-    }
-
     function addToWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
         for (uint256 i = 0; i < whitelistAddreses.length; i++) {
             _addToWhitelist(whitelistAddreses[i]);
@@ -134,55 +129,65 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         }
     }
 
-    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external onlyValidator {
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
+        if (!whitelist[msg.sender]) revert Unauthorized("WHITELIST");
+
         (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message);
         require(callSuccess && result, "INVALID_SIGNATURE");
 
-        _validators.insert(msg.sender, Validator({blsKey: pubkey, stake: 0, totalStake: 0, commission: 0}));
-        // whitelist[msg.sender] = false;
+        _validators.insert(
+            msg.sender,
+            Validator({blsKey: pubkey, stake: 0, totalStake: 0, commission: 0, active: true})
+        );
+        _removeFromWhitelist(msg.sender);
+
+        delegations[msg.sender][msg.sender].epochId = currentEpochId;
 
         emit NewValidator(msg.sender, pubkey);
     }
 
+    // TODO: claim validator rewards before stake or unstake action
     function stake() external payable onlyValidator {
-        // TODO check for BLS key or introduce additional variable to check if validator is registered
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
+        claimValidatorReward();
+        rewardModifiers[msg.sender] -= int256(msg.value);
         _queue.insert(msg.sender, int256(msg.value), 0);
+        emit Staked(msg.sender, msg.value);
     }
 
     function unstake(uint256 amount) external {
+        // TODO: check if balance requirement is sufficient for access control
         int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
-        int256 amountInt = int256(amount);
-        // prevent overflow
-        assert(amountInt > 0);
+        int256 amountInt = amount.toInt256Safe();
         if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
+
         int256 amountAfterUnstake = totalValidatorStake - amountInt;
         if (amountAfterUnstake < int256(minStake) && amountAfterUnstake != 0)
             revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
+
+        claimValidatorReward();
+        rewardModifiers[msg.sender] += amountInt;
         _queue.insert(msg.sender, amountInt * -1, 0);
         if (amountAfterUnstake == 0) {
-            _removeFromWhitelist(msg.sender);
+            _validators.get(msg.sender).active = false;
         }
         _registerWithdrawal(msg.sender, amount);
+        emit Unstaked(msg.sender, amount);
     }
 
     function delegate(address validator, bool restake) external payable {
-        if (!whitelist[validator]) revert Unauthorized("INVALID_VALIDATOR");
+        if (!_validators.get(validator).active) revert Unauthorized("INVALID_VALIDATOR");
 
         Stake storage delegation = delegations[msg.sender][validator];
         if (delegation.amount + msg.value < minDelegation)
             revert StakeRequirement({src: "delegate", msg: "DELEGATION_TOO_LOW"});
-
         claimDelegatorReward(validator, restake);
-
-        _queue.insert(msg.sender, 0, int256(msg.value));
-        delegation.amount += msg.value;
+        _delegate(msg.sender, validator, msg.value);
     }
 
     function undelegate(address validator, uint256 amount) external {
-        if (!whitelist[validator]) revert Unauthorized("INVALID_VALIDATOR");
-
+        // TODO: check if balance requirement is sufficient for access control
         Stake storage delegation = delegations[msg.sender][validator];
         uint256 delegatedAmount = delegation.amount;
 
@@ -194,30 +199,25 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
         claimDelegatorReward(validator, false);
 
-        int256 amountInt = int256(amount);
-        // prevent overflow
-        assert(amountInt > 0);
+        int256 amountInt = amount.toInt256Safe();
 
-        _queue.insert(msg.sender, 0, amountInt * -1);
+        _queue.insert(validator, 0, amountInt * -1);
         delegation.amount -= amount;
 
         _registerWithdrawal(msg.sender, amount);
+        emit Undelegated(msg.sender, validator, amount);
     }
 
-    function withdraw(address to) external {
-        WithdrawalQueue storage queue = _withdrawals[msg.sender];
-        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
-        queue.head = newHead;
-        (bool success, ) = to.call{value: amount}("");
-        require(success, "WITHDRAWAL_FAILED");
-    }
-
-    function claimValidatorReward() public onlyValidator {
-        // uint256 id = childValidatorSet.validatorIdByAddress(msg.sender);
+    function claimValidatorReward() public {
+        // TODO: validator should be able to claim reward even in non-active state
+        // check if balance requirement is sufficient for access control
+        if (delegations[msg.sender][msg.sender].epochId == currentEpochId) return;
         uint256 reward = calculateValidatorReward(msg.sender);
-        Stake storage delegation = delegations[msg.sender][msg.sender];
-        delegation.epochId = currentEpochId;
+        delegations[msg.sender][msg.sender].epochId = currentEpochId;
+        if (reward == 0) return;
+        rewardModifiers[msg.sender] = 0;
         _registerWithdrawal(msg.sender, reward);
+        emit ValidatorRewardClaimed(msg.sender, reward);
     }
 
     function claimDelegatorReward(address validator, bool restake) public {
@@ -229,17 +229,36 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         if (reward == 0) return;
 
         if (restake) {
-            _queue.insert(msg.sender, 0, int256(reward));
-            delegation.amount += reward;
+            _delegate(msg.sender, validator, reward);
         } else {
             _registerWithdrawal(msg.sender, reward);
         }
+
+        emit DelegatorRewardClaimed(msg.sender, validator, restake, reward);
+    }
+
+    function withdraw(address to) external nonReentrant {
+        WithdrawalQueue storage queue = _withdrawals[msg.sender];
+        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
+        queue.head = newHead;
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "WITHDRAWAL_FAILED");
+        emit Withdrawal(msg.sender, to, amount);
     }
 
     function setCommission(uint256 newCommission) external onlyValidator {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
         Validator storage validator = _validators.get(msg.sender);
         validator.commission = newCommission;
+    }
+
+    function getCurrentValidatorSet() external view returns (address[] memory) {
+        return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
+    }
+
+    function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
+        uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
+        return epochs[ret + 1];
     }
 
     function getValidator(address validator) public view returns (Validator memory) {
@@ -290,15 +309,22 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function calculateValidatorReward(address validator) public view returns (uint256) {
-        Stake memory delegation = selfStakes[validator];
+        uint256 validatorStake = _validators.get(validator).stake;
 
-        uint256 startIndex = delegation.epochId;
+        uint256 startIndex = delegations[validator][validator].epochId;
         uint256 endIndex = currentEpochId - 1;
 
         uint256 totalReward = 0;
-
         for (uint256 i = startIndex; i <= endIndex; i++) {
-            totalReward += delegation.amount * validatorRewardShares[i][validator];
+            uint256 rewardShares = validatorRewardShares[i][validator];
+            if (rewardShares == 0) continue;
+            totalReward += validatorStake * rewardShares;
+            if (i == startIndex) {
+                int256 rewardModifier = rewardModifiers[validator];
+                totalReward = rewardModifier < 0
+                    ? totalReward - (rewardModifier * -1).toUint256Safe() * rewardShares
+                    : totalReward + (rewardModifier).toUint256Safe() * rewardShares;
+            }
         }
 
         return totalReward / REWARD_PRECISION;
@@ -336,7 +362,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
                 validatorReward
             );
             validatorRewardShares[uptime.epochId][validator] = validatorShares;
+            emit ValidatorRewardDistributed(validator, validatorReward);
             delegatorRewardShares[uptime.epochId][validator] = delegatorShares;
+            emit DelegatorRewardDistributed(validator, delegatorShares);
         }
     }
 
@@ -352,8 +380,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             if (_validators.exists(validatorAddr)) {
                 _validators.remove(validatorAddr);
             }
-            validator.stake = uint256(int256(validator.stake) + item.stake);
-            validator.totalStake = uint256(int256(validator.totalStake) + item.stake + item.delegation);
+            validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
+            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
             _validators.insert(validatorAddr, validator);
             _queue.resetIndex(validatorAddr);
         }
@@ -362,14 +390,27 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     function _registerWithdrawal(address account, uint256 amount) private {
         _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
+        emit WithdrawalRegistered(account, amount);
+    }
+
+    function _delegate(
+        address delegator,
+        address validator,
+        uint256 amount
+    ) private {
+        _queue.insert(validator, 0, amount.toInt256Safe());
+        delegations[delegator][validator].amount += amount;
+        emit Delegated(delegator, validator, amount);
     }
 
     function _addToWhitelist(address account) private {
         whitelist[account] = true;
+        emit AddedToWhitelist(account);
     }
 
     function _removeFromWhitelist(address account) private {
         whitelist[account] = false;
+        emit RemovedFromWhitelist(account);
     }
 
     /// @notice Calculate validator power for a validator in percentage.
@@ -405,4 +446,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
         return (rewardShares - commission, delegatorShares - commission);
     }
+
+    uint256[50] private __gap;
 }

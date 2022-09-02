@@ -55,7 +55,6 @@ library WithdrawalQueueLib {
             if (withdrawal.epoch > currentEpoch) return (amount, newHead);
             amount += withdrawal.amount;
         }
-        newHead++;
     }
 
     function pending(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {
