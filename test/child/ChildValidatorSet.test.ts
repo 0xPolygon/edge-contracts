@@ -436,9 +436,6 @@ describe("ChildValidatorSet", () => {
         ethers.utils.hexValue(elem.toHexString())
       );
       expect(parsedValidatorBlsKey).to.deep.equal(strippedParsedPubkey);
-
-      // const delegation = await childValidatorSet.delegations(accounts[2].address, accounts[2].address);
-      // expect(delegation.epochId).to.equal(await childValidatorSet.currentEpochId());
     });
   });
 
@@ -461,8 +458,6 @@ describe("ChildValidatorSet", () => {
     });
 
     it("Get 0 sortedValidators", async () => {
-      // console.log(await childValidatorSet.getValidator(accounts[0].address));
-      // console.log(await childValidatorSet.getValidator(accounts[2].address));
       const validatorAddresses = await childValidatorSet.sortedValidators(0);
       expect(validatorAddresses).to.deep.equal([]);
     });
@@ -484,14 +479,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("Get 2 sortedValidators ", async () => {
-      // await childValidatorSet.stake({ value: minStake * 2 });
-      // console.log(await childValidatorSet.getValidator(accounts[0].address));
-      // console.log(await childValidatorSet.getValidator(accounts[2].address));
       const validatorAddresses = await childValidatorSet.sortedValidators(3);
-      // console.log(validatorAddresses);
-      // console.log([accounts[2].address, accounts[0].address]);
       expect(validatorAddresses).to.deep.equal([accounts[2].address, accounts[0].address]);
-      // await childValidatorSet.unstake(minStake * 2);
     });
   });
 
@@ -583,11 +572,9 @@ describe("ChildValidatorSet", () => {
       expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(0);
       expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(0);
 
-      const receipt = await tx.wait();
-      const event = receipt.events?.find((log) => log.event === "Withdrawal");
-      expect(event?.args?.account).to.equal(accounts[2].address);
-      expect(event?.args?.to).to.equal(accounts[2].address);
-      expect(event?.args?.amount).to.equal(minStake * 2);
+      await expect(tx)
+        .to.emit(childValidatorSet, "Withdrawal")
+        .withArgs(accounts[2].address, accounts[2].address, minStake * 2);
     });
   });
 
@@ -624,14 +611,12 @@ describe("ChildValidatorSet", () => {
         value: delegateAmount,
       });
 
-      const receipt = await tx.wait();
-      const event = receipt.events?.find((log) => log.event === "Delegated");
-      expect(event?.args?.delegator).to.equal(accounts[3].address);
-      expect(event?.args?.validator).to.equal(accounts[2].address);
-      expect(event?.args?.amount).to.equal(delegateAmount);
+      await expect(tx)
+        .to.emit(childValidatorSet, "Delegated")
+        .withArgs(accounts[3].address, accounts[2].address, delegateAmount);
 
-      // const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
-      // expect(delegation.amount).to.equal(delegateAmount);
+      const delegation = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      expect(delegation).to.equal(delegateAmount);
     });
 
     it("Delegate again without restake", async () => {
@@ -642,14 +627,9 @@ describe("ChildValidatorSet", () => {
         value: delegateAmount,
       });
 
-      const receipt = await tx.wait();
-      const event = receipt.events?.find((log) => log.event === "Delegated");
-      expect(event?.args?.delegator).to.equal(accounts[3].address);
-      expect(event?.args?.validator).to.equal(accounts[2].address);
-      expect(event?.args?.amount).to.equal(delegateAmount);
-
-      // const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
-      // expect(delegation.amount).to.equal(delegateAmount * 2);
+      await expect(tx)
+        .to.emit(childValidatorSet, "Delegated")
+        .withArgs(accounts[3].address, accounts[2].address, delegateAmount);
     });
 
     it("Delegate again with restake", async () => {
@@ -660,16 +640,9 @@ describe("ChildValidatorSet", () => {
         value: delegateAmount,
       });
 
-      const receipt = await tx.wait();
-      const event = receipt.events?.find((log) => log.event === "Delegated");
-      expect(event?.args?.delegator).to.equal(accounts[3].address);
-      expect(event?.args?.validator).to.equal(accounts[2].address);
-      expect(event?.args?.amount).to.equal(delegateAmount);
-
-      // console.log(await childValidatorSet.getValidator(accounts[2].address));
-      // console.log(await childValidatorSet.getValidator(accounts[0].address));
-      // const delegation = await childValidatorSet.delegations(accounts[0].address, accounts[2].address);
-      // expect(delegation.amount).to.equal(delegateAmount * 3);
+      await expect(tx)
+        .to.emit(childValidatorSet, "Delegated")
+        .withArgs(accounts[3].address, accounts[2].address, delegateAmount);
     });
   });
 
@@ -683,12 +656,10 @@ describe("ChildValidatorSet", () => {
       expect(event?.args?.validator).to.equal(accounts[0].address);
       expect(event?.args?.amount).to.equal(reward);
 
-      const event1 = receipt.events?.find((log) => log.event === "WithdrawalRegistered");
-      expect(event1?.args?.account).to.equal(accounts[0].address);
-      expect(event1?.args?.amount).to.equal(reward);
+      await expect(tx).to.emit(childValidatorSet, "WithdrawalRegistered").withArgs(accounts[0].address, reward);
     });
 
-    it("Claim delegatorReward", async () => {
+    it("Claim delegatorReward with restake", async () => {
       await expect(
         systemChildValidatorSet.commitEpoch(
           5,
@@ -714,33 +685,76 @@ describe("ChildValidatorSet", () => {
       ).to.not.be.reverted;
 
       const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[3].address);
-      const tx = await childValidatorSet.claimDelegatorReward(accounts[3].address, false);
-
       console.log(reward);
 
-      // const receipt = await tx.wait();
-      // const event = receipt.events?.find((log) => log.event === "DelegatorRewardClaimed");
-      // expect(event?.args?.delegator).to.equal(accounts[0].address);
-      // expect(event?.args?.validator).to.equal(accounts[2].address);
-      // expect(event?.args?.restake).to.equal(false);
-      // expect(event?.args?.amount).to.equal(reward);
+      //Claim with restake
+      const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[2].address, true);
 
-      // const event1 = receipt.events?.find((log) => log.event === "WithdrawalRegistered");
-      // expect(event1?.args?.account).to.equal(accounts[0].address);
-      // expect(event1?.args?.amount).to.equal(reward);
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "DelegatorRewardClaimed");
+      expect(event?.args?.delegator).to.equal(accounts[3].address);
+      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.restake).to.equal(true);
+      expect(event?.args?.amount).to.equal(reward);
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "Delegated")
+        .withArgs(accounts[3].address, accounts[2].address, reward);
+    });
+
+    it("Claim delegatorReward without restake", async () => {
+      await expect(
+        systemChildValidatorSet.commitEpoch(
+          7,
+          { startBlock: 385, endBlock: 448, epochRoot: ethers.constants.HashZero },
+          {
+            epochId: 7,
+            uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+            totalBlocks: 2,
+          }
+        )
+      ).to.not.be.reverted;
+
+      await expect(
+        systemChildValidatorSet.commitEpoch(
+          8,
+          { startBlock: 449, endBlock: 512, epochRoot: ethers.constants.HashZero },
+          {
+            epochId: 8,
+            uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+            totalBlocks: 2,
+          }
+        )
+      ).to.not.be.reverted;
+
+      const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[3].address);
+      console.log(reward);
+      //Claim without restake
+      const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[2].address, false);
+
+      const receipt = await tx.wait();
+      const event = receipt.events?.find((log) => log.event === "DelegatorRewardClaimed");
+      expect(event?.args?.delegator).to.equal(accounts[3].address);
+      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.restake).to.equal(false);
+      expect(event?.args?.amount).to.equal(reward);
+
+      await expect(tx).to.emit(childValidatorSet, "WithdrawalRegistered").withArgs(accounts[3].address, reward);
     });
   });
 
   describe("undelegate", async () => {
     it("undelegate insufficient amount", async () => {
+      const delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
       await expect(
-        childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, minDelegation * 10)
+        childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.add(1))
       ).to.be.revertedWith(customError("StakeRequirement", "undelegate", "INSUFFICIENT_BALANCE"));
     });
 
     it("undelegate low amount", async () => {
+      const delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
       await expect(
-        childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, minDelegation * 3)
+        childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.sub(1))
       ).to.be.revertedWith(customError("StakeRequirement", "undelegate", "DELEGATION_TOO_LOW"));
     });
 
@@ -775,13 +789,6 @@ describe("ChildValidatorSet", () => {
       expect(validator.commission).to.equal(MAX_COMMISSION - 1);
     });
   });
-
-  // it("Get sortedValidators", async () => {
-  //   console.log(await childValidatorSet.getValidator(accounts[0].address))
-  //   console.log(await childValidatorSet.getValidator(accounts[2].address))
-  //   const validatorAddresses = await childValidatorSet.sortedValidators(3);
-  //   expect(validatorAddresses).to.deep.equal([accounts[0].address]);
-  // });
 
   it("Get total stake", async () => {
     const totalStake = await childValidatorSet.totalStake();
