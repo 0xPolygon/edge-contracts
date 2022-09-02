@@ -23,8 +23,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
 
     address public predicate;
 
-    // slither-disable-next-line too-many-digits
-    address private constant ZERO_ADDRESS = address(0x0000000000000000000000000000000000000000);
+    address private constant ZERO_ADDRESS = address(0);
 
     /**
      * @dev Sets the values for {predicate}, {name} and {symbol}.
