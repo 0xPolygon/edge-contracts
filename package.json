@@ -1,6 +1,6 @@
 {
   "name": "v3-contracts",
-  "description": "",
+  "description": "smart contract suite for the Polygon POS v3 blockchain",
   "version": "1.0.0",
   "main": "index.js",
   "repository": {
@@ -39,6 +39,7 @@
     "@openzeppelin/contracts": "^4.7.2",
     "@openzeppelin/contracts-upgradeable": "^4.7.2",
     "erc20-extensions": "^1.1.1",
+    "@primitivefi/hardhat-dodoc": "^0.2.3",
     "hardhat": "^2.9.3",
     "keccak256": "^1.0.6",
     "mcl-wasm": "^1.0.2",
