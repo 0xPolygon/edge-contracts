@@ -579,12 +579,12 @@ describe("ChildValidatorSet", () => {
   });
 
   describe("delegate", async () => {
-    it("only validators can delegate", async () => {
+    it("should only be able to delegate to validators", async () => {
       const restake = false;
 
-      await expect(childValidatorSet.delegate(accounts[1].address, restake, { value: 100 })).to.be.revertedWith(
-        customError("Unauthorized", "INVALID_VALIDATOR")
-      );
+      await expect(
+        childValidatorSet.delegate(accounts[1].address, restake, { value: minDelegation })
+      ).to.be.revertedWith(customError("Unauthorized", "INVALID_VALIDATOR"));
     });
 
     it("Delegate less amount than minDelegation", async () => {

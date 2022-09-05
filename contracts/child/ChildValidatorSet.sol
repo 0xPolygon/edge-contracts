@@ -173,8 +173,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function delegate(address validator, bool restake) external payable {
-        if (!getValidator(validator).active) revert Unauthorized("INVALID_VALIDATOR");
-
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         if (delegation.balanceOf(msg.sender) + msg.value < minDelegation)
             revert StakeRequirement({src: "delegate", msg: "DELEGATION_TOO_LOW"});
@@ -370,8 +368,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         address validator,
         uint256 amount
     ) private {
-        Validator storage _validator = _validators.get(validator);
-        // require(_validator.active, "INACTIVE_VALIDATOR");
+        if (!getValidator(validator).active) revert Unauthorized("INVALID_VALIDATOR");
         _queue.insert(validator, 0, amount.toInt256Safe());
         _validators.getDelegationPool(validator).deposit(delegator, amount);
         // delegations[delegator][validator].amount += amount;
