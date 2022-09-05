@@ -19,7 +19,6 @@ jobs:
       - run: npx hardhat compile --show-stack-traces
       - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel
   forge_tests:
-    name: Foundry project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
