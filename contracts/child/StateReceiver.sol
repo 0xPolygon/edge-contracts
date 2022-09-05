@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.15;
 
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
@@ -28,8 +28,9 @@ contract StateReceiver is System {
     // Index of the next event which needs to be processed
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public counter;
-    uint256 public bundleCounter;
-    uint256 public lastExecutedBundleCounter;
+    uint256 public bundleCounter = 1;
+    uint256 public lastExecutedBundleCounter = 1;
+    uint256 public lastCommittedId;
     uint256 public currentLeafIndex;
 
     mapping(uint256 => StateSyncBundle) public bundles;
@@ -44,6 +45,9 @@ contract StateReceiver is System {
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
     function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
+        uint256 currentBundleCounter = bundleCounter++;
+        require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
+        require(bundle.endId >= bundle.startId, "INVALID_END_ID");
         // create sig data for verification
         // counter, sender, receiver, data and result (skip) should be
         // part of the dataHash. Otherwise data can be manipulated for same sigs
@@ -53,7 +57,9 @@ contract StateReceiver is System {
 
         _checkPubkeyAggregation(dataHash, signature);
 
-        bundles[bundleCounter++] = bundle;
+        bundles[currentBundleCounter] = bundle;
+
+        lastCommittedId = bundle.endId;
     }
 
     function execute(bytes32[] calldata proof, StateSync[] calldata objs) external {
