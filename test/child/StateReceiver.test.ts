@@ -59,7 +59,7 @@ describe("StateReceiver", () => {
 
   it("State sync commit fail: no system call", async () => {
     const bundle = {
-      startId: 0,
+      startId: 1,
       endId: 1,
       leaves: 1,
       root: ethers.constants.HashZero,
@@ -76,7 +76,7 @@ describe("StateReceiver", () => {
       alwaysFalseBytecode,
     ]);
     const bundle = {
-      startId: 0,
+      startId: 1,
       endId: 1,
       leaves: 1,
       root: ethers.constants.HashZero,
@@ -88,6 +88,26 @@ describe("StateReceiver", () => {
       "0x0000000000000000000000000000000000002030",
       alwaysTrueBytecode,
     ]);
+  });
+
+  it("State sync bad commit fail: invalid start id", async () => {
+    const bundle = {
+      startId: 0,
+      endId: 1,
+      leaves: 1,
+      root: ethers.constants.HashZero,
+    };
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith("INVALID_START_ID");
+  });
+
+  it("State sync bad commit fail: invalid end id", async () => {
+    const bundle = {
+      startId: 1,
+      endId: 0,
+      leaves: 1,
+      root: ethers.constants.HashZero,
+    };
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith("INVALID_END_ID");
   });
 
   it("State sync commit", async () => {
@@ -203,9 +223,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root,
     };
-    const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero);
-
-    await tx.wait();
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.not.be.reverted;
   });
 
   it("State sync execute: skipped", async () => {
@@ -254,9 +272,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root,
     };
-    const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero);
-
-    await tx.wait();
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.not.be.reverted;
   });
 
   it("State sync execute: failed message call", async () => {
@@ -280,10 +296,17 @@ describe("StateReceiver", () => {
   it("State sync bad commit", async () => {
     hashes = [];
     stateSyncBundle = [];
-    let counter: BigNumber = (await stateReceiver.counter()).add(2);
+    let counter: BigNumber = (await stateReceiver.counter()).add(1);
     const stateSyncs = [
       {
         id: counter,
+        sender: ethers.constants.AddressZero,
+        receiver: revertContractAddress,
+        data: ethers.constants.HashZero,
+        skip: false,
+      },
+      {
+        id: counter.add(2),
         sender: ethers.constants.AddressZero,
         receiver: revertContractAddress,
         data: ethers.constants.HashZero,
