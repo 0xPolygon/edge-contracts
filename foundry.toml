@@ -4,9 +4,6 @@ test = 'test/forge'
 libs = ['node_modules', 'lib']
 out = 'out'
 cache_path  = 'forge-cache'
-remappings = [
-    '@openzeppelin/=node_modules/@openzeppelin/',
-    ]
 verbosity = 2
 # comment out if you notice any weird behavior
 #sparse_mode = true
