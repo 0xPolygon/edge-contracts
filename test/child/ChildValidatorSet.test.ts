@@ -685,7 +685,6 @@ describe("ChildValidatorSet", () => {
       ).to.not.be.reverted;
 
       const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[3].address);
-      console.log(reward);
 
       //Claim with restake
       const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[2].address, true);
@@ -728,7 +727,6 @@ describe("ChildValidatorSet", () => {
       ).to.not.be.reverted;
 
       const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[3].address);
-      console.log(reward);
       //Claim without restake
       const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[2].address, false);
 
