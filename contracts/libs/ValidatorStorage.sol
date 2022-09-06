@@ -2,6 +2,11 @@
 pragma solidity ^0.8.13;
 
 import "../interfaces/IValidator.sol";
+import "./RewardPool.sol";
+
+error AmountZero();
+error NotFound(address validator);
+error Exists(address validator);
 
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
@@ -9,6 +14,14 @@ library ValidatorStorageLib {
     function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
         return self.nodes[validator].validator;
+    }
+
+    function getDelegationPool(ValidatorTree storage self, address validator)
+        internal
+        view
+        returns (RewardPool storage)
+    {
+        return self.delegationPools[validator];
     }
 
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {

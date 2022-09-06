@@ -5,13 +5,13 @@ import {Validator} from "../interfaces/IValidator.sol";
 
 struct UptimeData {
     address validator;
-    uint256 uptime;
+    uint256 signedBlocks;
 }
 
 struct Uptime {
     uint256 epochId;
     UptimeData[] uptimeData;
-    uint256 totalUptime;
+    uint256 totalBlocks;
 }
 
 struct Stake {
@@ -108,6 +108,8 @@ interface IChildValidatorSet {
 
     function getValidator(address validator) external view returns (Validator memory);
 
+    function delegationOf(address validator, address delegator) external view returns (uint256);
+
     // get first `n` of validators sorted by stake from high to low
     function sortedValidators(uint256 n) external view returns (address[] memory);
 
@@ -115,11 +117,13 @@ interface IChildValidatorSet {
     /// @return stake Returns total stake (in MATIC wei)
     function totalStake() external view returns (uint256);
 
+    function totalActiveStake() external view returns (uint256);
+
     function withdrawable(address account) external view returns (uint256);
 
     function pendingWithdrawals(address account) external view returns (uint256);
 
-    function calculateValidatorReward(address validator) external view returns (uint256);
+    function getValidatorReward(address validator) external view returns (uint256);
 
-    function calculateDelegatorReward(address validator, address delegator) external view returns (uint256);
+    function getDelegatorReward(address validator, address delegator) external view returns (uint256);
 }
