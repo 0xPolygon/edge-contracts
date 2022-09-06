@@ -56,6 +56,6 @@ library RewardPoolLib {
     }
 
     function magnitude() private pure returns (uint256) {
-        return 10**40;
+        return 1e18;
     }
 }
