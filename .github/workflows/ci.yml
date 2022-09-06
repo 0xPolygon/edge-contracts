@@ -24,17 +24,17 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Get node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16.x"
-      - run: npm install
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+      - name: Install Node modules
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - run: npm install
       - name: Run tests
-        run: forge test -vvv
+        run: FOUNDRY_PROFILE=intense forge test -vvv --no-match-contract=ValidatorStorage && forge test -vvv match-contract=ValidatorStorage
   gas_report:
     runs-on: ubuntu-latest
     steps:
