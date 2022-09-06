@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 library Merkle {
@@ -6,7 +7,7 @@ library Merkle {
         uint256 index,
         bytes32 rootHash,
         bytes32[] calldata proof
-    ) internal view returns (bool) {
+    ) internal pure returns (bool) {
         uint256 proofHeight = proof.length;
         // Proof of size n means, height of the tree is n+1.
         // In a tree of height n+1, max leaves possible is 2^n

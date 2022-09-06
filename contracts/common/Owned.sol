@@ -21,9 +21,10 @@ abstract contract Owned is IOwned, Initializable {
     }
 
     /// @dev can only be called by the new current owner
-    function proposeOwner(address payable _newOwner) external virtual onlyOwner {
-        proposedOwner = _newOwner;
-        emit OwnershipProposed(_newOwner);
+    // slither-disable-next-line missing-zero-check
+    function proposeOwner(address payable newOwner) external virtual onlyOwner {
+        proposedOwner = newOwner;
+        emit OwnershipProposed(newOwner);
     }
 
     /// @dev can only be called by the new proposed owner
@@ -38,5 +39,6 @@ abstract contract Owned is IOwned, Initializable {
         owner = newOwner;
     }
 
+    // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;
 }

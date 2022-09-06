@@ -231,12 +231,14 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function withdraw(address to) external nonReentrant {
+        assert(to != address(0));
         WithdrawalQueue storage queue = _withdrawals[msg.sender];
         (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
         queue.head = newHead;
+        emit Withdrawal(msg.sender, to, amount);
+        // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{value: amount}("");
         require(success, "WITHDRAWAL_FAILED");
-        emit Withdrawal(msg.sender, to, amount);
     }
 
     function setCommission(uint256 newCommission) external onlyValidator {
@@ -279,7 +281,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         return validatorAddresses;
     }
 
-    function totalStake() public view returns (uint256) {
+    function totalStake() external view returns (uint256) {
         return _validators.totalStake;
     }
 
@@ -296,19 +298,19 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         }
     }
 
-    function withdrawable(address account) public view returns (uint256 amount) {
+    function withdrawable(address account) external view returns (uint256 amount) {
         (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
     }
 
-    function pendingWithdrawals(address account) public view returns (uint256) {
+    function pendingWithdrawals(address account) external view returns (uint256) {
         return _withdrawals[account].pending(currentEpochId);
     }
 
-    function getDelegatorReward(address validator, address delegator) public view returns (uint256) {
+    function getDelegatorReward(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
 
-    function getValidatorReward(address validator) public view returns (uint256) {
+    function getValidatorReward(address validator) external view returns (uint256) {
         return getValidator(validator).withdrawableRewards;
     }
 
@@ -405,5 +407,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         return (validatorReward + commission, delegatorReward - commission);
     }
 
+    // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;
 }

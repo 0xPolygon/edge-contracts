@@ -13,7 +13,7 @@ library RewardPoolLib {
     function distributeReward(RewardPool storage pool, uint256 amount) internal {
         if (amount == 0) return;
         if (pool.supply == 0) revert NoTokensDelegated(pool.validator);
-        pool.magnifiedRewardPerShare += (amount * MAGNITUDE()) / pool.supply;
+        pool.magnifiedRewardPerShare += (amount * magnitude()) / pool.supply;
     }
 
     function deposit(
@@ -48,14 +48,14 @@ library RewardPoolLib {
     function totalRewardsEarned(RewardPool storage pool, address account) internal view returns (uint256) {
         int256 magnifiedRewards = (pool.magnifiedRewardPerShare * pool.balances[account]).toInt256Safe();
         uint256 correctedRewards = (magnifiedRewards + pool.magnifiedRewardCorrections[account]).toUint256Safe();
-        return correctedRewards / MAGNITUDE();
+        return correctedRewards / magnitude();
     }
 
     function claimableRewards(RewardPool storage pool, address account) internal view returns (uint256) {
         return totalRewardsEarned(pool, account) - pool.claimedRewards[account];
     }
 
-    function MAGNITUDE() private pure returns (uint256) {
+    function magnitude() private pure returns (uint256) {
         return 10**40;
     }
 }
