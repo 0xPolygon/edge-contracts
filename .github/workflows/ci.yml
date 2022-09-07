@@ -34,7 +34,7 @@ jobs:
           node-version: "16.x"
       - run: npm install
       - name: Run tests
-        run: FOUNDRY_PROFILE=intense forge test -vvv --no-match-contract=ValidatorStorage && forge test -vvv match-contract=ValidatorStorage
+        run: FOUNDRY_PROFILE=intense forge test -vvv --no-match-contract=ValidatorStorage; forge test -vvv --match-contract=ValidatorStorage
   gas_report:
     runs-on: ubuntu-latest
     steps:
