@@ -2,23 +2,11 @@
 /* Adapted from https://github.com/thehubbleproject/hubble-contracts/blob/f1c13fe4e1a0dc9ab1f150895de7c0e654ee46b0/ts/
    hashToField.ts */
 import { BigNumber } from "ethers";
-import {
-  sha256,
-  arrayify,
-  hexlify,
-  randomBytes,
-  zeroPad,
-} from "ethers/lib/utils";
+import { sha256, arrayify, hexlify, randomBytes, zeroPad } from "ethers/lib/utils";
 
-export const FIELD_ORDER = BigNumber.from(
-  "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
-);
+export const FIELD_ORDER = BigNumber.from("0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47");
 
-export function hashToField(
-  domain: Uint8Array,
-  msg: Uint8Array,
-  count: number
-): BigNumber[] {
+export function hashToField(domain: Uint8Array, msg: Uint8Array, count: number): BigNumber[] {
   const u = 48;
   const _msg = expandMsg(domain, msg, count * u);
   const els = [];
@@ -29,11 +17,7 @@ export function hashToField(
   return els;
 }
 
-export function expandMsg(
-  domain: Uint8Array,
-  msg: Uint8Array,
-  outLen: number
-): Uint8Array {
+export function expandMsg(domain: Uint8Array, msg: Uint8Array, outLen: number): Uint8Array {
   if (domain.length > 32) {
     throw new Error("bad domain size");
   }
