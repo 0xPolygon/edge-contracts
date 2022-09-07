@@ -46,6 +46,7 @@ library ValidatorStorageLib {
         }
     }
 
+    // slither-disable-next-line dead-code
     function next(ValidatorTree storage self, address target) internal view returns (address cursor) {
         if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].right != EMPTY) {
@@ -76,10 +77,12 @@ library ValidatorStorageLib {
         return (key != EMPTY) && ((key == self.root) || (self.nodes[key].parent != EMPTY));
     }
 
+    // slither-disable-next-line dead-code
     function isEmpty(address key) internal pure returns (bool) {
         return key == EMPTY;
     }
 
+    // slither-disable-next-line dead-code
     function getNode(ValidatorTree storage self, address key)
         internal
         view
@@ -180,6 +183,7 @@ library ValidatorStorageLib {
         self.totalStake -= self.nodes[cursor].validator.stake;
     }
 
+    // slither-disable-next-line dead-code
     function treeMinimum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].left != EMPTY) {
             key = self.nodes[key].left;

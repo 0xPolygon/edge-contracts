@@ -41,6 +41,7 @@ library WithdrawalQueueLib {
         }
     }
 
+    // slither-disable-next-line dead-code
     function length(WithdrawalQueue storage self) internal view returns (uint256) {
         return self.tail - self.head;
     }

@@ -71,6 +71,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         _transferOwnership(governance);
         __ReentrancyGuard_init();
 
+        // slither-disable-next-line events-maths
         epochReward = newEpochReward;
         minStake = newMinStake;
         minDelegation = newMinDelegation;
