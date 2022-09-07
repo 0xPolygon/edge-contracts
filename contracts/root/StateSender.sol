@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 contract StateSender {
     uint256 public constant MAX_LENGTH = 2048;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import {ValidatorStorageLib, AmountZero, Exists, NotFound} from "contracts/libs/ValidatorStorage.sol";
 import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/IValidator.sol";
