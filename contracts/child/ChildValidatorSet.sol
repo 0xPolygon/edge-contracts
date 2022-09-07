@@ -46,7 +46,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     mapping(uint256 => Epoch) public epochs;
     mapping(address => bool) public whitelist;
-    mapping(address => int256) rewardModifiers;
+    mapping(address => int256) public rewardModifiers;
 
     modifier onlyValidator() {
         if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
@@ -238,7 +238,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         queue.head = newHead;
         emit Withdrawal(msg.sender, to, amount);
         // slither-disable-next-line low-level-calls
-        (bool success, ) = to.call{value: amount}("");
+        (bool success, ) = to.call{value: amount}(""); // solhint-disable-line avoid-low-level-calls
         require(success, "WITHDRAWAL_FAILED");
     }
 
