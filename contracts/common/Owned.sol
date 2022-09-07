@@ -9,9 +9,9 @@ abstract contract Owned is IOwned, Initializable {
     address public proposedOwner;
 
     /// @dev initializes the contract setting the deployer as the initial owner
+    // prettier-ignore
     // slither-disable-next-line naming-convention
-    function __Owned_init() internal onlyInitializing {
-        // solhint-disable-line func-name-mixedcase
+    function __Owned_init() internal onlyInitializing { // solhint-disable-line func-name-mixedcase
         _transferOwnership(msg.sender);
     }
 
