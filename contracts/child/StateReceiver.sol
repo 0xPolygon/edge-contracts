@@ -26,10 +26,11 @@ contract StateReceiver is System {
     // slither-disable-next-line too-many-digits
     uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed
-    /// @custom:security write-protection="onlySystemCall()"
     uint256 public counter;
+    /// @custom:security write-protection="onlySystemCall()"
     uint256 public bundleCounter = 1;
     uint256 public lastExecutedBundleCounter = 1;
+    /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
     uint256 public currentLeafIndex;
 
@@ -81,19 +82,12 @@ contract StateReceiver is System {
         }
 
         uint256 currentId = counter;
+        uint256 length = objs.length;
+        counter += objs.length;
+
         // execute state sync
-        for (uint256 i = 0; i < objs.length; ++i) {
+        for (uint256 i = 0; i < length; ++i) {
             _executeStateSync(currentId++, objs[i]);
-        }
-
-        counter = currentId;
-    }
-
-    function lastCommittedStateSyncId() external view returns (uint256) {
-        if (lastExecutedBundleCounter == bundleCounter) {
-            return counter; // return counter when all statesyncs have been executed
-        } else {
-            return bundles[bundleCounter - 1].endId; // return last committed id when statesyncs are remaining
         }
     }
 

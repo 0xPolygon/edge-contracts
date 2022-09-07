@@ -247,9 +247,8 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
-        // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line reentrancy-events,low-level-calls
-        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(from, to, amount));
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(from, to, amount)); // solhint-disable-line avoid-low-level-calls
         require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
         emit Transfer(from, to, amount);
@@ -269,9 +268,8 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
 
         _totalSupply += amount;
 
-        // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line reentrancy-events,low-level-calls
-        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call( // solhint-disable-line avoid-low-level-calls
             abi.encode(ZERO_ADDRESS, account, amount)
         );
         require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
@@ -295,9 +293,8 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
 
         _totalSupply -= amount;
 
-        // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line reentrancy-events,low-level-calls
-        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call( // solhint-disable-line avoid-low-level-calls
             abi.encode(account, ZERO_ADDRESS, amount)
         );
         require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
