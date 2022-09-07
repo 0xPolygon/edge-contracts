@@ -315,7 +315,7 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
                                 HELPERS
 //////////////////////////////////////////////////////////////////////////*/
 
-function _createValidator(uint256 amount) returns (Validator memory validator) {
+function _createValidator(uint256 amount) pure returns (Validator memory validator) {
     validator.stake = amount;
     validator.totalStake = amount;
 }
