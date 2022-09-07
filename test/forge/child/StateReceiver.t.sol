@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.15;
 
 import {StateReceiver} from "contracts/child/StateReceiver.sol";
 import {System} from "contracts/child/StateReceiver.sol";
@@ -40,8 +40,9 @@ abstract contract EmptyState is TestPlus, System, StateReceiver {
 contract StateReceiverTest_EmptyState is EmptyState {
     function testConstructor() public {
         assertEq(stateReceiver.counter(), 0, "Counter");
-        assertEq(stateReceiver.bundleCounter(), 0, "Bundle counter");
-        assertEq(stateReceiver.lastExecutedBundleCounter(), 0, "Last executed bundle counter");
+        assertEq(stateReceiver.bundleCounter(), 1, "Bundle counter");
+        assertEq(stateReceiver.lastExecutedBundleCounter(), 1, "Last executed bundle counter");
+        assertEq(stateReceiver.lastCommittedId(), 0, "Last committed ID");
         assertEq(stateReceiver.currentLeafIndex(), 0, "Current leaf index");
     }
 
@@ -52,7 +53,29 @@ contract StateReceiverTest_EmptyState is EmptyState {
         stateReceiver.commit(bundle, "");
     }
 
+    function testCannotCommit_InvalidStartId() public {
+        bundle.startId = 0;
+
+        vm.expectRevert("INVALID_START_ID");
+        stateReceiver.commit(bundle, "");
+
+        bundle.startId = 2;
+
+        vm.expectRevert("INVALID_START_ID");
+        stateReceiver.commit(bundle, "");
+    }
+
+    function testCannotCommit_InvalidEndId() public {
+        bundle.startId = 1;
+        bundle.endId = 0;
+
+        vm.expectRevert("INVALID_END_ID");
+        stateReceiver.commit(bundle, "");
+    }
+
     function testCannotCommit_SignatureVerificationFailed() public {
+        bundle.startId = 1;
+        bundle.endId = 1337;
         vm.mockCall(VALIDATOR_PKCHECK_PRECOMPILE, "", abi.encode(false));
 
         vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
@@ -60,13 +83,14 @@ contract StateReceiverTest_EmptyState is EmptyState {
     }
 
     function testCommit() public {
-        // set startId to 1337, so we can assert commitment
-        bundle.startId = 1337;
+        bundle.startId = 1;
+        bundle.endId = 1337;
 
         stateReceiver.commit(bundle, "");
 
-        assertEq(stateReceiver.bundleCounter(), 1);
-        assertEq(_getBundle(0), bundle);
+        assertEq(stateReceiver.bundleCounter(), 2, "Bundle counter");
+        assertEq(_getBundle(1), bundle);
+        assertEq(stateReceiver.lastCommittedId(), 1337, "Last committed ID");
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -163,6 +187,8 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
 
         // commit bundle
         StateSyncBundle memory _bundle;
+        _bundle.startId = 1;
+        _bundle.endId = bundleSize * batchSize;
         _bundle.leaves = bundleSize;
         _bundle.root = getRoot(leaves);
         stateReceiver.commit(_bundle, "");
@@ -189,7 +215,7 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
         stateReceiver.execute(proofFor[0], _getBatch(0));
 
         assertEq(stateReceiver.counter(), 2, "Counter");
-        assertEq(stateReceiver.lastExecutedBundleCounter(), 0, "Last executed bundle counter");
+        assertEq(stateReceiver.lastExecutedBundleCounter(), 1, "Last executed bundle counter");
         assertEq(stateReceiver.currentLeafIndex(), 1, "Current leaf index");
         assertEq(stateReceivingContract.counter(), 1337 * 2, "State receiving contract");
     }
@@ -200,7 +226,7 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
         stateReceiver.execute(proofFor[1], _getBatch(1));
 
         assertEq(stateReceiver.counter(), 4, "Counter");
-        assertEq(stateReceiver.lastExecutedBundleCounter(), 1, "Last executed bundle counter");
+        assertEq(stateReceiver.lastExecutedBundleCounter(), 2, "Last executed bundle counter");
         assertEq(stateReceiver.currentLeafIndex(), 0, "Current leaf index");
         assertEq(_getBundle(0), bundle); // empty (deleted)
         assertEq(stateReceivingContract.counter(), 1337 * 4, "State receiving contract");

@@ -43,7 +43,7 @@ contract MerkleTest is TestPlus, MurkyBase {
         uint256 index,
         bytes32 rootHash,
         bytes32[] calldata proof
-    ) external view returns (bool) {
+    ) external pure returns (bool) {
         return leaf.checkMembership(index, rootHash, proof);
     }
 }

@@ -34,7 +34,7 @@ contract RewardPoolTest is Test {
         assertEq(pool.magnifiedRewardCorrections[accountB], 0, "Correction B");
     }
 
-    function testBalanceOf(uint96[2] memory amounts) public {
+    function testBalanceOf() public {
         pool.deposit(accountA, 1 ether);
         pool.deposit(accountB, 3 ether);
 
