@@ -115,3 +115,14 @@ cache
 artifacts
 
 .openzeppelin/
+
+# Foundry
+# Compiler files
+forge-cache/
+out/
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*
+/broadcast/*/31337/
+
+.DS_Store

@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: MIT
 // solium-disable security/no-assign-params
 
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.15;
 
 /**
  * @title Elliptic curve operations on twist points on bn256 (G2)
- * @dev Adaptation of https://github.com/musalbas/solidity-BN256G2 to 0.6.0
+ * @dev Adaptation of https://github.com/musalbas/solidity-BN256G2 to 0.6.0 and then 0.8.15
  */
+// slither-disable-next-line missing-inheritance
 contract BN256G2 {
-    uint256 internal constant FIELD_MODULUS =
-        0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
-    uint256 internal constant TWISTBX =
-        0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5;
-    uint256 internal constant TWISTBY =
-        0x9713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2;
+    uint256 internal constant FIELD_MODULUS = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
+    uint256 internal constant TWISTBX = 0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5;
+    uint256 internal constant TWISTBY = 0x9713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2;
     uint256 internal constant PTXX = 0;
     uint256 internal constant PTXY = 1;
     uint256 internal constant PTYX = 2;
@@ -22,16 +20,12 @@ contract BN256G2 {
     uint256 internal constant PTZY = 5;
 
     // This is the generator negated, to use for pairing
-    uint256 public constant G2_NEG_X_RE =
-        0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2;
-    uint256 public constant G2_NEG_X_IM =
-        0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED;
+    uint256 public constant G2_NEG_X_RE = 0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2;
+    uint256 public constant G2_NEG_X_IM = 0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED;
     // slither-disable-next-line similar-names
-    uint256 public constant G2_NEG_Y_RE =
-        0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec;
+    uint256 public constant G2_NEG_Y_RE = 0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec;
     // slither-disable-next-line similar-names
-    uint256 public constant G2_NEG_Y_IM =
-        0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d;
+    uint256 public constant G2_NEG_Y_IM = 0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d;
 
     /**
      * @notice Add two twist points
@@ -66,17 +60,11 @@ contract BN256G2 {
     {
         if (pt1xx == 0 && pt1xy == 0 && pt1yx == 0 && pt1yy == 0) {
             if (!(pt2xx == 0 && pt2xy == 0 && pt2yx == 0 && pt2yy == 0)) {
-                require(
-                    _isOnCurve(pt2xx, pt2xy, pt2yx, pt2yy),
-                    "point not in curve"
-                );
+                require(_isOnCurve(pt2xx, pt2xy, pt2yx, pt2yy), "point not in curve");
             }
             return (pt2xx, pt2xy, pt2yx, pt2yy);
         } else if (pt2xx == 0 && pt2xy == 0 && pt2yx == 0 && pt2yy == 0) {
-            require(
-                _isOnCurve(pt1xx, pt1xy, pt1yx, pt1yy),
-                "point not in curve"
-            );
+            require(_isOnCurve(pt1xx, pt1xy, pt1yx, pt1yy), "point not in curve");
             return (pt1xx, pt1xy, pt1yx, pt1yy);
         }
 
@@ -84,30 +72,9 @@ contract BN256G2 {
 
         require(_isOnCurve(pt2xx, pt2xy, pt2yx, pt2yy), "point not in curve");
 
-        uint256[6] memory pt3 = ecTwistAddJacobian(
-            pt1xx,
-            pt1xy,
-            pt1yx,
-            pt1yy,
-            1,
-            0,
-            pt2xx,
-            pt2xy,
-            pt2yx,
-            pt2yy,
-            1,
-            0
-        );
+        uint256[6] memory pt3 = ecTwistAddJacobian(pt1xx, pt1xy, pt1yx, pt1yy, 1, 0, pt2xx, pt2xy, pt2yx, pt2yy, 1, 0);
 
-        return
-            _fromJacobian(
-                pt3[PTXX],
-                pt3[PTXY],
-                pt3[PTYX],
-                pt3[PTYY],
-                pt3[PTZX],
-                pt3[PTZY]
-            );
+        return _fromJacobian(pt3[PTXX], pt3[PTXY], pt3[PTYX], pt3[PTYY], pt3[PTZX], pt3[PTZY]);
     }
 
     /**
@@ -141,30 +108,11 @@ contract BN256G2 {
             pt1yx = 1;
             pt1zx = 0;
         } else {
-            require(
-                _isOnCurve(pt1xx, pt1xy, pt1yx, pt1yy),
-                "point not in curve"
-            );
+            require(_isOnCurve(pt1xx, pt1xy, pt1yx, pt1yy), "point not in curve");
         }
-        uint256[6] memory pt2 = _ecTwistMulJacobian(
-            s,
-            pt1xx,
-            pt1xy,
-            pt1yx,
-            pt1yy,
-            pt1zx,
-            0
-        );
+        uint256[6] memory pt2 = _ecTwistMulJacobian(s, pt1xx, pt1xy, pt1yx, pt1yy, pt1zx, 0);
 
-        return
-            _fromJacobian(
-                pt2[PTXX],
-                pt2[PTXY],
-                pt2[PTYX],
-                pt2[PTYY],
-                pt2[PTZX],
-                pt2[PTZY]
-            );
+        return _fromJacobian(pt2[PTXX], pt2[PTXY], pt2[PTYX], pt2[PTYY], pt2[PTZX], pt2[PTZY]);
     }
 
     /**
@@ -205,16 +153,8 @@ contract BN256G2 {
         uint256 yy
     ) internal pure returns (uint256, uint256) {
         return (
-            submod(
-                mulmod(xx, yx, FIELD_MODULUS),
-                mulmod(xy, yy, FIELD_MODULUS),
-                FIELD_MODULUS
-            ),
-            addmod(
-                mulmod(xx, yy, FIELD_MODULUS),
-                mulmod(xy, yx, FIELD_MODULUS),
-                FIELD_MODULUS
-            )
+            submod(mulmod(xx, yx, FIELD_MODULUS), mulmod(xy, yy, FIELD_MODULUS), FIELD_MODULUS),
+            addmod(mulmod(xx, yy, FIELD_MODULUS), mulmod(xy, yx, FIELD_MODULUS), FIELD_MODULUS)
         );
     }
 
@@ -291,23 +231,12 @@ contract BN256G2 {
      * @param y FQ2 operands second coordinate
      * @return Inv([xx, xy])
      */
-    function _fq2inv(uint256 x, uint256 y)
-        internal
-        view
-        returns (uint256, uint256)
-    {
+    function _fq2inv(uint256 x, uint256 y) internal view returns (uint256, uint256) {
         uint256 inv = _modInv(
-            addmod(
-                mulmod(y, y, FIELD_MODULUS),
-                mulmod(x, x, FIELD_MODULUS),
-                FIELD_MODULUS
-            ),
+            addmod(mulmod(y, y, FIELD_MODULUS), mulmod(x, x, FIELD_MODULUS), FIELD_MODULUS),
             FIELD_MODULUS
         );
-        return (
-            mulmod(x, inv, FIELD_MODULUS),
-            FIELD_MODULUS - mulmod(y, inv, FIELD_MODULUS)
-        );
+        return (mulmod(x, inv, FIELD_MODULUS), FIELD_MODULUS - mulmod(y, inv, FIELD_MODULUS));
     }
 
     /**
@@ -342,11 +271,7 @@ contract BN256G2 {
      * @param n The modulus
      * @return result Inv(a)modn
      **/
-    function _modInv(uint256 a, uint256 n)
-        internal
-        view
-        returns (uint256 result)
-    {
+    function _modInv(uint256 a, uint256 n) internal view returns (uint256 result) {
         bool success;
         // prettier-ignore
         // slither-disable-next-line assembly
@@ -441,24 +366,24 @@ contract BN256G2 {
         uint256 pt2zy
     ) internal pure returns (uint256[6] memory pt3) {
         if (pt1zx == 0 && pt1zy == 0) {
-            (
-                pt3[PTXX],
-                pt3[PTXY],
-                pt3[PTYX],
-                pt3[PTYY],
-                pt3[PTZX],
-                pt3[PTZY]
-            ) = (pt2xx, pt2xy, pt2yx, pt2yy, pt2zx, pt2zy);
+            (pt3[PTXX], pt3[PTXY], pt3[PTYX], pt3[PTYY], pt3[PTZX], pt3[PTZY]) = (
+                pt2xx,
+                pt2xy,
+                pt2yx,
+                pt2yy,
+                pt2zx,
+                pt2zy
+            );
             return pt3;
         } else if (pt2zx == 0 && pt2zy == 0) {
-            (
-                pt3[PTXX],
-                pt3[PTXY],
-                pt3[PTYX],
-                pt3[PTYY],
-                pt3[PTZX],
-                pt3[PTZY]
-            ) = (pt1xx, pt1xy, pt1yx, pt1yy, pt1zx, pt1zy);
+            (pt3[PTXX], pt3[PTXY], pt3[PTYX], pt3[PTYY], pt3[PTZX], pt3[PTZY]) = (
+                pt1xx,
+                pt1xy,
+                pt1yx,
+                pt1yy,
+                pt1zx,
+                pt1zy
+            );
             return pt3;
         }
 
@@ -469,14 +394,7 @@ contract BN256G2 {
 
         if (pt2xx == pt3[PTZX] && pt2xy == pt3[PTZY]) {
             if (pt2yx == pt3[PTYX] && pt2yy == pt3[PTYY]) {
-                (
-                    pt3[PTXX],
-                    pt3[PTXY],
-                    pt3[PTYX],
-                    pt3[PTYY],
-                    pt3[PTZX],
-                    pt3[PTZY]
-                ) = _ecTwistDoubleJacobian(
+                (pt3[PTXX], pt3[PTXY], pt3[PTYX], pt3[PTYY], pt3[PTZX], pt3[PTZY]) = _ecTwistDoubleJacobian(
                     pt1xx,
                     pt1xy,
                     pt1yx,
@@ -486,14 +404,7 @@ contract BN256G2 {
                 );
                 return pt3;
             }
-            (
-                pt3[PTXX],
-                pt3[PTXY],
-                pt3[PTYX],
-                pt3[PTYY],
-                pt3[PTZX],
-                pt3[PTZY]
-            ) = (1, 0, 1, 0, 0, 0);
+            (pt3[PTXX], pt3[PTXY], pt3[PTYX], pt3[PTYY], pt3[PTZX], pt3[PTZY]) = (1, 0, 1, 0, 0, 0);
             return pt3;
         }
 

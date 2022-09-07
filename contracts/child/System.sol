@@ -28,4 +28,7 @@ contract System {
         if (msg.sender != SYSTEM) revert Unauthorized("SYSTEMCALL");
         _;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -9,9 +9,10 @@ abstract contract Owned is IOwned, Initializable {
     address public proposedOwner;
 
     /// @dev initializes the contract setting the deployer as the initial owner
-    function __Owned_init() internal initializer {
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
+    // slither-disable-next-line naming-convention
+    function __Owned_init() internal onlyInitializing {
+        // solhint-disable-line func-name-mixedcase
+        _transferOwnership(msg.sender);
     }
 
     /// @dev throws if called by any account other than the owner
@@ -21,15 +22,24 @@ abstract contract Owned is IOwned, Initializable {
     }
 
     /// @dev can only be called by the new current owner
-    function proposeOwner(address payable _newOwner) external onlyOwner {
-        proposedOwner = _newOwner;
-        emit OwnershipProposed(_newOwner);
+    // slither-disable-next-line missing-zero-check
+    function proposeOwner(address payable newOwner) external virtual onlyOwner {
+        proposedOwner = newOwner;
+        emit OwnershipProposed(newOwner);
     }
 
     /// @dev can only be called by the new proposed owner
-    function claimOwnership() external {
+    function claimOwnership() external virtual {
         if (msg.sender != proposedOwner) revert Unauthorized("PROPOSED_OWNER");
-        emit OwnershipTransferred(owner, proposedOwner);
-        owner = proposedOwner;
+        _transferOwnership(proposedOwner);
     }
+
+    /// @dev Transfers ownership of the contract to a new account (`newOwner`).
+    function _transferOwnership(address newOwner) internal virtual {
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

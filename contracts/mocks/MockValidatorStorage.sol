@@ -4,19 +4,27 @@ pragma solidity ^0.8.13;
 import "../libs/ValidatorStorage.sol";
 
 contract MockValidatorStorage {
+    // slither-disable-next-line uninitialized-state
     uint256[4] blsKey;
 
     using ValidatorStorageLib for ValidatorTree;
     ValidatorTree validators;
 
-    uint256 public ACTIVE_VALIDATORS = 5;
+    uint256 public constant ACTIVE_VALIDATORS = 5;
 
     function balanceOf(address account) public view returns (uint256 balance) {
         balance = validators.nodes[account].validator.totalStake;
     }
 
     function insert(address account, uint256 amount) external {
-        Validator memory data = Validator({blsKey: blsKey, stake: amount, totalStake: amount, commission: 0});
+        Validator memory data = Validator({
+            blsKey: blsKey,
+            stake: amount,
+            totalStake: amount,
+            commission: 0,
+            withdrawableRewards: 0,
+            active: true
+        });
         validators.insert(account, data);
     }
 

@@ -18,6 +18,23 @@ jobs:
       - run: npm install
       - run: npx hardhat compile --show-stack-traces
       - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel
+  forge_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Install Node modules
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - run: npm install
+      - name: Run tests
+        run: FOUNDRY_PROFILE=intense forge test -vvv --no-match-contract=ValidatorStorage; forge test -vvv --match-contract=ValidatorStorage
   gas_report:
     runs-on: ubuntu-latest
     steps:

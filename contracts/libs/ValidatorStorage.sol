@@ -2,6 +2,11 @@
 pragma solidity ^0.8.13;
 
 import "../interfaces/IValidator.sol";
+import "./RewardPool.sol";
+
+error AmountZero();
+error NotFound(address validator);
+error Exists(address validator);
 
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
@@ -9,6 +14,14 @@ library ValidatorStorageLib {
     function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
         return self.nodes[validator].validator;
+    }
+
+    function getDelegationPool(ValidatorTree storage self, address validator)
+        internal
+        view
+        returns (RewardPool storage)
+    {
+        return self.delegationPools[validator];
     }
 
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
@@ -33,8 +46,9 @@ library ValidatorStorageLib {
         }
     }
 
+    // slither-disable-next-line dead-code
     function next(ValidatorTree storage self, address target) internal view returns (address cursor) {
-        require(target != EMPTY);
+        if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].right != EMPTY) {
             cursor = treeMinimum(self, self.nodes[target].right);
         } else {
@@ -47,7 +61,7 @@ library ValidatorStorageLib {
     }
 
     function prev(ValidatorTree storage self, address target) internal view returns (address cursor) {
-        require(target != EMPTY);
+        if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].left != EMPTY) {
             cursor = treeMaximum(self, self.nodes[target].left);
         } else {
@@ -63,10 +77,12 @@ library ValidatorStorageLib {
         return (key != EMPTY) && ((key == self.root) || (self.nodes[key].parent != EMPTY));
     }
 
+    // slither-disable-next-line dead-code
     function isEmpty(address key) internal pure returns (bool) {
         return key == EMPTY;
     }
 
+    // slither-disable-next-line dead-code
     function getNode(ValidatorTree storage self, address key)
         internal
         view
@@ -78,7 +94,7 @@ library ValidatorStorageLib {
             bool _red
         )
     {
-        require(exists(self, key));
+        if (!exists(self, key)) revert NotFound(key);
         return (key, self.nodes[key].parent, self.nodes[key].left, self.nodes[key].right, self.nodes[key].red);
     }
 
@@ -89,7 +105,7 @@ library ValidatorStorageLib {
     ) internal {
         assert(key != EMPTY);
         assert(validator.totalStake >= validator.stake);
-        require(!exists(self, key));
+        if (exists(self, key)) revert Exists(key);
         if (validator.stake == 0) {
             self.nodes[key].validator = validator;
             return;
@@ -119,7 +135,7 @@ library ValidatorStorageLib {
 
     function remove(ValidatorTree storage self, address key) internal {
         assert(key != EMPTY);
-        require(exists(self, key));
+        if (!exists(self, key)) revert NotFound(key);
         address probe;
         address cursor;
         if (self.nodes[key].left == EMPTY || self.nodes[key].right == EMPTY) {
@@ -167,6 +183,7 @@ library ValidatorStorageLib {
         self.totalStake -= self.nodes[cursor].validator.stake;
     }
 
+    // slither-disable-next-line dead-code
     function treeMinimum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].left != EMPTY) {
             key = self.nodes[key].left;

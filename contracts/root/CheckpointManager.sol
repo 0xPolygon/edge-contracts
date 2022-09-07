@@ -12,10 +12,7 @@ interface IRootValidatorSet {
 
     function addValidators(Validator[] calldata newValidators) external;
 
-    function getValidatorBlsKey(uint256 id)
-        external
-        view
-        returns (uint256[4] memory);
+    function getValidatorBlsKey(uint256 id) external view returns (uint256[4] memory);
 
     function activeValidatorSetSize() external returns (uint256);
 }
@@ -97,17 +94,12 @@ contract CheckpointManager is Initializable {
         uint256[] calldata validatorIds,
         IRootValidatorSet.Validator[] calldata newValidators
     ) external {
-        bytes memory hash = abi.encode(
-            keccak256(abi.encode(id, checkpoint, newValidators))
-        );
+        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint, newValidators)));
 
         uint256[2] memory message = bls.hashToPoint(domain, hash);
 
         // slither-disable-next-line reentrancy-benign
-        require(
-            _verifySignature(message, signature, validatorIds),
-            "SIGNATURE_VERIFICATION_FAILED"
-        );
+        require(_verifySignature(message, signature, validatorIds), "SIGNATURE_VERIFICATION_FAILED");
 
         _verifyCheckpoint(currentCheckpointId, id, checkpoint);
 
@@ -133,17 +125,11 @@ contract CheckpointManager is Initializable {
         uint256[] calldata validatorIds,
         IRootValidatorSet.Validator[] calldata newValidators
     ) external {
-        bytes memory hash = abi.encode(
-            keccak256(abi.encode(ids, checkpointBatch, newValidators))
-        );
+        bytes memory hash = abi.encode(keccak256(abi.encode(ids, checkpointBatch, newValidators)));
 
         // slither-disable-next-line reentrancy-benign
         require(
-            _verifySignature(
-                bls.hashToPoint(domain, hash),
-                signature,
-                validatorIds
-            ),
+            _verifySignature(bls.hashToPoint(domain, hash), signature, validatorIds),
             "SIGNATURE_VERIFICATION_FAILED"
         );
 
@@ -178,14 +164,8 @@ contract CheckpointManager is Initializable {
     ) internal view {
         require(id == prevId + 1, "ID_NOT_SEQUENTIAL");
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(
-            oldCheckpoint.endBlock + 1 == checkpoint.startBlock,
-            "INVALID_START_BLOCK"
-        );
-        require(
-            checkpoint.endBlock > checkpoint.startBlock,
-            "EMPTY_CHECKPOINT"
-        );
+        require(oldCheckpoint.endBlock + 1 == checkpoint.startBlock, "INVALID_START_BLOCK");
+        require(checkpoint.endBlock > checkpoint.startBlock, "EMPTY_CHECKPOINT");
     }
 
     /**
@@ -201,36 +181,24 @@ contract CheckpointManager is Initializable {
     ) internal returns (bool) {
         uint256 length = validatorIds.length;
         // we assume here that length will always be more than 2 since validator set at genesis is larger than 6
-        require(
-            length > ((2 * rootValidatorSet.activeValidatorSetSize()) / 3),
-            "NOT_ENOUGH_SIGNATURES"
-        );
-        uint256[4] memory aggPubkey = rootValidatorSet.getValidatorBlsKey(
-            validatorIds[0]
-        );
+        require(length > ((2 * rootValidatorSet.activeValidatorSetSize()) / 3), "NOT_ENOUGH_SIGNATURES");
+        uint256[4] memory aggPubkey = rootValidatorSet.getValidatorBlsKey(validatorIds[0]);
         for (uint256 i = 1; i < length; ++i) {
-            uint256[4] memory blsKey = rootValidatorSet.getValidatorBlsKey(
-                validatorIds[i]
-            );
+            uint256[4] memory blsKey = rootValidatorSet.getValidatorBlsKey(validatorIds[i]);
             // slither-disable-next-line calls-loop
-            (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2
-                .ecTwistAdd(
-                    aggPubkey[0],
-                    aggPubkey[1],
-                    aggPubkey[2],
-                    aggPubkey[3],
-                    blsKey[0],
-                    blsKey[1],
-                    blsKey[2],
-                    blsKey[3]
-                );
+            (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
+                aggPubkey[0],
+                aggPubkey[1],
+                aggPubkey[2],
+                aggPubkey[3],
+                blsKey[0],
+                blsKey[1],
+                blsKey[2],
+                blsKey[3]
+            );
         }
 
-        (bool callSuccess, bool result) = bls.verifySingle(
-            signature,
-            aggPubkey,
-            message
-        );
+        (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
         return callSuccess && result;
     }

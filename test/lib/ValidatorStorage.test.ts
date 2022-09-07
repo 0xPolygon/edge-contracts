@@ -51,15 +51,6 @@ describe("ValidatorStorage", async () => {
 
     const activeValidators = await vs.activeValidators();
 
-    console.log(
-      await Promise.all(
-        activeValidators.map(async (v) => ({
-          validator: v,
-          balance: await vs.balanceOf(v),
-        }))
-      )
-    );
-
     expect(activeValidators.length).to.equal(await vs.ACTIVE_VALIDATORS());
   });
 
@@ -72,8 +63,6 @@ describe("ValidatorStorage", async () => {
         balance: await vs.balanceOf(v),
       }))
     );
-
-    console.log(allValidators);
 
     let previousBalance = BigNumber.from(10000);
     for (const validator of allValidators) {

@@ -1,106 +1,101 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "../common/Owned.sol";
+import "./System.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {System} from "./System.sol";
+import "../libs/SafeMathInt.sol";
+import "../libs/ValidatorStorage.sol";
+import "../libs/ValidatorQueue.sol";
+import "../libs/WithdrawalQueue.sol";
+import "../interfaces/IBLS.sol";
+import "../interfaces/IChildValidatorSet.sol";
 
-interface IStakeManager {
-    struct Uptime {
-        uint256 epochId;
-        uint256[] uptimes;
-        uint256 totalUptime;
-    }
-
-    function distributeRewards(Uptime calldata uptime) external;
-
-    function processQueue() external;
-
-    function sortedValidators(uint256 n) external view returns (address[] memory);
-}
-
-/**
-    @title ChildValidatorSet
-    @author Polygon Technology
-    @notice Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
-    @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
- */
-contract ChildValidatorSet is System, OwnableUpgradeable {
+// solhint-disable max-states-count
+contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];
-
-    struct Validator {
-        address _address;
-        uint256[4] blsKey;
-        uint256 selfStake;
-        uint256 totalStake; // self-stake + delegation
-        uint256 commission;
-        ValidatorStatus status;
-    }
-
-    enum ValidatorStatus {
-        REGISTERED, // 0 -> will be staked next epock
-        STAKED, // 1 -> currently staked (i.e. validating)
-        UNSTAKING, // 2 -> currently unstaking (i.e. will stop validating)
-        UNSTAKED // 3 -> not staked (i.e. is not validating)
-    }
-
-    struct Epoch {
-        uint256 startBlock;
-        uint256 endBlock;
-        bytes32 epochRoot;
-        address[] validatorSet;
-    }
+    using SafeMathUint for uint256;
+    using SafeMathInt for int256;
+    using ValidatorStorageLib for ValidatorTree;
+    using ValidatorQueueLib for ValidatorQueue;
+    using WithdrawalQueueLib for WithdrawalQueue;
+    using RewardPoolLib for RewardPool;
 
     bytes32 public constant NEW_VALIDATOR_SIG = 0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
     uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
+    uint256 public constant REWARD_PRECISION = 10**18;
+    uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
+    // more granular commission?
+    uint256 public constant MAX_COMMISSION = 100;
+
     uint256 public currentEpochId;
-
-    IStakeManager public stakeManager;
-
     uint256[] public epochEndBlocks;
+    uint256 public epochReward;
+    uint256 public minStake;
+    uint256 public minDelegation;
+
+    IBLS public bls;
+    uint256[2] public message;
+
+    ValidatorTree private _validators;
+    ValidatorQueue private _queue;
+    mapping(address => WithdrawalQueue) private _withdrawals;
 
     mapping(uint256 => Epoch) public epochs;
-    mapping(address => mapping(uint256 => bool)) public validatorsByEpoch;
     mapping(address => bool) public whitelist;
+    mapping(address => int256) public rewardModifiers;
 
-    event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
-
-    modifier onlyStakeManager() {
-        require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
+    modifier onlyValidator() {
+        if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
         _;
     }
 
-    /**
-     * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
-     * @param governance Governance address to set as owner of the contract
-     * @param epochValidatorSet First active validator set
-     */
+    /// @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
+    /// @param governance Governance address to set as owner of the contract
     function initialize(
-        IStakeManager newStakeManager,
-        address governance,
-        address[] calldata epochValidatorSet
+        uint256 newEpochReward,
+        uint256 newMinStake,
+        uint256 newMinDelegation,
+        address[] calldata validatorAddresses,
+        uint256[4][] calldata validatorPubkeys,
+        uint256[] calldata validatorStakes,
+        IBLS newBls,
+        uint256[2] calldata newMessage,
+        address governance
     ) external initializer onlySystemCall {
-        // slither-disable-next-line missing-zero-check
-        stakeManager = newStakeManager;
-
-        Epoch storage nextEpoch = epochs[++currentEpochId];
-        nextEpoch.validatorSet = epochValidatorSet;
+        currentEpochId = 1;
 
         _transferOwnership(governance);
+        __ReentrancyGuard_init();
+
+        // slither-disable-next-line events-maths
+        epochReward = newEpochReward;
+        minStake = newMinStake;
+        minDelegation = newMinDelegation;
+
+        for (uint256 i = 0; i < validatorAddresses.length; i++) {
+            _addToWhitelist(validatorAddresses[i]);
+            Validator memory validator = Validator({
+                blsKey: validatorPubkeys[i],
+                stake: validatorStakes[i],
+                totalStake: validatorStakes[i],
+                commission: 0,
+                withdrawableRewards: 0,
+                active: true
+            });
+            _validators.insert(validatorAddresses[i], validator);
+        }
+        bls = newBls;
+        message = newMessage;
     }
 
-    /**
-     * @notice Allows the v3 client to commit epochs to this contract.
-     * @param id ID of epoch to be committed
-     * @param epoch New epoch data to be committed
-     * @param uptime Uptime data for the epoch being committed
-     */
     function commitEpoch(
         uint256 id,
         Epoch calldata epoch,
-        IStakeManager.Uptime calldata uptime
+        Uptime calldata uptime
     ) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
@@ -115,64 +110,304 @@ contract ChildValidatorSet is System, OwnableUpgradeable {
 
         epochEndBlocks.push(epoch.endBlock);
 
-        stakeManager.distributeRewards(uptime);
-        stakeManager.processQueue();
-
-        _setNextValidatorSet(newEpochId + 1, epoch.epochRoot);
+        _distributeRewards(uptime);
+        _processQueue();
 
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
-    function getCurrentValidatorSet() external view returns (address[] memory) {
-        return epochs[currentEpochId].validatorSet;
+    function addToWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            _addToWhitelist(whitelistAddreses[i]);
+        }
     }
 
-    /**
-     * @notice Look up an epoch by block number. Searches in O(log n) time.
-     * @param blockNumber ID of epoch to be committed
-     * @return Epoch Returns epoch if found, or else, the last epoch
-     */
+    function removeFromWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
+        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
+            _removeFromWhitelist(whitelistAddreses[i]);
+        }
+    }
+
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
+        if (!whitelist[msg.sender]) revert Unauthorized("WHITELIST");
+
+        (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message);
+        require(callSuccess && result, "INVALID_SIGNATURE");
+
+        _validators.insert(
+            msg.sender,
+            Validator({blsKey: pubkey, stake: 0, totalStake: 0, commission: 0, withdrawableRewards: 0, active: true})
+        );
+        _removeFromWhitelist(msg.sender);
+
+        emit NewValidator(msg.sender, pubkey);
+    }
+
+    // TODO: claim validator rewards before stake or unstake action
+    function stake() external payable onlyValidator {
+        uint256 currentStake = _validators.stakeOf(msg.sender);
+        if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
+        claimValidatorReward();
+        rewardModifiers[msg.sender] -= int256(msg.value);
+        _queue.insert(msg.sender, int256(msg.value), 0);
+        emit Staked(msg.sender, msg.value);
+    }
+
+    function unstake(uint256 amount) external {
+        // TODO: check if balance requirement is sufficient for access control
+        int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
+        int256 amountInt = amount.toInt256Safe();
+        if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
+
+        int256 amountAfterUnstake = totalValidatorStake - amountInt;
+        if (amountAfterUnstake < int256(minStake) && amountAfterUnstake != 0)
+            revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
+
+        claimValidatorReward();
+        rewardModifiers[msg.sender] += amountInt;
+        _queue.insert(msg.sender, amountInt * -1, 0);
+        if (amountAfterUnstake == 0) {
+            _validators.get(msg.sender).active = false;
+        }
+        _registerWithdrawal(msg.sender, amount);
+        emit Unstaked(msg.sender, amount);
+    }
+
+    function delegate(address validator, bool restake) external payable {
+        RewardPool storage delegation = _validators.getDelegationPool(validator);
+        if (delegation.balanceOf(msg.sender) + msg.value < minDelegation)
+            revert StakeRequirement({src: "delegate", msg: "DELEGATION_TOO_LOW"});
+        claimDelegatorReward(validator, restake);
+        _delegate(msg.sender, validator, msg.value);
+    }
+
+    function undelegate(address validator, uint256 amount) external {
+        // TODO: check if balance requirement is sufficient for access control
+        // Stake storage delegation = delegations[msg.sender][validator];
+        RewardPool storage delegation = _validators.getDelegationPool(validator);
+        uint256 delegatedAmount = delegation.balanceOf(msg.sender);
+
+        if (amount > delegatedAmount) revert StakeRequirement({src: "undelegate", msg: "INSUFFICIENT_BALANCE"});
+        delegation.withdraw(msg.sender, amount);
+
+        uint256 amountAfterUndelegate = delegatedAmount - amount;
+
+        if (amountAfterUndelegate < minDelegation && amountAfterUndelegate != 0)
+            revert StakeRequirement({src: "undelegate", msg: "DELEGATION_TOO_LOW"});
+
+        claimDelegatorReward(validator, false);
+
+        int256 amountInt = amount.toInt256Safe();
+
+        _queue.insert(validator, 0, amountInt * -1);
+        // delegation.amount -= amount;
+
+        _registerWithdrawal(msg.sender, amount);
+        emit Undelegated(msg.sender, validator, amount);
+    }
+
+    function claimValidatorReward() public {
+        // TODO: validator should be able to claim reward even in non-active state
+        // check if balance requirement is sufficient for access control
+        Validator storage validator = _validators.get(msg.sender);
+        uint256 reward = validator.withdrawableRewards;
+        if (reward == 0) return;
+        validator.withdrawableRewards = 0;
+        _registerWithdrawal(msg.sender, reward);
+        emit ValidatorRewardClaimed(msg.sender, reward);
+    }
+
+    function claimDelegatorReward(address validator, bool restake) public {
+        RewardPool storage pool = _validators.getDelegationPool(validator);
+        uint256 reward = pool.claimRewards(msg.sender);
+        if (reward == 0) return;
+
+        if (restake) {
+            _delegate(msg.sender, validator, reward);
+        } else {
+            _registerWithdrawal(msg.sender, reward);
+        }
+
+        emit DelegatorRewardClaimed(msg.sender, validator, restake, reward);
+    }
+
+    function withdraw(address to) external nonReentrant {
+        assert(to != address(0));
+        WithdrawalQueue storage queue = _withdrawals[msg.sender];
+        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
+        queue.head = newHead;
+        emit Withdrawal(msg.sender, to, amount);
+        // slither-disable-next-line low-level-calls
+        (bool success, ) = to.call{value: amount}(""); // solhint-disable-line avoid-low-level-calls
+        require(success, "WITHDRAWAL_FAILED");
+    }
+
+    function setCommission(uint256 newCommission) external onlyValidator {
+        require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
+        Validator storage validator = _validators.get(msg.sender);
+        validator.commission = newCommission;
+    }
+
+    function getCurrentValidatorSet() external view returns (address[] memory) {
+        return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
+    }
+
     function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
         return epochs[ret + 1];
     }
 
-    /**
-     * @notice Sets the validator set for an epoch using the previous root as seed
-     */
-    function _setNextValidatorSet(uint256 epochId, bytes32 epochRoot) internal {
-        address[] memory activeValidators = stakeManager.sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
-
-        for (uint256 i = 0; i < activeValidators.length; i++) {
-            epochs[epochId].validatorSet.push(activeValidators[i]);
-        }
-        // // if current total set is less than wanted active validator set size, we include the entire set
-        // if (currentId <= validatorSetSize) {
-        //     uint256[] memory validatorSet = new uint256[](currentId); // include all validators in set
-        //     for (uint256 i = 0; i < currentId; i++) {
-        //         validatorSet[i] = i + 1; // validators are one-indexed
-        //     }
-        //     epochs[epochId].validatorSet = validatorSet;
-        //     // else, randomly pick active validator set from total validator set
-        // } else {
-        //     uint256[] memory validatorSet = new uint256[](validatorSetSize);
-        //     uint256 counter = 0;
-        //     for (uint256 i = 0; ; i++) {
-        //         // use epoch root with seed and pick a random index
-        //         uint256 randomIndex = uint256(keccak256(abi.encodePacked(epochRoot, i))) % currentId;
-        //         // if validator picked, skip iteration
-        //         if (validatorsByEpoch[epochId][randomIndex]) {
-        //             continue;
-        //             // else, add validator and include in set
-        //         } else {
-        //             validatorsByEpoch[epochId][randomIndex] = true;
-        //             validatorSet[counter++] = randomIndex;
-        //         }
-        //         if (validatorSet[validatorSetSize - 1] != 0) {
-        //             break; // last element filled, break
-        //         }
-        //     }
-        //     epochs[epochId].validatorSet = validatorSet;
-        // }
+    function getValidator(address validator) public view returns (Validator memory) {
+        return _validators.get(validator);
     }
+
+    function delegationOf(address validator, address delegator) external view returns (uint256) {
+        return _validators.getDelegationPool(validator).balanceOf(delegator);
+    }
+
+    function sortedValidators(uint256 n) public view returns (address[] memory) {
+        uint256 length = n <= _validators.count ? n : _validators.count;
+        address[] memory validatorAddresses = new address[](length);
+
+        if (length == 0) return validatorAddresses;
+
+        address tmpValidator = _validators.last();
+        validatorAddresses[0] = tmpValidator;
+
+        for (uint256 i = 1; i < length; i++) {
+            tmpValidator = _validators.prev(tmpValidator);
+            validatorAddresses[i] = tmpValidator;
+        }
+
+        return validatorAddresses;
+    }
+
+    function totalStake() external view returns (uint256) {
+        return _validators.totalStake;
+    }
+
+    function totalActiveStake() public view returns (uint256 activeStake) {
+        uint256 length = ACTIVE_VALIDATOR_SET_SIZE <= _validators.count ? ACTIVE_VALIDATOR_SET_SIZE : _validators.count;
+        if (length == 0) return 0;
+
+        address tmpValidator = _validators.last();
+        activeStake += getValidator(tmpValidator).totalStake;
+
+        for (uint256 i = 1; i < length; i++) {
+            tmpValidator = _validators.prev(tmpValidator);
+            activeStake += getValidator(tmpValidator).totalStake;
+        }
+    }
+
+    function withdrawable(address account) external view returns (uint256 amount) {
+        (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
+    }
+
+    function pendingWithdrawals(address account) external view returns (uint256) {
+        return _withdrawals[account].pending(currentEpochId);
+    }
+
+    function getDelegatorReward(address validator, address delegator) external view returns (uint256) {
+        return _validators.getDelegationPool(validator).claimableRewards(delegator);
+    }
+
+    function getValidatorReward(address validator) external view returns (uint256) {
+        return getValidator(validator).withdrawableRewards;
+    }
+
+    function _distributeRewards(Uptime calldata uptime) private {
+        require(uptime.epochId == currentEpochId - 1, "EPOCH_NOT_COMMITTED");
+
+        uint256 length = uptime.uptimeData.length;
+
+        require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
+
+        uint256 activeStake = totalActiveStake();
+        uint256 reward = epochReward;
+
+        for (uint256 i = 0; i < length; ++i) {
+            UptimeData memory uptimeData = uptime.uptimeData[i];
+            Validator storage validator = _validators.get(uptimeData.validator);
+            uint256 validatorReward = (reward * validator.totalStake * uptimeData.signedBlocks) /
+                (activeStake * uptime.totalBlocks);
+            (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
+                uptimeData.validator,
+                validatorReward
+            );
+            validator.withdrawableRewards += validatorShares;
+            emit ValidatorRewardDistributed(uptimeData.validator, validatorReward);
+            _validators.getDelegationPool(uptimeData.validator).distributeReward(delegatorShares);
+            emit DelegatorRewardDistributed(uptimeData.validator, delegatorShares);
+        }
+    }
+
+    function _processQueue() private {
+        QueuedValidator[] storage queue = _queue.get();
+        for (uint256 i = 0; i < queue.length; ++i) {
+            QueuedValidator memory item = queue[i];
+            address validatorAddr = item.validator;
+            // values will be zero for non existing validators
+            Validator storage validator = _validators.get(validatorAddr);
+            // if validator already present in tree, remove andreinsert to maintain sort
+            // TODO move reinsertion logic to library
+            if (_validators.exists(validatorAddr)) {
+                _validators.remove(validatorAddr);
+            }
+            validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
+            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
+            _validators.insert(validatorAddr, validator);
+            _queue.resetIndex(validatorAddr);
+        }
+        _queue.reset();
+    }
+
+    function _registerWithdrawal(address account, uint256 amount) private {
+        _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
+        emit WithdrawalRegistered(account, amount);
+    }
+
+    function _delegate(
+        address delegator,
+        address validator,
+        uint256 amount
+    ) private {
+        if (!getValidator(validator).active) revert Unauthorized("INVALID_VALIDATOR");
+        _queue.insert(validator, 0, amount.toInt256Safe());
+        _validators.getDelegationPool(validator).deposit(delegator, amount);
+        // delegations[delegator][validator].amount += amount;
+        emit Delegated(delegator, validator, amount);
+    }
+
+    function _addToWhitelist(address account) private {
+        whitelist[account] = true;
+        emit AddedToWhitelist(account);
+    }
+
+    function _removeFromWhitelist(address account) private {
+        whitelist[account] = false;
+        emit RemovedFromWhitelist(account);
+    }
+
+    function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)
+        private
+        view
+        returns (uint256, uint256)
+    {
+        Validator memory validator = getValidator(validatorAddr);
+        uint256 stakedAmount = validator.stake;
+        uint256 delegations = _validators.getDelegationPool(validatorAddr).supply;
+
+        if (stakedAmount == 0) return (0, 0);
+        if (delegations == 0) return (totalReward, 0);
+
+        uint256 validatorReward = (totalReward * stakedAmount) / (stakedAmount + delegations);
+        uint256 delegatorReward = totalReward - validatorReward;
+
+        uint256 commission = (validator.commission * delegatorReward) / 100;
+
+        return (validatorReward + commission, delegatorReward - commission);
+    }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
