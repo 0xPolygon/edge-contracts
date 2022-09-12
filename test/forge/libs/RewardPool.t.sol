@@ -252,27 +252,27 @@ contract RewardPoolLibUser {
                                         GETTERS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function supplyGetter() external returns (uint256) {
+    function supplyGetter() external view returns (uint256) {
         return pool.supply;
     }
 
-    function magnifiedRewardPerShareGetter() external returns (uint256) {
+    function magnifiedRewardPerShareGetter() external view returns (uint256) {
         return pool.magnifiedRewardPerShare;
     }
 
-    function validatorGetter() external returns (address) {
+    function validatorGetter() external view returns (address) {
         return pool.validator;
     }
 
-    function magnifiedRewardCorrectionsGetter(address a) external returns (int256) {
+    function magnifiedRewardCorrectionsGetter(address a) external view returns (int256) {
         return pool.magnifiedRewardCorrections[a];
     }
 
-    function claimedRewardsGetter(address a) external returns (uint256) {
+    function claimedRewardsGetter(address a) external view returns (uint256) {
         return pool.claimedRewards[a];
     }
 
-    function balancesGetter(address a) external returns (uint256) {
+    function balancesGetter(address a) external view returns (uint256) {
         return pool.balances[a];
     }
 }
