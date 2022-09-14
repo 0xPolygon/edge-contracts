@@ -22,9 +22,6 @@ contract StateReceiver is System {
         uint256 leaves;
         bytes32 root;
     }
-    // Maximum gas provided for each message call
-    // slither-disable-next-line too-many-digits
-    uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed
     uint256 public counter;
     /// @custom:security write-protection="onlySystemCall()"
@@ -33,6 +30,9 @@ contract StateReceiver is System {
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
     uint256 public currentLeafIndex;
+    // Maximum gas provided for each message call
+    // slither-disable-next-line too-many-digits
+    uint256 private constant MAX_GAS = 300000;
 
     mapping(uint256 => StateSyncBundle) public bundles;
 
@@ -45,7 +45,11 @@ contract StateReceiver is System {
 
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
-    function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
+    function commit(
+        StateSyncBundle calldata bundle,
+        bytes calldata signature,
+        uint256[] calldata validatorIds
+    ) external onlySystemCall {
         uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
         require(bundle.endId >= bundle.startId, "INVALID_END_ID");
@@ -56,7 +60,7 @@ contract StateReceiver is System {
         // dataHash = hash(counter, sender, receiver, data, result)
         bytes32 dataHash = keccak256(abi.encode(bundle));
 
-        _checkPubkeyAggregation(dataHash, signature);
+        _checkPubkeyAggregation(dataHash, signature, validatorIds);
 
         bundles[currentBundleCounter] = bundle;
 
@@ -127,13 +131,17 @@ contract StateReceiver is System {
         }
     }
 
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature) internal view {
+    function _checkPubkeyAggregation(
+        bytes32 message,
+        bytes calldata signature,
+        uint256[] calldata validatorIds
+    ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-        }(abi.encode(message, signature));
+        }(abi.encode(message, signature, validatorIds));
         bool verified = abi.decode(returnData, (bool));
         require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }

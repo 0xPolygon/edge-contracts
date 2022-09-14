@@ -2,18 +2,6 @@
 
 ## Methods
 
-### MAX_GAS
-
-```solidity
-function MAX_GAS() external view returns (uint256)
-```
-
-#### Returns
-
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
-
 ### NATIVE_TOKEN_CONTRACT
 
 ```solidity
@@ -122,15 +110,16 @@ function bundles(uint256) external view returns (uint256 startId, uint256 endId,
 ### commit
 
 ```solidity
-function commit(StateReceiver.StateSyncBundle bundle, bytes signature) external nonpayable
+function commit(StateReceiver.StateSyncBundle bundle, bytes signature, uint256[] validatorIds) external nonpayable
 ```
 
 #### Parameters
 
-| Name      | Type                          | Description |
-| --------- | ----------------------------- | ----------- |
-| bundle    | StateReceiver.StateSyncBundle | undefined   |
-| signature | bytes                         | undefined   |
+| Name         | Type                          | Description |
+| ------------ | ----------------------------- | ----------- |
+| bundle       | StateReceiver.StateSyncBundle | undefined   |
+| signature    | bytes                         | undefined   |
+| validatorIds | uint256[]                     | undefined   |
 
 ### counter
 
