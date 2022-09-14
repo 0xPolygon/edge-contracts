@@ -65,7 +65,7 @@ describe("StateReceiver", () => {
       root: ethers.constants.HashZero,
     };
 
-    await expect(stateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith(
+    await expect(stateReceiver.commit(bundle, ethers.constants.HashZero, [])).to.be.revertedWith(
       customError("Unauthorized", "SYSTEMCALL")
     );
   });
@@ -81,7 +81,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root: ethers.constants.HashZero,
     };
-    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith(
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero, [])).to.be.revertedWith(
       "SIGNATURE_VERIFICATION_FAILED"
     );
     await hre.network.provider.send("hardhat_setCode", [
@@ -97,7 +97,9 @@ describe("StateReceiver", () => {
       leaves: 1,
       root: ethers.constants.HashZero,
     };
-    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith("INVALID_START_ID");
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero, [])).to.be.revertedWith(
+      "INVALID_START_ID"
+    );
   });
 
   it("State sync bad commit fail: invalid end id", async () => {
@@ -107,7 +109,9 @@ describe("StateReceiver", () => {
       leaves: 1,
       root: ethers.constants.HashZero,
     };
-    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.be.revertedWith("INVALID_END_ID");
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero, [])).to.be.revertedWith(
+      "INVALID_END_ID"
+    );
   });
 
   it("State sync commit", async () => {
@@ -154,7 +158,7 @@ describe("StateReceiver", () => {
       leaves: batchSize,
       root,
     };
-    const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero);
+    const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero, []);
 
     const receipt = await tx.wait();
   });
@@ -223,7 +227,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root,
     };
-    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.not.be.reverted;
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero, [])).to.not.be.reverted;
   });
 
   it("State sync execute: skipped", async () => {
@@ -272,7 +276,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root,
     };
-    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero)).to.not.be.reverted;
+    await expect(systemStateReceiver.commit(bundle, ethers.constants.HashZero, [])).to.not.be.reverted;
   });
 
   it("State sync execute: failed message call", async () => {
@@ -333,7 +337,7 @@ describe("StateReceiver", () => {
       leaves: 1,
       root,
     };
-    const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero);
+    const tx = await systemStateReceiver.commit(bundle, ethers.constants.HashZero, []);
 
     await tx.wait();
   });
@@ -342,6 +346,6 @@ describe("StateReceiver", () => {
     let stateSyncCounter: BigNumber = (await stateReceiver.counter()).add(2);
     const proof = tree.getHexProof(hashes[0]);
     const stateSyncs = stateSyncBundle[0];
-    await expect(systemStateReceiver.execute(proof, stateSyncs)).to.be.revertedWith("ID_NOT_SEQUENTIAL");
+    await expect(systemStateReceiver.execute(proof, stateSyncs, [])).to.be.revertedWith("ID_NOT_SEQUENTIAL");
   });
 });
