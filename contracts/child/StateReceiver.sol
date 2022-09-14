@@ -48,7 +48,7 @@ contract StateReceiver is System {
     function commit(
         StateSyncBundle calldata bundle,
         bytes calldata signature,
-        uint256[] calldata validatorIds
+        bytes calldata bitmap
     ) external onlySystemCall {
         uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
@@ -60,7 +60,7 @@ contract StateReceiver is System {
         // dataHash = hash(counter, sender, receiver, data, result)
         bytes32 dataHash = keccak256(abi.encode(bundle));
 
-        _checkPubkeyAggregation(dataHash, signature, validatorIds);
+        _checkPubkeyAggregation(dataHash, signature, bitmap);
 
         bundles[currentBundleCounter] = bundle;
 
@@ -134,14 +134,14 @@ contract StateReceiver is System {
     function _checkPubkeyAggregation(
         bytes32 message,
         bytes calldata signature,
-        uint256[] calldata validatorIds
+        bytes calldata bitmap
     ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-        }(abi.encode(message, signature, validatorIds));
+        }(abi.encode(message, signature, bitmap));
         bool verified = abi.decode(returnData, (bool));
         require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }

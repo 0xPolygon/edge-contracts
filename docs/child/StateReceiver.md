@@ -110,16 +110,16 @@ function bundles(uint256) external view returns (uint256 startId, uint256 endId,
 ### commit
 
 ```solidity
-function commit(StateReceiver.StateSyncBundle bundle, bytes signature, uint256[] validatorIds) external nonpayable
+function commit(StateReceiver.StateSyncBundle bundle, bytes signature, bytes bitmap) external nonpayable
 ```
 
 #### Parameters
 
-| Name         | Type                          | Description |
-| ------------ | ----------------------------- | ----------- |
-| bundle       | StateReceiver.StateSyncBundle | undefined   |
-| signature    | bytes                         | undefined   |
-| validatorIds | uint256[]                     | undefined   |
+| Name      | Type                          | Description |
+| --------- | ----------------------------- | ----------- |
+| bundle    | StateReceiver.StateSyncBundle | undefined   |
+| signature | bytes                         | undefined   |
+| bitmap    | bytes                         | undefined   |
 
 ### counter
 
