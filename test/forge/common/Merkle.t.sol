@@ -7,7 +7,11 @@ import "../utils/TestPlus.sol";
 import {MurkyBase} from "murky/common/MurkyBase.sol";
 
 contract MerkleTest is TestPlus, MurkyBase {
-    using Merkle for bytes32;
+    MerkleUser merkleUser;
+
+    function setUp() public {
+        merkleUser = new MerkleUser();
+    }
 
     /// @notice Hashing function for Murky
     function hashLeafPairs(bytes32 left, bytes32 right) public pure override returns (bytes32 _hash) {
@@ -19,7 +23,7 @@ contract MerkleTest is TestPlus, MurkyBase {
         bytes32[] memory proof = new bytes32[](proofSize);
 
         vm.expectRevert("INVALID_LEAF_INDEX");
-        this.checkMembershipHelper("", index, "", proof);
+        merkleUser.checkMembership("", index, "", proof);
     }
 
     function testCheckMembership(bytes32[] memory leaves, uint256 index) public {
@@ -33,17 +37,23 @@ contract MerkleTest is TestPlus, MurkyBase {
         bytes32 randomDataHash = keccak256(abi.encode(leaf));
 
         // should return true for leaf and false for random hash
-        assertTrue(this.checkMembershipHelper(leaf, index, root, proof));
-        assertFalse(this.checkMembershipHelper(randomDataHash, index, root, proof));
+        assertTrue(merkleUser.checkMembership(leaf, index, root, proof));
+        assertFalse(merkleUser.checkMembership(randomDataHash, index, root, proof));
     }
+}
 
-    /// @notice Helper for passing proof in calldata
-    function checkMembershipHelper(
+/*//////////////////////////////////////////////////////////////////////////
+                                MOCKS
+//////////////////////////////////////////////////////////////////////////*/
+
+contract MerkleUser {
+    function checkMembership(
         bytes32 leaf,
         uint256 index,
         bytes32 rootHash,
         bytes32[] calldata proof
     ) external pure returns (bool) {
-        return leaf.checkMembership(index, rootHash, proof);
+        bool r = Merkle.checkMembership(leaf, index, rootHash, proof);
+        return r;
     }
 }

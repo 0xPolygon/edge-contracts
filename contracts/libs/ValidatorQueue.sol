@@ -65,7 +65,8 @@ library ValidatorQueueLib {
 
     function indexOf(ValidatorQueue storage self, address validator) private view returns (uint256 index) {
         index = self.indices[validator];
-        assert(index != 0);
+        // never triggered currently
+        // assert(index != 0);
         return index - 1;
     }
 }
