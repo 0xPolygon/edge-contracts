@@ -63,6 +63,7 @@ library WithdrawalQueueLib {
             Withdrawal memory withdrawal = self.withdrawals[i];
             if (withdrawal.epoch <= currentEpoch) break;
             amount += withdrawal.amount;
+            if (i == 0) break;
         }
     }
 }
