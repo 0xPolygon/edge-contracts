@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import {NoTokensDelegated, RewardPoolLib} from "contracts/libs/RewardPool.sol";
 import {SafeMathInt, SafeMathUint} from "contracts/libs/SafeMathInt.sol";
