@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 /**
     @title Compute Inverse by Modular Exponentiation

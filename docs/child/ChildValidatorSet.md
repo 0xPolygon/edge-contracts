@@ -555,24 +555,6 @@ Deletes addresses which are allowed to register as validators.
 | ----------------- | --------- | ----------------------------------------- |
 | whitelistAddreses | address[] | Array of address to remove from whitelist |
 
-### rewardModifiers
-
-```solidity
-function rewardModifiers(address) external view returns (int256)
-```
-
-#### Parameters
-
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
-
-#### Returns
-
-| Name | Type   | Description |
-| ---- | ------ | ----------- |
-| \_0  | int256 | undefined   |
-
 ### setCommission
 
 ```solidity
