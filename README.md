@@ -20,7 +20,7 @@ This repository contains the smart contract suite used in Polygon's POS v3 block
   - [Check Test Coverage](#check-test-coverage)
   - [Run Slither](#run-slither)
   - [Continuous Integration](#continuous-integration)
-  - TODO: Scripts (deploy?)
+  - [Documentation](#documentation)
 
 ## Repo Architecture
 
@@ -248,3 +248,7 @@ There is a CI script for Github Actions in `.github/workflows/`. Currently it ru
 - both test suites (fails if any tests fail)
 - coverage report (currently only HH)
 - Slither
+
+### Documentation
+
+This repo makes use of [Dodoc](https://github.com/primitivefinance/primitive-dodoc), a Hardhat plugin from Primitive Finance which generates Markdown docs on contracts from their natspec. The docs are generated on every compile, and can be found in the `docs/` directory.

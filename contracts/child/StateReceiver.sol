@@ -45,6 +45,11 @@ contract StateReceiver is System {
 
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
+    /**
+     * @notice send data to be committed on root
+     * @param bundle StateSync payload to be committed
+     * @param signature signature verification
+     */
     function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
         uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");

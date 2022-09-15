@@ -57,6 +57,10 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
         _transferOwnership(governance);
     }
 
+    /**
+     * @notice add validators
+     * @param newValidators validators to be added
+     */
     function addValidators(Validator[] calldata newValidators) external {
         require(msg.sender == checkpointManager, "ONLY_CHECKPOINT_MANAGER");
         uint256 length = newValidators.length;
@@ -71,14 +75,28 @@ contract RootValidatorSet is Initializable, OwnableUpgradeable {
         currentValidatorId += length;
     }
 
+    /**
+     * @notice returns validator struct by id
+     * @param id the id of the validator to be queried
+     * @return Validator struct
+     */
     function getValidator(uint256 id) external view returns (Validator memory) {
         return validators[id];
     }
 
+    /**
+     * @notice convenience function to return the BLS key of a spcific validator (by id)
+     * @param id the id of the validator to retrieve the BLS pubkey of
+     * @return BLS pubkey (uint256[4])
+     */
     function getValidatorBlsKey(uint256 id) external view returns (uint256[4] memory) {
         return validators[id].blsKey;
     }
 
+    /**
+     * @notice returns number of active validators
+     * @return uint256 number of active validators
+     */
     function activeValidatorSetSize() external view returns (uint256) {
         if (currentValidatorId < ACTIVE_VALIDATOR_SET_SIZE) {
             return currentValidatorId;
