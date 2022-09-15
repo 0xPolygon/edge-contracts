@@ -83,7 +83,7 @@ The `package-lock.json` is also provided to ensure the ability to install the sa
 
 ### Requirements
 
-In order to work with this repo locally, you will need Node (preferably using [nvm](https://github.com/nvm-sh/nvm)) in order to work with the Hardhat part of the repo, and [Rust](https://www.rust-lang.org/tools/install) for the Foundry environment.
+In order to work with this repo locally, you will need Node (preferably using [nvm](https://github.com/nvm-sh/nvm)) in order to work with the Hardhat part of the repo.
 
 In addition, to work with Foundry, you will need to have it installed. The recommended method is to use their `foundryup` tool, which can be installed (and automatically install Foundry) using this command:
 

@@ -2,7 +2,7 @@
 
 /* MIT License
 
-Copyright (c) 2021 Hubble-Project
+Copyright (c) 2021 Hubble-Project (natspec added by Polygon Technology)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +31,8 @@ import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
 
 /**
     @title  Boneh–Lynn–Shacham (BLS) signature scheme on Barreto-Naehrig 254 bit curve (BN-254)
-    @notice We use BLS signature aggregation to reduce the size of signature data to store on chain.
-    @dev We use G1 points for signatures and messages, and G2 points for public keys
+    @notice BLS signature aggregation reduces the size of signature data to store on-chain
+    @dev points on G1 are used for signatures and messages, and on G2 for public keys
  */
 contract BLS is IBLS {
     // Field order
@@ -61,6 +61,9 @@ contract BLS is IBLS {
     // prettier-ignore
     uint256 private constant MASK24 = 0xffffffffffffffffffffffffffffffffffffffffffffffff;
 
+    /**
+     * @inheritdoc IBLS
+     */
     function verifySingle(
         uint256[2] calldata signature,
         uint256[4] calldata pubkey,
@@ -93,6 +96,9 @@ contract BLS is IBLS {
         return (out[0] != 0, true);
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function verifyMultiple(
         uint256[2] calldata signature,
         uint256[4][] calldata pubkeys,
@@ -131,6 +137,9 @@ contract BLS is IBLS {
         return (out[0] != 0, true);
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function verifyMultipleSameMsg(
         uint256[2] calldata signature,
         uint256[4][] calldata pubkeys,
@@ -168,7 +177,7 @@ contract BLS is IBLS {
     }
 
     /**
-    @notice Fouque-Tibouchi Hash to Curve
+     * @inheritdoc IBLS
      */
     function hashToPoint(bytes32 domain, bytes memory message) external view returns (uint256[2] memory) {
         uint256[2] memory u = this.hashToField(domain, message);
@@ -192,6 +201,9 @@ contract BLS is IBLS {
         return p0;
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function mapToPoint(uint256 _x) external pure returns (uint256[2] memory p) {
         // solhint-disable-next-line reason-string
         require(_x < N, "mapToPointFT: invalid field element");
@@ -256,6 +268,9 @@ contract BLS is IBLS {
         return [x, a1];
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function isValidSignature(uint256[2] memory signature) external view returns (bool) {
         if ((signature[0] >= N) || (signature[1] >= N)) {
             return false;
@@ -264,6 +279,9 @@ contract BLS is IBLS {
         }
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function isOnCurveG1(uint256[2] memory point) external pure returns (bool _isOnCurve) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -277,6 +295,9 @@ contract BLS is IBLS {
         }
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function isOnCurveG2(uint256[4] memory point) external pure returns (bool _isOnCurve) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -312,15 +333,28 @@ contract BLS is IBLS {
         }
     }
 
+    /**
+     * @notice returns square root of a uint256 value
+     * @param xx the value to take the square root of
+     * @return tuple of a uint256 value and a bool indicating if there is a square root
+     */
     function sqrt(uint256 xx) internal pure returns (uint256 x, bool hasRoot) {
         x = ModexpSqrt.run(xx);
         hasRoot = mulmod(x, x, N) == xx;
     }
 
+    /**
+     * @notice inverts a uint256 value
+     * @param a uint256 value to invert
+     * @return uint256 of the value of the inverse
+     */
     function inverse(uint256 a) internal pure returns (uint256) {
         return ModexpInverse.run(a);
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function hashToField(bytes32 domain, bytes memory messages) external view returns (uint256[2] memory) {
         bytes memory _msg = this.expandMsgTo96(domain, messages);
         uint256 u0;
@@ -343,6 +377,9 @@ contract BLS is IBLS {
         return [a0, a1];
     }
 
+    /**
+     * @inheritdoc IBLS
+     */
     function expandMsgTo96(bytes32 domain, bytes memory message) external pure returns (bytes memory) {
         // zero<64>|msg<var>|lib_str<2>|I2OSP(0, 1)<1>|dst<var>|dst_len<1>
         uint256 t0 = message.length;
