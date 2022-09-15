@@ -58,6 +58,15 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
+     * @dev only callable by client, can only be called once
+     * @param newEpochReward reward for a proposed epoch
+     * @param newMinStake minimum stake to become a validator
+     * @param newMinDelegation minimum amount to delegate to a validator
+     * @param validatorAddresses addresses of initial validators
+     * @param validatorPubkeys uint256[4] BLS public keys of initial validators
+     * @param validatorStakes amount staked per initial validator
+     * @param newBls address pf BLS contract/precompile
+     * @param newMessage message for BLS signing
      * @param governance Governance address to set as owner of the contract
      */
     function initialize(
