@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import {Validator} from "../interfaces/IValidator.sol";
 
 struct UptimeData {
     address validator;
-    uint256 uptime;
+    uint256 signedBlocks;
 }
 
 struct Uptime {
     uint256 epochId;
     UptimeData[] uptimeData;
-    uint256 totalUptime;
+    uint256 totalBlocks;
 }
 
 struct Stake {
@@ -40,6 +40,23 @@ interface IChildValidatorSet {
     // TODO events
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
     event NewValidator(address indexed validator, uint256[4] blsKey);
+    event AddedToWhitelist(address indexed validator);
+    event RemovedFromWhitelist(address indexed validator);
+    event Staked(address indexed validator, uint256 amount);
+    event Unstaked(address indexed validator, uint256 amount);
+    event Delegated(address indexed delegator, address indexed validator, uint256 amount);
+    event Undelegated(address indexed delegator, address indexed validator, uint256 amount);
+    event ValidatorRewardClaimed(address indexed validator, uint256 amount);
+    event DelegatorRewardClaimed(
+        address indexed delegator,
+        address indexed validator,
+        bool indexed restake,
+        uint256 amount
+    );
+    event WithdrawalRegistered(address indexed account, uint256 amount);
+    event Withdrawal(address indexed account, address indexed to, uint256 amount);
+    event ValidatorRewardDistributed(address indexed validator, uint256 amount);
+    event DelegatorRewardDistributed(address indexed validator, uint256 amount);
 
     error StakeRequirement(string src, string msg);
 
@@ -91,6 +108,8 @@ interface IChildValidatorSet {
 
     function getValidator(address validator) external view returns (Validator memory);
 
+    function delegationOf(address validator, address delegator) external view returns (uint256);
+
     // get first `n` of validators sorted by stake from high to low
     function sortedValidators(uint256 n) external view returns (address[] memory);
 
@@ -98,11 +117,13 @@ interface IChildValidatorSet {
     /// @return stake Returns total stake (in MATIC wei)
     function totalStake() external view returns (uint256);
 
+    function totalActiveStake() external view returns (uint256);
+
     function withdrawable(address account) external view returns (uint256);
 
     function pendingWithdrawals(address account) external view returns (uint256);
 
-    function calculateValidatorReward(address validator) external view returns (uint256);
+    function getValidatorReward(address validator) external view returns (uint256);
 
-    function calculateDelegatorReward(address validator, address delegator) external view returns (uint256);
+    function getDelegatorReward(address validator, address delegator) external view returns (uint256);
 }

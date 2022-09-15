@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "../interfaces/IValidator.sol";
+import "./RewardPool.sol";
+
+error AmountZero();
+error NotFound(address validator);
+error Exists(address validator);
 
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
@@ -9,6 +14,14 @@ library ValidatorStorageLib {
     function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
         return self.nodes[validator].validator;
+    }
+
+    function getDelegationPool(ValidatorTree storage self, address validator)
+        internal
+        view
+        returns (RewardPool storage)
+    {
+        return self.delegationPools[validator];
     }
 
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
@@ -33,6 +46,7 @@ library ValidatorStorageLib {
         }
     }
 
+    // slither-disable-next-line dead-code
     function next(ValidatorTree storage self, address target) internal view returns (address cursor) {
         if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].right != EMPTY) {
@@ -63,10 +77,12 @@ library ValidatorStorageLib {
         return (key != EMPTY) && ((key == self.root) || (self.nodes[key].parent != EMPTY));
     }
 
+    // slither-disable-next-line dead-code
     function isEmpty(address key) internal pure returns (bool) {
         return key == EMPTY;
     }
 
+    // slither-disable-next-line dead-code
     function getNode(ValidatorTree storage self, address key)
         internal
         view
@@ -167,6 +183,7 @@ library ValidatorStorageLib {
         self.totalStake -= self.nodes[cursor].validator.stake;
     }
 
+    // slither-disable-next-line dead-code
     function treeMinimum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].left != EMPTY) {
             key = self.nodes[key].left;

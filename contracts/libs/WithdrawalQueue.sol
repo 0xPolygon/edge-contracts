@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 struct Withdrawal {
     uint256 amount;
@@ -41,6 +41,7 @@ library WithdrawalQueueLib {
         }
     }
 
+    // slither-disable-next-line dead-code
     function length(WithdrawalQueue storage self) internal view returns (uint256) {
         return self.tail - self.head;
     }
@@ -55,7 +56,6 @@ library WithdrawalQueueLib {
             if (withdrawal.epoch > currentEpoch) return (amount, newHead);
             amount += withdrawal.amount;
         }
-        newHead++;
     }
 
     function pending(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {

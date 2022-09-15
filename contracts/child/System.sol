@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "../interfaces/Errors.sol";
 
@@ -28,4 +28,7 @@ contract System {
         if (msg.sender != SYSTEM) revert Unauthorized("SYSTEMCALL");
         _;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

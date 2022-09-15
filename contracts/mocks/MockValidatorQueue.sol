@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "../libs/ValidatorQueue.sol";
 
@@ -10,29 +10,29 @@ contract MockValidatorQueue {
 
     function stake(
         address validator,
-        uint256 _stake,
-        uint256 _delegation
-    ) public {
-        queue.insert(validator, int256(_stake), int256(_delegation));
+        uint256 stake_,
+        uint256 delegation
+    ) external {
+        queue.insert(validator, int256(stake_), int256(delegation));
     }
 
     function unstake(
         address validator,
-        uint256 _stake,
-        uint256 _delegation
-    ) public {
-        queue.insert(validator, int256(_stake) * -1, int256(_delegation) * -1);
+        uint256 stake_,
+        uint256 delegation
+    ) external {
+        queue.insert(validator, int256(stake_) * -1, int256(delegation) * -1);
     }
 
-    function reset() public {
+    function reset() external {
         queue.reset();
     }
 
-    function getQueue() public view returns (QueuedValidator[] memory) {
+    function getQueue() external view returns (QueuedValidator[] memory) {
         return queue.get();
     }
 
-    function getIndex(address validator) public view returns (uint256 index) {
+    function getIndex(address validator) external view returns (uint256 index) {
         return queue.indices[validator];
     }
 }

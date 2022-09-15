@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "../interfaces/IValidator.sol";
 
@@ -57,6 +57,7 @@ library ValidatorQueueLib {
         return self.queue[indexOf(self, validator)].stake;
     }
 
+    // slither-disable-next-line dead-code
     function pendingDelegation(ValidatorQueue storage self, address validator) internal view returns (int256) {
         if (!waiting(self, validator)) return 0;
         return self.queue[indexOf(self, validator)].delegation;

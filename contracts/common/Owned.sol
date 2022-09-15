@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.16;
 
 import "../interfaces/IOwned.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -9,8 +9,9 @@ abstract contract Owned is IOwned, Initializable {
     address public proposedOwner;
 
     /// @dev initializes the contract setting the deployer as the initial owner
-    // solhint-disable-next-line func-name-mixedcase
-    function __Owned_init() internal onlyInitializing {
+    // prettier-ignore
+    // slither-disable-next-line naming-convention
+    function __Owned_init() internal onlyInitializing { // solhint-disable-line func-name-mixedcase
         _transferOwnership(msg.sender);
     }
 
@@ -21,9 +22,10 @@ abstract contract Owned is IOwned, Initializable {
     }
 
     /// @dev can only be called by the new current owner
-    function proposeOwner(address payable _newOwner) external virtual onlyOwner {
-        proposedOwner = _newOwner;
-        emit OwnershipProposed(_newOwner);
+    // slither-disable-next-line missing-zero-check
+    function proposeOwner(address payable newOwner) external virtual onlyOwner {
+        proposedOwner = newOwner;
+        emit OwnershipProposed(newOwner);
     }
 
     /// @dev can only be called by the new proposed owner
@@ -37,4 +39,7 @@ abstract contract Owned is IOwned, Initializable {
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

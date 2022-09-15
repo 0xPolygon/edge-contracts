@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "../common/Owned.sol";
 
 contract MockOwned is Owned {
-    function initialize() public initializer {
+    function initialize() external initializer {
         __Owned_init();
     }
 }

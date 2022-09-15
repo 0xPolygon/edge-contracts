@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import {StateSender} from "contracts/root/StateSender.sol";
 
@@ -10,8 +10,15 @@ contract StateSenderTest is TestPlus {
 
     StateSender stateSender;
 
+    address receiver;
+    bytes maxData;
+    bytes moreThanMaxData;
+
     function setUp() public {
         stateSender = new StateSender();
+        receiver = makeAddr("receiver");
+        maxData = new bytes(stateSender.MAX_LENGTH());
+        moreThanMaxData = new bytes(stateSender.MAX_LENGTH() + 1);
     }
 
     function testConstructor() public {
@@ -24,27 +31,17 @@ contract StateSenderTest is TestPlus {
     }
 
     function testCannotSyncState_ExceedsMaxLength() public {
-        bytes memory moreThanMaxData = new bytes(stateSender.MAX_LENGTH() + 1);
-        address receiver = makeAddr("receiver");
-
         vm.expectRevert("EXCEEDS_MAX_LENGTH");
         stateSender.syncState(receiver, moreThanMaxData);
     }
 
     function testSyncState_EmitsEvent() public {
-        bytes memory maxData = new bytes(stateSender.MAX_LENGTH());
-        address receiver = makeAddr("receiver");
-
         vm.expectEmit(true, true, true, true);
         emit StateSynced(1, address(this), receiver, maxData);
         stateSender.syncState(receiver, maxData);
     }
 
     function testSyncState_IncreasesCounter() public {
-        bytes memory maxData = new bytes(stateSender.MAX_LENGTH());
-        bytes memory moreThanMaxData = new bytes(stateSender.MAX_LENGTH() + 1);
-        address receiver = makeAddr("receiver");
-
         stateSender.syncState(receiver, maxData);
         stateSender.syncState(receiver, maxData);
         vm.expectRevert("EXCEEDS_MAX_LENGTH");
