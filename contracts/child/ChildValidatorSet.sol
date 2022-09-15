@@ -38,7 +38,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     uint256 public minDelegation;
 
     IBLS public bls;
-    /// @notice Message to sign for registration
+    /**
+     * @notice Message to sign for registration
+     */
     uint256[2] public message;
 
     ValidatorTree private _validators;

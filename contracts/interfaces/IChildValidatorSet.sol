@@ -178,8 +178,10 @@ interface IChildValidatorSet {
      */
     function sortedValidators(uint256 n) external view returns (address[] memory);
 
-    /// @notice Calculates total stake in the network (self-stake + delegation).
-    /// @return Total stake (in MATIC wei)
+    /**
+     * @notice Calculates total stake in the network (self-stake + delegation).
+     * @return Total stake (in MATIC wei)
+     */
     function totalStake() external view returns (uint256);
 
     /**
