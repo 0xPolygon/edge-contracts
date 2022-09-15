@@ -142,7 +142,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewValidator(msg.sender, pubkey);
     }
 
-    // TODO: claim validator rewards before stake or unstake action
     function stake() external payable onlyValidator {
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
@@ -152,7 +151,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function unstake(uint256 amount) external {
-        // TODO: check if balance requirement is sufficient for access control
         int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
         int256 amountInt = amount.toInt256Safe();
         if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
@@ -179,8 +177,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function undelegate(address validator, uint256 amount) external {
-        // TODO: check if balance requirement is sufficient for access control
-        // Stake storage delegation = delegations[msg.sender][validator];
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         uint256 delegatedAmount = delegation.balanceOf(msg.sender);
 
@@ -204,8 +200,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function claimValidatorReward() public {
-        // TODO: validator should be able to claim reward even in non-active state
-        // check if balance requirement is sufficient for access control
         Validator storage validator = _validators.get(msg.sender);
         uint256 reward = validator.withdrawableRewards;
         if (reward == 0) return;
@@ -346,7 +340,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             // values will be zero for non existing validators
             Validator storage validator = _validators.get(validatorAddr);
             // if validator already present in tree, remove andreinsert to maintain sort
-            // TODO move reinsertion logic to library
             if (_validators.exists(validatorAddr)) {
                 _validators.remove(validatorAddr);
             }
