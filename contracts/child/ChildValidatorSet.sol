@@ -46,7 +46,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     mapping(uint256 => Epoch) public epochs;
     mapping(address => bool) public whitelist;
-    mapping(address => int256) public rewardModifiers;
 
     modifier onlyValidator() {
         if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
@@ -148,7 +147,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
         claimValidatorReward();
-        rewardModifiers[msg.sender] -= int256(msg.value);
         _queue.insert(msg.sender, int256(msg.value), 0);
         emit Staked(msg.sender, msg.value);
     }
@@ -164,7 +162,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
 
         claimValidatorReward();
-        rewardModifiers[msg.sender] += amountInt;
         _queue.insert(msg.sender, amountInt * -1, 0);
         if (amountAfterUnstake == 0) {
             _validators.get(msg.sender).active = false;
