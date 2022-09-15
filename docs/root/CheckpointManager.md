@@ -1,12 +1,12 @@
 # CheckpointManager
 
-_Polygon Technology_
+*Polygon Technology*
 
 > CheckpointManager
 
 Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
 
-_The contract is used to submit checkpoints and verify that they have been signed as expected._
+*The contract is used to submit checkpoints and verify that they have been signed as expected.*
 
 ## Methods
 
@@ -16,11 +16,16 @@ _The contract is used to submit checkpoints and verify that they have been signe
 function bls() external view returns (contract IBLS)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type          | Description |
-| ---- | ------------- | ----------- |
-| \_0  | contract IBLS | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IBLS | undefined |
 
 ### bn256G2
 
@@ -28,11 +33,16 @@ function bls() external view returns (contract IBLS)
 function bn256G2() external view returns (contract IBN256G2)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type              | Description |
-| ---- | ----------------- | ----------- |
-| \_0  | contract IBN256G2 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IBN256G2 | undefined |
 
 ### checkpoints
 
@@ -40,19 +50,23 @@ function bn256G2() external view returns (contract IBN256G2)
 function checkpoints(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 eventRoot)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name       | Type    | Description |
-| ---------- | ------- | ----------- |
-| startBlock | uint256 | undefined   |
-| endBlock   | uint256 | undefined   |
-| eventRoot  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| startBlock | uint256 | undefined |
+| endBlock | uint256 | undefined |
+| eventRoot | bytes32 | undefined |
 
 ### currentCheckpointId
 
@@ -60,11 +74,16 @@ function checkpoints(uint256) external view returns (uint256 startBlock, uint256
 function currentCheckpointId() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### domain
 
@@ -72,11 +91,16 @@ function currentCheckpointId() external view returns (uint256)
 function domain() external view returns (bytes32)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### initialize
 
@@ -86,16 +110,16 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, contract
 
 Initialization function for CheckpointManager
 
-_Contract can only be initialized once_
+*Contract can only be initialized once*
 
 #### Parameters
 
-| Name                | Type                       | Description                                            |
-| ------------------- | -------------------------- | ------------------------------------------------------ |
-| newBls              | contract IBLS              | Address of the BLS library contract                    |
-| newBn256G2          | contract IBN256G2          | Address of the BLS library contract                    |
+| Name | Type | Description |
+|---|---|---|
+| newBls | contract IBLS | Address of the BLS library contract |
+| newBn256G2 | contract IBN256G2 | Address of the BLS library contract |
 | newRootValidatorSet | contract IRootValidatorSet | Array of validator addresses to seed the contract with |
-| newDomain           | bytes32                    | Domain to use when hashing messages to a point         |
+| newDomain | bytes32 | Domain to use when hashing messages to a point |
 
 ### rootValidatorSet
 
@@ -103,11 +127,16 @@ _Contract can only be initialized once_
 function rootValidatorSet() external view returns (contract IRootValidatorSet)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type                       | Description |
-| ---- | -------------------------- | ----------- |
-| \_0  | contract IRootValidatorSet | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IRootValidatorSet | undefined |
 
 ### submit
 
@@ -115,15 +144,19 @@ function rootValidatorSet() external view returns (contract IRootValidatorSet)
 function submit(uint256 id, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, uint256[] validatorIds, IRootValidatorSet.Validator[] newValidators) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name          | Type                          | Description |
-| ------------- | ----------------------------- | ----------- |
-| id            | uint256                       | undefined   |
-| checkpoint    | CheckpointManager.Checkpoint  | undefined   |
-| signature     | uint256[2]                    | undefined   |
-| validatorIds  | uint256[]                     | undefined   |
-| newValidators | IRootValidatorSet.Validator[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined |
+| checkpoint | CheckpointManager.Checkpoint | undefined |
+| signature | uint256[2] | undefined |
+| validatorIds | uint256[] | undefined |
+| newValidators | IRootValidatorSet.Validator[] | undefined |
 
 ### submitBatch
 
@@ -131,15 +164,21 @@ function submit(uint256 id, CheckpointManager.Checkpoint checkpoint, uint256[2] 
 function submitBatch(uint256[] ids, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, uint256[] validatorIds, IRootValidatorSet.Validator[] newValidators) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name            | Type                           | Description |
-| --------------- | ------------------------------ | ----------- |
-| ids             | uint256[]                      | undefined   |
-| checkpointBatch | CheckpointManager.Checkpoint[] | undefined   |
-| signature       | uint256[2]                     | undefined   |
-| validatorIds    | uint256[]                      | undefined   |
-| newValidators   | IRootValidatorSet.Validator[]  | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| ids | uint256[] | undefined |
+| checkpointBatch | CheckpointManager.Checkpoint[] | undefined |
+| signature | uint256[2] | undefined |
+| validatorIds | uint256[] | undefined |
+| newValidators | IRootValidatorSet.Validator[] | undefined |
+
+
 
 ## Events
 
@@ -149,8 +188,15 @@ function submitBatch(uint256[] ids, CheckpointManager.Checkpoint[] checkpointBat
 event Initialized(uint8 version)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type  | Description |
-| ------- | ----- | ----------- |
-| version | uint8 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
+
+

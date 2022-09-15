@@ -7,7 +7,8 @@ interface IBLS {
      * @param signature 64-byte G1 group element (small sig)
      * @param pubkey 128-byte G2 group element (big pubkey)
      * @param message message signed to produce signature
-     * @return two boolean values, one on sig verification, the other for call success
+     * @return bool sig verification
+     * @return bool indicating call success
      */
     function verifySingle(
         uint256[2] calldata signature,
@@ -20,7 +21,8 @@ interface IBLS {
      * @param signature 64-byte G1 group element (small sig)
      * @param pubkeys array of 128-byte G2 group element (big pubkey)
      * @param messages array of messages signed to produce signature
-     * @return two boolean values, one on sig verification, the other for call success
+     * @return checkResult bool indicating sig verification
+     * @return callSuccess bool indicating call success
      */
     function verifyMultiple(
         uint256[2] calldata signature,
@@ -33,7 +35,8 @@ interface IBLS {
      * @param signature 64-byte G1 group element (small sig)
      * @param pubkeys array of 128-byte G2 group element (big pubkey)
      * @param message message signed by all to produce signature
-     * @return two boolean values, one on sig verification, the other for call success
+     * @return checkResult sig verification
+     * @return callSuccess indicating call success
      */
     function verifyMultipleSameMsg(
         uint256[2] calldata signature,
@@ -82,7 +85,7 @@ interface IBLS {
     /**
      * @notice converts a hash to a field element in Fq
      * @param domain domain separator for the hash
-     * @param message the message to map
+     * @param messages the messages to map
      * @return uint256[2] (x,y) point of the field element that the message maps to
      */
     function hashToField(bytes32 domain, bytes memory messages) external view returns (uint256[2] memory);

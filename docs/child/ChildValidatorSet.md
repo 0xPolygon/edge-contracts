@@ -1,5 +1,13 @@
 # ChildValidatorSet
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### ACTIVE_VALIDATOR_SET_SIZE
@@ -8,11 +16,16 @@
 function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### MAX_COMMISSION
 
@@ -20,11 +33,16 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 function MAX_COMMISSION() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### MAX_VALIDATOR_SET_SIZE
 
@@ -32,11 +50,16 @@ function MAX_COMMISSION() external view returns (uint256)
 function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### NATIVE_TOKEN_CONTRACT
 
@@ -44,11 +67,16 @@ function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
 function NATIVE_TOKEN_CONTRACT() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TRANSFER_PRECOMPILE
 
@@ -56,11 +84,16 @@ function NATIVE_TOKEN_CONTRACT() external view returns (address)
 function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TRANSFER_PRECOMPILE_GAS
 
@@ -68,11 +101,16 @@ function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### NEW_VALIDATOR_SIG
 
@@ -80,11 +118,16 @@ function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
 function NEW_VALIDATOR_SIG() external view returns (bytes32)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### REWARD_PRECISION
 
@@ -92,11 +135,16 @@ function NEW_VALIDATOR_SIG() external view returns (bytes32)
 function REWARD_PRECISION() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### SPRINT
 
@@ -104,11 +152,16 @@ function REWARD_PRECISION() external view returns (uint256)
 function SPRINT() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### SYSTEM
 
@@ -116,11 +169,16 @@ function SPRINT() external view returns (uint256)
 function SYSTEM() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### VALIDATOR_PKCHECK_PRECOMPILE
 
@@ -128,11 +186,16 @@ function SYSTEM() external view returns (address)
 function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### VALIDATOR_PKCHECK_PRECOMPILE_GAS
 
@@ -140,11 +203,16 @@ function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### WITHDRAWAL_WAIT_PERIOD
 
@@ -152,11 +220,16 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### addToWhitelist
 
@@ -166,10 +239,12 @@ function addToWhitelist(address[] whitelistAddreses) external nonpayable
 
 Adds addresses which are allowed to register as validators.
 
+
+
 #### Parameters
 
-| Name              | Type      | Description                   |
-| ----------------- | --------- | ----------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | whitelistAddreses | address[] | Array of address to whitelist |
 
 ### bls
@@ -178,11 +253,16 @@ Adds addresses which are allowed to register as validators.
 function bls() external view returns (contract IBLS)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type          | Description |
-| ---- | ------------- | ----------- |
-| \_0  | contract IBLS | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IBLS | undefined |
 
 ### claimDelegatorReward
 
@@ -190,12 +270,16 @@ function bls() external view returns (contract IBLS)
 function claimDelegatorReward(address validator, bool restake) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| restake   | bool    | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+| restake | bool | undefined |
 
 ### claimOwnership
 
@@ -203,7 +287,10 @@ function claimDelegatorReward(address validator, bool restake) external nonpayab
 function claimOwnership() external nonpayable
 ```
 
-_can only be called by the new proposed owner_
+allows proposed owner to claim ownership (step 2 of transferring ownership)
+
+*can only be called by the new proposed owner*
+
 
 ### claimValidatorReward
 
@@ -211,19 +298,28 @@ _can only be called by the new proposed owner_
 function claimValidatorReward() external nonpayable
 ```
 
+
+
+
+
+
 ### commitEpoch
 
 ```solidity
 function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| id     | uint256 | undefined   |
-| epoch  | Epoch   | undefined   |
-| uptime | Uptime  | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined |
+| epoch | Epoch | undefined |
+| uptime | Uptime | undefined |
 
 ### currentEpochId
 
@@ -231,11 +327,16 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 function currentEpochId() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### delegate
 
@@ -243,12 +344,16 @@ function currentEpochId() external view returns (uint256)
 function delegate(address validator, bool restake) external payable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| restake   | bool    | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+| restake | bool | undefined |
 
 ### delegationOf
 
@@ -256,18 +361,22 @@ function delegate(address validator, bool restake) external payable
 function delegationOf(address validator, address delegator) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| delegator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+| delegator | address | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochEndBlocks
 
@@ -275,17 +384,21 @@ function delegationOf(address validator, address delegator) external view return
 function epochEndBlocks(uint256) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochReward
 
@@ -293,11 +406,16 @@ function epochEndBlocks(uint256) external view returns (uint256)
 function epochReward() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochs
 
@@ -305,19 +423,23 @@ function epochReward() external view returns (uint256)
 function epochs(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 epochRoot)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name       | Type    | Description |
-| ---------- | ------- | ----------- |
-| startBlock | uint256 | undefined   |
-| endBlock   | uint256 | undefined   |
-| epochRoot  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| startBlock | uint256 | undefined |
+| endBlock | uint256 | undefined |
+| epochRoot | bytes32 | undefined |
 
 ### getCurrentValidatorSet
 
@@ -325,11 +447,16 @@ function epochs(uint256) external view returns (uint256 startBlock, uint256 endB
 function getCurrentValidatorSet() external view returns (address[])
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
 
 ### getDelegatorReward
 
@@ -337,18 +464,22 @@ function getCurrentValidatorSet() external view returns (address[])
 function getDelegatorReward(address validator, address delegator) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| delegator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+| delegator | address | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### getEpochByBlock
 
@@ -358,17 +489,19 @@ function getEpochByBlock(uint256 blockNumber) external view returns (struct Epoc
 
 Look up an epoch by block number. Searches in O(log n) time.
 
+
+
 #### Parameters
 
-| Name        | Type    | Description                 |
-| ----------- | ------- | --------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | blockNumber | uint256 | ID of epoch to be committed |
 
 #### Returns
 
-| Name | Type  | Description                                           |
-| ---- | ----- | ----------------------------------------------------- |
-| \_0  | Epoch | Epoch Returns epoch if found, or else, the last epoch |
+| Name | Type | Description |
+|---|---|---|
+| _0 | Epoch | Epoch Returns epoch if found, or else, the last epoch |
 
 ### getValidator
 
@@ -376,17 +509,21 @@ Look up an epoch by block number. Searches in O(log n) time.
 function getValidator(address validator) external view returns (struct Validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | Validator | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | Validator | undefined |
 
 ### getValidatorReward
 
@@ -394,17 +531,21 @@ function getValidator(address validator) external view returns (struct Validator
 function getValidatorReward(address validator) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### initialize
 
@@ -414,19 +555,21 @@ function initialize(uint256 newEpochReward, uint256 newMinStake, uint256 newMinD
 
 Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
 
+
+
 #### Parameters
 
-| Name               | Type          | Description                                        |
-| ------------------ | ------------- | -------------------------------------------------- |
-| newEpochReward     | uint256       | undefined                                          |
-| newMinStake        | uint256       | undefined                                          |
-| newMinDelegation   | uint256       | undefined                                          |
-| validatorAddresses | address[]     | undefined                                          |
-| validatorPubkeys   | uint256[4][]  | undefined                                          |
-| validatorStakes    | uint256[]     | undefined                                          |
-| newBls             | contract IBLS | undefined                                          |
-| newMessage         | uint256[2]    | undefined                                          |
-| governance         | address       | Governance address to set as owner of the contract |
+| Name | Type | Description |
+|---|---|---|
+| newEpochReward | uint256 | undefined |
+| newMinStake | uint256 | undefined |
+| newMinDelegation | uint256 | undefined |
+| validatorAddresses | address[] | undefined |
+| validatorPubkeys | uint256[4][] | undefined |
+| validatorStakes | uint256[] | undefined |
+| newBls | contract IBLS | undefined |
+| newMessage | uint256[2] | undefined |
+| governance | address | Governance address to set as owner of the contract |
 
 ### message
 
@@ -434,17 +577,21 @@ Initializer function for genesis contract, called by v3 client at genesis to set
 function message(uint256) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### minDelegation
 
@@ -452,11 +599,16 @@ function message(uint256) external view returns (uint256)
 function minDelegation() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### minStake
 
@@ -464,11 +616,16 @@ function minDelegation() external view returns (uint256)
 function minStake() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### owner
 
@@ -476,11 +633,16 @@ function minStake() external view returns (uint256)
 function owner() external view returns (address)
 ```
 
+the address of the owner
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### pendingWithdrawals
 
@@ -488,17 +650,21 @@ function owner() external view returns (address)
 function pendingWithdrawals(address account) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### proposeOwner
 
@@ -506,13 +672,15 @@ function pendingWithdrawals(address account) external view returns (uint256)
 function proposeOwner(address payable newOwner) external nonpayable
 ```
 
-_can only be called by the new current owner_
+proposes a new owner (step 1 of transferring ownership)
+
+*can only be called by the current owner*
 
 #### Parameters
 
-| Name     | Type            | Description |
-| -------- | --------------- | ----------- |
-| newOwner | address payable | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address payable | undefined |
 
 ### proposedOwner
 
@@ -520,11 +688,16 @@ _can only be called by the new current owner_
 function proposedOwner() external view returns (address)
 ```
 
+the address of a proposed owner
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### register
 
@@ -534,12 +707,14 @@ function register(uint256[2] signature, uint256[4] pubkey) external nonpayable
 
 Validates BLS signature with the provided pubkey and registers validators into the set.
 
+
+
 #### Parameters
 
-| Name      | Type       | Description                           |
-| --------- | ---------- | ------------------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | signature | uint256[2] | Signature to validate message against |
-| pubkey    | uint256[4] | BLS public key of validator           |
+| pubkey | uint256[4] | BLS public key of validator |
 
 ### removeFromWhitelist
 
@@ -549,10 +724,12 @@ function removeFromWhitelist(address[] whitelistAddreses) external nonpayable
 
 Deletes addresses which are allowed to register as validators.
 
+
+
 #### Parameters
 
-| Name              | Type      | Description                               |
-| ----------------- | --------- | ----------------------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | whitelistAddreses | address[] | Array of address to remove from whitelist |
 
 ### rewardModifiers
@@ -561,17 +738,21 @@ Deletes addresses which are allowed to register as validators.
 function rewardModifiers(address) external view returns (int256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 #### Returns
 
-| Name | Type   | Description |
-| ---- | ------ | ----------- |
-| \_0  | int256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | int256 | undefined |
 
 ### setCommission
 
@@ -579,11 +760,15 @@ function rewardModifiers(address) external view returns (int256)
 function setCommission(uint256 newCommission) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name          | Type    | Description |
-| ------------- | ------- | ----------- |
-| newCommission | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| newCommission | uint256 | undefined |
 
 ### sortedValidators
 
@@ -591,17 +776,21 @@ function setCommission(uint256 newCommission) external nonpayable
 function sortedValidators(uint256 n) external view returns (address[])
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| n    | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| n | uint256 | undefined |
 
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
 
 ### stake
 
@@ -609,17 +798,27 @@ function sortedValidators(uint256 n) external view returns (address[])
 function stake() external payable
 ```
 
+
+
+
+
+
 ### totalActiveStake
 
 ```solidity
 function totalActiveStake() external view returns (uint256 activeStake)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name        | Type    | Description |
-| ----------- | ------- | ----------- |
-| activeStake | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| activeStake | uint256 | undefined |
 
 ### totalStake
 
@@ -629,11 +828,14 @@ function totalStake() external view returns (uint256)
 
 Calculate total stake in the network (self-stake + delegation)
 
+
+
+
 #### Returns
 
-| Name | Type    | Description                              |
-| ---- | ------- | ---------------------------------------- |
-| \_0  | uint256 | stake Returns total stake (in MATIC wei) |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | stake Returns total stake (in MATIC wei) |
 
 ### undelegate
 
@@ -641,12 +843,16 @@ Calculate total stake in the network (self-stake + delegation)
 function undelegate(address validator, uint256 amount) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| amount    | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+| amount | uint256 | undefined |
 
 ### unstake
 
@@ -654,11 +860,15 @@ function undelegate(address validator, uint256 amount) external nonpayable
 function unstake(uint256 amount) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| amount | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | undefined |
 
 ### whitelist
 
@@ -666,17 +876,21 @@ function unstake(uint256 amount) external nonpayable
 function whitelist(address) external view returns (bool)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
-| ---- | ---- | ----------- |
-| \_0  | bool | undefined   |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### withdraw
 
@@ -684,11 +898,15 @@ function whitelist(address) external view returns (bool)
 function withdraw(address to) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| to   | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| to | address | undefined |
 
 ### withdrawable
 
@@ -696,17 +914,23 @@ function withdraw(address to) external nonpayable
 function withdrawable(address account) external view returns (uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
 
 #### Returns
 
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| amount | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | undefined |
+
+
 
 ## Events
 
@@ -716,11 +940,15 @@ function withdrawable(address account) external view returns (uint256 amount)
 event AddedToWhitelist(address indexed validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
 
 ### Delegated
 
@@ -728,13 +956,17 @@ event AddedToWhitelist(address indexed validator)
 event Delegated(address indexed delegator, address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### DelegatorRewardClaimed
 
@@ -742,14 +974,18 @@ event Delegated(address indexed delegator, address indexed validator, uint256 am
 event DelegatorRewardClaimed(address indexed delegator, address indexed validator, bool indexed restake, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| restake `indexed`   | bool    | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| validator `indexed` | address | undefined |
+| restake `indexed` | bool | undefined |
+| amount  | uint256 | undefined |
 
 ### DelegatorRewardDistributed
 
@@ -757,12 +993,16 @@ event DelegatorRewardClaimed(address indexed delegator, address indexed validato
 event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### Initialized
 
@@ -770,11 +1010,15 @@ event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 event Initialized(uint8 version)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type  | Description |
-| ------- | ----- | ----------- |
-| version | uint8 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### NewEpoch
 
@@ -782,14 +1026,18 @@ event Initialized(uint8 version)
 event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                 | Type    | Description |
-| -------------------- | ------- | ----------- |
-| id `indexed`         | uint256 | undefined   |
-| startBlock `indexed` | uint256 | undefined   |
-| endBlock `indexed`   | uint256 | undefined   |
-| epochRoot            | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| id `indexed` | uint256 | undefined |
+| startBlock `indexed` | uint256 | undefined |
+| endBlock `indexed` | uint256 | undefined |
+| epochRoot  | bytes32 | undefined |
 
 ### NewValidator
 
@@ -797,12 +1045,16 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 event NewValidator(address indexed validator, uint256[4] blsKey)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type       | Description |
-| ------------------- | ---------- | ----------- |
-| validator `indexed` | address    | undefined   |
-| blsKey              | uint256[4] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| blsKey  | uint256[4] | undefined |
 
 ### OwnershipProposed
 
@@ -810,11 +1062,15 @@ event NewValidator(address indexed validator, uint256[4] blsKey)
 event OwnershipProposed(address indexed proposedOwner)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                    | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| proposedOwner `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| proposedOwner `indexed` | address | undefined |
 
 ### OwnershipTransferred
 
@@ -822,12 +1078,16 @@ event OwnershipProposed(address indexed proposedOwner)
 event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                    | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| previousOwner `indexed` | address | undefined   |
-| newOwner `indexed`      | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### RemovedFromWhitelist
 
@@ -835,11 +1095,15 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 event RemovedFromWhitelist(address indexed validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
 
 ### Staked
 
@@ -847,12 +1111,16 @@ event RemovedFromWhitelist(address indexed validator)
 event Staked(address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### Undelegated
 
@@ -860,13 +1128,17 @@ event Staked(address indexed validator, uint256 amount)
 event Undelegated(address indexed delegator, address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### Unstaked
 
@@ -874,12 +1146,16 @@ event Undelegated(address indexed delegator, address indexed validator, uint256 
 event Unstaked(address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### ValidatorRewardClaimed
 
@@ -887,12 +1163,16 @@ event Unstaked(address indexed validator, uint256 amount)
 event ValidatorRewardClaimed(address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### ValidatorRewardDistributed
 
@@ -900,12 +1180,16 @@ event ValidatorRewardClaimed(address indexed validator, uint256 amount)
 event ValidatorRewardDistributed(address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### Withdrawal
 
@@ -913,13 +1197,17 @@ event ValidatorRewardDistributed(address indexed validator, uint256 amount)
 event Withdrawal(address indexed account, address indexed to, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name              | Type    | Description |
-| ----------------- | ------- | ----------- |
-| account `indexed` | address | undefined   |
-| to `indexed`      | address | undefined   |
-| amount            | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| to `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### WithdrawalRegistered
 
@@ -927,12 +1215,18 @@ event Withdrawal(address indexed account, address indexed to, uint256 amount)
 event WithdrawalRegistered(address indexed account, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name              | Type    | Description |
-| ----------------- | ------- | ----------- |
-| account `indexed` | address | undefined   |
-| amount            | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| amount  | uint256 | undefined |
+
+
 
 ## Errors
 
@@ -942,17 +1236,26 @@ event WithdrawalRegistered(address indexed account, uint256 amount)
 error AmountZero()
 ```
 
+
+
+
+
+
 ### Exists
 
 ```solidity
 error Exists(address validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 ### NoTokensDelegated
 
@@ -960,11 +1263,15 @@ error Exists(address validator)
 error NoTokensDelegated(address validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 ### NotFound
 
@@ -972,11 +1279,15 @@ error NoTokensDelegated(address validator)
 error NotFound(address validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 ### StakeRequirement
 
@@ -984,12 +1295,16 @@ error NotFound(address validator)
 error StakeRequirement(string src, string msg)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type   | Description |
-| ---- | ------ | ----------- |
-| src  | string | undefined   |
-| msg  | string | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| src | string | undefined |
+| msg | string | undefined |
 
 ### Unauthorized
 
@@ -997,8 +1312,14 @@ error StakeRequirement(string src, string msg)
 error Unauthorized(string only)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type   | Description |
-| ---- | ------ | ----------- |
-| only | string | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| only | string | undefined |
+
+

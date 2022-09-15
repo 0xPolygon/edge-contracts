@@ -35,6 +35,12 @@ pragma solidity 0.8.16;
     see https://github.com/kobigurk/addchain/commit/2c37a2ace567a9bdc680b4e929c94aaaa3ec700f
  */
 library ModexpInverse {
+    /**
+     * @notice computes inverse
+     * @dev computes $input^(N - 2) mod N$ using Addition Chain method.
+     * @param t2 the number to get the inverse of (uint256)
+     * @return t0 the inverse (uint256)
+     */
     function run(uint256 t2) internal pure returns (uint256 t0) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -358,6 +364,12 @@ library ModexpInverse {
     and   (N + 1) / 4 = 0xc19139cb84c680a6e14116da060561765e05aa45a1c72a34f082305b61f3f52
  */
 library ModexpSqrt {
+    /**
+     * @notice computes square root by modular exponentation
+     * @dev Compute $input^{(N + 1) / 4} mod N$ using Addition Chain method
+     * @param t6 the number to derive the square root of
+     * @return t0 the square root
+     */
     function run(uint256 t6) internal pure returns (uint256 t0) {
         // solhint-disable-next-line no-inline-assembly
         assembly {

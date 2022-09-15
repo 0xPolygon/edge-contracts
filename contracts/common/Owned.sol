@@ -10,7 +10,16 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * @notice single address access control with a two-step transfer
  */
 abstract contract Owned is IOwned, Initializable {
+    /**
+     * @notice the address of the owner
+     * @return address
+     */
     address public owner;
+    /**
+     * @notice the address of a proposed owner
+     * @dev the proposed owner can transfer ownership to themselves
+     * @return address
+     */
     address public proposedOwner;
 
     /**

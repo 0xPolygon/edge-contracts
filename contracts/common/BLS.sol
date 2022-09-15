@@ -336,7 +336,8 @@ contract BLS is IBLS {
     /**
      * @notice returns square root of a uint256 value
      * @param xx the value to take the square root of
-     * @return tuple of a uint256 value and a bool indicating if there is a square root
+     * @return x the uint256 value of the root
+     * @return hasRoot a bool indicating if there is a square root
      */
     function sqrt(uint256 xx) internal pure returns (uint256 x, bool hasRoot) {
         x = ModexpSqrt.run(xx);

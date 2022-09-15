@@ -3,7 +3,7 @@ pragma solidity 0.8.16;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./IStateReceiver.sol";
+import "../interfaces/IStateReceiver.sol";
 import "./System.sol";
 
 /**
