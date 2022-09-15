@@ -135,6 +135,13 @@ contract WithdrawalQueue_MultipleState is MultipleState {
 
         assertEq(withdrawalQueueLibUser.pending(currentEpoch), expectedAmount);
     }
+
+    function testPending_HeadZero() public {
+        withdrawalQueueLibUser.append(1 ether, 2);
+
+        // should break and not underflow
+        assertEq(withdrawalQueueLibUser.pending(1), 1 ether);
+    }
 }
 
 /*//////////////////////////////////////////////////////////////////////////
