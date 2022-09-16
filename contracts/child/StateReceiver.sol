@@ -56,7 +56,7 @@ contract StateReceiver is System {
      * @param bitmap bitmap of which validators signed the message
      */
     function commit(
-        StateSyncBundle calldata bundle, 
+        StateSyncBundle calldata bundle,
         bytes calldata signature,
         bytes calldata bitmap
     ) external onlySystemCall {
@@ -156,7 +156,7 @@ contract StateReceiver is System {
      * @param bitmap bitmap of which validators have signed
      */
     function _checkPubkeyAggregation(
-        bytes32 message, 
+        bytes32 message,
         bytes calldata signature,
         bytes calldata bitmap
     ) internal view {

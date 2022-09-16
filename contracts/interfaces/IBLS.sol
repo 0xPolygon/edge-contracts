@@ -17,7 +17,7 @@ interface IBLS {
     ) external view returns (bool, bool);
 
     /**
-     * @notice verifies multiple signatures (separate msgs for ea sig)
+     * @notice verifies multiple non-aggregated signatures where each message is unique
      * @param signature 64-byte G1 group element (small sig)
      * @param pubkeys array of 128-byte G2 group element (big pubkey)
      * @param messages array of messages signed to produce signature
@@ -31,7 +31,7 @@ interface IBLS {
     ) external view returns (bool checkResult, bool callSuccess);
 
     /**
-     * @notice verifies multiple signatures (one msg for all)
+     * @notice verifies an aggregated signature where the same message is signed
      * @param signature 64-byte G1 group element (small sig)
      * @param pubkeys array of 128-byte G2 group element (big pubkey)
      * @param message message signed by all to produce signature
