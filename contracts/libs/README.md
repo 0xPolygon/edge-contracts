@@ -1,30 +1,39 @@
 # Libraries
+
 ##### Library contracts
+
 This directory contains all library contracts in use in the contract suite, with the exception of third-party libraries (such as OpenZeppelin's Arrays Upgradeable, used in Child Validator Set) and the merkle verification contract (which is in [common](../common/)). We will give a high-level overview of the contracts, and then focus more on the high-level usage of the contracts dealing with the queues, pools, and validator tree.
 
 There is natspec on the contracts, along with markdown docs automatically generated from the natspec in the [`docs/`](../../docs/) directory at the project root.
 
 ## `ModExp.sol`
+
 Focuses on mathematical operations related to cryptography.
 
 ## `SafeMathInt.sol`
+
 Conversion between `uint256` and `int256`.
 
 ## `RewardPool.sol`
+
 Library for the management of reward pools. Each validator has a reward pool for delegators delegating funds to them. This will be explained further below.
 
 ## ValidatorQueue.sol
+
 Library for processing new (post-genesis) validators and changes to existing validators. These changes only become canonical at the end of the epoch they were submitted, the queue holds them and is cleared every epoch. Explained in further detail below.
 
 ## ValidatorStorage
+
 Red-black ordered statistic tree for ordering validators by total stake. (Total stake is the amount of stake the validator has staked from their own address, in addition to any funds delegated to them.) Explained in further detail below.
 
 (Further links on red-black trees are included in comments in the contract.)
 
 ## WithdrawalQueue.sol
+
 Library to manage withdrawals of funds from unstaking, undelegating, and rewards withdrawals. Each address has its own queue, the queue manages various system-enforced delays to withdrawals. Explained in further detail below.
 
 ## Queue, Pool, and Tree libs in More Detail
+
 These libraries were written to help facilitate gas-efficient management of the validator set and rewards distribution. These operations are done through the [Child Validator Set](../child/ChildValidatorSet.sol) contract, which imports and makes use of these libraries.
 
 We'll start with a brief walk through registering a new validator in order to illustrate where each library plays a role. Anytime after genesis, new validators enter the system through the `register()` function in Child Validator Set. (Note that this implementation of Child Validator set has a whitelist, so a potential validator must be whitelisted before being able to register.)

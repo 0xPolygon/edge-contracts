@@ -13,7 +13,7 @@ struct Withdrawal {
 
 /**
  * @notice data type for managing the withdrawal queue
- * @param head earliest unprocessed index 
+ * @param head earliest unprocessed index
  * (which is also the most recently filled witrhdrawal)
  * @param tail index of most recent withdrawal
  * (which is also the total number of submitted withdrawals)
@@ -80,7 +80,7 @@ library WithdrawalQueueLib {
     }
 
     /**
-     * @notice returns the amount withdrawable through a specified epoch 
+     * @notice returns the amount withdrawable through a specified epoch
      * and new head index at that point
      * @dev meant to be used with the current epoch being passed in
      * @param self the WithdrawalQueue struct
@@ -101,7 +101,7 @@ library WithdrawalQueueLib {
     }
 
     /**
-     * @notice returns the amount withdrawable beyond a specified epoch 
+     * @notice returns the amount withdrawable beyond a specified epoch
      * @dev meant to be used with the current epoch being passed in
      * @param self the WithdrawalQueue struct
      * @param currentEpoch the epoch to check from

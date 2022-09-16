@@ -1,12 +1,12 @@
 # IChildValidatorSet
 
-*Polygon Technology*
+_Polygon Technology_
 
 > ChildValidatorSet
 
 Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
 
-*The contract is used to complete validator registration and store self-stake and delegated MATIC amounts. It manages staking, epoch committing, and reward distribution.*
+_The contract is used to complete validator registration and store self-stake and delegated MATIC amounts. It manages staking, epoch committing, and reward distribution._
 
 ## Methods
 
@@ -18,12 +18,10 @@ function addToWhitelist(address[] whitelistAddreses) external nonpayable
 
 Adds addresses that are allowed to register as validators.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name              | Type      | Description                   |
+| ----------------- | --------- | ----------------------------- |
 | whitelistAddreses | address[] | Array of address to whitelist |
 
 ### claimDelegatorReward
@@ -34,14 +32,12 @@ function claimDelegatorReward(address validator, bool restake) external nonpayab
 
 Claims delegator rewards for sender.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator | address | Validator to claim from |
-| restake | bool | Whether to redelegate the claimed rewards |
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| validator | address | Validator to claim from                   |
+| restake   | bool    | Whether to redelegate the claimed rewards |
 
 ### claimValidatorReward
 
@@ -51,26 +47,19 @@ function claimValidatorReward() external nonpayable
 
 Claims validator rewards for sender.
 
-
-
-
 ### commitEpoch
 
 ```solidity
 function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined |
-| epoch | Epoch | undefined |
-| uptime | Uptime | undefined |
+| Name   | Type    | Description |
+| ------ | ------- | ----------- |
+| id     | uint256 | undefined   |
+| epoch  | Epoch   | undefined   |
+| uptime | Uptime  | undefined   |
 
 ### delegate
 
@@ -80,14 +69,12 @@ function delegate(address validator, bool restake) external payable
 
 Delegates sent amount to validator. Claims rewards beforehand.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator | address | Validator to delegate to |
-| restake | bool | Whether to redelegate the claimed rewards |
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| validator | address | Validator to delegate to                  |
+| restake   | bool    | Whether to redelegate the claimed rewards |
 
 ### delegationOf
 
@@ -97,20 +84,18 @@ function delegationOf(address validator, address delegator) external view return
 
 Gets amount delegated by delegator to validator.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
 | validator | address | Address of validator |
 | delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Amount delegated (in MATIC wei) |
+| Name | Type    | Description                     |
+| ---- | ------- | ------------------------------- |
+| \_0  | uint256 | Amount delegated (in MATIC wei) |
 
 ### getCurrentValidatorSet
 
@@ -120,14 +105,11 @@ function getCurrentValidatorSet() external view returns (address[])
 
 Gets addresses of active validators in this epoch, sorted by total stake (self-stake + delegation)
 
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address[] | Array of addresses of active validators in this epoch, sorted by total stake |
+| Name | Type      | Description                                                                  |
+| ---- | --------- | ---------------------------------------------------------------------------- |
+| \_0  | address[] | Array of addresses of active validators in this epoch, sorted by total stake |
 
 ### getDelegatorReward
 
@@ -137,20 +119,18 @@ function getDelegatorReward(address validator, address delegator) external view 
 
 Gets delegators&#39;s claimable rewards from validator.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
 | validator | address | Address of validator |
 | delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Delegator&#39;s withdrawable rewards from validator (in MATIC wei) |
+| Name | Type    | Description                                                        |
+| ---- | ------- | ------------------------------------------------------------------ |
+| \_0  | uint256 | Delegator&#39;s withdrawable rewards from validator (in MATIC wei) |
 
 ### getEpochByBlock
 
@@ -160,19 +140,17 @@ function getEpochByBlock(uint256 blockNumber) external view returns (struct Epoc
 
 Look up an epoch by block number. Searches in O(log n) time.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name        | Type    | Description                 |
+| ----------- | ------- | --------------------------- |
 | blockNumber | uint256 | ID of epoch to be committed |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | Epoch | Epoch Returns epoch if found, or else, the last epoch |
+| Name | Type  | Description                                           |
+| ---- | ----- | ----------------------------------------------------- |
+| \_0  | Epoch | Epoch Returns epoch if found, or else, the last epoch |
 
 ### getValidator
 
@@ -182,19 +160,17 @@ function getValidator(address validator) external view returns (struct Validator
 
 Gets validator by address.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
+| Name      | Type    | Description |
+| --------- | ------- | ----------- |
+| validator | address | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
+| Name | Type      | Description                                                                                            |
+| ---- | --------- | ------------------------------------------------------------------------------------------------------ |
+| \_0  | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
 
 ### getValidatorReward
 
@@ -204,19 +180,17 @@ function getValidatorReward(address validator) external view returns (uint256)
 
 Gets validator&#39;s withdrawable rewards.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
 | validator | address | Address of validator |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Validator&#39;s withdrawable rewards (in MATIC wei) |
+| Name | Type    | Description                                         |
+| ---- | ------- | --------------------------------------------------- |
+| \_0  | uint256 | Validator&#39;s withdrawable rewards (in MATIC wei) |
 
 ### pendingWithdrawals
 
@@ -226,19 +200,17 @@ function pendingWithdrawals(address account) external view returns (uint256)
 
 Calculates how much is yet to become withdrawable for account.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name    | Type    | Description                         |
+| ------- | ------- | ----------------------------------- |
 | account | address | The account to calculate amount for |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
+| Name | Type    | Description                                |
+| ---- | ------- | ------------------------------------------ |
+| \_0  | uint256 | Amount not yet withdrawable (in MATIC wei) |
 
 ### register
 
@@ -248,14 +220,12 @@ function register(uint256[2] signature, uint256[4] pubkey) external nonpayable
 
 Validates BLS signature with the provided pubkey and registers validators into the set.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name      | Type       | Description                           |
+| --------- | ---------- | ------------------------------------- |
 | signature | uint256[2] | Signature to validate message against |
-| pubkey | uint256[4] | BLS public key of validator |
+| pubkey    | uint256[4] | BLS public key of validator           |
 
 ### removeFromWhitelist
 
@@ -265,12 +235,10 @@ function removeFromWhitelist(address[] whitelistAddreses) external nonpayable
 
 Deletes addresses that are allowed to register as validators.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name              | Type      | Description                               |
+| ----------------- | --------- | ----------------------------------------- |
 | whitelistAddreses | address[] | Array of address to remove from whitelist |
 
 ### setCommission
@@ -281,12 +249,10 @@ function setCommission(uint256 newCommission) external nonpayable
 
 Sets commission for validator.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name          | Type    | Description                 |
+| ------------- | ------- | --------------------------- |
 | newCommission | uint256 | New commission (100 = 100%) |
 
 ### sortedValidators
@@ -297,19 +263,17 @@ function sortedValidators(uint256 n) external view returns (address[])
 
 Gets first n active validators sorted by total stake.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| n | uint256 | Desired number of validators to return |
+| Name | Type    | Description                            |
+| ---- | ------- | -------------------------------------- |
+| n    | uint256 | Desired number of validators to return |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address[] | Returns array of addresses of first n active validators sorted by total stake, or fewer if there are not enough active validators |
+| Name | Type      | Description                                                                                                                       |
+| ---- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| \_0  | address[] | Returns array of addresses of first n active validators sorted by total stake, or fewer if there are not enough active validators |
 
 ### stake
 
@@ -319,9 +283,6 @@ function stake() external payable
 
 Stakes sent amount. Claims rewards beforehand.
 
-
-
-
 ### totalActiveStake
 
 ```solidity
@@ -330,14 +291,11 @@ function totalActiveStake() external view returns (uint256)
 
 Calculates total stake of active validators (self-stake + delegation).
 
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Total stake of active validators (in MATIC wei) |
+| Name | Type    | Description                                     |
+| ---- | ------- | ----------------------------------------------- |
+| \_0  | uint256 | Total stake of active validators (in MATIC wei) |
 
 ### totalStake
 
@@ -347,14 +305,11 @@ function totalStake() external view returns (uint256)
 
 Calculates total stake in the network (self-stake + delegation).
 
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Total stake (in MATIC wei) |
+| Name | Type    | Description                |
+| ---- | ------- | -------------------------- |
+| \_0  | uint256 | Total stake (in MATIC wei) |
 
 ### undelegate
 
@@ -364,14 +319,12 @@ function undelegate(address validator, uint256 amount) external nonpayable
 
 Undelegates amount from validator for sender. Claims rewards beforehand.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name      | Type    | Description                  |
+| --------- | ------- | ---------------------------- |
 | validator | address | Validator to undelegate from |
-| amount | uint256 | The amount to undelegate |
+| amount    | uint256 | The amount to undelegate     |
 
 ### unstake
 
@@ -381,12 +334,10 @@ function unstake(uint256 amount) external nonpayable
 
 Unstakes amount for sender. Claims rewards beforehand.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
 | amount | uint256 | Amount to unstake |
 
 ### withdraw
@@ -397,13 +348,11 @@ function withdraw(address to) external nonpayable
 
 Withdraws sender&#39;s withdrawable amount to specified address.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| to | address | Address to withdraw to |
+| Name | Type    | Description            |
+| ---- | ------- | ---------------------- |
+| to   | address | Address to withdraw to |
 
 ### withdrawable
 
@@ -413,21 +362,17 @@ function withdrawable(address account) external view returns (uint256)
 
 Calculates how much can be withdrawn for account in this epoch.
 
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name    | Type    | Description                         |
+| ------- | ------- | ----------------------------------- |
 | account | address | The account to calculate amount for |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Amount withdrawable (in MATIC wei) |
-
-
+| Name | Type    | Description                        |
+| ---- | ------- | ---------------------------------- |
+| \_0  | uint256 | Amount withdrawable (in MATIC wei) |
 
 ## Events
 
@@ -437,15 +382,11 @@ Calculates how much can be withdrawn for account in this epoch.
 event AddedToWhitelist(address indexed validator)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
 
 ### Delegated
 
@@ -453,17 +394,13 @@ event AddedToWhitelist(address indexed validator)
 event Delegated(address indexed delegator, address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| delegator `indexed` | address | undefined |
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| delegator `indexed` | address | undefined   |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### DelegatorRewardClaimed
 
@@ -471,18 +408,14 @@ event Delegated(address indexed delegator, address indexed validator, uint256 am
 event DelegatorRewardClaimed(address indexed delegator, address indexed validator, bool indexed restake, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| delegator `indexed` | address | undefined |
-| validator `indexed` | address | undefined |
-| restake `indexed` | bool | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| delegator `indexed` | address | undefined   |
+| validator `indexed` | address | undefined   |
+| restake `indexed`   | bool    | undefined   |
+| amount              | uint256 | undefined   |
 
 ### DelegatorRewardDistributed
 
@@ -490,16 +423,12 @@ event DelegatorRewardClaimed(address indexed delegator, address indexed validato
 event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### NewEpoch
 
@@ -507,18 +436,14 @@ event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| id `indexed` | uint256 | undefined |
-| startBlock `indexed` | uint256 | undefined |
-| endBlock `indexed` | uint256 | undefined |
-| epochRoot  | bytes32 | undefined |
+| Name                 | Type    | Description |
+| -------------------- | ------- | ----------- |
+| id `indexed`         | uint256 | undefined   |
+| startBlock `indexed` | uint256 | undefined   |
+| endBlock `indexed`   | uint256 | undefined   |
+| epochRoot            | bytes32 | undefined   |
 
 ### NewValidator
 
@@ -526,16 +451,12 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 event NewValidator(address indexed validator, uint256[4] blsKey)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
-| blsKey  | uint256[4] | undefined |
+| Name                | Type       | Description |
+| ------------------- | ---------- | ----------- |
+| validator `indexed` | address    | undefined   |
+| blsKey              | uint256[4] | undefined   |
 
 ### RemovedFromWhitelist
 
@@ -543,15 +464,11 @@ event NewValidator(address indexed validator, uint256[4] blsKey)
 event RemovedFromWhitelist(address indexed validator)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
 
 ### Staked
 
@@ -559,16 +476,12 @@ event RemovedFromWhitelist(address indexed validator)
 event Staked(address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### Undelegated
 
@@ -576,17 +489,13 @@ event Staked(address indexed validator, uint256 amount)
 event Undelegated(address indexed delegator, address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| delegator `indexed` | address | undefined |
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| delegator `indexed` | address | undefined   |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### Unstaked
 
@@ -594,16 +503,12 @@ event Undelegated(address indexed delegator, address indexed validator, uint256 
 event Unstaked(address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### ValidatorRewardClaimed
 
@@ -611,16 +516,12 @@ event Unstaked(address indexed validator, uint256 amount)
 event ValidatorRewardClaimed(address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### ValidatorRewardDistributed
 
@@ -628,16 +529,12 @@ event ValidatorRewardClaimed(address indexed validator, uint256 amount)
 event ValidatorRewardDistributed(address indexed validator, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
+| amount              | uint256 | undefined   |
 
 ### Withdrawal
 
@@ -645,17 +542,13 @@ event ValidatorRewardDistributed(address indexed validator, uint256 amount)
 event Withdrawal(address indexed account, address indexed to, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| account `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| Name              | Type    | Description |
+| ----------------- | ------- | ----------- |
+| account `indexed` | address | undefined   |
+| to `indexed`      | address | undefined   |
+| amount            | uint256 | undefined   |
 
 ### WithdrawalRegistered
 
@@ -663,18 +556,12 @@ event Withdrawal(address indexed account, address indexed to, uint256 amount)
 event WithdrawalRegistered(address indexed account, uint256 amount)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| account `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
-
+| Name              | Type    | Description |
+| ----------------- | ------- | ----------- |
+| account `indexed` | address | undefined   |
+| amount            | uint256 | undefined   |
 
 ## Errors
 
@@ -684,15 +571,9 @@ event WithdrawalRegistered(address indexed account, uint256 amount)
 error StakeRequirement(string src, string msg)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| src | string | undefined |
-| msg | string | undefined |
-
-
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| src  | string | undefined   |
+| msg  | string | undefined   |
