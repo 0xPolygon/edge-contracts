@@ -1,5 +1,13 @@
 # IOwned
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### claimOwnership
@@ -8,7 +16,10 @@
 function claimOwnership() external nonpayable
 ```
 
-claim ownership of the contract
+allows proposed owner to claim ownership (step 2 of transferring ownership)
+
+*can only be called by the new proposed owner*
+
 
 ### proposeOwner
 
@@ -16,13 +27,17 @@ claim ownership of the contract
 function proposeOwner(address payable _newOwner) external nonpayable
 ```
 
-propeses a new owner
+proposes a new owner (step 1 of transferring ownership)
+
+*can only be called by the current owner*
 
 #### Parameters
 
-| Name       | Type            | Description                   |
-| ---------- | --------------- | ----------------------------- |
-| \_newOwner | address payable | address of new proposed owner |
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address payable | address of new proposed owner |
+
+
 
 ## Events
 
@@ -32,11 +47,15 @@ propeses a new owner
 event OwnershipProposed(address indexed proposedOwner)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                    | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| proposedOwner `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| proposedOwner `indexed` | address | undefined |
 
 ### OwnershipTransferred
 
@@ -44,9 +63,16 @@ event OwnershipProposed(address indexed proposedOwner)
 event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                    | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| previousOwner `indexed` | address | undefined   |
-| newOwner `indexed`      | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
+
+
+

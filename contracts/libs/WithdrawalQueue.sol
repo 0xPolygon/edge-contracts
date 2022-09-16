@@ -1,18 +1,45 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+/**
+ * @notice data type for withdrawals
+ * @param amount the amount to withdraw
+ * @param epoch the epoch of the withdrawal
+ */
 struct Withdrawal {
     uint256 amount;
     uint256 epoch;
 }
 
+/**
+ * @notice data type for managing the withdrawal queue
+ * @param head earliest unprocessed index 
+ * (which is also the most recently filled witrhdrawal)
+ * @param tail index of most recent withdrawal
+ * (which is also the total number of submitted withdrawals)
+ * @param withdrawals Withdrawal structs by index
+ */
 struct WithdrawalQueue {
     uint256 head;
     uint256 tail;
     mapping(uint256 => Withdrawal) withdrawals;
 }
 
+/**
+ * @title Withdrawal Queue Lib
+ * @author Polygon Technology (Daniel Gretzke @gretzke)
+ * @notice queue for withdrawals
+ */
 library WithdrawalQueueLib {
+    /**
+     * @notice update queue with new withdrawal data
+     * @dev if there is already a withdrawal for the epoch being submitted,
+     * the amount will be added to that epoch; otherwise, a new withdrawal
+     * struct will be created in the queue
+     * @param self the WithdrawalQueue struct
+     * @param amount the amount to withdraw
+     * @param epoch the epoch to withdraw
+     */
     function append(
         WithdrawalQueue storage self,
         uint256 amount,
@@ -41,11 +68,26 @@ library WithdrawalQueueLib {
         }
     }
 
+    /**
+     * @notice returns the length between the head and tail of the queue
+     * (which is the amount of unprocessed withdrawals)
+     * @param self the WithdrawalQueue struct
+     * @return uint256 the length between head and tail (unproceesed withdrawals)
+     */
     // slither-disable-next-line dead-code
     function length(WithdrawalQueue storage self) internal view returns (uint256) {
         return self.tail - self.head;
     }
 
+    /**
+     * @notice returns the amount withdrawable through a specified epoch 
+     * and new head index at that point
+     * @dev meant to be used with the current epoch being passed in
+     * @param self the WithdrawalQueue struct
+     * @param currentEpoch the epoch to check until
+     * @return amount the amount withdrawable through the specified epoch
+     * @return newHead the head of the queue once these withdrawals have been processed
+     */
     function withdrawable(WithdrawalQueue storage self, uint256 currentEpoch)
         internal
         view
@@ -58,6 +100,13 @@ library WithdrawalQueueLib {
         }
     }
 
+    /**
+     * @notice returns the amount withdrawable beyond a specified epoch 
+     * @dev meant to be used with the current epoch being passed in
+     * @param self the WithdrawalQueue struct
+     * @param currentEpoch the epoch to check from
+     * @return amount the amount withdrawable from beyond the specified epoch
+     */
     function pending(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {
         for (uint256 i = self.tail - 1; i >= self.head; i--) {
             Withdrawal memory withdrawal = self.withdrawals[i];

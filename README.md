@@ -20,7 +20,7 @@ This repository contains the smart contract suite used in Polygon's POS v3 block
   - [Check Test Coverage](#check-test-coverage)
   - [Run Slither](#run-slither)
   - [Continuous Integration](#continuous-integration)
-  - TODO: Scripts (deploy?)
+  - [Documentation](#documentation)
 
 ## Repo Architecture
 
@@ -42,13 +42,13 @@ There are a number of different contracts with different roles in the suite, as 
 │ libs/ "libraries used for specific applications"
 ├─ ModExp — "modular exponentiation (from Hubble Project, for BLS)"
 ├─ ValidatorQueue - "lib of operations for the validator queue"
-├─ ValidatorStorage — "statistical binary tree lib for ordering validators"
+├─ ValidatorStorage — "statistical red-black tree lib for ordering validators"
 ├─ WithdrawalQueue — "lib of operations for the rewards withdrawal queue"
 │ mocks/ "mocks of various contracts for testing"
 │ root/ "contracts that live on the root chain (Ethereum mainnet)"
-├─ CheckpointManager - //TODO once root contracts are more settled
-├─ RootValidatorSet - //TODO once root contracts are more settled
-├─ StateSender - //TODO once root contracts are more settled
+├─ CheckpointManager - "receives and executes messages from child"
+├─ RootValidatorSet - "*LIKELY TO CHANGE* stores data from child about validators and epochs"
+├─ StateSender - "sends messages to child"
 ```
 
 ### General Repo Layout
@@ -83,7 +83,39 @@ The `package-lock.json` is also provided to ensure the ability to install the sa
 
 ### Requirements
 
-In order to work with this repo locally, you will need Node (preferably using [nvm](https://github.com/nvm-sh/nvm)) in order to work with the Hardhat part of the repo, and [Rust](https://www.rust-lang.org/tools/install) for the Foundry environment.
+In order to work with this repo locally, you will need Node (preferably using [nvm](https://github.com/nvm-sh/nvm)) in order to work with the Hardhat part of the repo.
+
+In addition, to work with Foundry, you will need to have it installed. The recommended method is to use their `foundryup` tool, which can be installed (and automatically install Foundry) using this command:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+Note that this only works on Linux and Mac. For Windows, or if `foundryup` doesn't work, consult [their documentation](https://book.getfoundry.sh/getting-started/installation).
+
+### Installation
+
+**You do not need to clone this repo in order to interact with Polygon POS v3.**
+
+If you would like to work with these contracts in a development environment, first clone the repo:
+
+```bash
+git clone git@github.com:maticnetwork/v3-contracts.git
+```
+
+If you have [nvm](https://github.com/nvm-sh/nvm) installed (recommended), you can run `nvm use #` to set your version of Node to the same as used in development and testing.
+
+Install JS/TS (Hardhat) dependencies:
+
+```bash
+npm i
+```
+
+### General Repo Layout
+
+This repo is a hybrid [Hardhat](https://hardhat.org) and [Foundry](https://getfoundry.sh/) environment. There are a number of add-ons, some of which we will detail here. Unlike standard Foundry environments, the contracts are located in `contracts/` (as opposed to `src/`) in order to conform with the general Hardhat project architecture. The Foundry/Solidity tests live in `test/forge/` whereas the Hardhat/Typescript tests are at the root level of `test/`. (For more details on the tests, see [Running Tests](#running-tests) in the [Using This Repo](#using-this-repo) section.)
+
+Install Foundry libs:
 
 In addition, to work with Foundry, you will need to have it installed. The recommended method is to use their `foundryup` tool, which can be installed (and automatically install Foundry) using this command:
 
@@ -116,6 +148,10 @@ Install Foundry libs:
 ```bash
 forge install
 ```
+
+### Environment Setup
+
+There are a few things that should be done to set up the repo once you've cloned it and installed the dependencies and libraries. An important step for various parts of the repo to work properly is to set up a `.env` file. There is an `.example.env` file provided, copy it and rename the copy `.env`.
 
 ### Environment Setup
 
@@ -162,6 +198,8 @@ The Hardhat tests have gas reporting enabled by default, you can disable them fr
 ```bash
 forge test
 ```
+
+Simple gas profiling is included in Foundry tests by default. For a more complete gas profile using Foundry, see [their documentation](https://book.getfoundry.sh/forge/gas-reports).
 
 Simple gas profiling is included in Foundry tests by default. For a more complete gas profile using Foundry, see [their documentation](https://book.getfoundry.sh/forge/gas-reports).
 
@@ -217,3 +255,16 @@ There is a CI script for Github Actions in `.github/workflows/`. Currently it ru
 - both test suites (fails if any tests fail)
 - coverage report (currently only HH)
 - Slither
+
+### Continuous Integration
+
+There is a CI script for Github Actions in `.github/workflows/`. Currently it runs:
+
+- linters
+- both test suites (fails if any tests fail)
+- coverage report (currently only HH)
+- Slither
+
+### Documentation
+
+This repo makes use of [Dodoc](https://github.com/primitivefinance/primitive-dodoc), a Hardhat plugin from Primitive Finance which generates Markdown docs on contracts from their natspec. The docs are generated on every compile, and can be found in the `docs/` directory.

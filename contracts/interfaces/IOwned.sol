@@ -7,10 +7,16 @@ interface IOwned {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event OwnershipProposed(address indexed proposedOwner);
 
-    /// @notice propeses a new owner
-    /// @param _newOwner address of new proposed owner
+    /**
+     * @notice proposes a new owner (step 1 of transferring ownership)
+     * @dev can only be called by the current owner
+     * @param _newOwner address of new proposed owner
+     */
     function proposeOwner(address payable _newOwner) external;
 
-    /// @notice claim ownership of the contract
+    /**
+     * @notice allows proposed owner to claim ownership (step 2 of transferring ownership)
+     * @dev can only be called by the new proposed owner
+     */
     function claimOwnership() external;
 }

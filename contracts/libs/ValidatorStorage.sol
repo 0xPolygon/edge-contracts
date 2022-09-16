@@ -8,14 +8,38 @@ error AmountZero();
 error NotFound(address validator);
 error Exists(address validator);
 
+/**
+ * @title Validator Storage Lib
+ * @author Polygon Technology (Daniel Gretzke @gretzke)
+ * @notice implementation of red-black ordered tree to order validators by stake
+ *
+ * for more information on red-black trees:
+ * https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
+ * implementation draws on Rob Hutchins's (B9Labs) Order Statistics tree:
+ * https://github.com/rob-Hitchens/OrderStatisticsTree
+ * which in turn is based on BokkyPooBah's implementation
+ * https://github.com/bokkypoobah/BokkyPooBahsRedBlackTreeLibrary
+ */
 library ValidatorStorageLib {
     address private constant EMPTY = address(0);
 
+    /**
+     * @notice returns the Validator struct of a specific validator
+     * @param self the ValidatorTree struct
+     * @param validator the address of the validator to lookup
+     * @return Validator struct
+     */
     function get(ValidatorTree storage self, address validator) internal view returns (Validator storage) {
         // return empty validator object if validator doesn't exist
         return self.nodes[validator].validator;
     }
 
+    /**
+     * @notice returns RewardPool struct for a specific validator
+     * @param self the ValidatorTree struct
+     * @param validator the address of the validator whose pool is being queried
+     * @return RewardPool struct for the validator
+     */
     function getDelegationPool(ValidatorTree storage self, address validator)
         internal
         view
@@ -24,10 +48,22 @@ library ValidatorStorageLib {
         return self.delegationPools[validator];
     }
 
+    /**
+     * @notice returns the stake of a specific validator
+     * @param self the ValidatorTree struct
+     * @param account the address of the validator to query the stake of
+     * @return balance the stake of the validator
+     */
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
         balance = self.nodes[account].validator.stake;
     }
 
+    /**
+     * @notice returns the address of the first validator in the tree
+     * @dev the first node will be the validator with the lowest stake + delegation
+     * @param self the ValidatorTree struct
+     * @return _key the address of the validator
+     */
     function first(ValidatorTree storage self) internal view returns (address _key) {
         _key = self.root;
         if (_key != EMPTY) {
@@ -37,6 +73,12 @@ library ValidatorStorageLib {
         }
     }
 
+    /**
+     * @notice returns the address of the last validator in the tree
+     * @dev the first node will be the validator with the highest stake + delegation
+     * @param self the ValidatorTree struct
+     * @return _key the address of the validator
+     */
     function last(ValidatorTree storage self) internal view returns (address _key) {
         _key = self.root;
         if (_key != EMPTY) {
@@ -46,6 +88,13 @@ library ValidatorStorageLib {
         }
     }
 
+    /**
+     * @notice returns the next addr in the tree from a particular addr
+     * @dev the "next" node is the validator with the next highest stake
+     * @param self the ValidatorTree struct
+     * @param target the address to check the next validator to
+     * @return cursor the next validator's address
+     */
     // slither-disable-next-line dead-code
     function next(ValidatorTree storage self, address target) internal view returns (address cursor) {
         if (target == EMPTY) revert AmountZero();
@@ -60,6 +109,13 @@ library ValidatorStorageLib {
         }
     }
 
+    /**
+     * @notice returns the prev addr in the tree from a particular addr
+     * @dev the "next" node is the validator with the next lowest stake
+     * @param self the ValidatorTree struct
+     * @param target the address to check the previous validator to
+     * @return cursor the previous validator's address
+     */
     function prev(ValidatorTree storage self, address target) internal view returns (address cursor) {
         if (target == EMPTY) revert AmountZero();
         if (self.nodes[target].left != EMPTY) {
@@ -73,15 +129,36 @@ library ValidatorStorageLib {
         }
     }
 
+    /**
+     * @notice checks if a specific address is in the tree with nonzero stake
+     * @param self the ValidatorTree struct
+     * @param key the address to check membership of
+     * @return bool indicating if the address is in the tree (with stake >0) or not
+     */
     function exists(ValidatorTree storage self, address key) internal view returns (bool) {
         return (key != EMPTY) && ((key == self.root) || (self.nodes[key].parent != EMPTY));
     }
 
+    /**
+     * @notice checks if an address is the zero address
+     * @param key the address to check
+     * @return bool indicating if the address is the zero addr or not
+     */
     // slither-disable-next-line dead-code
     function isEmpty(address key) internal pure returns (bool) {
         return key == EMPTY;
     }
 
+    /**
+     * @notice returns the tree positioning of an address in the tree
+     * @param self the ValidatorTree struct
+     * @param key the address to return the position of
+     * @return _returnKey the address input as an argument
+     * @return _parent the parent address in the node
+     * @return _left the address to the left in the tree
+     * @return _right the address to the right in the tree
+     * @return _red if the node is red or not
+     */
     // slither-disable-next-line dead-code
     function getNode(ValidatorTree storage self, address key)
         internal
@@ -98,6 +175,12 @@ library ValidatorStorageLib {
         return (key, self.nodes[key].parent, self.nodes[key].left, self.nodes[key].right, self.nodes[key].red);
     }
 
+    /**
+     * @notice inserts a validator into the tree
+     * @param self the ValidatorTree struct
+     * @param key the address to add
+     * @param validator the Validator struct of the address
+     */
     function insert(
         ValidatorTree storage self,
         address key,
@@ -133,6 +216,11 @@ library ValidatorStorageLib {
         self.totalStake += validator.stake;
     }
 
+    /**
+     * @notice removes a validator from the tree
+     * @param self the ValidatorTree struct
+     * @param key the address to remove
+     */
     function remove(ValidatorTree storage self, address key) internal {
         assert(key != EMPTY);
         if (!exists(self, key)) revert NotFound(key);
@@ -183,6 +271,13 @@ library ValidatorStorageLib {
         self.totalStake -= self.nodes[cursor].validator.stake;
     }
 
+    /**
+     * @notice returns the left-most node from an address, using that address as the root of a subtree
+     * @dev since left will not traverse to a parent, this will not necessarily return `first()`
+     * @param self the ValidatorTree struct
+     * @param key the address to check the left-most node from
+     * @return address the left-most node from the input address
+     */
     // slither-disable-next-line dead-code
     function treeMinimum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].left != EMPTY) {
@@ -191,6 +286,13 @@ library ValidatorStorageLib {
         return key;
     }
 
+    /**
+     * @notice returns the right-most node from an address in the tree, using that address as the root of a subtree
+     * @dev since right will not traverse to a parent, this will not necessarily return `last()`
+     * @param self the ValidatorTree struct
+     * @param key the address to check the right-most node from
+     * @return address the right-most node from the input address
+     */
     function treeMaximum(ValidatorTree storage self, address key) private view returns (address) {
         while (self.nodes[key].right != EMPTY) {
             key = self.nodes[key].right;
@@ -198,6 +300,11 @@ library ValidatorStorageLib {
         return (key);
     }
 
+    /**
+     * @notice rebalances tree by rotating left
+     * @param self the ValidatorTree struct
+     * @param key the address to begin the rotation from
+     */
     function rotateLeft(ValidatorTree storage self, address key) private {
         address cursor = self.nodes[key].right;
         address keyParent = self.nodes[key].parent;
@@ -218,6 +325,11 @@ library ValidatorStorageLib {
         self.nodes[key].parent = cursor;
     }
 
+    /**
+     * @notice rebalances tree by rotating right
+     * @param self the ValidatorTree struct
+     * @param key the address to begin the rotation from
+     */
     function rotateRight(ValidatorTree storage self, address key) private {
         address cursor = self.nodes[key].left;
         address keyParent = self.nodes[key].parent;
@@ -238,6 +350,11 @@ library ValidatorStorageLib {
         self.nodes[key].parent = cursor;
     }
 
+    /**
+     * @notice private function for repainting tree on insert
+     * @param self the ValidatorTree struct
+     * @param key the address being inserted into the tree
+     */
     function insertFixup(ValidatorTree storage self, address key) private {
         address cursor;
         while (key != self.root && self.nodes[self.nodes[key].parent].red) {
@@ -281,6 +398,12 @@ library ValidatorStorageLib {
         self.nodes[self.root].red = false;
     }
 
+    /**
+     * @notice changes the parent node of a validator's node in the tree
+     * @param self the ValidatorTree struct
+     * @param a the address to have the parent changed
+     * @param b the parent will be changed to the parent of this addr
+     */
     function replaceParent(
         ValidatorTree storage self,
         address a,
@@ -299,6 +422,11 @@ library ValidatorStorageLib {
         }
     }
 
+    /**
+     * @notice private function for repainting tree on remove
+     * @param self the ValidatorTree struct
+     * @param key the address being removed into the tree
+     */
     function removeFixup(ValidatorTree storage self, address key) private {
         address cursor;
         while (key != self.root && !self.nodes[key].red) {
