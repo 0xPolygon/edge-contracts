@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 /**
  * @notice data type for withdrawals
@@ -13,7 +13,7 @@ struct Withdrawal {
 
 /**
  * @notice data type for managing the withdrawal queue
- * @param head earliest index 
+ * @param head earliest index
  * @param tail latest index
  * @param withdrawals Withdrawal structs by index
  */
@@ -74,7 +74,7 @@ library WithdrawalQueueLib {
     }
 
     /**
-     * @notice returns the amount withdrawable up to a specified epoch 
+     * @notice returns the amount withdrawable up to a specified epoch
      * and new head index at that point
      * @param self the WithdrawalQueue struct
      * @param currentEpoch the epoch to check until
@@ -94,7 +94,7 @@ library WithdrawalQueueLib {
     }
 
     /**
-     * @notice returns the amount withdrawable up to a specified epoch 
+     * @notice returns the amount withdrawable up to a specified epoch
      * @param self the WithdrawalQueue struct
      * @param currentEpoch the epoch to check until
      * @return amount the amount withdrawable through the specified epoch

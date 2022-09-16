@@ -110,17 +110,23 @@ Install JS/TS (Hardhat) dependencies:
 ```bash
 npm i
 ```
+
 ### General Repo Layout
+
 This repo is a hybrid [Hardhat](https://hardhat.org) and [Foundry](https://getfoundry.sh/) environment. There are a number of add-ons, some of which we will detail here. Unlike standard Foundry environments, the contracts are located in `contracts/` (as opposed to `src/`) in order to conform with the general Hardhat project architecture. The Foundry/Solidity tests live in `test/forge/` whereas the Hardhat/Typescript tests are at the root level of `test/`. (For more details on the tests, see [Running Tests](#running-tests) in the [Using This Repo](#using-this-repo) section.)
 
 Install Foundry libs:
 
 In addition, to work with Foundry, you will need to have it installed. The recommended method is to use their `foundryup` tool, which can be installed (and automatically install Foundry) using this command:
+
 ```bash
 curl -L https://foundry.paradigm.xyz | bash
 ```
+
 Note that this only works on Linux and Mac. For Windows, or if `foundryup` doesn't work, consult [their documentation](https://book.getfoundry.sh/getting-started/installation).
+
 ### Installation
+
 **You do not need to clone this repo in order to interact with Polygon POS v3.**
 
 If you would like to work with these contracts in a development environment, first clone the repo:
@@ -128,17 +134,23 @@ If you would like to work with these contracts in a development environment, fir
 ```bash
 git clone git@github.com:maticnetwork/v3-contracts.git
 ```
+
 If you have [nvm](https://github.com/nvm-sh/nvm) installed (recommended), you can run `nvm use #` to set your version of Node to the same as used in development and testing.
 
 Install JS/TS (Hardhat) dependencies:
+
 ```bash
 npm i
 ```
+
 Install Foundry libs:
+
 ```bash
 forge install
 ```
+
 ### Environment Setup
+
 There are a few things that should be done to set up the repo once you've cloned it and installed the dependencies and libraries. An important step for various parts of the repo to work properly is to set up a `.env` file. There is an `.example.env` file provided, copy it and rename the copy `.env`.
 
 ### Environment Setup
@@ -158,6 +170,7 @@ Lastly, there are fields for an Etherscan and Polygonscan for verifying any depl
 ```bash
 npx hardhat compile --show-stack-traces
 ```
+
 `hardhat-ts` automatically generates typings for you after compilation, to use in tests and scripts. You can import them like: `import { ... } from "../typechain";`
 
 Similarly, the `hardhat-dodoc` package autogenerates smart contract documentation in `docs/` every time Hardhat compiles the contract. If you wish to disable this, uncomment the `runOnCompile: false` line in the `dodoc` object in `hardhat.config.ts`.
@@ -183,9 +196,11 @@ The Hardhat tests have gas reporting enabled by default, you can disable them fr
 **Foundry:**
 
 **Foundry:**
+
 ```bash
 forge test
 ```
+
 Simple gas profiling is included in Foundry tests by default. For a more complete gas profile using Foundry, see [their documentation](https://book.getfoundry.sh/forge/gas-reports).
 
 Simple gas profiling is included in Foundry tests by default. For a more complete gas profile using Foundry, see [their documentation](https://book.getfoundry.sh/forge/gas-reports).
@@ -233,12 +248,15 @@ slither .
 
 npm run slither
 ```
+
 ### Continuous Integration
+
 There is a CI script for Github Actions in `.github/workflows/`. Currently it runs:
- * linters
- * both test suites (fails if any tests fail)
- * coverage report (currently only HH)
- * Slither
+
+- linters
+- both test suites (fails if any tests fail)
+- coverage report (currently only HH)
+- Slither
 
 ### Continuous Integration
 

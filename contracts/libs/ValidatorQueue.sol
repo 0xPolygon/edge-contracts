@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import "../interfaces/IValidator.sol";
 
@@ -128,7 +128,8 @@ library ValidatorQueueLib {
      */
     function indexOf(ValidatorQueue storage self, address validator) private view returns (uint256 index) {
         index = self.indices[validator];
-        assert(index != 0);
+        // never triggered currently
+        // assert(index != 0);
         return index - 1;
     }
 }

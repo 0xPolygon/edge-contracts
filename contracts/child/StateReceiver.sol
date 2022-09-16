@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
@@ -22,9 +22,6 @@ contract StateReceiver is System {
         uint256 leaves;
         bytes32 root;
     }
-    // Maximum gas provided for each message call
-    // slither-disable-next-line too-many-digits
-    uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed
     uint256 public counter;
     /// @custom:security write-protection="onlySystemCall()"
@@ -33,6 +30,9 @@ contract StateReceiver is System {
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
     uint256 public currentLeafIndex;
+    // Maximum gas provided for each message call
+    // slither-disable-next-line too-many-digits
+    uint256 private constant MAX_GAS = 300000;
 
     mapping(uint256 => StateSyncBundle) public bundles;
 
@@ -49,8 +49,13 @@ contract StateReceiver is System {
      * @notice send data to be committed on root
      * @param bundle StateSync payload to be committed
      * @param signature signature verification
+     * @param bitmap validators that signed the message
      */
-    function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
+    function commit(
+        StateSyncBundle calldata bundle,
+        bytes calldata signature,
+        bytes calldata bitmap
+    ) external onlySystemCall {
         uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
         require(bundle.endId >= bundle.startId, "INVALID_END_ID");
@@ -61,7 +66,7 @@ contract StateReceiver is System {
         // dataHash = hash(counter, sender, receiver, data, result)
         bytes32 dataHash = keccak256(abi.encode(bundle));
 
-        _checkPubkeyAggregation(dataHash, signature);
+        _checkPubkeyAggregation(dataHash, signature, bitmap);
 
         bundles[currentBundleCounter] = bundle;
 
@@ -132,13 +137,17 @@ contract StateReceiver is System {
         }
     }
 
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature) internal view {
+    function _checkPubkeyAggregation(
+        bytes32 message,
+        bytes calldata signature,
+        bytes calldata bitmap
+    ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-        }(abi.encode(message, signature));
+        }(abi.encode(message, signature, bitmap));
         bool verified = abi.decode(returnData, (bool));
         require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }

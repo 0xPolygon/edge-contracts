@@ -120,6 +120,8 @@ artifacts
 # Compiler files
 forge-cache/
 out/
+forge-coverage/
+lcov.info
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*
