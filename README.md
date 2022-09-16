@@ -42,13 +42,13 @@ There are a number of different contracts with different roles in the suite, as 
 │ libs/ "libraries used for specific applications"
 ├─ ModExp — "modular exponentiation (from Hubble Project, for BLS)"
 ├─ ValidatorQueue - "lib of operations for the validator queue"
-├─ ValidatorStorage — "statistical binary tree lib for ordering validators"
+├─ ValidatorStorage — "statistical red-black tree lib for ordering validators"
 ├─ WithdrawalQueue — "lib of operations for the rewards withdrawal queue"
 │ mocks/ "mocks of various contracts for testing"
 │ root/ "contracts that live on the root chain (Ethereum mainnet)"
-├─ CheckpointManager - //TODO once root contracts are more settled
-├─ RootValidatorSet - //TODO once root contracts are more settled
-├─ StateSender - //TODO once root contracts are more settled
+├─ CheckpointManager - "receives and executes messages from child"
+├─ RootValidatorSet - "*LIKELY TO CHANGE* stores data from child about validators and epochs"
+├─ StateSender - "sends messages to child"
 ```
 
 ### General Repo Layout

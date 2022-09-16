@@ -4,7 +4,11 @@ pragma solidity 0.8.16;
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
 
-// StateReceiver is the contract which executes and relays the state data on Polygon
+/**
+ * @title State Receiver
+ * @author Polygon Technology (JD Kanani @jdkanani, @QEDK)
+ * @notice executes and relays the state data on the child chain
+ */
 contract StateReceiver is System {
     using Merkle for bytes32;
 
@@ -46,11 +50,16 @@ contract StateReceiver is System {
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
     /**
-     * @notice send data to be committed on root
-     * @param bundle StateSync payload to be committed
-     * @param signature signature verification
+     * @notice commits merkle root of multiple StateSync objects
+     * @param bundle StateSync struct with root to be committed
+     * @param signature bundle signed (by BLS)
+     * @param bitmap bitmap of which validators signed the message
      */
-    function commit(StateSyncBundle calldata bundle, bytes calldata signature) external onlySystemCall {
+    function commit(
+        StateSyncBundle calldata bundle, 
+        bytes calldata signature,
+        bytes calldata bitmap
+    ) external onlySystemCall {
         uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
         require(bundle.endId >= bundle.startId, "INVALID_END_ID");
@@ -61,13 +70,20 @@ contract StateReceiver is System {
         // dataHash = hash(counter, sender, receiver, data, result)
         bytes32 dataHash = keccak256(abi.encode(bundle));
 
-        _checkPubkeyAggregation(dataHash, signature);
+        _checkPubkeyAggregation(dataHash, signature, bitmap);
 
         bundles[currentBundleCounter] = bundle;
 
         lastCommittedId = bundle.endId;
     }
 
+    /**
+     * @notice submits leaf of tree of root data for execution
+     * @dev function does not have to be called from client
+     * and can be called arbitrarily so long as proper data/proofs are supplied
+     * @param proof array of merkle proofs
+     * @param objs array of StateSync objects being proven (the keccak of which is the leaf)
+     */
     function execute(bytes32[] calldata proof, StateSync[] calldata objs) external {
         require(lastExecutedBundleCounter < bundleCounter, "NOTHING_TO_EXECUTE");
 
@@ -96,10 +112,11 @@ contract StateReceiver is System {
         }
     }
 
-    //
-    // Execute state sync
-    //
-
+    /**
+     * @notice internal function to execute StateSync objects received by StateReceiver
+     * @param prevId id of last executed StateSync object
+     * @param obj StateSync object to be executed
+     */
     function _executeStateSync(uint256 prevId, StateSync calldata obj) internal {
         require(prevId + 1 == obj.id, "ID_NOT_SEQUENTIAL");
 
@@ -132,13 +149,23 @@ contract StateReceiver is System {
         }
     }
 
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature) internal view {
+    /**
+     * @notice verifies an aggregated BLS signature using BLS precompile
+     * @param message plaintext of signed message
+     * @param signature the signed message
+     * @param bitmap bitmap of which validators have signed
+     */
+    function _checkPubkeyAggregation(
+        bytes32 message, 
+        bytes calldata signature,
+        bytes calldata bitmap
+    ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
-        }(abi.encode(message, signature));
+        }(abi.encode(message, signature, bitmap));
         bool verified = abi.decode(returnData, (bool));
         require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
     }

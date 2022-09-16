@@ -52,7 +52,7 @@ library ValidatorStorageLib {
      * @notice returns the stake of a specific validator
      * @param self the ValidatorTree struct
      * @param account the address of the validator to query the stake of
-     * @return balance the stake of the validator (uint256)
+     * @return balance the stake of the validator
      */
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
         balance = self.nodes[account].validator.stake;
@@ -60,6 +60,7 @@ library ValidatorStorageLib {
 
     /**
      * @notice returns the address of the first validator in the tree
+     * @dev the first node will be the validator with the lowest stake + delegation
      * @param self the ValidatorTree struct
      * @return _key the address of the validator
      */
@@ -74,6 +75,7 @@ library ValidatorStorageLib {
 
     /**
      * @notice returns the address of the last validator in the tree
+     * @dev the first node will be the validator with the highest stake + delegation
      * @param self the ValidatorTree struct
      * @return _key the address of the validator
      */
@@ -88,6 +90,7 @@ library ValidatorStorageLib {
 
     /**
      * @notice returns the next addr in the tree from a particular addr
+     * @dev the "next" node is the validator with the next highest stake
      * @param self the ValidatorTree struct
      * @param target the address to check the next validator to
      * @return cursor the next validator's address
@@ -108,6 +111,7 @@ library ValidatorStorageLib {
 
     /**
      * @notice returns the prev addr in the tree from a particular addr
+     * @dev the "next" node is the validator with the next lowest stake
      * @param self the ValidatorTree struct
      * @param target the address to check the previous validator to
      * @return cursor the previous validator's address
@@ -126,10 +130,10 @@ library ValidatorStorageLib {
     }
 
     /**
-     * @notice checks membership of a specific address
+     * @notice checks if a specific address is in the tree with nonzero stake
      * @param self the ValidatorTree struct
      * @param key the address to check membership of
-     * @return bool indicating if the address is in the tree or not
+     * @return bool indicating if the address is in the tree (with stake >0) or not
      */
     function exists(ValidatorTree storage self, address key) internal view returns (bool) {
         return (key != EMPTY) && ((key == self.root) || (self.nodes[key].parent != EMPTY));
@@ -148,7 +152,7 @@ library ValidatorStorageLib {
     /**
      * @notice returns the tree positioning of an address in the tree
      * @param self the ValidatorTree struct
-     * @param key the address to unpack the Validator struct of
+     * @param key the address to return the position of
      * @return _returnKey the address input as an argument
      * @return _parent the parent address in the node
      * @return _left the address to the left in the tree
@@ -268,7 +272,8 @@ library ValidatorStorageLib {
     }
 
     /**
-     * @notice returns the left-most node from an address in the tree
+     * @notice returns the left-most node from an address, using that address as the root of a subtree
+     * @dev since left will not traverse to a parent, this will not necessarily return `first()`
      * @param self the ValidatorTree struct
      * @param key the address to check the left-most node from
      * @return address the left-most node from the input address
@@ -282,7 +287,8 @@ library ValidatorStorageLib {
     }
 
     /**
-     * @notice returns the right-most node from an address in the tree
+     * @notice returns the right-most node from an address in the tree, using that address as the root of a subtree
+     * @dev since right will not traverse to a parent, this will not necessarily return `last()`
      * @param self the ValidatorTree struct
      * @param key the address to check the right-most node from
      * @return address the right-most node from the input address
@@ -295,9 +301,9 @@ library ValidatorStorageLib {
     }
 
     /**
-     * @notice moves a validator to the left in the tree
+     * @notice rebalances tree by rotating left
      * @param self the ValidatorTree struct
-     * @param key the address to move to the left
+     * @param key the address to begin the rotation from
      */
     function rotateLeft(ValidatorTree storage self, address key) private {
         address cursor = self.nodes[key].right;
@@ -320,9 +326,9 @@ library ValidatorStorageLib {
     }
 
     /**
-     * @notice moves a validator to the right in the tree
+     * @notice rebalances tree by rotating right
      * @param self the ValidatorTree struct
-     * @param key the address to move to the right
+     * @param key the address to begin the rotation from
      */
     function rotateRight(ValidatorTree storage self, address key) private {
         address cursor = self.nodes[key].left;

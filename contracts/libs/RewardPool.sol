@@ -71,7 +71,7 @@ library RewardPoolLib {
     }
 
     /**
-     * @notice returns the balance of an account in a specific pool
+     * @notice returns the balance (eg amount delegated) of an account in a specific pool
      * @param pool the RewardPool to query the balance from
      * @param account the address to query the balance of
      * @return uint256 the balance of the account

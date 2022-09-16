@@ -28,15 +28,18 @@ struct ValidatorQueue {
 /**
  * @title Validator Queue Lib
  * @author Polygon Technology (Daniel Gretzke @gretzke)
- * @notice library to manage the queue of potenital block validators
+ * @notice library to manage a queue of updates to block validators
+ * including registering a new validator, adding to stake or unstaking,
+ * delegation and undelegation
+ * @dev queue is processed and cleared at the end of each epoch
  */
 library ValidatorQueueLib {
     /**
-     * @notice inserts a validator into the queue
+     * @notice queues a validator's data
      * @param self ValidatorQueue struct
      * @param validator address of the validator
-     * @param stake amount staked by validator
-     * @param delegation amount delegated to validator
+     * @param stake delta to the amount staked by validator (negative for unstaking)
+     * @param delegation delta to the amount delegated to validator (negative for undelegating)
      */
     function insert(
         ValidatorQueue storage self,
@@ -60,16 +63,18 @@ library ValidatorQueueLib {
     }
 
     /**
-     * @notice deletes data from a specific index in the queue
+     * @notice deletes data from a specific validator in the queue
+     * @dev used in tandem with reset() to delete queue
      * @param self ValidatorQueue struct
-     * @param validator address of the validator being removed
+     * @param validator address of the validator to remove the queue data of
      */
     function resetIndex(ValidatorQueue storage self, address validator) internal {
         self.indices[validator] = 0;
     }
 
     /**
-     * @notice reinitializes the validator queue, removing all current data
+     * @notice reinitializes the validator queue
+     * @dev used in tandem with resetIndex() to delete queue
      * @param self ValidatorQueue struct
      */
     function reset(ValidatorQueue storage self) internal {
@@ -97,10 +102,10 @@ library ValidatorQueueLib {
     }
 
     /**
-     * @notice convenience function to return the stake of a validator in the queue
+     * @notice convenience function to return the change to stake for a validator in the queue
      * @param self the ValidatorQueue struct
-     * @param validator the address of the validator to check the stake of
-     * @return int256 stake of the validator
+     * @param validator the address of the validator to check the change to stake of
+     * @return int256 change to stake of the validator
      */
     function pendingStake(ValidatorQueue storage self, address validator) internal view returns (int256) {
         if (!waiting(self, validator)) return 0;
@@ -108,10 +113,10 @@ library ValidatorQueueLib {
     }
 
     /**
-     * @notice convenience function to return the funds delegated to a pending validator
+     * @notice convenience function to return the change to funds delegated to a pending validator
      * @param self the ValidatorQueue struct
-     * @param validator the address of the validator to check the delegated funds of
-     * @return int256 funds delegated to the validator
+     * @param validator the address of the validator to check the change to delegated funds of
+     * @return int256 change to funds delegated to the validator
      */
     // slither-disable-next-line dead-code
     function pendingDelegation(ValidatorQueue storage self, address validator) internal view returns (int256) {
@@ -128,7 +133,7 @@ library ValidatorQueueLib {
      */
     function indexOf(ValidatorQueue storage self, address validator) private view returns (uint256 index) {
         index = self.indices[validator];
-        assert(index != 0);
+        assert(index != 0); // currently index == 0 is unreachable
         return index - 1;
     }
 }
