@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import {StateReceiver} from "contracts/child/StateReceiver.sol";
 import {System} from "contracts/child/StateReceiver.sol";
@@ -50,19 +50,19 @@ contract StateReceiverTest_EmptyState is EmptyState {
         changePrank(address(this));
 
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        stateReceiver.commit(bundle, "");
+        stateReceiver.commit(bundle, "", "");
     }
 
     function testCannotCommit_InvalidStartId() public {
         bundle.startId = 0;
 
         vm.expectRevert("INVALID_START_ID");
-        stateReceiver.commit(bundle, "");
+        stateReceiver.commit(bundle, "", "");
 
         bundle.startId = 2;
 
         vm.expectRevert("INVALID_START_ID");
-        stateReceiver.commit(bundle, "");
+        stateReceiver.commit(bundle, "", "");
     }
 
     function testCannotCommit_InvalidEndId() public {
@@ -70,7 +70,7 @@ contract StateReceiverTest_EmptyState is EmptyState {
         bundle.endId = 0;
 
         vm.expectRevert("INVALID_END_ID");
-        stateReceiver.commit(bundle, "");
+        stateReceiver.commit(bundle, "", "");
     }
 
     function testCannotCommit_SignatureVerificationFailed() public {
@@ -79,14 +79,14 @@ contract StateReceiverTest_EmptyState is EmptyState {
         vm.mockCall(VALIDATOR_PKCHECK_PRECOMPILE, "", abi.encode(false));
 
         vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
-        stateReceiver.commit(bundle, "");
+        stateReceiver.commit(bundle, "", "");
     }
 
     function testCommit() public {
         bundle.startId = 1;
         bundle.endId = 1337;
 
-        stateReceiver.commit(bundle, "");
+        stateReceiver.commit(bundle, "", "");
 
         assertEq(stateReceiver.bundleCounter(), 2, "Bundle counter");
         assertEq(_getBundle(1), bundle);
@@ -191,7 +191,7 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
         _bundle.endId = bundleSize * batchSize;
         _bundle.leaves = bundleSize;
         _bundle.root = getRoot(leaves);
-        stateReceiver.commit(_bundle, "");
+        stateReceiver.commit(_bundle, "", "");
     }
 
     /// @notice Hashing function for Murky

@@ -1,13 +1,5 @@
 # MockValidatorQueue
 
-
-
-
-
-
-
-
-
 ## Methods
 
 ### getIndex
@@ -16,21 +8,17 @@
 function getIndex(address validator) external view returns (uint256 index)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
+| Name      | Type    | Description |
+| --------- | ------- | ----------- |
+| validator | address | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| index | uint256 | undefined |
+| Name  | Type    | Description |
+| ----- | ------- | ----------- |
+| index | uint256 | undefined   |
 
 ### getQueue
 
@@ -38,16 +26,11 @@ function getIndex(address validator) external view returns (uint256 index)
 function getQueue() external view returns (struct QueuedValidator[])
 ```
 
-
-
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | QueuedValidator[] | undefined |
+| Name | Type              | Description |
+| ---- | ----------------- | ----------- |
+| \_0  | QueuedValidator[] | undefined   |
 
 ### reset
 
@@ -55,28 +38,19 @@ function getQueue() external view returns (struct QueuedValidator[])
 function reset() external nonpayable
 ```
 
-
-
-
-
-
 ### stake
 
 ```solidity
 function stake(address validator, uint256 stake_, uint256 delegation) external nonpayable
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
-| stake_ | uint256 | undefined |
-| delegation | uint256 | undefined |
+| Name       | Type    | Description |
+| ---------- | ------- | ----------- |
+| validator  | address | undefined   |
+| stake\_    | uint256 | undefined   |
+| delegation | uint256 | undefined   |
 
 ### unstake
 
@@ -84,18 +58,10 @@ function stake(address validator, uint256 stake_, uint256 delegation) external n
 function unstake(address validator, uint256 stake_, uint256 delegation) external nonpayable
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
-| stake_ | uint256 | undefined |
-| delegation | uint256 | undefined |
-
-
-
-
+| Name       | Type    | Description |
+| ---------- | ------- | ----------- |
+| validator  | address | undefined   |
+| stake\_    | uint256 | undefined   |
+| delegation | uint256 | undefined   |

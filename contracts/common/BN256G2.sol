@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // solium-disable security/no-assign-params
 
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 /**
  * @title Elliptic curve operations on twist points on bn256 (G2)
- * @dev Adaptation of https://github.com/musalbas/solidity-BN256G2 to 0.6.0 and then 0.8.16
+ * @dev Adaptation of https://github.com/musalbas/solidity-BN256G2 to 0.6.0 and then 0.8.17
  */
 // slither-disable-next-line missing-inheritance
 contract BN256G2 {

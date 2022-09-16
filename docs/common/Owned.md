@@ -1,12 +1,10 @@
 # Owned
 
-*Polygon Technology (Daniel Gretzke @gretzke)*
+_Polygon Technology (Daniel Gretzke @gretzke)_
 
 > Owned
 
 single address access control with a two-step transfer
-
-
 
 ## Methods
 
@@ -18,8 +16,7 @@ function claimOwnership() external nonpayable
 
 allows proposed owner to claim ownership (step 2 of transferring ownership)
 
-*can only be called by the new proposed owner*
-
+_can only be called by the new proposed owner_
 
 ### owner
 
@@ -29,14 +26,11 @@ function owner() external view returns (address)
 
 the address of the owner
 
-
-
-
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | address     |
 
 ### proposeOwner
 
@@ -46,13 +40,13 @@ function proposeOwner(address payable newOwner) external nonpayable
 
 proposes a new owner (step 1 of transferring ownership)
 
-*can only be called by the current owner*
+_can only be called by the current owner_
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| newOwner | address payable | undefined |
+| Name     | Type            | Description |
+| -------- | --------------- | ----------- |
+| newOwner | address payable | undefined   |
 
 ### proposedOwner
 
@@ -62,16 +56,13 @@ function proposedOwner() external view returns (address)
 
 the address of a proposed owner
 
-*the proposed owner can transfer ownership to themselves*
-
+_the proposed owner can transfer ownership to themselves_
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address |
-
-
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | address     |
 
 ## Events
 
@@ -81,15 +72,11 @@ the address of a proposed owner
 event Initialized(uint8 version)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
+| Name    | Type  | Description |
+| ------- | ----- | ----------- |
+| version | uint8 | undefined   |
 
 ### OwnershipProposed
 
@@ -97,15 +84,11 @@ event Initialized(uint8 version)
 event OwnershipProposed(address indexed proposedOwner)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| proposedOwner `indexed` | address | undefined |
+| Name                    | Type    | Description |
+| ----------------------- | ------- | ----------- |
+| proposedOwner `indexed` | address | undefined   |
 
 ### OwnershipTransferred
 
@@ -113,18 +96,12 @@ event OwnershipProposed(address indexed proposedOwner)
 event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| previousOwner `indexed` | address | undefined |
-| newOwner `indexed` | address | undefined |
-
-
+| Name                    | Type    | Description |
+| ----------------------- | ------- | ----------- |
+| previousOwner `indexed` | address | undefined   |
+| newOwner `indexed`      | address | undefined   |
 
 ## Errors
 
@@ -134,14 +111,8 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 error Unauthorized(string only)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| only | string | undefined |
-
-
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| only | string | undefined   |

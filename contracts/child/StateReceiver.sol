@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
@@ -26,9 +26,6 @@ contract StateReceiver is System {
         uint256 leaves;
         bytes32 root;
     }
-    // Maximum gas provided for each message call
-    // slither-disable-next-line too-many-digits
-    uint256 public constant MAX_GAS = 300000;
     // Index of the next event which needs to be processed
     uint256 public counter;
     /// @custom:security write-protection="onlySystemCall()"
@@ -37,6 +34,9 @@ contract StateReceiver is System {
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
     uint256 public currentLeafIndex;
+    // Maximum gas provided for each message call
+    // slither-disable-next-line too-many-digits
+    uint256 private constant MAX_GAS = 300000;
 
     mapping(uint256 => StateSyncBundle) public bundles;
 

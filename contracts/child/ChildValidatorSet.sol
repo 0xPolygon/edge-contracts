@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import "../common/Owned.sol";
 import "./System.sol";
@@ -49,7 +49,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     mapping(uint256 => Epoch) public epochs;
     mapping(address => bool) public whitelist;
-    mapping(address => int256) public rewardModifiers;
 
     modifier onlyValidator() {
         if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
@@ -169,7 +168,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewValidator(msg.sender, pubkey);
     }
 
-    // TODO: claim validator rewards before stake or unstake action
     /**
      * @inheritdoc IChildValidatorSet
      */
@@ -177,7 +175,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
         claimValidatorReward();
-        rewardModifiers[msg.sender] -= int256(msg.value);
         _queue.insert(msg.sender, int256(msg.value), 0);
         emit Staked(msg.sender, msg.value);
     }
@@ -186,7 +183,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
      * @inheritdoc IChildValidatorSet
      */
     function unstake(uint256 amount) external {
-        // TODO: check if balance requirement is sufficient for access control
         int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
         int256 amountInt = amount.toInt256Safe();
         if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
@@ -196,7 +192,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
 
         claimValidatorReward();
-        rewardModifiers[msg.sender] += amountInt;
         _queue.insert(msg.sender, amountInt * -1, 0);
         if (amountAfterUnstake == 0) {
             _validators.get(msg.sender).active = false;
@@ -220,8 +215,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
      * @inheritdoc IChildValidatorSet
      */
     function undelegate(address validator, uint256 amount) external {
-        // TODO: check if balance requirement is sufficient for access control
-        // Stake storage delegation = delegations[msg.sender][validator];
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         uint256 delegatedAmount = delegation.balanceOf(msg.sender);
 
@@ -248,8 +241,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
      * @inheritdoc IChildValidatorSet
      */
     function claimValidatorReward() public {
-        // TODO: validator should be able to claim reward even in non-active state
-        // check if balance requirement is sufficient for access control
         Validator storage validator = _validators.get(msg.sender);
         uint256 reward = validator.withdrawableRewards;
         if (reward == 0) return;
@@ -432,7 +423,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             // values will be zero for non existing validators
             Validator storage validator = _validators.get(validatorAddr);
             // if validator already present in tree, remove andreinsert to maintain sort
-            // TODO move reinsertion logic to library
             if (_validators.exists(validatorAddr)) {
                 _validators.remove(validatorAddr);
             }

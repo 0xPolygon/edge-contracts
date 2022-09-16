@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import "../interfaces/IValidator.sol";
 import "./RewardPool.sol";
@@ -12,8 +12,8 @@ error Exists(address validator);
  * @title Validator Storage Lib
  * @author Polygon Technology (Daniel Gretzke @gretzke)
  * @notice implementation of red-black ordered tree to order validators by stake
- * 
- * for more information on red-black trees: 
+ *
+ * for more information on red-black trees:
  * https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
  * implementation draws on Rob Hutchins's (B9Labs) Order Statistics tree:
  * https://github.com/rob-Hitchens/OrderStatisticsTree

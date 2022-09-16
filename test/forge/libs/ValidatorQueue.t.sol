@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import {QueuedValidator, ValidatorQueue, ValidatorQueueLib} from "contracts/libs/ValidatorQueue.sol";
 import "contracts/interfaces/IValidator.sol";
@@ -11,87 +11,139 @@ abstract contract EmptyState is TestPlus {
     int256 constant DELEGATED = 0.5 ether;
 
     address account;
-    ValidatorQueue queue;
+
+    ValidatorQueueLibUser validatorQueueLibUser;
 
     function setUp() public virtual {
         account = makeAddr("account");
+        validatorQueueLibUser = new ValidatorQueueLibUser();
     }
 }
 
 contract ValidatorQueueTest_EmptyState is EmptyState {
-    using ValidatorQueueLib for ValidatorQueue;
-
     function testInsert_New() public {
-        queue.insert(account, STAKE, DELEGATED);
+        validatorQueueLibUser.insert(account, STAKE, DELEGATED);
 
-        assertEq(queue.indices[account], 1);
-        assertEq(queue.queue.length, 1);
-        assertEq(queue.queue[0], QueuedValidator(account, STAKE, DELEGATED));
+        assertEq(validatorQueueLibUser.indicesGetter(account), 1);
+        assertEq(validatorQueueLibUser.queueGetter().length, 1);
+        assertEq(validatorQueueLibUser.queueGetter()[0], QueuedValidator(account, STAKE, DELEGATED));
     }
 }
 
 abstract contract NonEmptyState is EmptyState {
-    using ValidatorQueueLib for ValidatorQueue;
-
     QueuedValidator[] queuedValidators;
     address newAccount;
 
     function setUp() public virtual override {
         super.setUp();
-        queue.insert(account, STAKE, DELEGATED);
+        validatorQueueLibUser.insert(account, STAKE, DELEGATED);
         queuedValidators.push(QueuedValidator(account, STAKE, DELEGATED));
         newAccount = makeAddr("newAccount");
     }
 }
 
 contract ValidatorQueueTest_NonEmptyState is NonEmptyState {
-    using ValidatorQueueLib for ValidatorQueue;
-
     function testInsert_Queued() public {
-        queue.insert(account, -1, -1); // remove
+        validatorQueueLibUser.insert(account, -1, -1); // remove
 
-        assertEq(queue.indices[account], 1);
-        assertEq(queue.queue.length, 1);
-        assertEq(queue.queue[0], QueuedValidator(account, STAKE - 1, DELEGATED - 1));
+        assertEq(validatorQueueLibUser.indicesGetter(account), 1);
+        assertEq(validatorQueueLibUser.queueGetter().length, 1);
+        assertEq(validatorQueueLibUser.queueGetter()[0], QueuedValidator(account, STAKE - 1, DELEGATED - 1));
     }
 
     function testInsert_New() public {
-        queue.insert(newAccount, STAKE / 2, DELEGATED / 2);
+        validatorQueueLibUser.insert(newAccount, STAKE / 2, DELEGATED / 2);
 
-        assertEq(queue.indices[newAccount], 2);
-        assertEq(queue.queue.length, 2);
-        assertEq(queue.queue[1], QueuedValidator(newAccount, STAKE / 2, DELEGATED / 2));
+        assertEq(validatorQueueLibUser.indicesGetter(newAccount), 2);
+        assertEq(validatorQueueLibUser.queueGetter().length, 2);
+        assertEq(validatorQueueLibUser.queueGetter()[1], QueuedValidator(newAccount, STAKE / 2, DELEGATED / 2));
     }
 
     function testResetIndex() public {
-        queue.resetIndex(account);
-        assertEq(queue.indices[account], 0);
+        validatorQueueLibUser.resetIndex(account);
+        assertEq(validatorQueueLibUser.indicesGetter(account), 0);
     }
 
     function testReset() public {
         delete queuedValidators;
 
-        queue.reset();
+        validatorQueueLibUser.reset();
 
-        assertEq(queue.queue, queuedValidators);
+        assertEq(validatorQueueLibUser.queueGetter(), queuedValidators);
     }
 
     function testGet() public {
-        assertEq(queue.get(), queuedValidators);
+        assertEq(validatorQueueLibUser.get(), queuedValidators);
     }
 
     function testWaiting() public {
-        assertFalse(queue.waiting(newAccount));
-        assertTrue(queue.waiting(account));
+        assertFalse(validatorQueueLibUser.waiting(newAccount));
+        assertTrue(validatorQueueLibUser.waiting(account));
     }
 
     function testPendingStake() public {
-        assertEq(queue.pendingStake(newAccount), 0);
-        assertEq(queue.pendingStake(account), STAKE);
+        assertEq(validatorQueueLibUser.pendingStake(newAccount), 0);
+        assertEq(validatorQueueLibUser.pendingStake(account), STAKE);
     }
 
     function testPendingDelegation() public {
-        assertEq(queue.pendingDelegation(newAccount), 0);
-        assertEq(queue.pendingDelegation(account), DELEGATED);
+        assertEq(validatorQueueLibUser.pendingDelegation(newAccount), 0);
+        assertEq(validatorQueueLibUser.pendingDelegation(account), DELEGATED);
+    }
+}
+
+/*//////////////////////////////////////////////////////////////////////////
+                                MOCKS
+//////////////////////////////////////////////////////////////////////////*/
+
+contract ValidatorQueueLibUser {
+    ValidatorQueue queue;
+
+    function insert(
+        address validator,
+        int256 stake,
+        int256 delegation
+    ) external {
+        ValidatorQueueLib.insert(queue, validator, stake, delegation);
+    }
+
+    function resetIndex(address validator) external {
+        ValidatorQueueLib.resetIndex(queue, validator);
+    }
+
+    function reset() external {
+        ValidatorQueueLib.reset(queue);
+    }
+
+    function get() external view returns (QueuedValidator[] memory) {
+        QueuedValidator[] memory r = ValidatorQueueLib.get(queue);
+        return r;
+    }
+
+    function waiting(address validator) external view returns (bool) {
+        bool r = ValidatorQueueLib.waiting(queue, validator);
+        return r;
+    }
+
+    function pendingStake(address validator) external view returns (int256) {
+        int256 r = ValidatorQueueLib.pendingStake(queue, validator);
+        return r;
+    }
+
+    function pendingDelegation(address validator) external view returns (int256) {
+        int256 r = ValidatorQueueLib.pendingDelegation(queue, validator);
+        return r;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                        GETTERS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function indicesGetter(address a) external view returns (uint256) {
+        return queue.indices[a];
+    }
+
+    function queueGetter() external view returns (QueuedValidator[] memory) {
+        return queue.queue;
     }
 }
