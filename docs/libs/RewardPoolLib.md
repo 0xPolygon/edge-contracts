@@ -1,9 +1,12 @@
 # RewardPoolLib
 
-_Polygon Technology (Daniel Gretzke @gretzke)_
+*Polygon Technology (Daniel Gretzke @gretzke)*
 
 > Reward Pool Lib
 
 library for distributing rewards
 
-_structs can be found in the IValidator interface_
+*structs can be found in the IValidator interface*
+
+
+

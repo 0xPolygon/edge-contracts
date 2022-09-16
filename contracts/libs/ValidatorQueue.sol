@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import "../interfaces/IValidator.sol";
 
 /**
- * @notice data type reperesnting validator in queue (not active)
+ * @notice data type representing validator in queue
  * @param validator the address of the validator
  * @param stake the amount staked by the validator
  * @param delegation the amount delegated to this validator

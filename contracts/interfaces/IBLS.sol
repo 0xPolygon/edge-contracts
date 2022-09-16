@@ -74,7 +74,7 @@ interface IBLS {
     function isOnCurveG2(uint256[4] memory point) external pure returns (bool _isOnCurve);
 
     /**
-     * @notice converts a hash to a point on the curve
+     * @notice hashes an arbitrary message to a point on the curve
      * @dev Fouque-Tibouchi Hash to Curve
      * @param domain domain separator for the hash
      * @param message the message to map
@@ -83,7 +83,7 @@ interface IBLS {
     function hashToPoint(bytes32 domain, bytes memory message) external view returns (uint256[2] memory);
 
     /**
-     * @notice converts a hash to a field element in Fq
+     * @notice hashes an arbitrary message to a field element
      * @param domain domain separator for the hash
      * @param messages the messages to map
      * @return uint256[2] (x,y) point of the field element that the message maps to

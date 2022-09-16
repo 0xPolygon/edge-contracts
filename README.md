@@ -195,8 +195,6 @@ The Hardhat tests have gas reporting enabled by default, you can disable them fr
 
 **Foundry:**
 
-**Foundry:**
-
 ```bash
 forge test
 ```

@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 /**
  * @title Merkle
- * @author Polygon Technology, modified from ENS and OpenZeppelin
+ * @author Polygon Technology (similar to ENS, but written from scratch)
  * @notice library for checking membership in a merkle tree
  */
 library Merkle {
