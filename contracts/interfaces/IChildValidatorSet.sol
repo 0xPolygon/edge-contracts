@@ -40,7 +40,6 @@ struct Epoch {
  * It manages staking, epoch committing, and reward distribution.
  */
 interface IChildValidatorSet {
-    // TODO events
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
     event NewValidator(address indexed validator, uint256[4] blsKey);
     event AddedToWhitelist(address indexed validator);
