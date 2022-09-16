@@ -204,17 +204,17 @@ interface IChildValidatorSet {
     function pendingWithdrawals(address account) external view returns (uint256);
 
     /**
-     * @notice Gets validator's withdrawable rewards.
+     * @notice Gets validator's unclaimed rewards.
      * @param validator Address of validator
-     * @return Validator's withdrawable rewards (in MATIC wei)
+     * @return Validator's unclaimed rewards (in MATIC wei)
      */
     function getValidatorReward(address validator) external view returns (uint256);
 
     /**
-     * @notice Gets delegators's claimable rewards from validator.
+     * @notice Gets delegators's unclaimed rewards with validator.
      * @param validator Address of validator
      * @param delegator Address of delegator
-     * @return Delegator's withdrawable rewards from validator (in MATIC wei)
+     * @return Delegator's unclaimed rewards with validator (in MATIC wei)
      */
     function getDelegatorReward(address validator, address delegator) external view returns (uint256);
 }
