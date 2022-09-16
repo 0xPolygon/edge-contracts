@@ -28,11 +28,13 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 function activeValidatorSetSize() external view returns (uint256)
 ```
 
+returns number of active validators
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                         |
+| ---- | ------- | ----------------------------------- |
+| \_0  | uint256 | uint256 number of active validators |
 
 ### addValidators
 
@@ -76,17 +78,19 @@ function currentValidatorId() external view returns (uint256)
 function getValidator(uint256 id) external view returns (struct RootValidatorSet.Validator)
 ```
 
+returns validator struct by id
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| id   | uint256 | undefined   |
+| Name | Type    | Description                           |
+| ---- | ------- | ------------------------------------- |
+| id   | uint256 | the id of the validator to be queried |
 
 #### Returns
 
-| Name | Type                       | Description |
-| ---- | -------------------------- | ----------- |
-| \_0  | RootValidatorSet.Validator | undefined   |
+| Name | Type                       | Description      |
+| ---- | -------------------------- | ---------------- |
+| \_0  | RootValidatorSet.Validator | Validator struct |
 
 ### getValidatorBlsKey
 
@@ -94,17 +98,19 @@ function getValidator(uint256 id) external view returns (struct RootValidatorSet
 function getValidatorBlsKey(uint256 id) external view returns (uint256[4])
 ```
 
+convenience function to return the BLS key of a spcific validator (by id)
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| id   | uint256 | undefined   |
+| Name | Type    | Description                                           |
+| ---- | ------- | ----------------------------------------------------- |
+| id   | uint256 | the id of the validator to retrieve the BLS pubkey of |
 
 #### Returns
 
-| Name | Type       | Description |
-| ---- | ---------- | ----------- |
-| \_0  | uint256[4] | undefined   |
+| Name | Type       | Description             |
+| ---- | ---------- | ----------------------- |
+| \_0  | uint256[4] | BLS pubkey (uint256[4]) |
 
 ### initialize
 

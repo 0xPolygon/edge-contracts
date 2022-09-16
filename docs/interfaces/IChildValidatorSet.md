@@ -6,7 +6,7 @@ _Polygon Technology_
 
 Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
 
-_The contract is used to complete validator registration and store self-stake and delegated MATIC amounts._
+_The contract is used to complete validator registration and store self-stake and delegated MATIC amounts. It manages staking, epoch committing, and reward distribution._
 
 ## Methods
 
@@ -16,7 +16,7 @@ _The contract is used to complete validator registration and store self-stake an
 function addToWhitelist(address[] whitelistAddreses) external nonpayable
 ```
 
-Adds addresses which are allowed to register as validators.
+Adds addresses that are allowed to register as validators.
 
 #### Parameters
 
@@ -30,18 +30,22 @@ Adds addresses which are allowed to register as validators.
 function claimDelegatorReward(address validator, bool restake) external nonpayable
 ```
 
+Claims delegator rewards for sender.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| restake   | bool    | undefined   |
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| validator | address | Validator to claim from                   |
+| restake   | bool    | Whether to redelegate the claimed rewards |
 
 ### claimValidatorReward
 
 ```solidity
 function claimValidatorReward() external nonpayable
 ```
+
+Claims validator rewards for sender.
 
 ### commitEpoch
 
@@ -63,12 +67,14 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 function delegate(address validator, bool restake) external payable
 ```
 
+Delegates sent amount to validator. Claims rewards beforehand.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| restake   | bool    | undefined   |
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| validator | address | Validator to delegate to                  |
+| restake   | bool    | Whether to redelegate the claimed rewards |
 
 ### delegationOf
 
@@ -76,18 +82,20 @@ function delegate(address validator, bool restake) external payable
 function delegationOf(address validator, address delegator) external view returns (uint256)
 ```
 
+Gets amount delegated by delegator to validator.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| delegator | address | undefined   |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| validator | address | Address of validator |
+| delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                     |
+| ---- | ------- | ------------------------------- |
+| \_0  | uint256 | Amount delegated (in MATIC wei) |
 
 ### getCurrentValidatorSet
 
@@ -95,11 +103,13 @@ function delegationOf(address validator, address delegator) external view return
 function getCurrentValidatorSet() external view returns (address[])
 ```
 
+Gets addresses of active validators in this epoch, sorted by total stake (self-stake + delegation)
+
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type      | Description                                                                  |
+| ---- | --------- | ---------------------------------------------------------------------------- |
+| \_0  | address[] | Array of addresses of active validators in this epoch, sorted by total stake |
 
 ### getDelegatorReward
 
@@ -107,18 +117,20 @@ function getCurrentValidatorSet() external view returns (address[])
 function getDelegatorReward(address validator, address delegator) external view returns (uint256)
 ```
 
+Gets delegators&#39;s claimable rewards from validator.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| delegator | address | undefined   |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| validator | address | Address of validator |
+| delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                                        |
+| ---- | ------- | ------------------------------------------------------------------ |
+| \_0  | uint256 | Delegator&#39;s withdrawable rewards from validator (in MATIC wei) |
 
 ### getEpochByBlock
 
@@ -146,6 +158,8 @@ Look up an epoch by block number. Searches in O(log n) time.
 function getValidator(address validator) external view returns (struct Validator)
 ```
 
+Gets validator by address.
+
 #### Parameters
 
 | Name      | Type    | Description |
@@ -154,9 +168,9 @@ function getValidator(address validator) external view returns (struct Validator
 
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | Validator | undefined   |
+| Name | Type      | Description                                                                                            |
+| ---- | --------- | ------------------------------------------------------------------------------------------------------ |
+| \_0  | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
 
 ### getValidatorReward
 
@@ -164,17 +178,19 @@ function getValidator(address validator) external view returns (struct Validator
 function getValidatorReward(address validator) external view returns (uint256)
 ```
 
+Gets validator&#39;s withdrawable rewards.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| validator | address | Address of validator |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                         |
+| ---- | ------- | --------------------------------------------------- |
+| \_0  | uint256 | Validator&#39;s withdrawable rewards (in MATIC wei) |
 
 ### pendingWithdrawals
 
@@ -182,17 +198,19 @@ function getValidatorReward(address validator) external view returns (uint256)
 function pendingWithdrawals(address account) external view returns (uint256)
 ```
 
+Calculates how much is yet to become withdrawable for account.
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name    | Type    | Description                         |
+| ------- | ------- | ----------------------------------- |
+| account | address | The account to calculate amount for |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                |
+| ---- | ------- | ------------------------------------------ |
+| \_0  | uint256 | Amount not yet withdrawable (in MATIC wei) |
 
 ### register
 
@@ -215,7 +233,7 @@ Validates BLS signature with the provided pubkey and registers validators into t
 function removeFromWhitelist(address[] whitelistAddreses) external nonpayable
 ```
 
-Deletes addresses which are allowed to register as validators.
+Deletes addresses that are allowed to register as validators.
 
 #### Parameters
 
@@ -229,11 +247,13 @@ Deletes addresses which are allowed to register as validators.
 function setCommission(uint256 newCommission) external nonpayable
 ```
 
+Sets commission for validator.
+
 #### Parameters
 
-| Name          | Type    | Description |
-| ------------- | ------- | ----------- |
-| newCommission | uint256 | undefined   |
+| Name          | Type    | Description                 |
+| ------------- | ------- | --------------------------- |
+| newCommission | uint256 | New commission (100 = 100%) |
 
 ### sortedValidators
 
@@ -241,17 +261,19 @@ function setCommission(uint256 newCommission) external nonpayable
 function sortedValidators(uint256 n) external view returns (address[])
 ```
 
+Gets first n active validators sorted by total stake.
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| n    | uint256 | undefined   |
+| Name | Type    | Description                            |
+| ---- | ------- | -------------------------------------- |
+| n    | uint256 | Desired number of validators to return |
 
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type      | Description                                                                                                                       |
+| ---- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| \_0  | address[] | Returns array of addresses of first n active validators sorted by total stake, or fewer if there are not enough active validators |
 
 ### stake
 
@@ -259,17 +281,21 @@ function sortedValidators(uint256 n) external view returns (address[])
 function stake() external payable
 ```
 
+Stakes sent amount. Claims rewards beforehand.
+
 ### totalActiveStake
 
 ```solidity
 function totalActiveStake() external view returns (uint256)
 ```
 
+Calculates total stake of active validators (self-stake + delegation).
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                     |
+| ---- | ------- | ----------------------------------------------- |
+| \_0  | uint256 | Total stake of active validators (in MATIC wei) |
 
 ### totalStake
 
@@ -277,13 +303,13 @@ function totalActiveStake() external view returns (uint256)
 function totalStake() external view returns (uint256)
 ```
 
-Calculate total stake in the network (self-stake + delegation)
+Calculates total stake in the network (self-stake + delegation).
 
 #### Returns
 
-| Name | Type    | Description                              |
-| ---- | ------- | ---------------------------------------- |
-| \_0  | uint256 | stake Returns total stake (in MATIC wei) |
+| Name | Type    | Description                |
+| ---- | ------- | -------------------------- |
+| \_0  | uint256 | Total stake (in MATIC wei) |
 
 ### undelegate
 
@@ -291,12 +317,14 @@ Calculate total stake in the network (self-stake + delegation)
 function undelegate(address validator, uint256 amount) external nonpayable
 ```
 
+Undelegates amount from validator for sender. Claims rewards beforehand.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| amount    | uint256 | undefined   |
+| Name      | Type    | Description                  |
+| --------- | ------- | ---------------------------- |
+| validator | address | Validator to undelegate from |
+| amount    | uint256 | The amount to undelegate     |
 
 ### unstake
 
@@ -304,11 +332,13 @@ function undelegate(address validator, uint256 amount) external nonpayable
 function unstake(uint256 amount) external nonpayable
 ```
 
+Unstakes amount for sender. Claims rewards beforehand.
+
 #### Parameters
 
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| amount | uint256 | undefined   |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| amount | uint256 | Amount to unstake |
 
 ### withdraw
 
@@ -316,11 +346,13 @@ function unstake(uint256 amount) external nonpayable
 function withdraw(address to) external nonpayable
 ```
 
+Withdraws sender&#39;s withdrawable amount to specified address.
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| to   | address | undefined   |
+| Name | Type    | Description            |
+| ---- | ------- | ---------------------- |
+| to   | address | Address to withdraw to |
 
 ### withdrawable
 
@@ -328,17 +360,19 @@ function withdraw(address to) external nonpayable
 function withdrawable(address account) external view returns (uint256)
 ```
 
+Calculates how much can be withdrawn for account in this epoch.
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name    | Type    | Description                         |
+| ------- | ------- | ----------------------------------- |
+| account | address | The account to calculate amount for |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                        |
+| ---- | ------- | ---------------------------------- |
+| \_0  | uint256 | Amount withdrawable (in MATIC wei) |
 
 ## Events
 

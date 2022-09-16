@@ -1,5 +1,11 @@
 # StateReceiver
 
+_Polygon Technology (JD Kanani @jdkanani, @QEDK)_
+
+> State Receiver
+
+executes and relays the state data on the child chain
+
 ## Methods
 
 ### NATIVE_TOKEN_CONTRACT

@@ -164,7 +164,7 @@ function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 function addToWhitelist(address[] whitelistAddreses) external nonpayable
 ```
 
-Adds addresses which are allowed to register as validators.
+Adds addresses that are allowed to register as validators.
 
 #### Parameters
 
@@ -190,18 +190,22 @@ function bls() external view returns (contract IBLS)
 function claimDelegatorReward(address validator, bool restake) external nonpayable
 ```
 
+Claims delegator rewards for sender.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| restake   | bool    | undefined   |
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| validator | address | Validator to claim from                   |
+| restake   | bool    | Whether to redelegate the claimed rewards |
 
 ### claimOwnership
 
 ```solidity
 function claimOwnership() external nonpayable
 ```
+
+allows proposed owner to claim ownership (step 2 of transferring ownership)
 
 _can only be called by the new proposed owner_
 
@@ -210,6 +214,8 @@ _can only be called by the new proposed owner_
 ```solidity
 function claimValidatorReward() external nonpayable
 ```
+
+Claims validator rewards for sender.
 
 ### commitEpoch
 
@@ -243,12 +249,14 @@ function currentEpochId() external view returns (uint256)
 function delegate(address validator, bool restake) external payable
 ```
 
+Delegates sent amount to validator. Claims rewards beforehand.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| restake   | bool    | undefined   |
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| validator | address | Validator to delegate to                  |
+| restake   | bool    | Whether to redelegate the claimed rewards |
 
 ### delegationOf
 
@@ -256,18 +264,20 @@ function delegate(address validator, bool restake) external payable
 function delegationOf(address validator, address delegator) external view returns (uint256)
 ```
 
+Gets amount delegated by delegator to validator.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| delegator | address | undefined   |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| validator | address | Address of validator |
+| delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                     |
+| ---- | ------- | ------------------------------- |
+| \_0  | uint256 | Amount delegated (in MATIC wei) |
 
 ### epochEndBlocks
 
@@ -325,11 +335,13 @@ function epochs(uint256) external view returns (uint256 startBlock, uint256 endB
 function getCurrentValidatorSet() external view returns (address[])
 ```
 
+Gets addresses of active validators in this epoch, sorted by total stake (self-stake + delegation)
+
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type      | Description                                                                  |
+| ---- | --------- | ---------------------------------------------------------------------------- |
+| \_0  | address[] | Array of addresses of active validators in this epoch, sorted by total stake |
 
 ### getDelegatorReward
 
@@ -337,18 +349,20 @@ function getCurrentValidatorSet() external view returns (address[])
 function getDelegatorReward(address validator, address delegator) external view returns (uint256)
 ```
 
+Gets delegators&#39;s claimable rewards from validator.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| delegator | address | undefined   |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| validator | address | Address of validator |
+| delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                                        |
+| ---- | ------- | ------------------------------------------------------------------ |
+| \_0  | uint256 | Delegator&#39;s withdrawable rewards from validator (in MATIC wei) |
 
 ### getEpochByBlock
 
@@ -376,6 +390,8 @@ Look up an epoch by block number. Searches in O(log n) time.
 function getValidator(address validator) external view returns (struct Validator)
 ```
 
+Gets validator by address.
+
 #### Parameters
 
 | Name      | Type    | Description |
@@ -384,9 +400,9 @@ function getValidator(address validator) external view returns (struct Validator
 
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | Validator | undefined   |
+| Name | Type      | Description                                                                                            |
+| ---- | --------- | ------------------------------------------------------------------------------------------------------ |
+| \_0  | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
 
 ### getValidatorReward
 
@@ -394,17 +410,19 @@ function getValidator(address validator) external view returns (struct Validator
 function getValidatorReward(address validator) external view returns (uint256)
 ```
 
+Gets validator&#39;s withdrawable rewards.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| validator | address | Address of validator |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                         |
+| ---- | ------- | --------------------------------------------------- |
+| \_0  | uint256 | Validator&#39;s withdrawable rewards (in MATIC wei) |
 
 ### initialize
 
@@ -414,18 +432,20 @@ function initialize(uint256 newEpochReward, uint256 newMinStake, uint256 newMinD
 
 Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
 
+_only callable by client, can only be called once_
+
 #### Parameters
 
 | Name               | Type          | Description                                        |
 | ------------------ | ------------- | -------------------------------------------------- |
-| newEpochReward     | uint256       | undefined                                          |
-| newMinStake        | uint256       | undefined                                          |
-| newMinDelegation   | uint256       | undefined                                          |
-| validatorAddresses | address[]     | undefined                                          |
-| validatorPubkeys   | uint256[4][]  | undefined                                          |
-| validatorStakes    | uint256[]     | undefined                                          |
-| newBls             | contract IBLS | undefined                                          |
-| newMessage         | uint256[2]    | undefined                                          |
+| newEpochReward     | uint256       | reward for a proposed epoch                        |
+| newMinStake        | uint256       | minimum stake to become a validator                |
+| newMinDelegation   | uint256       | minimum amount to delegate to a validator          |
+| validatorAddresses | address[]     | addresses of initial validators                    |
+| validatorPubkeys   | uint256[4][]  | uint256[4] BLS public keys of initial validators   |
+| validatorStakes    | uint256[]     | amount staked per initial validator                |
+| newBls             | contract IBLS | address pf BLS contract/precompile                 |
+| newMessage         | uint256[2]    | message for BLS signing                            |
 | governance         | address       | Governance address to set as owner of the contract |
 
 ### message
@@ -433,6 +453,8 @@ Initializer function for genesis contract, called by v3 client at genesis to set
 ```solidity
 function message(uint256) external view returns (uint256)
 ```
+
+Message to sign for registration
 
 #### Parameters
 
@@ -476,6 +498,8 @@ function minStake() external view returns (uint256)
 function owner() external view returns (address)
 ```
 
+the address of the owner
+
 #### Returns
 
 | Name | Type    | Description |
@@ -488,17 +512,19 @@ function owner() external view returns (address)
 function pendingWithdrawals(address account) external view returns (uint256)
 ```
 
+Calculates how much is yet to become withdrawable for account.
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name    | Type    | Description                         |
+| ------- | ------- | ----------------------------------- |
+| account | address | The account to calculate amount for |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type    | Description                                |
+| ---- | ------- | ------------------------------------------ |
+| \_0  | uint256 | Amount not yet withdrawable (in MATIC wei) |
 
 ### proposeOwner
 
@@ -506,7 +532,9 @@ function pendingWithdrawals(address account) external view returns (uint256)
 function proposeOwner(address payable newOwner) external nonpayable
 ```
 
-_can only be called by the new current owner_
+proposes a new owner (step 1 of transferring ownership)
+
+_can only be called by the current owner_
 
 #### Parameters
 
@@ -519,6 +547,8 @@ _can only be called by the new current owner_
 ```solidity
 function proposedOwner() external view returns (address)
 ```
+
+the address of a proposed owner
 
 #### Returns
 
@@ -547,7 +577,7 @@ Validates BLS signature with the provided pubkey and registers validators into t
 function removeFromWhitelist(address[] whitelistAddreses) external nonpayable
 ```
 
-Deletes addresses which are allowed to register as validators.
+Deletes addresses that are allowed to register as validators.
 
 #### Parameters
 
@@ -561,11 +591,13 @@ Deletes addresses which are allowed to register as validators.
 function setCommission(uint256 newCommission) external nonpayable
 ```
 
+Sets commission for validator.
+
 #### Parameters
 
-| Name          | Type    | Description |
-| ------------- | ------- | ----------- |
-| newCommission | uint256 | undefined   |
+| Name          | Type    | Description                 |
+| ------------- | ------- | --------------------------- |
+| newCommission | uint256 | New commission (100 = 100%) |
 
 ### sortedValidators
 
@@ -573,17 +605,19 @@ function setCommission(uint256 newCommission) external nonpayable
 function sortedValidators(uint256 n) external view returns (address[])
 ```
 
+Gets first n active validators sorted by total stake.
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| n    | uint256 | undefined   |
+| Name | Type    | Description                            |
+| ---- | ------- | -------------------------------------- |
+| n    | uint256 | Desired number of validators to return |
 
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type      | Description                                                                                                                       |
+| ---- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| \_0  | address[] | Returns array of addresses of first n active validators sorted by total stake, or fewer if there are not enough active validators |
 
 ### stake
 
@@ -591,17 +625,21 @@ function sortedValidators(uint256 n) external view returns (address[])
 function stake() external payable
 ```
 
+Stakes sent amount. Claims rewards beforehand.
+
 ### totalActiveStake
 
 ```solidity
 function totalActiveStake() external view returns (uint256 activeStake)
 ```
 
+Calculates total stake of active validators (self-stake + delegation).
+
 #### Returns
 
-| Name        | Type    | Description |
-| ----------- | ------- | ----------- |
-| activeStake | uint256 | undefined   |
+| Name        | Type    | Description                                     |
+| ----------- | ------- | ----------------------------------------------- |
+| activeStake | uint256 | Total stake of active validators (in MATIC wei) |
 
 ### totalStake
 
@@ -609,13 +647,13 @@ function totalActiveStake() external view returns (uint256 activeStake)
 function totalStake() external view returns (uint256)
 ```
 
-Calculate total stake in the network (self-stake + delegation)
+Calculates total stake in the network (self-stake + delegation).
 
 #### Returns
 
-| Name | Type    | Description                              |
-| ---- | ------- | ---------------------------------------- |
-| \_0  | uint256 | stake Returns total stake (in MATIC wei) |
+| Name | Type    | Description                |
+| ---- | ------- | -------------------------- |
+| \_0  | uint256 | Total stake (in MATIC wei) |
 
 ### undelegate
 
@@ -623,12 +661,14 @@ Calculate total stake in the network (self-stake + delegation)
 function undelegate(address validator, uint256 amount) external nonpayable
 ```
 
+Undelegates amount from validator for sender. Claims rewards beforehand.
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
-| amount    | uint256 | undefined   |
+| Name      | Type    | Description                  |
+| --------- | ------- | ---------------------------- |
+| validator | address | Validator to undelegate from |
+| amount    | uint256 | The amount to undelegate     |
 
 ### unstake
 
@@ -636,11 +676,13 @@ function undelegate(address validator, uint256 amount) external nonpayable
 function unstake(uint256 amount) external nonpayable
 ```
 
+Unstakes amount for sender. Claims rewards beforehand.
+
 #### Parameters
 
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| amount | uint256 | undefined   |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| amount | uint256 | Amount to unstake |
 
 ### whitelist
 
@@ -666,11 +708,13 @@ function whitelist(address) external view returns (bool)
 function withdraw(address to) external nonpayable
 ```
 
+Withdraws sender&#39;s withdrawable amount to specified address.
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| to   | address | undefined   |
+| Name | Type    | Description            |
+| ---- | ------- | ---------------------- |
+| to   | address | Address to withdraw to |
 
 ### withdrawable
 
@@ -678,17 +722,19 @@ function withdraw(address to) external nonpayable
 function withdrawable(address account) external view returns (uint256 amount)
 ```
 
+Calculates how much can be withdrawn for account in this epoch.
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name    | Type    | Description                         |
+| ------- | ------- | ----------------------------------- |
+| account | address | The account to calculate amount for |
 
 #### Returns
 
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| amount | uint256 | undefined   |
+| Name   | Type    | Description                        |
+| ------ | ------- | ---------------------------------- |
+| amount | uint256 | Amount withdrawable (in MATIC wei) |
 
 ## Events
 

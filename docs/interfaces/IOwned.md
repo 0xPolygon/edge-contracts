@@ -8,7 +8,9 @@
 function claimOwnership() external nonpayable
 ```
 
-claim ownership of the contract
+allows proposed owner to claim ownership (step 2 of transferring ownership)
+
+_can only be called by the new proposed owner_
 
 ### proposeOwner
 
@@ -16,7 +18,9 @@ claim ownership of the contract
 function proposeOwner(address payable _newOwner) external nonpayable
 ```
 
-propeses a new owner
+proposes a new owner (step 1 of transferring ownership)
+
+_can only be called by the current owner_
 
 #### Parameters
 

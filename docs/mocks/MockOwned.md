@@ -8,6 +8,8 @@
 function claimOwnership() external nonpayable
 ```
 
+allows proposed owner to claim ownership (step 2 of transferring ownership)
+
 _can only be called by the new proposed owner_
 
 ### initialize
@@ -22,6 +24,8 @@ function initialize() external nonpayable
 function owner() external view returns (address)
 ```
 
+the address of the owner
+
 #### Returns
 
 | Name | Type    | Description |
@@ -34,7 +38,9 @@ function owner() external view returns (address)
 function proposeOwner(address payable newOwner) external nonpayable
 ```
 
-_can only be called by the new current owner_
+proposes a new owner (step 1 of transferring ownership)
+
+_can only be called by the current owner_
 
 #### Parameters
 
@@ -47,6 +53,8 @@ _can only be called by the new current owner_
 ```solidity
 function proposedOwner() external view returns (address)
 ```
+
+the address of a proposed owner
 
 #### Returns
 

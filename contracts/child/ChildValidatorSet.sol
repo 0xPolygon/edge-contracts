@@ -38,6 +38,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     uint256 public minDelegation;
 
     IBLS public bls;
+    /**
+     * @notice Message to sign for registration
+     */
     uint256[2] public message;
 
     ValidatorTree private _validators;
@@ -52,8 +55,19 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         _;
     }
 
-    /// @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
-    /// @param governance Governance address to set as owner of the contract
+    /**
+     * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
+     * @dev only callable by client, can only be called once
+     * @param newEpochReward reward for a proposed epoch
+     * @param newMinStake minimum stake to become a validator
+     * @param newMinDelegation minimum amount to delegate to a validator
+     * @param validatorAddresses addresses of initial validators
+     * @param validatorPubkeys uint256[4] BLS public keys of initial validators
+     * @param validatorStakes amount staked per initial validator
+     * @param newBls address pf BLS contract/precompile
+     * @param newMessage message for BLS signing
+     * @param governance Governance address to set as owner of the contract
+     */
     function initialize(
         uint256 newEpochReward,
         uint256 newMinStake,
@@ -91,6 +105,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         message = newMessage;
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function commitEpoch(
         uint256 id,
         Epoch calldata epoch,
@@ -115,18 +132,27 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function addToWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
         for (uint256 i = 0; i < whitelistAddreses.length; i++) {
             _addToWhitelist(whitelistAddreses[i]);
         }
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function removeFromWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
         for (uint256 i = 0; i < whitelistAddreses.length; i++) {
             _removeFromWhitelist(whitelistAddreses[i]);
         }
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
         if (!whitelist[msg.sender]) revert Unauthorized("WHITELIST");
 
@@ -142,6 +168,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit NewValidator(msg.sender, pubkey);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function stake() external payable onlyValidator {
         uint256 currentStake = _validators.stakeOf(msg.sender);
         if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
@@ -150,6 +179,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit Staked(msg.sender, msg.value);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function unstake(uint256 amount) external {
         int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
         int256 amountInt = amount.toInt256Safe();
@@ -168,6 +200,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit Unstaked(msg.sender, amount);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function delegate(address validator, bool restake) external payable {
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         if (delegation.balanceOf(msg.sender) + msg.value < minDelegation)
@@ -176,6 +211,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         _delegate(msg.sender, validator, msg.value);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function undelegate(address validator, uint256 amount) external {
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         uint256 delegatedAmount = delegation.balanceOf(msg.sender);
@@ -199,6 +237,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit Undelegated(msg.sender, validator, amount);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function claimValidatorReward() public {
         Validator storage validator = _validators.get(msg.sender);
         uint256 reward = validator.withdrawableRewards;
@@ -208,6 +249,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit ValidatorRewardClaimed(msg.sender, reward);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function claimDelegatorReward(address validator, bool restake) public {
         RewardPool storage pool = _validators.getDelegationPool(validator);
         uint256 reward = pool.claimRewards(msg.sender);
@@ -222,6 +266,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit DelegatorRewardClaimed(msg.sender, validator, restake, reward);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function withdraw(address to) external nonReentrant {
         assert(to != address(0));
         WithdrawalQueue storage queue = _withdrawals[msg.sender];
@@ -233,29 +280,47 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         require(success, "WITHDRAWAL_FAILED");
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function setCommission(uint256 newCommission) external onlyValidator {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
         Validator storage validator = _validators.get(msg.sender);
         validator.commission = newCommission;
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function getCurrentValidatorSet() external view returns (address[] memory) {
         return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
         return epochs[ret + 1];
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function getValidator(address validator) public view returns (Validator memory) {
         return _validators.get(validator);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function delegationOf(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).balanceOf(delegator);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function sortedValidators(uint256 n) public view returns (address[] memory) {
         uint256 length = n <= _validators.count ? n : _validators.count;
         address[] memory validatorAddresses = new address[](length);
@@ -273,10 +338,16 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         return validatorAddresses;
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function totalStake() external view returns (uint256) {
         return _validators.totalStake;
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function totalActiveStake() public view returns (uint256 activeStake) {
         uint256 length = ACTIVE_VALIDATOR_SET_SIZE <= _validators.count ? ACTIVE_VALIDATOR_SET_SIZE : _validators.count;
         if (length == 0) return 0;
@@ -290,18 +361,30 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         }
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function withdrawable(address account) external view returns (uint256 amount) {
         (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function pendingWithdrawals(address account) external view returns (uint256) {
         return _withdrawals[account].pending(currentEpochId);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function getDelegatorReward(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function getValidatorReward(address validator) external view returns (uint256) {
         return getValidator(validator).withdrawableRewards;
     }

@@ -1,5 +1,11 @@
 # Owned
 
+_Polygon Technology (Daniel Gretzke @gretzke)_
+
+> Owned
+
+single address access control with a two-step transfer
+
 ## Methods
 
 ### claimOwnership
@@ -7,6 +13,8 @@
 ```solidity
 function claimOwnership() external nonpayable
 ```
+
+allows proposed owner to claim ownership (step 2 of transferring ownership)
 
 _can only be called by the new proposed owner_
 
@@ -16,11 +24,13 @@ _can only be called by the new proposed owner_
 function owner() external view returns (address)
 ```
 
+the address of the owner
+
 #### Returns
 
 | Name | Type    | Description |
 | ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| \_0  | address | address     |
 
 ### proposeOwner
 
@@ -28,7 +38,9 @@ function owner() external view returns (address)
 function proposeOwner(address payable newOwner) external nonpayable
 ```
 
-_can only be called by the new current owner_
+proposes a new owner (step 1 of transferring ownership)
+
+_can only be called by the current owner_
 
 #### Parameters
 
@@ -42,11 +54,15 @@ _can only be called by the new current owner_
 function proposedOwner() external view returns (address)
 ```
 
+the address of a proposed owner
+
+_the proposed owner can transfer ownership to themselves_
+
 #### Returns
 
 | Name | Type    | Description |
 | ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| \_0  | address | address     |
 
 ## Events
 
