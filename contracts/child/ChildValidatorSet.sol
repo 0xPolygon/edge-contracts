@@ -4,24 +4,20 @@ pragma solidity 0.8.17;
 import "./ChildValidatorSet/CVSStorage.sol";
 import "./ChildValidatorSet/CVSAccessControl.sol";
 import "./ChildValidatorSet/CVSWithdrawal.sol";
+import "./ChildValidatorSet/CVSStaking.sol";
 import "./System.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../libs/SafeMathInt.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
 // solhint-disable max-states-count
-contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessControl, CVSWithdrawal {
+contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessControl, CVSWithdrawal, CVSStaking {
     using ArraysUpgradeable for uint256[];
     using SafeMathUint for uint256;
     using SafeMathInt for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
     using RewardPoolLib for RewardPool;
-
-    modifier onlyValidator() {
-        if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
-        _;
-    }
 
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
@@ -103,56 +99,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
-        if (!whitelist[msg.sender]) revert Unauthorized("WHITELIST");
-
-        (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message);
-        require(callSuccess && result, "INVALID_SIGNATURE");
-
-        _validators.insert(
-            msg.sender,
-            Validator({blsKey: pubkey, stake: 0, totalStake: 0, commission: 0, withdrawableRewards: 0, active: true})
-        );
-        _removeFromWhitelist(msg.sender);
-
-        emit NewValidator(msg.sender, pubkey);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function stake() external payable onlyValidator {
-        uint256 currentStake = _validators.stakeOf(msg.sender);
-        if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
-        claimValidatorReward();
-        _queue.insert(msg.sender, int256(msg.value), 0);
-        emit Staked(msg.sender, msg.value);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function unstake(uint256 amount) external {
-        int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
-        int256 amountInt = amount.toInt256Safe();
-        if (amountInt > totalValidatorStake) revert StakeRequirement({src: "unstake", msg: "INSUFFICIENT_BALANCE"});
-
-        int256 amountAfterUnstake = totalValidatorStake - amountInt;
-        if (amountAfterUnstake < int256(minStake) && amountAfterUnstake != 0)
-            revert StakeRequirement({src: "unstake", msg: "STAKE_TOO_LOW"});
-
-        claimValidatorReward();
-        _queue.insert(msg.sender, amountInt * -1, 0);
-        if (amountAfterUnstake == 0) {
-            _validators.get(msg.sender).active = false;
-        }
-        _registerWithdrawal(msg.sender, amount);
-        emit Unstaked(msg.sender, amount);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
     function delegate(address validator, bool restake) external payable {
         RewardPool storage delegation = _validators.getDelegationPool(validator);
         if (delegation.balanceOf(msg.sender) + msg.value < minDelegation)
@@ -190,18 +136,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function claimValidatorReward() public {
-        Validator storage validator = _validators.get(msg.sender);
-        uint256 reward = validator.withdrawableRewards;
-        if (reward == 0) return;
-        validator.withdrawableRewards = 0;
-        _registerWithdrawal(msg.sender, reward);
-        emit ValidatorRewardClaimed(msg.sender, reward);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
     function claimDelegatorReward(address validator, bool restake) public {
         RewardPool storage pool = _validators.getDelegationPool(validator);
         uint256 reward = pool.claimRewards(msg.sender);
@@ -214,15 +148,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
         }
 
         emit DelegatorRewardClaimed(msg.sender, validator, restake, reward);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function setCommission(uint256 newCommission) external onlyValidator {
-        require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
-        Validator storage validator = _validators.get(msg.sender);
-        validator.commission = newCommission;
     }
 
     /**
@@ -243,42 +168,8 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function getValidator(address validator) public view returns (Validator memory) {
-        return _validators.get(validator);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
     function delegationOf(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).balanceOf(delegator);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function sortedValidators(uint256 n) public view returns (address[] memory) {
-        uint256 length = n <= _validators.count ? n : _validators.count;
-        address[] memory validatorAddresses = new address[](length);
-
-        if (length == 0) return validatorAddresses;
-
-        address tmpValidator = _validators.last();
-        validatorAddresses[0] = tmpValidator;
-
-        for (uint256 i = 1; i < length; i++) {
-            tmpValidator = _validators.prev(tmpValidator);
-            validatorAddresses[i] = tmpValidator;
-        }
-
-        return validatorAddresses;
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function totalStake() external view returns (uint256) {
-        return _validators.totalStake;
     }
 
     /**
@@ -304,13 +195,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
         return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
 
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function getValidatorReward(address validator) external view returns (uint256) {
-        return getValidator(validator).withdrawableRewards;
-    }
-
     function _distributeRewards(Uptime calldata uptime) private {
         require(uptime.epochId == currentEpochId - 1, "EPOCH_NOT_COMMITTED");
 
@@ -330,8 +214,7 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
                 uptimeData.validator,
                 validatorReward
             );
-            validator.withdrawableRewards += validatorShares;
-            emit ValidatorRewardDistributed(uptimeData.validator, validatorReward);
+            _distributeValidatorReward(uptimeData.validator, validatorShares);
             _validators.getDelegationPool(uptimeData.validator).distributeReward(delegatorShares);
             emit DelegatorRewardDistributed(uptimeData.validator, delegatorShares);
         }

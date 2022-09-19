@@ -7,7 +7,9 @@ import "../../libs/ValidatorStorage.sol";
 import "../../libs/ValidatorQueue.sol";
 import "../../libs/WithdrawalQueue.sol";
 
-contract CVSStorage {
+contract CVSStorage is ICVSStorage {
+    using ValidatorStorageLib for ValidatorTree;
+
     bytes32 public constant NEW_VALIDATOR_SIG = 0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant SPRINT = 64;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
@@ -37,4 +39,11 @@ contract CVSStorage {
 
     // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;
+
+    /**
+     * @inheritdoc ICVSStorage
+     */
+    function getValidator(address validator) public view returns (Validator memory) {
+        return _validators.get(validator);
+    }
 }
