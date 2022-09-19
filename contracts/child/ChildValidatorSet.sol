@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "./ChildValidatorSet/CVSStorage.sol";
 import "../common/Owned.sol";
 import "./System.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../libs/SafeMathInt.sol";
-import "../libs/ValidatorStorage.sol";
-import "../libs/ValidatorQueue.sol";
-import "../libs/WithdrawalQueue.sol";
-import "../interfaces/IBLS.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
 // solhint-disable max-states-count
-contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
+contract ChildValidatorSet is CVSStorage, System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
     using ArraysUpgradeable for uint256[];
     using SafeMathUint for uint256;
     using SafeMathInt for int256;
@@ -21,34 +18,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     using ValidatorQueueLib for ValidatorQueue;
     using WithdrawalQueueLib for WithdrawalQueue;
     using RewardPoolLib for RewardPool;
-
-    bytes32 public constant NEW_VALIDATOR_SIG = 0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
-    uint256 public constant SPRINT = 64;
-    uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
-    uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
-    uint256 public constant REWARD_PRECISION = 10**18;
-    uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
-    // more granular commission?
-    uint256 public constant MAX_COMMISSION = 100;
-
-    uint256 public currentEpochId;
-    uint256[] public epochEndBlocks;
-    uint256 public epochReward;
-    uint256 public minStake;
-    uint256 public minDelegation;
-
-    IBLS public bls;
-    /**
-     * @notice Message to sign for registration
-     */
-    uint256[2] public message;
-
-    ValidatorTree private _validators;
-    ValidatorQueue private _queue;
-    mapping(address => WithdrawalQueue) private _withdrawals;
-
-    mapping(uint256 => Epoch) public epochs;
-    mapping(address => bool) public whitelist;
 
     modifier onlyValidator() {
         if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
@@ -480,7 +449,4 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
         return (validatorReward + commission, delegatorReward - commission);
     }
-
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
 }

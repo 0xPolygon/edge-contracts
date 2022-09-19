@@ -349,7 +349,7 @@ Gets addresses of active validators in this epoch, sorted by total stake (self-s
 function getDelegatorReward(address validator, address delegator) external view returns (uint256)
 ```
 
-Gets delegators&#39;s claimable rewards from validator.
+Gets delegators&#39;s unclaimed rewards with validator.
 
 #### Parameters
 
@@ -360,9 +360,9 @@ Gets delegators&#39;s claimable rewards from validator.
 
 #### Returns
 
-| Name | Type    | Description                                                        |
-| ---- | ------- | ------------------------------------------------------------------ |
-| \_0  | uint256 | Delegator&#39;s withdrawable rewards from validator (in MATIC wei) |
+| Name | Type    | Description                                                     |
+| ---- | ------- | --------------------------------------------------------------- |
+| \_0  | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
 
 ### getEpochByBlock
 
@@ -410,7 +410,7 @@ Gets validator by address.
 function getValidatorReward(address validator) external view returns (uint256)
 ```
 
-Gets validator&#39;s withdrawable rewards.
+Gets validator&#39;s unclaimed rewards.
 
 #### Parameters
 
@@ -420,9 +420,9 @@ Gets validator&#39;s withdrawable rewards.
 
 #### Returns
 
-| Name | Type    | Description                                         |
-| ---- | ------- | --------------------------------------------------- |
-| \_0  | uint256 | Validator&#39;s withdrawable rewards (in MATIC wei) |
+| Name | Type    | Description                                      |
+| ---- | ------- | ------------------------------------------------ |
+| \_0  | uint256 | Validator&#39;s unclaimed rewards (in MATIC wei) |
 
 ### initialize
 

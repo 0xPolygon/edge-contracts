@@ -2,35 +2,7 @@
 pragma solidity 0.8.17;
 
 import {Validator} from "../interfaces/IValidator.sol";
-
-struct UptimeData {
-    address validator;
-    uint256 signedBlocks;
-}
-
-struct Uptime {
-    uint256 epochId;
-    UptimeData[] uptimeData;
-    uint256 totalBlocks;
-}
-
-struct Stake {
-    uint256 epochId;
-    uint256 amount;
-}
-
-// enum ValidatorStatus {
-//     REGISTERED, // 0 -> will be staked next epock
-//     STAKED, // 1 -> currently staked (i.e. validating)
-//     UNSTAKING, // 2 -> currently unstaking (i.e. will stop validating)
-//     UNSTAKED // 3 -> not staked (i.e. is not validating)
-// }
-
-struct Epoch {
-    uint256 startBlock;
-    uint256 endBlock;
-    bytes32 epochRoot;
-}
+import "./ChildValidatorSet/ICVSStorage.sol";
 
 /**
  * @title ChildValidatorSet
