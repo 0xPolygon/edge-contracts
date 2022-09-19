@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./ChildValidatorSet/CVSStorage.sol";
-import "../common/Owned.sol";
+import "./ChildValidatorSet/CVSAccessControl.sol";
 import "./System.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
@@ -10,7 +9,7 @@ import "../libs/SafeMathInt.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
 // solhint-disable max-states-count
-contract ChildValidatorSet is CVSStorage, System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
+contract ChildValidatorSet is IChildValidatorSet, System, ReentrancyGuardUpgradeable, CVSAccessControl {
     using ArraysUpgradeable for uint256[];
     using SafeMathUint for uint256;
     using SafeMathInt for int256;
@@ -99,24 +98,6 @@ contract ChildValidatorSet is CVSStorage, System, Owned, ReentrancyGuardUpgradea
         _processQueue();
 
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function addToWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
-        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            _addToWhitelist(whitelistAddreses[i]);
-        }
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function removeFromWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
-        for (uint256 i = 0; i < whitelistAddreses.length; i++) {
-            _removeFromWhitelist(whitelistAddreses[i]);
-        }
     }
 
     /**
@@ -418,16 +399,6 @@ contract ChildValidatorSet is CVSStorage, System, Owned, ReentrancyGuardUpgradea
         _validators.getDelegationPool(validator).deposit(delegator, amount);
         // delegations[delegator][validator].amount += amount;
         emit Delegated(delegator, validator, amount);
-    }
-
-    function _addToWhitelist(address account) private {
-        whitelist[account] = true;
-        emit AddedToWhitelist(account);
-    }
-
-    function _removeFromWhitelist(address account) private {
-        whitelist[account] = false;
-        emit RemovedFromWhitelist(account);
     }
 
     function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)

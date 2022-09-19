@@ -14,8 +14,6 @@ import "./ChildValidatorSet/ICVSStorage.sol";
 interface IChildValidatorSet {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
     event NewValidator(address indexed validator, uint256[4] blsKey);
-    event AddedToWhitelist(address indexed validator);
-    event RemovedFromWhitelist(address indexed validator);
     event Staked(address indexed validator, uint256 amount);
     event Unstaked(address indexed validator, uint256 amount);
     event Delegated(address indexed delegator, address indexed validator, uint256 amount);
@@ -58,18 +56,6 @@ interface IChildValidatorSet {
      * @return Epoch Returns epoch if found, or else, the last epoch
      */
     function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory);
-
-    /**
-     * @notice Adds addresses that are allowed to register as validators.
-     * @param whitelistAddreses Array of address to whitelist
-     */
-    function addToWhitelist(address[] calldata whitelistAddreses) external;
-
-    /**
-     * @notice Deletes addresses that are allowed to register as validators.
-     * @param whitelistAddreses Array of address to remove from whitelist
-     */
-    function removeFromWhitelist(address[] calldata whitelistAddreses) external;
 
     /**
      * @notice Validates BLS signature with the provided pubkey and registers validators into the set.

@@ -10,20 +10,6 @@ _The contract is used to complete validator registration and store self-stake an
 
 ## Methods
 
-### addToWhitelist
-
-```solidity
-function addToWhitelist(address[] whitelistAddreses) external nonpayable
-```
-
-Adds addresses that are allowed to register as validators.
-
-#### Parameters
-
-| Name              | Type      | Description                   |
-| ----------------- | --------- | ----------------------------- |
-| whitelistAddreses | address[] | Array of address to whitelist |
-
 ### claimDelegatorReward
 
 ```solidity
@@ -227,20 +213,6 @@ Validates BLS signature with the provided pubkey and registers validators into t
 | signature | uint256[2] | Signature to validate message against |
 | pubkey    | uint256[4] | BLS public key of validator           |
 
-### removeFromWhitelist
-
-```solidity
-function removeFromWhitelist(address[] whitelistAddreses) external nonpayable
-```
-
-Deletes addresses that are allowed to register as validators.
-
-#### Parameters
-
-| Name              | Type      | Description                               |
-| ----------------- | --------- | ----------------------------------------- |
-| whitelistAddreses | address[] | Array of address to remove from whitelist |
-
 ### setCommission
 
 ```solidity
@@ -376,18 +348,6 @@ Calculates how much can be withdrawn for account in this epoch.
 
 ## Events
 
-### AddedToWhitelist
-
-```solidity
-event AddedToWhitelist(address indexed validator)
-```
-
-#### Parameters
-
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-
 ### Delegated
 
 ```solidity
@@ -457,18 +417,6 @@ event NewValidator(address indexed validator, uint256[4] blsKey)
 | ------------------- | ---------- | ----------- |
 | validator `indexed` | address    | undefined   |
 | blsKey              | uint256[4] | undefined   |
-
-### RemovedFromWhitelist
-
-```solidity
-event RemovedFromWhitelist(address indexed validator)
-```
-
-#### Parameters
-
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
 
 ### Staked
 
