@@ -25,8 +25,6 @@ interface IChildValidatorSet {
         bool indexed restake,
         uint256 amount
     );
-    event WithdrawalRegistered(address indexed account, uint256 amount);
-    event Withdrawal(address indexed account, address indexed to, uint256 amount);
     event ValidatorRewardDistributed(address indexed validator, uint256 amount);
     event DelegatorRewardDistributed(address indexed validator, uint256 amount);
 
@@ -90,12 +88,6 @@ interface IChildValidatorSet {
     function undelegate(address validator, uint256 amount) external;
 
     /**
-     * @notice Withdraws sender's withdrawable amount to specified address.
-     * @param to Address to withdraw to
-     */
-    function withdraw(address to) external;
-
-    /**
      * @notice Claims validator rewards for sender.
      */
     function claimValidatorReward() external;
@@ -146,20 +138,6 @@ interface IChildValidatorSet {
      * @return Total stake of active validators (in MATIC wei)
      */
     function totalActiveStake() external view returns (uint256);
-
-    /**
-     * @notice Calculates how much can be withdrawn for account in this epoch.
-     * @param account The account to calculate amount for
-     * @return Amount withdrawable (in MATIC wei)
-     */
-    function withdrawable(address account) external view returns (uint256);
-
-    /**
-     * @notice Calculates how much is yet to become withdrawable for account.
-     * @param account The account to calculate amount for
-     * @return Amount not yet withdrawable (in MATIC wei)
-     */
-    function pendingWithdrawals(address account) external view returns (uint256);
 
     /**
      * @notice Gets validator's unclaimed rewards.

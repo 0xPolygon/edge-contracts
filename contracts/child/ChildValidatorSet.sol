@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "./ChildValidatorSet/CVSStorage.sol";
 import "./ChildValidatorSet/CVSAccessControl.sol";
+import "./ChildValidatorSet/CVSWithdrawal.sol";
 import "./System.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../libs/SafeMathInt.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
 // solhint-disable max-states-count
-contract ChildValidatorSet is IChildValidatorSet, System, ReentrancyGuardUpgradeable, CVSAccessControl {
+contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessControl, CVSWithdrawal {
     using ArraysUpgradeable for uint256[];
     using SafeMathUint for uint256;
     using SafeMathInt for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
-    using WithdrawalQueueLib for WithdrawalQueue;
     using RewardPoolLib for RewardPool;
 
     modifier onlyValidator() {
@@ -219,20 +219,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, ReentrancyGuardUpgrade
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function withdraw(address to) external nonReentrant {
-        assert(to != address(0));
-        WithdrawalQueue storage queue = _withdrawals[msg.sender];
-        (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
-        queue.head = newHead;
-        emit Withdrawal(msg.sender, to, amount);
-        // slither-disable-next-line low-level-calls
-        (bool success, ) = to.call{value: amount}(""); // solhint-disable-line avoid-low-level-calls
-        require(success, "WITHDRAWAL_FAILED");
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
     function setCommission(uint256 newCommission) external onlyValidator {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
         Validator storage validator = _validators.get(msg.sender);
@@ -314,20 +300,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, ReentrancyGuardUpgrade
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function withdrawable(address account) external view returns (uint256 amount) {
-        (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function pendingWithdrawals(address account) external view returns (uint256) {
-        return _withdrawals[account].pending(currentEpochId);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
     function getDelegatorReward(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
@@ -382,11 +354,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, ReentrancyGuardUpgrade
             _queue.resetIndex(validatorAddr);
         }
         _queue.reset();
-    }
-
-    function _registerWithdrawal(address account, uint256 amount) private {
-        _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
-        emit WithdrawalRegistered(account, amount);
     }
 
     function _delegate(

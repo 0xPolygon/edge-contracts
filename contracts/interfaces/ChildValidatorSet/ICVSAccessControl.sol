@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./ICVSStorage.sol";
-
 interface ICVSAccessControl {
     event AddedToWhitelist(address indexed validator);
     event RemovedFromWhitelist(address indexed validator);

@@ -5,7 +5,7 @@ import "../../common/Owned.sol";
 import "../../interfaces/ChildValidatorSet/ICVSAccessControl.sol";
 import "./CVSStorage.sol";
 
-contract CVSAccessControl is ICVSAccessControl, Owned, CVSStorage {
+contract CVSAccessControl is ICVSAccessControl, CVSStorage, Owned {
     /**
      * @inheritdoc ICVSAccessControl
      */
