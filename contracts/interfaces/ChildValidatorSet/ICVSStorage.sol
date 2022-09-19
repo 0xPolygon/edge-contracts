@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import {Validator} from "../IValidator.sol";
+import "../Errors.sol";
 
 struct UptimeData {
     address validator;

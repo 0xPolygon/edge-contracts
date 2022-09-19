@@ -12,15 +12,6 @@ import "./ChildValidatorSet/ICVSStorage.sol";
  */
 interface IChildValidatorSet {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
-    event Delegated(address indexed delegator, address indexed validator, uint256 amount);
-    event Undelegated(address indexed delegator, address indexed validator, uint256 amount);
-    event DelegatorRewardClaimed(
-        address indexed delegator,
-        address indexed validator,
-        bool indexed restake,
-        uint256 amount
-    );
-    event DelegatorRewardDistributed(address indexed validator, uint256 amount);
 
     /**
      * @notice Allows the v3 client to commit epochs to this contract.
@@ -48,45 +39,8 @@ interface IChildValidatorSet {
     function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory);
 
     /**
-     * @notice Delegates sent amount to validator. Claims rewards beforehand.
-     * @param validator Validator to delegate to
-     * @param restake Whether to redelegate the claimed rewards
-     */
-    function delegate(address validator, bool restake) external payable;
-
-    /**
-     * @notice Undelegates amount from validator for sender. Claims rewards beforehand.
-     * @param validator Validator to undelegate from
-     * @param amount The amount to undelegate
-     */
-    function undelegate(address validator, uint256 amount) external;
-
-    /**
-     * @notice Claims delegator rewards for sender.
-     * @param validator Validator to claim from
-     * @param restake Whether to redelegate the claimed rewards
-     */
-    function claimDelegatorReward(address validator, bool restake) external;
-
-    /**
-     * @notice Gets amount delegated by delegator to validator.
-     * @param validator Address of validator
-     * @param delegator Address of delegator
-     * @return Amount delegated (in MATIC wei)
-     */
-    function delegationOf(address validator, address delegator) external view returns (uint256);
-
-    /**
      * @notice Calculates total stake of active validators (self-stake + delegation).
      * @return Total stake of active validators (in MATIC wei)
      */
     function totalActiveStake() external view returns (uint256);
-
-    /**
-     * @notice Gets delegators's unclaimed rewards with validator.
-     * @param validator Address of validator
-     * @param delegator Address of delegator
-     * @return Delegator's unclaimed rewards with validator (in MATIC wei)
-     */
-    function getDelegatorReward(address validator, address delegator) external view returns (uint256);
 }

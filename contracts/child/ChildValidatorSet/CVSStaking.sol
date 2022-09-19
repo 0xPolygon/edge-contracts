@@ -4,11 +4,11 @@ pragma solidity 0.8.17;
 import "../../interfaces/ChildValidatorSet/ICVSStaking.sol";
 import "./CVSStorage.sol";
 import "./CVSAccessControl.sol";
-import "./CVSStakingRewards.sol";
+import "./CVSWithdrawal.sol";
 
-contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSStakingRewards {
-    using ValidatorQueueLib for ValidatorQueue;
+contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWithdrawal {
     using ValidatorStorageLib for ValidatorTree;
+    using ValidatorQueueLib for ValidatorQueue;
     using SafeMathUint for uint256;
 
     modifier onlyValidator() {
@@ -78,6 +78,18 @@ contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSStakingRewa
     /**
      * @inheritdoc ICVSStaking
      */
+    function claimValidatorReward() public {
+        Validator storage validator = _validators.get(msg.sender);
+        uint256 reward = validator.withdrawableRewards;
+        if (reward == 0) return;
+        validator.withdrawableRewards = 0;
+        _registerWithdrawal(msg.sender, reward);
+        emit ValidatorRewardClaimed(msg.sender, reward);
+    }
+
+    /**
+     * @inheritdoc ICVSStaking
+     */
     function sortedValidators(uint256 n) public view returns (address[] memory) {
         uint256 length = n <= _validators.count ? n : _validators.count;
         address[] memory validatorAddresses = new address[](length);
@@ -98,7 +110,20 @@ contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSStakingRewa
     /**
      * @inheritdoc ICVSStaking
      */
+    function getValidatorReward(address validator) external view returns (uint256) {
+        return getValidator(validator).withdrawableRewards;
+    }
+
+    /**
+     * @inheritdoc ICVSStaking
+     */
     function totalStake() external view returns (uint256) {
         return _validators.totalStake;
+    }
+
+    function _distributeValidatorReward(address validator, uint256 reward) internal {
+        Validator storage _validator = _validators.get(validator);
+        _validator.withdrawableRewards += reward;
+        emit ValidatorRewardDistributed(validator, reward);
     }
 }

@@ -5,19 +5,26 @@ import "./ChildValidatorSet/CVSStorage.sol";
 import "./ChildValidatorSet/CVSAccessControl.sol";
 import "./ChildValidatorSet/CVSWithdrawal.sol";
 import "./ChildValidatorSet/CVSStaking.sol";
+import "./ChildValidatorSet/CVSDelegation.sol";
 import "./System.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../libs/SafeMathInt.sol";
 import "../interfaces/IChildValidatorSet.sol";
 
 // solhint-disable max-states-count
-contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessControl, CVSWithdrawal, CVSStaking {
+contract ChildValidatorSet is
+    IChildValidatorSet,
+    System,
+    CVSStorage,
+    CVSAccessControl,
+    CVSWithdrawal,
+    CVSStaking,
+    CVSDelegation
+{
     using ArraysUpgradeable for uint256[];
-    using SafeMathUint for uint256;
     using SafeMathInt for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
-    using RewardPoolLib for RewardPool;
 
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
@@ -99,60 +106,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function delegate(address validator, bool restake) external payable {
-        RewardPool storage delegation = _validators.getDelegationPool(validator);
-        if (delegation.balanceOf(msg.sender) + msg.value < minDelegation)
-            revert StakeRequirement({src: "delegate", msg: "DELEGATION_TOO_LOW"});
-        claimDelegatorReward(validator, restake);
-        _delegate(msg.sender, validator, msg.value);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function undelegate(address validator, uint256 amount) external {
-        RewardPool storage delegation = _validators.getDelegationPool(validator);
-        uint256 delegatedAmount = delegation.balanceOf(msg.sender);
-
-        if (amount > delegatedAmount) revert StakeRequirement({src: "undelegate", msg: "INSUFFICIENT_BALANCE"});
-        delegation.withdraw(msg.sender, amount);
-
-        uint256 amountAfterUndelegate = delegatedAmount - amount;
-
-        if (amountAfterUndelegate < minDelegation && amountAfterUndelegate != 0)
-            revert StakeRequirement({src: "undelegate", msg: "DELEGATION_TOO_LOW"});
-
-        claimDelegatorReward(validator, false);
-
-        int256 amountInt = amount.toInt256Safe();
-
-        _queue.insert(validator, 0, amountInt * -1);
-        // delegation.amount -= amount;
-
-        _registerWithdrawal(msg.sender, amount);
-        emit Undelegated(msg.sender, validator, amount);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function claimDelegatorReward(address validator, bool restake) public {
-        RewardPool storage pool = _validators.getDelegationPool(validator);
-        uint256 reward = pool.claimRewards(msg.sender);
-        if (reward == 0) return;
-
-        if (restake) {
-            _delegate(msg.sender, validator, reward);
-        } else {
-            _registerWithdrawal(msg.sender, reward);
-        }
-
-        emit DelegatorRewardClaimed(msg.sender, validator, restake, reward);
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
     function getCurrentValidatorSet() external view returns (address[] memory) {
         return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
     }
@@ -163,13 +116,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
     function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
         return epochs[ret + 1];
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function delegationOf(address validator, address delegator) external view returns (uint256) {
-        return _validators.getDelegationPool(validator).balanceOf(delegator);
     }
 
     /**
@@ -186,13 +132,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
             tmpValidator = _validators.prev(tmpValidator);
             activeStake += getValidator(tmpValidator).totalStake;
         }
-    }
-
-    /**
-     * @inheritdoc IChildValidatorSet
-     */
-    function getDelegatorReward(address validator, address delegator) external view returns (uint256) {
-        return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
 
     function _distributeRewards(Uptime calldata uptime) private {
@@ -215,8 +154,7 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
                 validatorReward
             );
             _distributeValidatorReward(uptimeData.validator, validatorShares);
-            _validators.getDelegationPool(uptimeData.validator).distributeReward(delegatorShares);
-            emit DelegatorRewardDistributed(uptimeData.validator, delegatorShares);
+            _distributeDelegatorReward(uptimeData.validator, delegatorShares);
         }
     }
 
@@ -237,18 +175,6 @@ contract ChildValidatorSet is IChildValidatorSet, System, CVSStorage, CVSAccessC
             _queue.resetIndex(validatorAddr);
         }
         _queue.reset();
-    }
-
-    function _delegate(
-        address delegator,
-        address validator,
-        uint256 amount
-    ) private {
-        if (!getValidator(validator).active) revert Unauthorized("INVALID_VALIDATOR");
-        _queue.insert(validator, 0, amount.toInt256Safe());
-        _validators.getDelegationPool(validator).deposit(delegator, amount);
-        // delegations[delegator][validator].amount += amount;
-        emit Delegated(delegator, validator, amount);
     }
 
     function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)

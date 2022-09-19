@@ -7,8 +7,8 @@ interface ICVSStaking {
     event NewValidator(address indexed validator, uint256[4] blsKey);
     event Staked(address indexed validator, uint256 amount);
     event Unstaked(address indexed validator, uint256 amount);
-
-    error StakeRequirement(string src, string msg);
+    event ValidatorRewardClaimed(address indexed validator, uint256 amount);
+    event ValidatorRewardDistributed(address indexed validator, uint256 amount);
 
     /**
      * @notice Validates BLS signature with the provided pubkey and registers validators into the set.
@@ -35,6 +35,11 @@ interface ICVSStaking {
     function setCommission(uint256 newCommission) external;
 
     /**
+     * @notice Claims validator rewards for sender.
+     */
+    function claimValidatorReward() external;
+
+    /**
      * @notice Gets first n active validators sorted by total stake.
      * @param n Desired number of validators to return
      * @return Returns array of addresses of first n active validators sorted by total stake,
@@ -47,4 +52,11 @@ interface ICVSStaking {
      * @return Total stake (in MATIC wei)
      */
     function totalStake() external view returns (uint256);
+
+    /**
+     * @notice Gets validator's unclaimed rewards.
+     * @param validator Address of validator
+     * @return Validator's unclaimed rewards (in MATIC wei)
+     */
+    function getValidatorReward(address validator) external view returns (uint256);
 }
