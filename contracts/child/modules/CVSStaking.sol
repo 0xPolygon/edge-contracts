@@ -7,6 +7,8 @@ import "./CVSStorage.sol";
 import "./CVSAccessControl.sol";
 import "./CVSWithdrawal.sol";
 
+import "../../interfaces/Errors.sol";
+
 import "../../libs/ValidatorStorage.sol";
 import "../../libs/ValidatorQueue.sol";
 import "../../libs/SafeMathInt.sol";

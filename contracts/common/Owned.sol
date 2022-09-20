@@ -2,6 +2,9 @@
 pragma solidity 0.8.17;
 
 import "../interfaces/IOwned.sol";
+
+import "../interfaces/Errors.sol";
+
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
