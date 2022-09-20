@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../../common/Owned.sol";
-import "../../interfaces/ChildValidatorSet/ICVSAccessControl.sol";
-import "./CVSStorage.sol";
+import "../../interfaces/modules/ICVSAccessControl.sol";
 
-contract CVSAccessControl is ICVSAccessControl, CVSStorage, Owned {
+import "./CVSStorage.sol";
+import "../../common/Owned.sol";
+
+abstract contract CVSAccessControl is ICVSAccessControl, CVSStorage, Owned {
     /**
      * @inheritdoc ICVSAccessControl
      */
