@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./ChildValidatorSet/ICVSStorage.sol";
+import "./modules/ICVSStorage.sol";
 
 /**
  * @title ChildValidatorSet
@@ -10,7 +10,7 @@ import "./ChildValidatorSet/ICVSStorage.sol";
  * @dev The contract is used to complete validator registration and store self-stake and delegated MATIC amounts.
  * It manages staking, epoch committing, and reward distribution.
  */
-interface IChildValidatorSet {
+interface IChildValidatorSetBase {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
 
     /**

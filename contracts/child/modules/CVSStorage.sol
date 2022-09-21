@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "../../interfaces/modules/ICVSStorage.sol";
 import "../../interfaces/IBLS.sol";
-import "../../interfaces/ChildValidatorSet/ICVSStorage.sol";
-import "../../libs/ValidatorStorage.sol";
-import "../../libs/ValidatorQueue.sol";
-import "../../libs/WithdrawalQueue.sol";
+import "../../interfaces/IValidatorQueue.sol";
+import "../../interfaces/IWithdrawalQueue.sol";
 
-contract CVSStorage is ICVSStorage {
+import "../../libs/ValidatorStorage.sol";
+
+abstract contract CVSStorage is ICVSStorage {
     using ValidatorStorageLib for ValidatorTree;
 
     bytes32 public constant NEW_VALIDATOR_SIG = 0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;

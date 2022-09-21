@@ -1,30 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./ChildValidatorSet/CVSStorage.sol";
-import "./ChildValidatorSet/CVSAccessControl.sol";
-import "./ChildValidatorSet/CVSWithdrawal.sol";
-import "./ChildValidatorSet/CVSStaking.sol";
-import "./ChildValidatorSet/CVSDelegation.sol";
+import "../interfaces/IChildValidatorSetBase.sol";
+import "./modules/CVSStorage.sol";
+import "./modules/CVSAccessControl.sol";
+import "./modules/CVSWithdrawal.sol";
+import "./modules/CVSStaking.sol";
+import "./modules/CVSDelegation.sol";
 import "./System.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
+
+import "../libs/ValidatorStorage.sol";
+import "../libs/ValidatorQueue.sol";
 import "../libs/SafeMathInt.sol";
-import "../interfaces/IChildValidatorSet.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 
 // solhint-disable max-states-count
 contract ChildValidatorSet is
-    IChildValidatorSet,
-    System,
+    IChildValidatorSetBase,
     CVSStorage,
     CVSAccessControl,
     CVSWithdrawal,
     CVSStaking,
-    CVSDelegation
+    CVSDelegation,
+    System
 {
-    using ArraysUpgradeable for uint256[];
-    using SafeMathInt for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
+    using SafeMathInt for int256;
+    using ArraysUpgradeable for uint256[];
 
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
@@ -77,7 +80,7 @@ contract ChildValidatorSet is
     }
 
     /**
-     * @inheritdoc IChildValidatorSet
+     * @inheritdoc IChildValidatorSetBase
      */
     function commitEpoch(
         uint256 id,
@@ -104,14 +107,14 @@ contract ChildValidatorSet is
     }
 
     /**
-     * @inheritdoc IChildValidatorSet
+     * @inheritdoc IChildValidatorSetBase
      */
     function getCurrentValidatorSet() external view returns (address[] memory) {
         return sortedValidators(ACTIVE_VALIDATOR_SET_SIZE);
     }
 
     /**
-     * @inheritdoc IChildValidatorSet
+     * @inheritdoc IChildValidatorSetBase
      */
     function getEpochByBlock(uint256 blockNumber) external view returns (Epoch memory) {
         uint256 ret = epochEndBlocks.findUpperBound(blockNumber);
@@ -119,7 +122,7 @@ contract ChildValidatorSet is
     }
 
     /**
-     * @inheritdoc IChildValidatorSet
+     * @inheritdoc IChildValidatorSetBase
      */
     function totalActiveStake() public view returns (uint256 activeStake) {
         uint256 length = ACTIVE_VALIDATOR_SET_SIZE <= _validators.count ? ACTIVE_VALIDATOR_SET_SIZE : _validators.count;
@@ -158,25 +161,6 @@ contract ChildValidatorSet is
         }
     }
 
-    function _processQueue() private {
-        QueuedValidator[] storage queue = _queue.get();
-        for (uint256 i = 0; i < queue.length; ++i) {
-            QueuedValidator memory item = queue[i];
-            address validatorAddr = item.validator;
-            // values will be zero for non existing validators
-            Validator storage validator = _validators.get(validatorAddr);
-            // if validator already present in tree, remove andreinsert to maintain sort
-            if (_validators.exists(validatorAddr)) {
-                _validators.remove(validatorAddr);
-            }
-            validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
-            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
-            _validators.insert(validatorAddr, validator);
-            _queue.resetIndex(validatorAddr);
-        }
-        _queue.reset();
-    }
-
     function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)
         private
         view
@@ -195,5 +179,24 @@ contract ChildValidatorSet is
         uint256 commission = (validator.commission * delegatorReward) / 100;
 
         return (validatorReward + commission, delegatorReward - commission);
+    }
+
+    function _processQueue() private {
+        QueuedValidator[] storage queue = _queue.get();
+        for (uint256 i = 0; i < queue.length; ++i) {
+            QueuedValidator memory item = queue[i];
+            address validatorAddr = item.validator;
+            // values will be zero for non existing validators
+            Validator storage validator = _validators.get(validatorAddr);
+            // if validator already present in tree, remove andreinsert to maintain sort
+            if (_validators.exists(validatorAddr)) {
+                _validators.remove(validatorAddr);
+            }
+            validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
+            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
+            _validators.insert(validatorAddr, validator);
+            _queue.resetIndex(validatorAddr);
+        }
+        _queue.reset();
     }
 }

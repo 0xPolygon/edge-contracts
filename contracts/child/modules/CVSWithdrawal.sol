@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../../interfaces/ChildValidatorSet/ICVSWithdrawal.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "../../interfaces/modules/ICVSWithdrawal.sol";
 import "./CVSStorage.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract CVSWithdrawal is ICVSWithdrawal, CVSStorage, ReentrancyGuardUpgradeable {
+import "../../libs/WithdrawalQueue.sol";
+
+abstract contract CVSWithdrawal is ICVSWithdrawal, CVSStorage, ReentrancyGuardUpgradeable {
     using WithdrawalQueueLib for WithdrawalQueue;
 
     /**
