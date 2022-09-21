@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import "../../interfaces/modules/ICVSStorage.sol";
-
 import "../../interfaces/IBLS.sol";
 import "../../interfaces/IValidatorQueue.sol";
 import "../../interfaces/IWithdrawalQueue.sol";

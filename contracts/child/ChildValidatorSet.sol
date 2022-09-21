@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import "../interfaces/IChildValidatorSetBase.sol";
-
 import "./modules/CVSStorage.sol";
 import "./modules/CVSAccessControl.sol";
 import "./modules/CVSWithdrawal.sol";
@@ -25,9 +24,9 @@ contract ChildValidatorSet is
     CVSDelegation,
     System
 {
-    using SafeMathInt for int256;
     using ValidatorStorageLib for ValidatorTree;
     using ValidatorQueueLib for ValidatorQueue;
+    using SafeMathInt for int256;
     using ArraysUpgradeable for uint256[];
 
     /**

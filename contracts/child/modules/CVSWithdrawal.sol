@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import "../../interfaces/modules/ICVSWithdrawal.sol";
-
 import "./CVSStorage.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 

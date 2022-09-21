@@ -2,11 +2,9 @@
 pragma solidity 0.8.17;
 
 import "../../interfaces/modules/ICVSStaking.sol";
-
 import "./CVSStorage.sol";
 import "./CVSAccessControl.sol";
 import "./CVSWithdrawal.sol";
-
 import "../../interfaces/Errors.sol";
 
 import "../../libs/ValidatorStorage.sol";

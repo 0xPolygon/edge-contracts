@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import "../../interfaces/modules/ICVSAccessControl.sol";
-
 import "./CVSStorage.sol";
 import "../../common/Owned.sol";
 
