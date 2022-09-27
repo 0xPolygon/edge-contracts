@@ -83,6 +83,26 @@ interface IChildValidatorSet {
     ) external;
 
     /**
+     * @notice Allows the v3 client to commit epoch and slash double signers.
+     * @param curEpochId ID of epoch to be committed
+     * @param epoch Epoch data to be committed
+     * @param uptime Uptime data for the epoch being committed
+     * @param blockNumber Block number at which double signer occurred
+     * @param pbftRound Round number at which double signing occurred
+     * @param epochId ID of epoch where double signing occurred
+     * @param inputs Information about double signers to be slashed along with signatures and bitmap
+     */
+    function commitEpoch(
+        uint256 curEpochId,
+        Epoch calldata epoch,
+        Uptime calldata uptime,
+        uint256 blockNumber,
+        uint256 pbftRound,
+        uint256 epochId,
+        DoubleSignerSlashingInput[] calldata inputs
+    ) external;
+
+    /**
      * @notice Gets addresses of active validators in this epoch, sorted by total stake (self-stake + delegation)
      * @return Array of addresses of active validators in this epoch, sorted by total stake
      */

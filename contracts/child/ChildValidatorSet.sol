@@ -239,6 +239,9 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit Undelegated(msg.sender, validator, amount);
     }
 
+    /**
+     * @inheritdoc IChildValidatorSet
+     */
     function commitEpoch(
         uint256 curEpochId,
         Epoch calldata epoch,

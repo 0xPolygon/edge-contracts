@@ -61,6 +61,24 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 | epoch  | Epoch   | undefined   |
 | uptime | Uptime  | undefined   |
 
+### commitEpoch
+
+```solidity
+function commitEpoch(uint256 curEpochId, Epoch epoch, Uptime uptime, uint256 blockNumber, uint256 pbftRound, uint256 epochId, DoubleSignerSlashingInput[] inputs) external nonpayable
+```
+
+#### Parameters
+
+| Name        | Type                        | Description |
+| ----------- | --------------------------- | ----------- |
+| curEpochId  | uint256                     | undefined   |
+| epoch       | Epoch                       | undefined   |
+| uptime      | Uptime                      | undefined   |
+| blockNumber | uint256                     | undefined   |
+| pbftRound   | uint256                     | undefined   |
+| epochId     | uint256                     | undefined   |
+| inputs      | DoubleSignerSlashingInput[] | undefined   |
+
 ### delegate
 
 ```solidity
