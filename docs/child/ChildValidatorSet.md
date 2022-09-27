@@ -231,6 +231,24 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 | epoch  | Epoch   | undefined   |
 | uptime | Uptime  | undefined   |
 
+### commitEpoch
+
+```solidity
+function commitEpoch(uint256 curEpochId, Epoch epoch, Uptime uptime, uint256 blockNumber, uint256 pbftRound, uint256 epochId, DoubleSignerSlashingInput[] inputs) external nonpayable
+```
+
+#### Parameters
+
+| Name        | Type                        | Description |
+| ----------- | --------------------------- | ----------- |
+| curEpochId  | uint256                     | undefined   |
+| epoch       | Epoch                       | undefined   |
+| uptime      | Uptime                      | undefined   |
+| blockNumber | uint256                     | undefined   |
+| pbftRound   | uint256                     | undefined   |
+| epochId     | uint256                     | undefined   |
+| inputs      | DoubleSignerSlashingInput[] | undefined   |
+
 ### currentEpochId
 
 ```solidity
@@ -278,6 +296,37 @@ Gets amount delegated by delegator to validator.
 | Name | Type    | Description                     |
 | ---- | ------- | ------------------------------- |
 | \_0  | uint256 | Amount delegated (in MATIC wei) |
+
+### doubleSignerSlashes
+
+```solidity
+function doubleSignerSlashes(uint256, uint256) external view returns (address)
+```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+| \_1  | uint256 | undefined   |
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
+
+### doubleSigningSlashingPercent
+
+```solidity
+function doubleSigningSlashingPercent() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 ### epochEndBlocks
 
@@ -349,7 +398,7 @@ Gets addresses of active validators in this epoch, sorted by total stake (self-s
 function getDelegatorReward(address validator, address delegator) external view returns (uint256)
 ```
 
-Gets delegators&#39;s claimable rewards from validator.
+Gets delegators&#39;s unclaimed rewards with validator.
 
 #### Parameters
 
@@ -360,9 +409,9 @@ Gets delegators&#39;s claimable rewards from validator.
 
 #### Returns
 
-| Name | Type    | Description                                                        |
-| ---- | ------- | ------------------------------------------------------------------ |
-| \_0  | uint256 | Delegator&#39;s withdrawable rewards from validator (in MATIC wei) |
+| Name | Type    | Description                                                     |
+| ---- | ------- | --------------------------------------------------------------- |
+| \_0  | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
 
 ### getEpochByBlock
 
@@ -410,7 +459,7 @@ Gets validator by address.
 function getValidatorReward(address validator) external view returns (uint256)
 ```
 
-Gets validator&#39;s withdrawable rewards.
+Gets validator&#39;s unclaimed rewards.
 
 #### Parameters
 
@@ -420,9 +469,9 @@ Gets validator&#39;s withdrawable rewards.
 
 #### Returns
 
-| Name | Type    | Description                                         |
-| ---- | ------- | --------------------------------------------------- |
-| \_0  | uint256 | Validator&#39;s withdrawable rewards (in MATIC wei) |
+| Name | Type    | Description                                      |
+| ---- | ------- | ------------------------------------------------ |
+| \_0  | uint256 | Validator&#39;s unclaimed rewards (in MATIC wei) |
 
 ### initialize
 
@@ -792,6 +841,20 @@ event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 | validator `indexed` | address | undefined   |
 | amount              | uint256 | undefined   |
 
+### DoubleSignerSlashed
+
+```solidity
+event DoubleSignerSlashed(address indexed validator, uint256 indexed epoch, uint256 indexed round)
+```
+
+#### Parameters
+
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| validator `indexed` | address | undefined   |
+| epoch `indexed`     | uint256 | undefined   |
+| round `indexed`     | uint256 | undefined   |
+
 ### Initialized
 
 ```solidity
@@ -981,6 +1044,19 @@ error Exists(address validator)
 | Name      | Type    | Description |
 | --------- | ------- | ----------- |
 | validator | address | undefined   |
+
+### Invalid
+
+```solidity
+error Invalid(string src, string msg)
+```
+
+#### Parameters
+
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| src  | string | undefined   |
+| msg  | string | undefined   |
 
 ### NoTokensDelegated
 

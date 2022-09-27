@@ -30,6 +30,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
     // more granular commission?
     uint256 public constant MAX_COMMISSION = 100;
+    uint256 public doubleSigningSlashingPercent = 10;
 
     uint256 public currentEpochId;
     uint256[] public epochEndBlocks;
@@ -49,6 +50,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     mapping(uint256 => Epoch) public epochs;
     mapping(address => bool) public whitelist;
+    mapping(uint256 => mapping(uint256 => address)) public doubleSignerSlashes;
 
     modifier onlyValidator() {
         if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
@@ -237,6 +239,49 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit Undelegated(msg.sender, validator, amount);
     }
 
+    function commitEpoch(
+        uint256 curEpochId,
+        Epoch calldata epoch,
+        Uptime calldata uptime,
+        uint256 blockNumber,
+        uint256 pbftRound,
+        uint256 epochId,
+        DoubleSignerSlashingInput[] calldata inputs
+    ) external {
+        // first, assert all blockhashes are unique
+        require(_assertUniqueBlockhash(inputs), "BLOCKHASH_NOT_UNIQUE");
+
+        // check aggregations are signed appropriately
+        for (uint256 i = 0; i < inputs.length; i++) {
+            _checkPubkeyAggregation(
+                keccak256(abi.encode(blockNumber, pbftRound, epochId, inputs[i].blockHash)),
+                inputs[i].bitmap,
+                inputs[i].signature
+            );
+        }
+
+        // get full validator set
+        uint256 validatorSetLength = _validators.count;
+        address[] memory validatorSet = sortedValidators(validatorSetLength);
+        bool[] memory slashingSet = new bool[](validatorSetLength);
+        for (uint256 i = 0; i < validatorSetLength; i++) {
+            uint256 count = 0;
+            for (uint256 j = 0; j < inputs.length; j++) {
+                // check if bitmap index has validator
+                if (_getValueFromBitmap(inputs[j].bitmap, i)) {
+                    count++;
+                }
+                // slash validators that have signed multiple blocks
+                if (count > 1) {
+                    _slashDoubleSigner(validatorSet[i], epochId, pbftRound);
+                    slashingSet[i] = true;
+                    break;
+                }
+            }
+        }
+        _endEpochOnSlashingEvent(curEpochId, epoch, uptime, slashingSet);
+    }
+
     /**
      * @inheritdoc IChildValidatorSet
      */
@@ -422,7 +467,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
             address validatorAddr = item.validator;
             // values will be zero for non existing validators
             Validator storage validator = _validators.get(validatorAddr);
-            // if validator already present in tree, remove andreinsert to maintain sort
+            // if validator already present in tree, remove and reinsert to maintain sort
             if (_validators.exists(validatorAddr)) {
                 _validators.remove(validatorAddr);
             }
@@ -461,6 +506,71 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         emit RemovedFromWhitelist(account);
     }
 
+    function _slashDoubleSigner(
+        address key,
+        uint256 epoch,
+        uint256 pbftRound
+    ) private {
+        if (doubleSignerSlashes[epoch][pbftRound] != address(0)) {
+            return;
+        }
+        // we can optimize gas here but will not compile without Yul IR
+        Validator storage validator = _validators.get(key);
+        doubleSignerSlashes[epoch][pbftRound] = key;
+        validator.totalStake -= (validator.totalStake * doubleSigningSlashingPercent) / 100;
+        validator.stake -= (validator.stake * doubleSigningSlashingPercent) / 100;
+        emit DoubleSignerSlashed(key, epoch, pbftRound);
+    }
+
+    function _endEpochOnSlashingEvent(
+        uint256 id,
+        Epoch calldata epoch,
+        Uptime calldata uptime,
+        bool[] memory slashingSet
+    ) private {
+        uint256 newEpochId = currentEpochId++;
+        require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
+        require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
+        require(epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock, "INVALID_START_BLOCK");
+
+        Epoch storage newEpoch = epochs[newEpochId];
+        newEpoch.endBlock = epoch.endBlock;
+        newEpoch.startBlock = epoch.startBlock;
+        newEpoch.epochRoot = epoch.epochRoot;
+
+        epochEndBlocks.push(epoch.endBlock);
+
+        uint256 length = uptime.uptimeData.length;
+
+        require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
+
+        uint256 activeStake = totalActiveStake();
+        uint256 reward = (epochReward * (((epoch.endBlock - epoch.startBlock) * 100) / 64)) / 100;
+
+        for (uint256 i = 0; i < length; ++i) {
+            // skip reward distribution for slashed validators
+            if (slashingSet[i] == true) {
+                continue;
+            }
+            UptimeData memory uptimeData = uptime.uptimeData[i];
+            Validator storage validator = _validators.get(uptimeData.validator);
+            uint256 validatorReward = (reward * validator.totalStake * uptimeData.signedBlocks) /
+                (activeStake * uptime.totalBlocks);
+            (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
+                uptimeData.validator,
+                validatorReward
+            );
+            validator.withdrawableRewards += validatorShares;
+            emit ValidatorRewardDistributed(uptimeData.validator, validatorReward);
+            _validators.getDelegationPool(uptimeData.validator).distributeReward(delegatorShares);
+            emit DelegatorRewardDistributed(uptimeData.validator, delegatorShares);
+        }
+
+        _processQueue();
+
+        emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
+    }
+
     function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)
         private
         view
@@ -479,6 +589,52 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 commission = (validator.commission * delegatorReward) / 100;
 
         return (validatorReward + commission, delegatorReward - commission);
+    }
+
+    /**
+     * @notice verifies an aggregated BLS signature using BLS precompile
+     * @param hash hash of the message signed
+     * @param signature the signed message
+     * @param bitmap bitmap of which validators have signed
+     */
+    function _checkPubkeyAggregation(
+        bytes32 hash,
+        bytes calldata signature,
+        bytes calldata bitmap
+    ) private view {
+        // verify signatures` for provided sig data and sigs bytes
+        // solhint-disable-next-line avoid-low-level-calls
+        // slither-disable-next-line low-level-calls
+        (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
+            gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
+        }(abi.encode(hash, signature, bitmap));
+        bool verified = abi.decode(returnData, (bool));
+        require(callSuccess && verified, "SIGNATURE_VERIFICATION_FAILED");
+    }
+
+    function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {
+        uint256 byteNumber = index / 8;
+        uint8 bitNumber = uint8(index % 8);
+
+        if (byteNumber > bitmap.length) {
+            return false;
+        }
+
+        // Get the value of the bit at the given 'index' in a byte.
+        return uint8(bitmap[byteNumber]) & (1 << bitNumber) > 0;
+    }
+
+    function _assertUniqueBlockhash(DoubleSignerSlashingInput[] calldata inputs) private pure returns (bool) {
+        uint256 length = inputs.length;
+        require(length >= 2, "INVALID_LENGTH");
+        for (uint256 i = 0; i < length; i++) {
+            for (uint256 j = i + 1; j < length; j++) {
+                if (inputs[i].blockHash == inputs[j].blockHash) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     // slither-disable-next-line unused-state,naming-convention

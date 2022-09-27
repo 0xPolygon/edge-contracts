@@ -32,6 +32,12 @@ struct Epoch {
     bytes32 epochRoot;
 }
 
+struct DoubleSignerSlashingInput {
+    bytes32 blockHash;
+    bytes bitmap;
+    bytes signature;
+}
+
 /**
  * @title ChildValidatorSet
  * @author Polygon Technology
@@ -59,8 +65,10 @@ interface IChildValidatorSet {
     event Withdrawal(address indexed account, address indexed to, uint256 amount);
     event ValidatorRewardDistributed(address indexed validator, uint256 amount);
     event DelegatorRewardDistributed(address indexed validator, uint256 amount);
+    event DoubleSignerSlashed(address indexed validator, uint256 indexed epoch, uint256 indexed round);
 
     error StakeRequirement(string src, string msg);
+    error Invalid(string src, string msg);
 
     /**
      * @notice Allows the v3 client to commit epochs to this contract.
