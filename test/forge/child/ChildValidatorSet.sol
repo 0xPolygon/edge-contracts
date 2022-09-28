@@ -103,7 +103,19 @@ contract ChildValidatorSetTest is TestPlus, System {
     function testCannotInitialize_Reinitialization() public {
         vm.startPrank(SYSTEM);
 
-        // vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        childValidatorSet.initialize(
+            epochReward,
+            minStake,
+            minDelegation,
+            validatorAddresses,
+            validatorPubkeys,
+            validatorStakes,
+            bls,
+            messagePoint,
+            governance
+        );
+
+        vm.expectRevert(bytes("Initializable: contract is already initialized"));
 
         childValidatorSet.initialize(
             epochReward,
