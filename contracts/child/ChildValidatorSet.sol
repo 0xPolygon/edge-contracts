@@ -251,11 +251,13 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 epochId,
         DoubleSignerSlashingInput[] calldata inputs
     ) external {
+        uint256 length = inputs.length;
+        require(length >= 2, "INVALID_LENGTH");
         // first, assert all blockhashes are unique
         require(_assertUniqueBlockhash(inputs), "BLOCKHASH_NOT_UNIQUE");
 
         // check aggregations are signed appropriately
-        for (uint256 i = 0; i < inputs.length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             _checkPubkeyAggregation(
                 keccak256(abi.encode(blockNumber, pbftRound, epochId, inputs[i].blockHash)),
                 inputs[i].bitmap,
@@ -269,7 +271,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         bool[] memory slashingSet = new bool[](validatorSetLength);
         for (uint256 i = 0; i < validatorSetLength; i++) {
             uint256 count = 0;
-            for (uint256 j = 0; j < inputs.length; j++) {
+            for (uint256 j = 0; j < length; j++) {
                 // check if bitmap index has validator
                 if (_getValueFromBitmap(inputs[j].bitmap, i)) {
                     count++;
@@ -517,11 +519,12 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         if (doubleSignerSlashes[epoch][pbftRound] != address(0)) {
             return;
         }
-        // we can optimize gas here but will not compile without Yul IR
         Validator storage validator = _validators.get(key);
+        uint256 valTotalStake = validator.totalStake;
+        uint256 valStake = validator.stake;
         doubleSignerSlashes[epoch][pbftRound] = key;
-        validator.totalStake -= (validator.totalStake * doubleSigningSlashingPercent) / 100;
-        validator.stake -= (validator.stake * doubleSigningSlashingPercent) / 100;
+        validator.totalStake -= (valTotalStake * doubleSigningSlashingPercent) / 100;
+        validator.stake -= (valStake * doubleSigningSlashingPercent) / 100;
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
 
@@ -629,7 +632,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     function _assertUniqueBlockhash(DoubleSignerSlashingInput[] calldata inputs) private pure returns (bool) {
         uint256 length = inputs.length;
-        require(length >= 2, "INVALID_LENGTH");
         for (uint256 i = 0; i < length; i++) {
             for (uint256 j = i + 1; j < length; j++) {
                 if (inputs[i].blockHash == inputs[j].blockHash) {
