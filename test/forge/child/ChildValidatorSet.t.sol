@@ -46,7 +46,7 @@ abstract contract Initialized is Uninitialized {
     function setUp() public override {
         super.setUp();
 
-        vm.startPrank(SYSTEM);
+        vm.prank(SYSTEM);
 
         childValidatorSet.initialize(
             epochReward,
@@ -125,6 +125,7 @@ contract ChildValidatorSetTest_Initialized is Initialized {
     function testCannotInitialize_Reinitialization() public {
         vm.expectRevert("Initializable: contract is already initialized");
 
+        vm.startPrank(SYSTEM);
         childValidatorSet.initialize(
             epochReward,
             minStake,
