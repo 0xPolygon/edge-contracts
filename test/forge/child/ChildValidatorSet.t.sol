@@ -9,7 +9,7 @@ import "contracts/interfaces/IValidator.sol";
 
 import "../utils/TestPlus.sol";
 
-contract ChildValidatorSetTest is TestPlus, System {
+abstract contract Uninitialized is TestPlus, System {
     ChildValidatorSet childValidatorSet;
     BLS bls;
 
@@ -23,7 +23,7 @@ contract ChildValidatorSetTest is TestPlus, System {
     uint256[2] messagePoint;
     address governance;
 
-    function setUp() public {
+    function setUp() public virtual {
         epochReward = 0.0000001 ether;
         minStake = 10000;
         minDelegation = 10000;
@@ -40,14 +40,34 @@ contract ChildValidatorSetTest is TestPlus, System {
         messagePoint[0] = 0;
         messagePoint[1] = 0;
     }
+}
 
+abstract contract Initialized is Uninitialized {
+    function setUp() public override {
+        super.setUp();
+
+        vm.startPrank(SYSTEM);
+
+        childValidatorSet.initialize(
+            epochReward,
+            minStake,
+            minDelegation,
+            validatorAddresses,
+            validatorPubkeys,
+            validatorStakes,
+            bls,
+            messagePoint,
+            governance
+        );
+    }
+}
+
+contract ChildValidatorSetTest_Unitialized is Uninitialized {
     function testConstructor() public {
         assertEq(childValidatorSet.currentEpochId(), 0);
     }
 
     function testCannotInitialize_Unauthorized() public {
-        changePrank(address(this));
-
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
 
         childValidatorSet.initialize(
@@ -99,23 +119,11 @@ contract ChildValidatorSetTest is TestPlus, System {
         assertEq(childValidatorSet.message(1), messagePoint[1]);
         assertEq(childValidatorSet.totalActiveStake(), minStake * 2);
     }
+}
 
+contract ChildValidatorSetTest_Initialized is Initialized {
     function testCannotInitialize_Reinitialization() public {
-        vm.startPrank(SYSTEM);
-
-        childValidatorSet.initialize(
-            epochReward,
-            minStake,
-            minDelegation,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
-        );
-
-        vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        vm.expectRevert("Initializable: contract is already initialized");
 
         childValidatorSet.initialize(
             epochReward,
