@@ -31,8 +31,11 @@ abstract contract CVSStorage is ICVSStorage {
     /// @notice Message to sign for registration
     uint256[2] public message;
 
+    // slither-disable-next-line naming-convention
     ValidatorTree internal _validators;
+    // slither-disable-next-line naming-convention
     ValidatorQueue internal _queue;
+    // slither-disable-next-line naming-convention
     mapping(address => WithdrawalQueue) internal _withdrawals;
 
     mapping(uint256 => Epoch) public epochs;
