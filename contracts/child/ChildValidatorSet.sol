@@ -242,7 +242,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     /**
      * @inheritdoc IChildValidatorSet
      */
-    function commitEpoch(
+    function commitEpochWithDoubleSignerSlashing(
         uint256 curEpochId,
         Epoch calldata epoch,
         Uptime calldata uptime,

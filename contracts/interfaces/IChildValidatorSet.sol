@@ -92,7 +92,7 @@ interface IChildValidatorSet {
      * @param epochId ID of epoch where double signing occurred
      * @param inputs Information about double signers to be slashed along with signatures and bitmap
      */
-    function commitEpoch(
+    function commitEpochWithDoubleSignerSlashing(
         uint256 curEpochId,
         Epoch calldata epoch,
         Uptime calldata uptime,

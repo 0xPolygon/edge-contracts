@@ -231,10 +231,10 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 | epoch  | Epoch   | undefined   |
 | uptime | Uptime  | undefined   |
 
-### commitEpoch
+### commitEpochWithDoubleSignerSlashing
 
 ```solidity
-function commitEpoch(uint256 curEpochId, Epoch epoch, Uptime uptime, uint256 blockNumber, uint256 pbftRound, uint256 epochId, DoubleSignerSlashingInput[] inputs) external nonpayable
+function commitEpochWithDoubleSignerSlashing(uint256 curEpochId, Epoch epoch, Uptime uptime, uint256 blockNumber, uint256 pbftRound, uint256 epochId, DoubleSignerSlashingInput[] inputs) external nonpayable
 ```
 
 #### Parameters
