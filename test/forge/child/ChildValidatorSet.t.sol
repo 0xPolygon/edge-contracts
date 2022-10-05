@@ -6,6 +6,7 @@ import {System} from "contracts/child/ChildValidatorSet.sol";
 import {BLS} from "contracts/common/BLS.sol";
 import "contracts/interfaces/Errors.sol";
 import "contracts/interfaces/IValidator.sol";
+import "contracts/interfaces/IChildValidatorSet.sol";
 
 import "../utils/TestPlus.sol";
 
@@ -22,6 +23,9 @@ abstract contract Uninitialized is TestPlus, System {
     uint256[] validatorStakes;
     uint256[2] messagePoint;
     address governance;
+    Epoch epoch;
+    Uptime uptime;
+    uint256 public id;
 
     function setUp() public virtual {
         epochReward = 0.0000001 ether;
@@ -137,5 +141,135 @@ contract ChildValidatorSetTest_Initialized is Initialized {
             messagePoint,
             governance
         );
+    }
+
+    function testCannotCommitEpoch_Unauthorized() public {
+        id = 0;
+        epoch = Epoch({startBlock: 0, endBlock: 0, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptime.epochId = 0;
+        uptime.totalBlocks = 0;
+
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
+    function testCannotCommitEpoch_UnexpectedId() public {
+        id = 0;
+        epoch = Epoch({startBlock: 0, endBlock: 0, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptime.epochId = 0;
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("UNEXPECTED_EPOCH_ID");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
+    function testCannotCommitEpoch_NoBlocksCommited() public {
+        id = 1;
+        epoch = Epoch({startBlock: 0, endBlock: 0, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptime.epochId = 0;
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("NO_BLOCKS_COMMITTED");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
+    function testCannotCommitEpoch_IncompleteSprint() public {
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 63, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptime.epochId = 0;
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_64");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
+    function testCannotCommitEpoch_NoCommittedEpoch() public {
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptime.epochId = 0;
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("EPOCH_NOT_COMMITTED");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
+    function testCannotCommitEpoch_InvalidLength() public {
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("INVALID_LENGTH");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
+    function testCommitEpoch() public {
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 1;
+
+        vm.startPrank(SYSTEM);
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+
+        (uint256 startBlock, uint256 endBlock, bytes32 epochRoot) = childValidatorSet.epochs(1);
+        assertEq(startBlock, epoch.startBlock);
+        assertEq(endBlock, epoch.endBlock);
+        assertEq(epochRoot, epoch.epochRoot);
+    }
+
+    function testCurrentValidatorSet() public {
+        address[] memory currentValidatorSet = childValidatorSet.getCurrentValidatorSet();
+        assertEq(currentValidatorSet[0], admin);
+    }
+
+    function testGetEpochByBlock() public {
+        Epoch memory storedEpoch = childValidatorSet.getEpochByBlock(64);
+        assertEq(storedEpoch.startBlock, epoch.startBlock);
+        assertEq(storedEpoch.endBlock, epoch.endBlock);
+        assertEq(storedEpoch.epochRoot, epoch.epochRoot);
+    }
+
+    function testGetNonExistentEpochByBlock() public {
+        Epoch memory storedEpoch = childValidatorSet.getEpochByBlock(65);
+        assertEq(storedEpoch.startBlock, 0);
+        assertEq(storedEpoch.endBlock, 0);
+        assertEq(storedEpoch.epochRoot, 0);
     }
 }
