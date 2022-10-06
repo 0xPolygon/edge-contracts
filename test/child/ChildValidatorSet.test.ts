@@ -4,7 +4,7 @@ import { ethers, upgrades } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
-// import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
+import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet } from "../../typechain";
 import { customError } from "../util";
 import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
@@ -29,6 +29,7 @@ describe("ChildValidatorSet", () => {
     id: number,
     epoch: any,
     uptime: any,
+    doubleSignerSlashingInput: any,
     childValidatorSetBalance: BigNumber,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
@@ -158,7 +159,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 0,
       endBlock: 0,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -175,7 +175,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 0,
       endBlock: 0,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -192,7 +191,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 0,
       endBlock: 0,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -209,7 +207,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 1,
       endBlock: 63,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -228,7 +225,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 1,
       endBlock: 64,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -245,7 +241,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 1,
       endBlock: 64,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
@@ -290,7 +285,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 64,
       endBlock: 127,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -738,6 +732,298 @@ describe("ChildValidatorSet", () => {
       expect(event?.args?.amount).to.equal(reward);
 
       await expect(tx).to.emit(childValidatorSet, "WithdrawalRegistered").withArgs(accounts[3].address, reward);
+    });
+  });
+
+  describe("commitEpochWithDoubleSignerSlashing", async () => {
+    it("failed by invalid length", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash = ethers.utils.randomBytes(32);
+      const signature = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash,
+          bitmap: "0x",
+          signature,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("INVALID_LENGTH");
+    });
+
+    it("failed by blockhash not unique", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash = ethers.utils.randomBytes(32);
+      const signature = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash,
+          bitmap: "0x",
+          signature,
+        },
+        {
+          blockHash,
+          bitmap: "0x",
+          signature,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("BLOCKHASH_NOT_UNIQUE");
+    });
+
+    it("failed by signature verification failed", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x",
+          signature: signature2,
+        },
+      ];
+
+      await hre.network.provider.send("hardhat_setCode", [
+        "0x0000000000000000000000000000000000002030",
+        alwaysFalseBytecode,
+      ]);
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
+    });
+
+    it("failed by unexpected epoch id", async () => {
+      id = 8;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await hre.network.provider.send("hardhat_setCode", [
+        "0x0000000000000000000000000000000000002030",
+        alwaysTrueBytecode,
+      ]);
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
+    });
+    it("failed by no blocks committed", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 513,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("NO_BLOCKS_COMMITTED");
     });
   });
 
