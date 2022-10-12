@@ -18,6 +18,7 @@ abstract contract Uninitialized is TestPlus, System {
     uint256 public minStake;
     uint256 public minDelegation;
     address public admin;
+    address public alice;
     address[] validatorAddresses;
     uint256[4][] validatorPubkeys;
     uint256[] validatorStakes;
@@ -37,6 +38,7 @@ abstract contract Uninitialized is TestPlus, System {
 
         admin = makeAddr("admin");
         governance = makeAddr("governance");
+        alice = makeAddr("Alice");
 
         validatorAddresses.push(admin);
         validatorPubkeys.push([0, 0, 0, 0]);
@@ -254,6 +256,24 @@ contract ChildValidatorSetTest_Initialized is Initialized {
         assertEq(epochRoot, epoch.epochRoot);
     }
 
+    function testCannotCommitEpoch_OldBlock() public {
+        id = 1;
+        epoch = Epoch({startBlock: 0, endBlock: 63, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("INVALID_START_BLOCK");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
     function testCurrentValidatorSet() public {
         address[] memory currentValidatorSet = childValidatorSet.getCurrentValidatorSet();
         assertEq(currentValidatorSet[0], admin);
@@ -271,5 +291,70 @@ contract ChildValidatorSetTest_Initialized is Initialized {
         assertEq(storedEpoch.startBlock, 0);
         assertEq(storedEpoch.endBlock, 0);
         assertEq(storedEpoch.epochRoot, 0);
+    }
+
+    function testCommitEpochWithoutStaking() public {
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 1000000000000}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 1;
+
+        vm.startPrank(SYSTEM);
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+
+        (uint256 startBlock, uint256 endBlock, bytes32 epochRoot) = childValidatorSet.epochs(1);
+        assertEq(startBlock, epoch.startBlock);
+        assertEq(endBlock, epoch.endBlock);
+        assertEq(epochRoot, epoch.epochRoot);
+    }
+
+    function testCannotAddWhitelist() public {
+        vm.startPrank(alice);
+
+        address[] memory whitelistAddresses = new address[](1);
+        whitelistAddresses[0] = alice;
+
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "OWNER"));
+        childValidatorSet.addToWhitelist(whitelistAddresses);
+    }
+
+    function testCannotRemoveWhitelist() public {
+        vm.startPrank(alice);
+
+        address[] memory whitelistAddresses = new address[](1);
+        whitelistAddresses[0] = alice;
+
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "OWNER"));
+        childValidatorSet.removeFromWhitelist(whitelistAddresses);
+    }
+
+    function testAddWhitelist() public {
+        vm.startPrank(governance);
+        address[] memory whitelistAddresses = new address[](2);
+        whitelistAddresses[0] = admin;
+        whitelistAddresses[1] = alice;
+
+        childValidatorSet.addToWhitelist(whitelistAddresses);
+        assertEq(childValidatorSet.whitelist(admin), true);
+        assertEq(childValidatorSet.whitelist(alice), true);
+    }
+
+    function testRemoveWhitelist() public {
+        assertEq(childValidatorSet.whitelist(admin), true);
+        vm.startPrank(governance);
+        address[] memory whitelistAddresses = new address[](2);
+        whitelistAddresses[0] = admin;
+
+        childValidatorSet.removeFromWhitelist(whitelistAddresses);
+        assertEq(childValidatorSet.whitelist(admin), false);
+    }
+
+    function testCannotRegister_NotWhitelisted() public {
+        bytes message = "polygon-v3-validator";
     }
 }
