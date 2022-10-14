@@ -19,11 +19,14 @@ abstract contract Uninitialized is TestPlus, System {
     uint256 public minDelegation;
     address public admin;
     address public alice;
+    address public bob;
     address[] validatorAddresses;
     uint256[4][] validatorPubkeys;
     uint256[] validatorStakes;
     uint256[2] messagePoint;
     address governance;
+    uint256[2] signature;
+    uint256[4] pubkey;
     Epoch epoch;
     Uptime uptime;
     uint256 public id;
@@ -39,6 +42,7 @@ abstract contract Uninitialized is TestPlus, System {
         admin = makeAddr("admin");
         governance = makeAddr("governance");
         alice = makeAddr("Alice");
+        bob = makeAddr("Bob");
 
         validatorAddresses.push(admin);
         validatorPubkeys.push([0, 0, 0, 0]);
@@ -49,10 +53,18 @@ abstract contract Uninitialized is TestPlus, System {
 }
 
 abstract contract Initialized is Uninitialized {
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         vm.prank(SYSTEM);
+
+        string[] memory cmd = new string[](3);
+        cmd[0] = "npx";
+        cmd[1] = "ts-node";
+        cmd[2] = "test/forge/child/generateMsg.ts";
+        bytes memory out = vm.ffi(cmd);
+
+        (messagePoint, signature, pubkey) = abi.decode(out, (uint256[2], uint256[2], uint256[4]));
 
         childValidatorSet.initialize(
             epochReward,
@@ -65,6 +77,38 @@ abstract contract Initialized is Uninitialized {
             messagePoint,
             governance
         );
+    }
+}
+
+abstract contract Whitelisted is Initialized {
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(governance);
+        address[] memory whitelistAddresses = new address[](2);
+        whitelistAddresses[0] = admin;
+        whitelistAddresses[1] = alice;
+
+        childValidatorSet.addToWhitelist(whitelistAddresses);
+    }
+}
+
+abstract contract Registered is Whitelisted {
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(alice);
+        childValidatorSet.register(signature, pubkey);
+    }
+}
+
+abstract contract Staked is Registered {
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(alice);
+        vm.deal(alice, 100 ether);
+        childValidatorSet.stake{value: minStake * 2}();
     }
 }
 
@@ -353,8 +397,88 @@ contract ChildValidatorSetTest_Initialized is Initialized {
         childValidatorSet.removeFromWhitelist(whitelistAddresses);
         assertEq(childValidatorSet.whitelist(admin), false);
     }
+}
+
+contract ChildValidatorSetTest_Whitelisted is Whitelisted {
+    event NewValidator(address indexed validator, uint256[4] blsKey);
 
     function testCannotRegister_NotWhitelisted() public {
-        bytes message = "polygon-v3-validator";
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "WHITELIST"));
+        childValidatorSet.register(signature, pubkey);
+    }
+
+    function testCannotRegister_InvalidSignature() public {
+        pubkey[0] = pubkey[0] + 1;
+        vm.startPrank(admin);
+        vm.expectRevert("INVALID_SIGNATURE");
+        childValidatorSet.register(signature, pubkey);
+    }
+
+    function testRegister() public {
+        vm.startPrank(alice);
+        vm.expectEmit(true, true, false, true);
+        emit NewValidator(alice, pubkey);
+        childValidatorSet.register(signature, pubkey);
+
+        assertEq(childValidatorSet.whitelist(alice), false);
+        Validator memory validator = childValidatorSet.getValidator(alice);
+        assertEq(keccak256(abi.encode(validator.blsKey)), keccak256(abi.encode(pubkey)));
+        assertEq(validator.stake, 0);
+        assertEq(validator.totalStake, 0);
+        assertEq(validator.commission, 0);
+        assertEq(validator.withdrawableRewards, 0);
+        assertEq(validator.active, true);
+    }
+}
+
+contract ChildValidatorSetTest_Registered is Registered {
+    function testCannotStake_NotWhitelistedvalidator() public {
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "VALIDATOR"));
+        childValidatorSet.stake{value: minStake}();
+    }
+
+    function testCannotStake_StakeTooLow() public {
+        vm.startPrank(alice);
+        vm.deal(alice, 100 ether);
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "stake", "STAKE_TOO_LOW"));
+        childValidatorSet.stake{value: minStake - 1}();
+    }
+
+    function testStake() public {
+        vm.startPrank(alice);
+        vm.deal(alice, 100 ether);
+        childValidatorSet.stake{value: minStake * 2}();
+        assertEq(childValidatorSet.totalActiveStake(), minStake * 2);
+
+        //Get 0 sortedValidators
+        address[] memory validatorAddresses = childValidatorSet.sortedValidators(0);
+        assertEq(validatorAddresses.length, 0);
+    }
+}
+
+contract ChildValidatorSetTest_Staked is Staked {
+    function testQueueProcess() public {
+        Validator memory validator = childValidatorSet.getValidator(alice);
+        assertEq(validator.stake, 0);
+
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 1;
+
+        vm.startPrank(SYSTEM);
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+
+        validator = childValidatorSet.getValidator(alice);
+        assertEq(validator.stake, minStake * 2);
+
+        //Get 2 sortedValidators
+        address[] memory validatorAddresses = childValidatorSet.sortedValidators(3);
+        assertEq(keccak256(abi.encodePacked(validatorAddresses)), keccak256(abi.encodePacked([alice, admin])));
     }
 }
