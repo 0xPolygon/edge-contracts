@@ -161,7 +161,7 @@ maps a field element to the curve
 function verifyMultiple(uint256[2] signature, uint256[4][] pubkeys, uint256[2][] messages) external view returns (bool checkResult, bool callSuccess)
 ```
 
-verifies multiple signatures (separate msgs for ea sig)
+verifies multiple non-aggregated signatures where each message is unique
 
 #### Parameters
 
@@ -184,7 +184,7 @@ verifies multiple signatures (separate msgs for ea sig)
 function verifyMultipleSameMsg(uint256[2] signature, uint256[4][] pubkeys, uint256[2] message) external view returns (bool checkResult, bool callSuccess)
 ```
 
-verifies multiple signatures (one msg for all)
+verifies an aggregated signature where the same message is signed
 
 #### Parameters
 

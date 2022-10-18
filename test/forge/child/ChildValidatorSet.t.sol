@@ -40,7 +40,7 @@ abstract contract Uninitialized is TestPlus, System {
         childValidatorSet = new ChildValidatorSet();
 
         admin = makeAddr("admin");
-        governance = makeAddr("governance");
+        governance = admin;
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
 
@@ -112,6 +112,129 @@ abstract contract Staked is Registered {
     }
 }
 
+abstract contract QueueProcessed is Staked {
+    function setUp() public virtual override {
+        super.setUp();
+
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 1}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 1;
+
+        vm.prank(SYSTEM);
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+}
+
+abstract contract UnstakedPartially is QueueProcessed {
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(alice);
+        childValidatorSet.unstake(minStake);
+    }
+}
+
+abstract contract UnstakedCompletely is UnstakedPartially {
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(alice);
+        childValidatorSet.unstake(minStake);
+    }
+}
+
+abstract contract QueueProcessedAfterUnstake is UnstakedCompletely {
+    function setUp() public virtual override {
+        super.setUp();
+
+        id = 2;
+        epoch = Epoch({startBlock: 65, endBlock: 128, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: alice, signedBlocks: 1}));
+
+        uptime.epochId = 2;
+        uptime.totalBlocks = 2;
+
+        vm.prank(SYSTEM);
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+}
+
+abstract contract Withdrawn is QueueProcessedAfterUnstake {
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(alice);
+        childValidatorSet.withdraw(alice);
+
+        //Whitelist Alice again
+        vm.prank(governance);
+        address[] memory whitelistAddresses = new address[](1);
+        whitelistAddresses[0] = alice;
+
+        childValidatorSet.addToWhitelist(whitelistAddresses);
+
+        //Register Alice again
+        vm.prank(alice);
+        childValidatorSet.register(signature, pubkey);
+
+        //Stake Again
+        vm.prank(alice);
+        vm.deal(alice, 100 ether);
+        childValidatorSet.stake{value: minStake * 2}();
+    }
+}
+
+abstract contract FirstDelegated is Withdrawn {
+    function setUp() public virtual override {
+        super.setUp();
+
+        uint256 delegateAmount = minDelegation + 1;
+        bool restake = false;
+
+        vm.prank(bob);
+        vm.deal(bob, 100 ether);
+
+        childValidatorSet.delegate{value: delegateAmount}(alice, restake);
+    }
+}
+
+abstract contract SecondDelegated is FirstDelegated {
+    function setUp() public virtual override {
+        super.setUp();
+
+        uint256 delegateAmount = minDelegation + 1;
+        bool restake = false;
+
+        vm.prank(bob);
+        vm.deal(bob, 100 ether);
+
+        childValidatorSet.delegate{value: delegateAmount}(alice, restake);
+    }
+}
+
+abstract contract ThirdDelegated is SecondDelegated {
+    function setUp() public virtual override {
+        super.setUp();
+
+        uint256 delegateAmount = minDelegation + 1;
+        bool restake = true;
+
+        vm.prank(bob);
+        vm.deal(bob, 100 ether);
+
+        childValidatorSet.delegate{value: delegateAmount}(alice, restake);
+    }
+}
+
 contract ChildValidatorSetTest_Unitialized is Uninitialized {
     function testConstructor() public {
         assertEq(childValidatorSet.currentEpochId(), 0);
@@ -171,7 +294,7 @@ contract ChildValidatorSetTest_Unitialized is Uninitialized {
     }
 }
 
-contract ChildValidatorSetTest_Initialized is Initialized {
+contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
     function testCannotInitialize_Reinitialization() public {
         vm.expectRevert("Initializable: contract is already initialized");
 
@@ -399,7 +522,7 @@ contract ChildValidatorSetTest_Initialized is Initialized {
     }
 }
 
-contract ChildValidatorSetTest_Whitelisted is Whitelisted {
+contract ChildValidatorSetTest_Register is Whitelisted {
     event NewValidator(address indexed validator, uint256[4] blsKey);
 
     function testCannotRegister_NotWhitelisted() public {
@@ -416,7 +539,7 @@ contract ChildValidatorSetTest_Whitelisted is Whitelisted {
 
     function testRegister() public {
         vm.startPrank(alice);
-        vm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, false, false, true);
         emit NewValidator(alice, pubkey);
         childValidatorSet.register(signature, pubkey);
 
@@ -431,7 +554,7 @@ contract ChildValidatorSetTest_Whitelisted is Whitelisted {
     }
 }
 
-contract ChildValidatorSetTest_Registered is Registered {
+contract ChildValidatorSetTest_Stake is Registered {
     function testCannotStake_NotWhitelistedvalidator() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "VALIDATOR"));
         childValidatorSet.stake{value: minStake}();
@@ -456,7 +579,7 @@ contract ChildValidatorSetTest_Registered is Registered {
     }
 }
 
-contract ChildValidatorSetTest_Staked is Staked {
+contract ChildValidatorSetTest_ProcessQueue is Staked {
     function testQueueProcess() public {
         Validator memory validator = childValidatorSet.getValidator(alice);
         assertEq(validator.stake, 0);
@@ -480,5 +603,193 @@ contract ChildValidatorSetTest_Staked is Staked {
         //Get 2 sortedValidators
         address[] memory validatorAddresses = childValidatorSet.sortedValidators(3);
         assertEq(keccak256(abi.encodePacked(validatorAddresses)), keccak256(abi.encodePacked([alice, admin])));
+    }
+}
+
+contract ChildValidatorSetTest_UnstakePartially is QueueProcessed {
+    function testCannotUnstake_InsufficientBalance() public {
+        vm.startPrank(bob);
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "unstake", "INSUFFICIENT_BALANCE"));
+        childValidatorSet.unstake(1);
+    }
+
+    function testCannotUnstake_IntOverflow() public {
+        vm.expectRevert(stdError.assertionError);
+        // vm.expectRevert(stdError.arithmeticError);
+        // vm.expectRevert();
+        childValidatorSet.unstake(2**256 - 1);
+    }
+
+    function testCannotUnstake_UnstakeMoreThanStake() public {
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "unstake", "INSUFFICIENT_BALANCE"));
+        childValidatorSet.unstake(minStake * 2 + 1);
+    }
+
+    function testCannotUnstake_StakeTooLow() public {
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "unstake", "STAKE_TOO_LOW"));
+        childValidatorSet.unstake(minStake + 1);
+    }
+
+    function testUnstakePartially() public {
+        vm.startPrank(alice);
+        childValidatorSet.unstake(minStake);
+    }
+}
+
+contract ChildValidatorSetTest_UnstakeCompletely is UnstakedPartially {
+    function testCannotUnstake_InsufficientBalance() public {
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "unstake", "INSUFFICIENT_BALANCE"));
+        childValidatorSet.unstake(minStake + 1);
+    }
+
+    function testCannotUnstake_StakeTooLow() public {
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "unstake", "STAKE_TOO_LOW"));
+        childValidatorSet.unstake(1);
+    }
+
+    function testUnstakeCompletely() public {
+        vm.startPrank(alice);
+        childValidatorSet.unstake(minStake);
+    }
+}
+
+contract ChildValidatorSetTest_ProcessQueueAfterStake is UnstakedCompletely {
+    function testCheckWithdrawalQueue() public {
+        assertEq(childValidatorSet.pendingWithdrawals(alice), minStake * 2);
+        assertEq(childValidatorSet.withdrawable(alice), 0);
+    }
+
+    function testProcessQueue() public {
+        Validator memory validator = childValidatorSet.getValidator(alice);
+        assertEq(validator.stake, minStake * 2);
+
+        id = 2;
+        epoch = Epoch({startBlock: 65, endBlock: 128, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 1}));
+
+        uptime.epochId = childValidatorSet.currentEpochId();
+        uptime.totalBlocks = 2;
+
+        vm.prank(SYSTEM);
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+
+        validator = childValidatorSet.getValidator(alice);
+        assertEq(validator.stake, 0);
+        assertEq(childValidatorSet.pendingWithdrawals(alice), 0);
+        assertEq(childValidatorSet.withdrawable(alice), minStake * 2);
+    }
+}
+
+contract ChildValidatorSetTest_Withdraw is QueueProcessedAfterUnstake {
+    event Withdrawal(address indexed account, address indexed to, uint256 amount);
+
+    function testCannotWithdraw_Failed() public {
+        vm.deal(address(childValidatorSet), 0);
+        vm.startPrank(alice);
+        vm.expectRevert("WITHDRAWAL_FAILED");
+        childValidatorSet.withdraw(admin);
+    }
+
+    function testWithdraw() public {
+        vm.startPrank(alice);
+
+        vm.expectEmit(true, true, false, true);
+        emit Withdrawal(alice, alice, minStake * 2);
+
+        childValidatorSet.withdraw(alice);
+
+        assertEq(childValidatorSet.pendingWithdrawals(alice), 0);
+        assertEq(childValidatorSet.withdrawable(alice), 0);
+    }
+}
+
+contract ChildValidatorSetTest_FirstDelegate is Withdrawn {
+    event Withdrawal(address indexed account, address indexed to, uint256 amount);
+    event Delegated(address indexed delegator, address indexed validator, uint256 amount);
+
+    function testCannotDelegate_InvalidValidator() public {
+        bool restake = false;
+        vm.startPrank(bob);
+        vm.deal(bob, 100 ether);
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "INVALID_VALIDATOR"));
+
+        childValidatorSet.delegate{value: minDelegation}(bob, restake);
+    }
+
+    function testCannotDelegate_DelegationTooLow() public {
+        bool restake = false;
+        vm.startPrank(alice);
+        vm.deal(alice, 100 ether);
+        vm.expectRevert(abi.encodeWithSelector(StakeRequirement.selector, "delegate", "DELEGATION_TOO_LOW"));
+
+        childValidatorSet.delegate{value: 100}(alice, restake);
+    }
+
+    function testFirstDelegate() public {
+        uint256 delegateAmount = minDelegation + 1;
+        bool restake = false;
+
+        vm.startPrank(bob);
+        vm.deal(bob, 100 ether);
+
+        vm.expectEmit(true, true, false, true);
+        emit Delegated(bob, alice, delegateAmount);
+        childValidatorSet.delegate{value: delegateAmount}(alice, restake);
+    }
+}
+
+contract ChildValidatorSetTest_SecondDelegate is FirstDelegated {
+    event Delegated(address indexed delegator, address indexed validator, uint256 amount);
+
+    function testSecondDelegateWithoutRestake() public {
+        uint256 delegateAmount = minDelegation + 1;
+        bool restake = false;
+
+        vm.startPrank(bob);
+        vm.deal(bob, 100 ether);
+
+        vm.expectEmit(true, true, false, true);
+        emit Delegated(bob, alice, delegateAmount);
+        childValidatorSet.delegate{value: delegateAmount}(alice, restake);
+    }
+}
+
+contract ChildValidatorSetTest_ThirdDelegate is SecondDelegated {
+    event Delegated(address indexed delegator, address indexed validator, uint256 amount);
+
+    function testThirdDelegateWithRestake() public {
+        uint256 delegateAmount = minDelegation + 1;
+        bool restake = true;
+
+        vm.startPrank(bob);
+        vm.deal(bob, 100 ether);
+
+        vm.expectEmit(true, true, false, true);
+        emit Delegated(bob, alice, delegateAmount);
+        childValidatorSet.delegate{value: delegateAmount}(alice, restake);
+    }
+}
+
+contract ChildValidatorSetTest_Claim is ThirdDelegated {
+    event ValidatorRewardClaimed(address indexed validator, uint256 amount);
+    event WithdrawalRegistered(address indexed account, uint256 amount);
+
+    function testClaimValidatorReward() public {
+        uint256 reward = childValidatorSet.getValidatorReward(admin);
+
+        vm.expectEmit(true, false, false, true);
+        emit WithdrawalRegistered(admin, reward);
+
+        vm.expectEmit(true, false, false, true);
+        emit ValidatorRewardClaimed(admin, reward);
+
+        vm.startPrank(admin);
+        childValidatorSet.claimValidatorReward();
     }
 }
