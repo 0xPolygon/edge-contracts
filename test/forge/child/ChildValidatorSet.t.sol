@@ -6,7 +6,7 @@ import {System} from "contracts/child/ChildValidatorSet.sol";
 import {BLS} from "contracts/common/BLS.sol";
 import "contracts/interfaces/Errors.sol";
 import "contracts/interfaces/IValidator.sol";
-import "contracts/interfaces/IChildValidatorSet.sol";
+import "contracts/interfaces/modules/ICVSStorage.sol";
 
 import "../utils/TestPlus.sol";
 

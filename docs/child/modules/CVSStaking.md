@@ -1,14 +1,90 @@
-# IChildValidatorSet
-
-_Polygon Technology_
-
-> ChildValidatorSet
-
-Validator set genesis contract for Polygon PoS v3. This contract serves the purpose of storing stakes.
-
-_The contract is used to complete validator registration and store self-stake and delegated MATIC amounts. It manages staking, epoch committing, and reward distribution._
+# CVSStaking
 
 ## Methods
+
+### ACTIVE_VALIDATOR_SET_SIZE
+
+```solidity
+function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### MAX_COMMISSION
+
+```solidity
+function MAX_COMMISSION() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### MAX_VALIDATOR_SET_SIZE
+
+```solidity
+function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### NEW_VALIDATOR_SIG
+
+```solidity
+function NEW_VALIDATOR_SIG() external view returns (bytes32)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
+
+### REWARD_PRECISION
+
+```solidity
+function REWARD_PRECISION() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### SPRINT
+
+```solidity
+function SPRINT() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### WITHDRAWAL_WAIT_PERIOD
+
+```solidity
+function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 ### addToWhitelist
 
@@ -24,20 +100,27 @@ Adds addresses that are allowed to register as validators.
 | ----------------- | --------- | ----------------------------- |
 | whitelistAddreses | address[] | Array of address to whitelist |
 
-### claimDelegatorReward
+### bls
 
 ```solidity
-function claimDelegatorReward(address validator, bool restake) external nonpayable
+function bls() external view returns (contract IBLS)
 ```
 
-Claims delegator rewards for sender.
+#### Returns
 
-#### Parameters
+| Name | Type          | Description |
+| ---- | ------------- | ----------- |
+| \_0  | contract IBLS | undefined   |
 
-| Name      | Type    | Description                               |
-| --------- | ------- | ----------------------------------------- |
-| validator | address | Validator to claim from                   |
-| restake   | bool    | Whether to redelegate the claimed rewards |
+### claimOwnership
+
+```solidity
+function claimOwnership() external nonpayable
+```
+
+allows proposed owner to claim ownership (step 2 of transferring ownership)
+
+_can only be called by the new proposed owner_
 
 ### claimValidatorReward
 
@@ -47,110 +130,81 @@ function claimValidatorReward() external nonpayable
 
 Claims validator rewards for sender.
 
-### commitEpoch
+### currentEpochId
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
+function currentEpochId() external view returns (uint256)
 ```
-
-#### Parameters
-
-| Name   | Type    | Description |
-| ------ | ------- | ----------- |
-| id     | uint256 | undefined   |
-| epoch  | Epoch   | undefined   |
-| uptime | Uptime  | undefined   |
-
-### delegate
-
-```solidity
-function delegate(address validator, bool restake) external payable
-```
-
-Delegates sent amount to validator. Claims rewards beforehand.
-
-#### Parameters
-
-| Name      | Type    | Description                               |
-| --------- | ------- | ----------------------------------------- |
-| validator | address | Validator to delegate to                  |
-| restake   | bool    | Whether to redelegate the claimed rewards |
-
-### delegationOf
-
-```solidity
-function delegationOf(address validator, address delegator) external view returns (uint256)
-```
-
-Gets amount delegated by delegator to validator.
-
-#### Parameters
-
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
-| validator | address | Address of validator |
-| delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description                     |
-| ---- | ------- | ------------------------------- |
-| \_0  | uint256 | Amount delegated (in MATIC wei) |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
-### getCurrentValidatorSet
-
-```solidity
-function getCurrentValidatorSet() external view returns (address[])
-```
-
-Gets addresses of active validators in this epoch, sorted by total stake (self-stake + delegation)
-
-#### Returns
-
-| Name | Type      | Description                                                                  |
-| ---- | --------- | ---------------------------------------------------------------------------- |
-| \_0  | address[] | Array of addresses of active validators in this epoch, sorted by total stake |
-
-### getDelegatorReward
+### epochEndBlocks
 
 ```solidity
-function getDelegatorReward(address validator, address delegator) external view returns (uint256)
+function epochEndBlocks(uint256) external view returns (uint256)
 ```
 
+<<<<<<< HEAD:docs/interfaces/IChildValidatorSet.md
 Gets delegators&#39;s unclaimed rewards with validator.
 
+=======
+
+> > > > > > > f67a2b053d5093c9604fbfedfc0031ecd1728720:docs/child/modules/CVSStaking.md
+
 #### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
-| validator | address | Address of validator |
-| delegator | address | Address of delegator |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 #### Returns
 
-| Name | Type    | Description                                                     |
+<<<<<<< HEAD:docs/interfaces/IChildValidatorSet.md
+| Name | Type | Description |
 | ---- | ------- | --------------------------------------------------------------- |
-| \_0  | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
+| \_0 | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
+=======
+| Name | Type | Description |
+| ---- | ------- | ----------- |
+| \_0 | uint256 | undefined |
 
-### getEpochByBlock
+> > > > > > > f67a2b053d5093c9604fbfedfc0031ecd1728720:docs/child/modules/CVSStaking.md
+
+### epochReward
 
 ```solidity
-function getEpochByBlock(uint256 blockNumber) external view returns (struct Epoch)
+function epochReward() external view returns (uint256)
 ```
-
-Look up an epoch by block number. Searches in O(log n) time.
-
-#### Parameters
-
-| Name        | Type    | Description                 |
-| ----------- | ------- | --------------------------- |
-| blockNumber | uint256 | ID of epoch to be committed |
 
 #### Returns
 
-| Name | Type  | Description                                           |
-| ---- | ----- | ----------------------------------------------------- |
-| \_0  | Epoch | Epoch Returns epoch if found, or else, the last epoch |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### epochs
+
+```solidity
+function epochs(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 epochRoot)
+```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+#### Returns
+
+| Name       | Type    | Description |
+| ---------- | ------- | ----------- |
+| startBlock | uint256 | undefined   |
+| endBlock   | uint256 | undefined   |
+| epochRoot  | bytes32 | undefined   |
 
 ### getValidator
 
@@ -192,6 +246,68 @@ Gets validator&#39;s unclaimed rewards.
 | ---- | ------- | ------------------------------------------------ |
 | \_0  | uint256 | Validator&#39;s unclaimed rewards (in MATIC wei) |
 
+# <<<<<<< HEAD:docs/interfaces/IChildValidatorSet.md
+
+### message
+
+```solidity
+function message(uint256) external view returns (uint256)
+```
+
+Message to sign for registration
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### minDelegation
+
+```solidity
+function minDelegation() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### minStake
+
+```solidity
+function minStake() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+the address of the owner
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
+
+> > > > > > > f67a2b053d5093c9604fbfedfc0031ecd1728720:docs/child/modules/CVSStaking.md
+
 ### pendingWithdrawals
 
 ```solidity
@@ -211,6 +327,36 @@ Calculates how much is yet to become withdrawable for account.
 | Name | Type    | Description                                |
 | ---- | ------- | ------------------------------------------ |
 | \_0  | uint256 | Amount not yet withdrawable (in MATIC wei) |
+
+### proposeOwner
+
+```solidity
+function proposeOwner(address payable newOwner) external nonpayable
+```
+
+proposes a new owner (step 1 of transferring ownership)
+
+_can only be called by the current owner_
+
+#### Parameters
+
+| Name     | Type            | Description |
+| -------- | --------------- | ----------- |
+| newOwner | address payable | undefined   |
+
+### proposedOwner
+
+```solidity
+function proposedOwner() external view returns (address)
+```
+
+the address of a proposed owner
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### register
 
@@ -283,20 +429,6 @@ function stake() external payable
 
 Stakes sent amount. Claims rewards beforehand.
 
-### totalActiveStake
-
-```solidity
-function totalActiveStake() external view returns (uint256)
-```
-
-Calculates total stake of active validators (self-stake + delegation).
-
-#### Returns
-
-| Name | Type    | Description                                     |
-| ---- | ------- | ----------------------------------------------- |
-| \_0  | uint256 | Total stake of active validators (in MATIC wei) |
-
 ### totalStake
 
 ```solidity
@@ -311,21 +443,6 @@ Calculates total stake in the network (self-stake + delegation).
 | ---- | ------- | -------------------------- |
 | \_0  | uint256 | Total stake (in MATIC wei) |
 
-### undelegate
-
-```solidity
-function undelegate(address validator, uint256 amount) external nonpayable
-```
-
-Undelegates amount from validator for sender. Claims rewards beforehand.
-
-#### Parameters
-
-| Name      | Type    | Description                  |
-| --------- | ------- | ---------------------------- |
-| validator | address | Validator to undelegate from |
-| amount    | uint256 | The amount to undelegate     |
-
 ### unstake
 
 ```solidity
@@ -339,6 +456,24 @@ Unstakes amount for sender. Claims rewards beforehand.
 | Name   | Type    | Description       |
 | ------ | ------- | ----------------- |
 | amount | uint256 | Amount to unstake |
+
+### whitelist
+
+```solidity
+function whitelist(address) external view returns (bool)
+```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
+
+#### Returns
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ### withdraw
 
@@ -357,7 +492,7 @@ Withdraws sender&#39;s withdrawable amount to specified address.
 ### withdrawable
 
 ```solidity
-function withdrawable(address account) external view returns (uint256)
+function withdrawable(address account) external view returns (uint256 amount)
 ```
 
 Calculates how much can be withdrawn for account in this epoch.
@@ -370,9 +505,9 @@ Calculates how much can be withdrawn for account in this epoch.
 
 #### Returns
 
-| Name | Type    | Description                        |
-| ---- | ------- | ---------------------------------- |
-| \_0  | uint256 | Amount withdrawable (in MATIC wei) |
+| Name   | Type    | Description                        |
+| ------ | ------- | ---------------------------------- |
+| amount | uint256 | Amount withdrawable (in MATIC wei) |
 
 ## Events
 
@@ -388,62 +523,17 @@ event AddedToWhitelist(address indexed validator)
 | ------------------- | ------- | ----------- |
 | validator `indexed` | address | undefined   |
 
-### Delegated
+### Initialized
 
 ```solidity
-event Delegated(address indexed delegator, address indexed validator, uint256 amount)
+event Initialized(uint8 version)
 ```
 
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
-
-### DelegatorRewardClaimed
-
-```solidity
-event DelegatorRewardClaimed(address indexed delegator, address indexed validator, bool indexed restake, uint256 amount)
-```
-
-#### Parameters
-
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| restake `indexed`   | bool    | undefined   |
-| amount              | uint256 | undefined   |
-
-### DelegatorRewardDistributed
-
-```solidity
-event DelegatorRewardDistributed(address indexed validator, uint256 amount)
-```
-
-#### Parameters
-
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
-
-### NewEpoch
-
-```solidity
-event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot)
-```
-
-#### Parameters
-
-| Name                 | Type    | Description |
-| -------------------- | ------- | ----------- |
-| id `indexed`         | uint256 | undefined   |
-| startBlock `indexed` | uint256 | undefined   |
-| endBlock `indexed`   | uint256 | undefined   |
-| epochRoot            | bytes32 | undefined   |
+| Name    | Type  | Description |
+| ------- | ----- | ----------- |
+| version | uint8 | undefined   |
 
 ### NewValidator
 
@@ -457,6 +547,31 @@ event NewValidator(address indexed validator, uint256[4] blsKey)
 | ------------------- | ---------- | ----------- |
 | validator `indexed` | address    | undefined   |
 | blsKey              | uint256[4] | undefined   |
+
+### OwnershipProposed
+
+```solidity
+event OwnershipProposed(address indexed proposedOwner)
+```
+
+#### Parameters
+
+| Name                    | Type    | Description |
+| ----------------------- | ------- | ----------- |
+| proposedOwner `indexed` | address | undefined   |
+
+### OwnershipTransferred
+
+```solidity
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+```
+
+#### Parameters
+
+| Name                    | Type    | Description |
+| ----------------------- | ------- | ----------- |
+| previousOwner `indexed` | address | undefined   |
+| newOwner `indexed`      | address | undefined   |
 
 ### RemovedFromWhitelist
 
@@ -480,20 +595,6 @@ event Staked(address indexed validator, uint256 amount)
 
 | Name                | Type    | Description |
 | ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
-
-### Undelegated
-
-```solidity
-event Undelegated(address indexed delegator, address indexed validator, uint256 amount)
-```
-
-#### Parameters
-
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
 | validator `indexed` | address | undefined   |
 | amount              | uint256 | undefined   |
 
@@ -565,6 +666,24 @@ event WithdrawalRegistered(address indexed account, uint256 amount)
 
 ## Errors
 
+### AmountZero
+
+```solidity
+error AmountZero()
+```
+
+### Exists
+
+```solidity
+error Exists(address validator)
+```
+
+#### Parameters
+
+| Name      | Type    | Description |
+| --------- | ------- | ----------- |
+| validator | address | undefined   |
+
 ### StakeRequirement
 
 ```solidity
@@ -577,3 +696,15 @@ error StakeRequirement(string src, string msg)
 | ---- | ------ | ----------- |
 | src  | string | undefined   |
 | msg  | string | undefined   |
+
+### Unauthorized
+
+```solidity
+error Unauthorized(string only)
+```
+
+#### Parameters
+
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| only | string | undefined   |
