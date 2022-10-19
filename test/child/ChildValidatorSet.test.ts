@@ -1204,6 +1204,65 @@ describe("ChildValidatorSet", () => {
         )
       ).to.be.revertedWith("INVALID_START_BLOCK");
     });
+    it("failed by short length bitmap", async () => {
+      id = 10;
+      epoch = {
+        startBlock: 578,
+        endBlock: 642,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0xffffff",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0xffffff",
+          signature: signature2,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("BITMAP_SIZE_MUST_BE_8");
+    });
     it("success with valid bitmap", async () => {
       id = 10;
       epoch = {
@@ -1261,7 +1320,7 @@ describe("ChildValidatorSet", () => {
         doubleSignerSlashingInput
       );
     });
-    it("success with short length bitmap", async () => {
+    it("success with valid bitmap & slashing input more than 64", async () => {
       id = 11;
       epoch = {
         startBlock: 643,
@@ -1280,34 +1339,43 @@ describe("ChildValidatorSet", () => {
       const blockNumber = 0;
       const pbftRound = 0;
       const epochId = 0;
-      const blockHash1 = ethers.utils.randomBytes(32);
-      const blockHash2 = ethers.utils.randomBytes(32);
-      const signature1 = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint", "uint", "bytes32"],
-          [blockNumber, pbftRound, epochId, blockHash1]
-        )
-      );
-      const signature2 = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint", "uint", "bytes32"],
-          [blockNumber, pbftRound, epochId, blockHash2]
-        )
-      );
 
-      doubleSignerSlashingInput = [
-        {
-          blockHash: blockHash1,
-          bitmap: "0xffffff",
-          signature: signature1,
-        },
-        {
-          blockHash: blockHash2,
-          bitmap: "0xffffff",
-          signature: signature2,
-        },
-      ];
+      for (let i = 0; i < 60; i++) {
+        const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
+        await setBalance(signer.address, ethers.utils.parseEther("1000000"));
+        accounts.push(signer);
+      }
 
+      const newValidators = accounts.map((x) => x.address);
+      await expect(childValidatorSet.addToWhitelist(newValidators)).to.not.be.reverted;
+
+      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
+      const { pubkey, secret } = mcl.newKeyPair();
+      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+      const parsedPubkey = mcl.g2ToHex(pubkey);
+
+      for (let i = 3; i < accounts.length; i++) {
+        await childValidatorSet.connect(accounts[i]).register(mcl.g1ToHex(signature), parsedPubkey);
+
+        const validator = await childValidatorSet.getValidator(accounts[i].address);
+        await childValidatorSet.connect(accounts[i]).stake({ value: minStake * 2 });
+        expect(validator.active).to.equal(true);
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const blockHash = ethers.utils.randomBytes(32);
+        const signature = ethers.utils.keccak256(
+          ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint", "uint", "bytes32"],
+            [blockNumber, pbftRound, epochId, blockHash]
+          )
+        );
+        doubleSignerSlashingInput.push({
+          blockHash: blockHash,
+          bitmap: "0xffffffffffffffff",
+          signature: signature,
+        });
+      }
       await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
         id,
         epoch,

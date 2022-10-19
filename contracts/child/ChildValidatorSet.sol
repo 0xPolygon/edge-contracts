@@ -11,6 +11,7 @@ import "../libs/ValidatorQueue.sol";
 import "../libs/WithdrawalQueue.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IChildValidatorSet.sol";
+import "hardhat/console.sol";
 
 // solhint-disable max-states-count
 contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildValidatorSet {
@@ -269,6 +270,8 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 validatorSetLength = _validators.count;
         address[] memory validatorSet = sortedValidators(validatorSetLength);
         bool[] memory slashingSet = new bool[](validatorSetLength);
+
+        console.log(validatorSetLength);
         for (uint256 i = 0; i < validatorSetLength; i++) {
             uint256 count = 0;
             for (uint256 j = 0; j < length; j++) {
