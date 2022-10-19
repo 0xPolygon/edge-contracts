@@ -271,6 +271,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         address[] memory validatorSet = sortedValidators(validatorSetLength);
         bool[] memory slashingSet = new bool[](validatorSetLength);
 
+        console.log("Length");
         console.log(validatorSetLength);
         for (uint256 i = 0; i < validatorSetLength; i++) {
             uint256 count = 0;
