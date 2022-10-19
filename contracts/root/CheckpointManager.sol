@@ -59,6 +59,8 @@ contract CheckpointManager is Initializable {
 
     mapping(uint256 => Checkpoint) public checkpoints;
 
+    event CheckpointDone(uint256 indexed checkpointId);
+
     /**
      * @notice Initialization function for CheckpointManager
      * @dev Contract can only be initialized once
@@ -108,6 +110,8 @@ contract CheckpointManager is Initializable {
         if (newValidators.length != 0) {
             rootValidatorSet.addValidators(newValidators);
         }
+
+        emit CheckpointDone(id);
     }
 
     /**
@@ -142,6 +146,7 @@ contract CheckpointManager is Initializable {
         for (uint256 i = 0; i < length; ++i) {
             _verifyCheckpoint(prevId++, ids[i], checkpointBatch[i]);
             checkpoints[ids[i]] = checkpointBatch[i];
+            emit CheckpointDone(ids[i]);
         }
 
         currentCheckpointId = prevId;
