@@ -619,6 +619,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {
+        require(bitmap.length >= 8, "BITMAP_SIZE_MUST_BE_8");
         uint256 byteNumber = index / 8;
         uint8 bitNumber = uint8(index % 8);
 
