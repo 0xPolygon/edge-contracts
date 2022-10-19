@@ -59,7 +59,7 @@ contract CheckpointManager is Initializable {
 
     mapping(uint256 => Checkpoint) public checkpoints;
 
-    event CheckpointDone(uint256 indexed checkpointId);
+    event CheckpointDone(uint256 checkpointId);
 
     /**
      * @notice Initialization function for CheckpointManager
