@@ -944,12 +944,6 @@ contract ChildValidatorSetTest_Undelegate is Claimed {
         childValidatorSet.undelegate(alice, delegatedAmount - 1);
     }
 
-    function testCannotUndelegate_IntOverflow() public {
-        // vm.expectRevert(stdError.assertionError);
-        // vm.prank(bob);
-        // childValidatorSet.undelegate(alice, 2**256 - 1);
-    }
-
     function testUndelegate() public {
         uint256 delegatedAmount = childValidatorSet.delegationOf(alice, bob);
 
