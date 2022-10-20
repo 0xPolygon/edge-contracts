@@ -1300,20 +1300,15 @@ describe("ChildValidatorSet", () => {
       doubleSignerSlashingInput = [
         {
           blockHash: blockHash1,
-          bitmap: "0xffffffffffffffffffffffff",
+          bitmap: "0xffffffffffffffff",
           signature: signature1,
         },
         {
           blockHash: blockHash2,
-          bitmap: "0xffffffffffffffffffffffff",
+          bitmap: "0xffffffffffffffff",
           signature: signature2,
         },
       ];
-
-      let validator = await childValidatorSet.getValidator(accounts[0].address);
-      let validator1 = await childValidatorSet.getValidator(accounts[2].address);
-      // console.log(validator);
-      // console.log(validator1);
 
       await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
         id,
@@ -1326,11 +1321,6 @@ describe("ChildValidatorSet", () => {
       );
 
       expect(await childValidatorSet.doubleSignerSlashes(epochId, pbftRound)).to.equal(accounts[2].address);
-      validator = await childValidatorSet.getValidator(accounts[0].address);
-      validator1 = await childValidatorSet.getValidator(accounts[2].address);
-
-      // console.log(validator);
-      // console.log(validator1);
 
       const storedEpoch: any = await childValidatorSet.epochs(10);
       expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
@@ -1343,12 +1333,17 @@ describe("ChildValidatorSet", () => {
       const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
       const parsedPubkey = mcl.g2ToHex(pubkey);
 
-      for (let i = 0; i < 70; i++) {
+      const newValidatorsCount = 80;
+      for (let i = 0; i < newValidatorsCount; i++) {
         const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
         await setBalance(signer.address, ethers.utils.parseEther("1000000"));
         await expect(childValidatorSet.addToWhitelist([signer.address])).to.not.be.reverted;
 
         await childValidatorSet.connect(signer).register(mcl.g1ToHex(signature), parsedPubkey);
+        await childValidatorSet.connect(signer).stake({ value: minStake * 2 });
+        const validator = await childValidatorSet.getValidator(signer.address);
+
+        expect(validator.active).to.equal(true);
 
         id = 11 + i;
         epoch = {
@@ -1367,16 +1362,12 @@ describe("ChildValidatorSet", () => {
         };
 
         await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
-
-        // const validator = await childValidatorSet.getValidator(signer.address);
-        // await childValidatorSet.connect(accounts[i]).stake({ value: minStake * 2 });
-        // expect(validator.active).to.equal(true);
       }
 
-      id = 11 + 70;
+      id = 11 + newValidatorsCount;
       epoch = {
-        startBlock: 643 + 70 * 64,
-        endBlock: 706 + 70 * 64,
+        startBlock: 643 + newValidatorsCount * 64,
+        endBlock: 706 + newValidatorsCount * 64,
         epochRoot: ethers.utils.randomBytes(32),
       };
 
