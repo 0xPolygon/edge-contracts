@@ -265,7 +265,6 @@ describe("ChildValidatorSet", () => {
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
-    const currentValidatorId = await childValidatorSet.currentEpochId();
 
     uptime = {
       epochId: currentEpochId,
@@ -273,7 +272,12 @@ describe("ChildValidatorSet", () => {
       totalBlocks: 1,
     };
 
-    await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    const tx = await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+
+    await expect(tx)
+      .to.emit(childValidatorSet, "NewEpoch")
+      .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
     const storedEpoch: any = await childValidatorSet.epochs(1);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
@@ -322,7 +326,6 @@ describe("ChildValidatorSet", () => {
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
-    const currentValidatorId = await childValidatorSet.currentEpochId();
 
     uptime = {
       epochId: currentEpochId,
@@ -330,33 +333,16 @@ describe("ChildValidatorSet", () => {
       totalBlocks: 1,
     };
 
-    await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    const tx = await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    await expect(tx)
+      .to.emit(childValidatorSet, "NewEpoch")
+      .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
     const storedEpoch: any = await childValidatorSet.epochs(2);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
     expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
   });
-
-  // it("Get and set current validators when exceeds active validator set size", async () => {
-  //   const currentValidatorId = await childValidatorSet.currentEpochId();
-
-  //   epoch = {
-  //     startBlock: 129,
-  //     endBlock: 192,
-  //     epochRoot: ethers.utils.randomBytes(32),
-  //     validatorSet: [],
-  //   };
-
-  //   const currentEpochId = await childValidatorSet.currentEpochId();
-
-  //   uptime = {
-  //     epochId: currentEpochId,
-  //     uptimeData: [{ validator: accounts[0].address, signedBlocks: 1000000000000 }],
-  //     totalBlocks: 1,
-  //   };
-
-  //   await systemChildValidatorSet.commitEpoch(3, epoch, uptime); // commit epoch to update validator set
-  // });
 
   describe("whitelist", async () => {
     it("only owner should be able to modify whitelist", async () => {
@@ -447,7 +433,11 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to stake", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
+      const tx = await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "Staked")
+        .withArgs(accounts[2].address, minStake * 2);
       expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
     });
 
@@ -502,8 +492,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to partially unstake", async () => {
-      // await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
-      await childValidatorSet.connect(accounts[2]).unstake(minStake);
+      const tx = await childValidatorSet.connect(accounts[2]).unstake(minStake);
+      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
     });
 
     it("should take pending unstakes into account", async () => {
@@ -516,7 +506,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to completely unstake", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      const tx = await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
     });
 
     it("should place in withdrawal queue", async () => {
@@ -1310,7 +1301,7 @@ describe("ChildValidatorSet", () => {
         },
       ];
 
-      await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+      const tx = await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
         id,
         epoch,
         uptime,
@@ -1319,6 +1310,10 @@ describe("ChildValidatorSet", () => {
         epochId,
         doubleSignerSlashingInput
       );
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "NewEpoch")
+        .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
 
       expect(await childValidatorSet.doubleSignerSlashes(epochId, pbftRound)).to.equal(accounts[2].address);
 
@@ -1398,7 +1393,7 @@ describe("ChildValidatorSet", () => {
         });
       }
 
-      await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+      const tx = await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
         id,
         epoch,
         uptime,
@@ -1407,6 +1402,10 @@ describe("ChildValidatorSet", () => {
         epochId,
         doubleSignerSlashingInput
       );
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "NewEpoch")
+        .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
 
       expect(await childValidatorSet.doubleSignerSlashes(epochId, pbftRound)).to.equal(accounts[2].address);
 
@@ -1439,7 +1438,15 @@ describe("ChildValidatorSet", () => {
     });
 
     it("undelegate", async () => {
-      await childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, minDelegation * 3 + 3);
+      let delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      const tx = await childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount);
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "Undelegated")
+        .withArgs(accounts[3].address, accounts[2].address, delegatedAmount);
+
+      delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      expect(delegatedAmount).to.equal(0);
     });
   });
 
