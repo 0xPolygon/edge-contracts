@@ -1407,6 +1407,13 @@ describe("ChildValidatorSet", () => {
         epochId,
         doubleSignerSlashingInput
       );
+
+      expect(await childValidatorSet.doubleSignerSlashes(epochId, pbftRound)).to.equal(accounts[2].address);
+
+      const storedEpoch: any = await childValidatorSet.epochs(currentEpochId);
+      expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
+      expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
+      expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
     });
   });
 
