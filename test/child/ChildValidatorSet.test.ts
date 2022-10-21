@@ -8,10 +8,12 @@ import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet } from "../../typechain";
 import { customError } from "../util";
 import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import { assert } from "console";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
 const MAX_COMMISSION = 100;
+const DOUBLE_SIGNING_SLASHING_PERCENT = 10;
 
 describe("ChildValidatorSet", () => {
   let bls: BLS,
@@ -1291,15 +1293,20 @@ describe("ChildValidatorSet", () => {
       doubleSignerSlashingInput = [
         {
           blockHash: blockHash1,
-          bitmap: "0xffffffffffffffff",
+          // bitmap: "0xffffffffffffffff",
+          bitmap: "0x1111111111111111",
           signature: signature1,
         },
         {
           blockHash: blockHash2,
-          bitmap: "0xffffffffffffffff",
+          // bitmap: "0xffffffffffffffff",
+          bitmap: "0x1111111111111111",
           signature: signature2,
         },
       ];
+
+      const validatorBeforeCommitSlashing = await childValidatorSet.getValidator(accounts[0].address);
+      const validator2BeforeCommitSlashing = await childValidatorSet.getValidator(accounts[2].address);
 
       const tx = await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
         id,
@@ -1316,6 +1323,23 @@ describe("ChildValidatorSet", () => {
         .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
 
       expect(await childValidatorSet.doubleSignerSlashes(epochId, pbftRound)).to.equal(accounts[2].address);
+
+      const validatorAfterCommitSlashing = await childValidatorSet.getValidator(accounts[0].address);
+      const validator2AfterCommitSlashing = await childValidatorSet.getValidator(accounts[2].address);
+
+      expect(validator2AfterCommitSlashing.stake).to.equal(
+        validator2BeforeCommitSlashing.stake.sub(
+          validator2BeforeCommitSlashing.stake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
+        )
+      );
+      expect(validator2AfterCommitSlashing.totalStake).to.equal(
+        validator2BeforeCommitSlashing.totalStake.sub(
+          validator2BeforeCommitSlashing.totalStake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
+        )
+      );
+
+      expect(validatorAfterCommitSlashing.stake).to.equal(validatorBeforeCommitSlashing.stake);
+      expect(validatorAfterCommitSlashing.totalStake).to.equal(validatorBeforeCommitSlashing.totalStake);
 
       const storedEpoch: any = await childValidatorSet.epochs(10);
       expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
@@ -1359,6 +1383,13 @@ describe("ChildValidatorSet", () => {
         await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
       }
 
+      const countOfValidators = 2 + newValidatorsCount;
+      const validators = await childValidatorSet.sortedValidators(countOfValidators);
+      const validatorsInfoBeforeCommitSlash = [];
+      for (let i = 0; i < countOfValidators; i++) {
+        validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
+      }
+
       id = 11 + newValidatorsCount;
       epoch = {
         startBlock: 643 + newValidatorsCount * 64,
@@ -1375,7 +1406,7 @@ describe("ChildValidatorSet", () => {
       };
 
       const blockNumber = 0;
-      const pbftRound = 0;
+      const pbftRound = 1;
       const epochId = 0;
 
       for (let i = 0; i < 2; i++) {
@@ -1406,6 +1437,27 @@ describe("ChildValidatorSet", () => {
       await expect(tx)
         .to.emit(childValidatorSet, "NewEpoch")
         .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
+      const validatorsInfoAfterCommitSlash = [];
+      for (let i = 0; i < countOfValidators; i++) {
+        validatorsInfoAfterCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
+      }
+
+      expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
+      expect(validatorsInfoAfterCommitSlash[0].stake).to.equal(
+        validatorsInfoBeforeCommitSlash[0].stake.sub(
+          validatorsInfoBeforeCommitSlash[0].stake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
+        )
+      );
+      expect(validatorsInfoAfterCommitSlash[0].totalStake).to.equal(
+        validatorsInfoBeforeCommitSlash[0].totalStake.sub(
+          validatorsInfoBeforeCommitSlash[0].totalStake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
+        )
+      );
+      for (let i = 0; i < countOfValidators; i++) {
+        expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(validatorsInfoAfterCommitSlash[i].stake);
+        expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(validatorsInfoAfterCommitSlash[i].totalStake);
+      }
 
       expect(await childValidatorSet.doubleSignerSlashes(epochId, pbftRound)).to.equal(accounts[2].address);
 
