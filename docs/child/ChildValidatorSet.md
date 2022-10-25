@@ -300,7 +300,7 @@ Gets amount delegated by delegator to validator.
 ### doubleSignerSlashes
 
 ```solidity
-function doubleSignerSlashes(uint256, uint256) external view returns (address)
+function doubleSignerSlashes(uint256, uint256, address) external view returns (bool)
 ```
 
 #### Parameters
@@ -309,12 +309,13 @@ function doubleSignerSlashes(uint256, uint256) external view returns (address)
 | ---- | ------- | ----------- |
 | \_0  | uint256 | undefined   |
 | \_1  | uint256 | undefined   |
+| \_2  | address | undefined   |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ### doubleSigningSlashingPercent
 

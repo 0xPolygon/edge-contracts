@@ -50,7 +50,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
 
     mapping(uint256 => Epoch) public epochs;
     mapping(address => bool) public whitelist;
-    mapping(uint256 => mapping(uint256 => address)) public doubleSignerSlashes;
+    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public doubleSignerSlashes;
 
     modifier onlyValidator() {
         if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
@@ -277,6 +277,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
                 if (_getValueFromBitmap(inputs[j].bitmap, i)) {
                     count++;
                 }
+
                 // slash validators that have signed multiple blocks
                 if (count > 1) {
                     _slashDoubleSigner(validatorSet[i], epochId, pbftRound);
@@ -517,13 +518,13 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
         uint256 epoch,
         uint256 pbftRound
     ) private {
-        if (doubleSignerSlashes[epoch][pbftRound] != address(0)) {
+        if (doubleSignerSlashes[epoch][pbftRound][key]) {
             return;
         }
+        doubleSignerSlashes[epoch][pbftRound][key] = true;
         Validator storage validator = _validators.get(key);
         uint256 valTotalStake = validator.totalStake;
         uint256 valStake = validator.stake;
-        doubleSignerSlashes[epoch][pbftRound] = key;
         validator.totalStake -= (valTotalStake * doubleSigningSlashingPercent) / 100;
         validator.stake -= (valStake * doubleSigningSlashingPercent) / 100;
         emit DoubleSignerSlashed(key, epoch, pbftRound);
@@ -620,7 +621,6 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
     }
 
     function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {
-        require(bitmap.length >= 8, "BITMAP_SIZE_MUST_BE_8");
         uint256 byteNumber = index / 8;
         uint8 bitNumber = uint8(index % 8);
 
