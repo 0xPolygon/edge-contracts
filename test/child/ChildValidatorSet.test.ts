@@ -21,8 +21,6 @@ describe("ChildValidatorSet", () => {
     governance: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
-    childValidatorSetValidatorSet: ChildValidatorSet,
-    stateSyncChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     validatorStake: BigNumber,
     epochReward: BigNumber,
@@ -70,13 +68,7 @@ describe("ChildValidatorSet", () => {
       params: ["0x0000000000000000000000000000000000001001"],
     });
     const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
-    const stateSyncSigner = await ethers.getSigner("0x0000000000000000000000000000000000001001");
-    // await hre.network.provider.send("hardhat_setCode", [
-    //   "0x0000000000000000000000000000000000002030",
-    //   alwaysTrueBytecode,
-    // ]);
     systemChildValidatorSet = childValidatorSet.connect(systemSigner);
-    stateSyncChildValidatorSet = childValidatorSet.connect(stateSyncSigner);
   });
   it("Initialize without system call", async () => {
     await expect(
@@ -1299,7 +1291,6 @@ describe("ChildValidatorSet", () => {
       ];
 
       const validators = await childValidatorSet.getCurrentValidatorSet();
-      console.log(validators.length);
       const validatorsInfoBeforeCommitSlash = [];
       for (let i = 0; i < validators.length; i++) {
         validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
