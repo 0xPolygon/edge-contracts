@@ -277,6 +277,7 @@ contract ChildValidatorSet is System, Owned, ReentrancyGuardUpgradeable, IChildV
                 if (_getValueFromBitmap(inputs[j].bitmap, i)) {
                     count++;
                 }
+
                 // slash validators that have signed multiple blocks
                 if (count > 1) {
                     _slashDoubleSigner(validatorSet[i], epochId, pbftRound);
