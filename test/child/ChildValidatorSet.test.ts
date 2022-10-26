@@ -1203,7 +1203,7 @@ describe("ChildValidatorSet", () => {
       const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
       const parsedPubkey = mcl.g2ToHex(pubkey);
 
-      const newValidatorsCount = Math.floor(Math.random() * 5 + 5); // Randomly pick 5-10
+      const newValidatorsCount = Math.floor(Math.random() * 4 + 6); // Randomly pick 6-10
       for (let i = 0; i < newValidatorsCount; i++) {
         const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
         await setBalance(signer.address, ethers.utils.parseEther("1000000"));
@@ -1253,6 +1253,7 @@ describe("ChildValidatorSet", () => {
       const epochId = 0;
       const blockHash1 = ethers.utils.randomBytes(32);
       const blockHash2 = ethers.utils.randomBytes(32);
+      const blockHash3 = ethers.utils.randomBytes(32);
       const signature1 = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
           ["uint", "uint", "uint", "bytes32"],
@@ -1263,6 +1264,12 @@ describe("ChildValidatorSet", () => {
         ethers.utils.defaultAbiCoder.encode(
           ["uint", "uint", "uint", "bytes32"],
           [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+      const signature3 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash3]
         )
       );
 
@@ -1284,9 +1291,15 @@ describe("ChildValidatorSet", () => {
           bitmap: "0x" + bitmapStr,
           signature: signature2,
         },
+        {
+          blockHash: blockHash3,
+          bitmap: "0xffffffffffffffff",
+          signature: signature3,
+        },
       ];
 
       const validators = await childValidatorSet.getCurrentValidatorSet();
+      console.log(validators.length);
       const validatorsInfoBeforeCommitSlash = [];
       for (let i = 0; i < validators.length; i++) {
         validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
