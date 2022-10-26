@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "../interfaces/IValidatorStorage.sol";
 import "../interfaces/IValidator.sol";
-import "./RewardPool.sol";
-
-error AmountZero();
-error NotFound(address validator);
-error Exists(address validator);
+import "../interfaces/IRewardPool.sol";
 
 /**
  * @title Validator Storage Lib
