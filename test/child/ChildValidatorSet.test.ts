@@ -1197,13 +1197,13 @@ describe("ChildValidatorSet", () => {
         )
       ).to.be.revertedWith("INVALID_START_BLOCK");
     });
-    it("success with full bitmap for fuzz length of validators", async () => {
+    it("success with fuzzy bitmap for fuzzy length of validators", async () => {
       const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
       const { pubkey, secret } = mcl.newKeyPair();
       const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
       const parsedPubkey = mcl.g2ToHex(pubkey);
 
-      const newValidatorsCount = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-8
+      const newValidatorsCount = Math.floor(Math.random() * 5 + 5); // Randomly pick 5-10
       for (let i = 0; i < newValidatorsCount; i++) {
         const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
         await setBalance(signer.address, ethers.utils.parseEther("1000000"));
@@ -1266,23 +1266,29 @@ describe("ChildValidatorSet", () => {
         )
       );
 
+      const bitmap = Math.floor(Math.random() * 0xffffffffffffffff);
+      let bitmapStr = bitmap.toString(16);
+      const bitmapLength = bitmapStr.length;
+      for (let j = 0; j < 16 - bitmapLength; j++) {
+        bitmapStr = "0" + bitmapStr;
+      }
+
       doubleSignerSlashingInput = [
         {
           blockHash: blockHash1,
-          bitmap: "0xffffffffffffffff",
+          bitmap: "0xff",
           signature: signature1,
         },
         {
           blockHash: blockHash2,
-          bitmap: "0xffffffffffffffff",
+          bitmap: "0x" + bitmapStr,
           signature: signature2,
         },
       ];
 
-      const countOfValidators = 2 + newValidatorsCount;
-      const validators = await childValidatorSet.sortedValidators(countOfValidators);
+      const validators = await childValidatorSet.getCurrentValidatorSet();
       const validatorsInfoBeforeCommitSlash = [];
-      for (let i = 0; i < countOfValidators; i++) {
+      for (let i = 0; i < validators.length; i++) {
         validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
       }
 
@@ -1301,148 +1307,19 @@ describe("ChildValidatorSet", () => {
         .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
 
       const validatorsInfoAfterCommitSlash = [];
-      for (let i = 0; i < countOfValidators; i++) {
+      for (let i = 0; i < validators.length; i++) {
         validatorsInfoAfterCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
       }
 
       expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
 
-      for (let i = 0; i < countOfValidators; i++) {
-        expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(
-          validatorsInfoBeforeCommitSlash[i].stake.sub(
-            validatorsInfoBeforeCommitSlash[i].stake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
-          )
-        );
-        expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(
-          validatorsInfoBeforeCommitSlash[i].totalStake.sub(
-            validatorsInfoBeforeCommitSlash[i].totalStake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
-          )
-        );
-      }
-
-      const storedEpoch: any = await childValidatorSet.epochs(id);
-      expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
-      expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
-      expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
-    });
-    it("success with fuzzy bitmap & slashing input more than 64", async () => {
-      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
-      const { pubkey, secret } = mcl.newKeyPair();
-      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
-      const parsedPubkey = mcl.g2ToHex(pubkey);
-
-      const newValidatorsCount = 80;
-
-      id++;
-      const startBlock = parseInt(epoch.startBlock, 10) + 64;
-      const endBlock = parseInt(epoch.endBlock, 10) + 64;
-      for (let i = 0; i < newValidatorsCount; i++) {
-        const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
-        await setBalance(signer.address, ethers.utils.parseEther("1000000"));
-        await expect(childValidatorSet.addToWhitelist([signer.address])).to.not.be.reverted;
-
-        await childValidatorSet.connect(signer).register(mcl.g1ToHex(signature), parsedPubkey);
-        await childValidatorSet.connect(signer).stake({ value: minStake * 2 });
-        const validator = await childValidatorSet.getValidator(signer.address);
-
-        expect(validator.active).to.equal(true);
-
-        epoch = {
-          startBlock: BigNumber.from(startBlock + i * 64),
-          endBlock: BigNumber.from(endBlock + i * 64),
-          epochRoot: ethers.utils.randomBytes(32),
-        };
-
-        const currentEpochId = await childValidatorSet.currentEpochId();
-
-        uptime = {
-          epochId: currentEpochId,
-          uptimeData: [{ validator: signer.address, signedBlocks: 1000000000000 }],
-          totalBlocks: 1,
-        };
-
-        await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
-        id++;
-      }
-
-      const countOfValidators = 2 + newValidatorsCount;
-      const validators = await childValidatorSet.sortedValidators(countOfValidators);
-      const validatorsInfoBeforeCommitSlash = [];
-      for (let i = 0; i < countOfValidators; i++) {
-        validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
-      }
-
-      epoch = {
-        startBlock: startBlock + 64 * newValidatorsCount,
-        endBlock: endBlock + 64 * newValidatorsCount,
-        epochRoot: ethers.utils.randomBytes(32),
-      };
-
-      const currentEpochId = await childValidatorSet.currentEpochId();
-
-      uptime = {
-        epochId: currentEpochId,
-        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
-        totalBlocks: 2,
-      };
-
-      const blockNumber = 0;
-      const pbftRound = 1;
-      const epochId = 0;
-
-      doubleSignerSlashingInput = [];
-      for (let i = 0; i < 2; i++) {
-        const blockHash = ethers.utils.randomBytes(32);
-        const signature = ethers.utils.keccak256(
-          ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint", "bytes32"],
-            [blockNumber, pbftRound, epochId, blockHash]
-          )
-        );
-
-        const bitmap = Math.floor(Math.random() * 0xffffffffffffffff);
-        let bitmapStr = bitmap.toString(16);
-        const bitmapLength = bitmapStr.length;
-        for (let j = 0; j < 16 - bitmapLength; j++) {
-          bitmapStr = "0" + bitmapStr;
-        }
-
-        doubleSignerSlashingInput.push({
-          blockHash: blockHash,
-          bitmap: "0x" + bitmapStr,
-          signature: signature,
-        });
-      }
-
-      const tx = await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
-        id,
-        epoch,
-        uptime,
-        blockNumber,
-        pbftRound,
-        epochId,
-        doubleSignerSlashingInput
-      );
-
-      await expect(tx)
-        .to.emit(childValidatorSet, "NewEpoch")
-        .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
-
-      const validatorsInfoAfterCommitSlash = [];
-      for (let i = 0; i < countOfValidators; i++) {
-        validatorsInfoAfterCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
-      }
-
-      expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
-
-      for (let i = 0; i < countOfValidators; i++) {
+      for (let i = 0; i < validators.length; i++) {
         let count = 0;
         for (let j = 0; j < doubleSignerSlashingInput.length; j++) {
           const byteNumber = Math.floor(i / 8);
           const bitNumber = i % 8;
 
-          if (byteNumber >= 8) {
-            //bitmap length is 8
+          if (byteNumber >= doubleSignerSlashingInput[j].bitmap.length / 2 - 1) {
             continue;
           }
 
@@ -1476,7 +1353,7 @@ describe("ChildValidatorSet", () => {
         }
       }
 
-      const storedEpoch: any = await childValidatorSet.epochs(currentEpochId);
+      const storedEpoch: any = await childValidatorSet.epochs(id);
       expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
       expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
       expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
@@ -1502,13 +1379,12 @@ describe("ChildValidatorSet", () => {
       };
 
       const blockNumber = 0;
-      const pbftRound = 1;
+      const pbftRound = 0;
       const epochId = 0;
 
-      const countOfValidators = 82;
-      const validators = await childValidatorSet.sortedValidators(countOfValidators);
+      const validators = await childValidatorSet.getCurrentValidatorSet();
       const validatorsInfoBeforeCommitSlash = [];
-      for (let i = 0; i < countOfValidators; i++) {
+      for (let i = 0; i < validators.length; i++) {
         validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
       }
 
@@ -1527,13 +1403,13 @@ describe("ChildValidatorSet", () => {
         .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
 
       const validatorsInfoAfterCommitSlash = [];
-      for (let i = 0; i < countOfValidators; i++) {
+      for (let i = 0; i < validators.length; i++) {
         validatorsInfoAfterCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
       }
 
       expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
 
-      for (let i = 0; i < countOfValidators; i++) {
+      for (let i = 0; i < validators.length; i++) {
         expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(validatorsInfoBeforeCommitSlash[i].stake);
         expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(validatorsInfoBeforeCommitSlash[i].totalStake);
       }
