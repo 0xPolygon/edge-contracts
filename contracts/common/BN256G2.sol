@@ -2,13 +2,14 @@
 // solium-disable security/no-assign-params
 
 pragma solidity 0.8.17;
+import "../interfaces/IBN256G2.sol";
 
 /**
  * @title Elliptic curve operations on twist points on bn256 (G2)
  * @dev Adaptation of https://github.com/musalbas/solidity-BN256G2 to 0.6.0 and then 0.8.17
  */
 // slither-disable-next-line missing-inheritance
-contract BN256G2 {
+contract BN256G2 is IBN256G2 {
     uint256 internal constant FIELD_MODULUS = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
     uint256 internal constant TWISTBX = 0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5;
     uint256 internal constant TWISTBY = 0x9713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2;

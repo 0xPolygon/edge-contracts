@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../interfaces/IBLS.sol";
+import "../interfaces/IRootValidatorSet.sol";
 
 /**
     @title RootValidatorSet
@@ -12,12 +13,7 @@ import "../interfaces/IBLS.sol";
     @dev The contract is used to onboard new validators and register their ECDSA and BLS public keys.
  */
 // slither-disable-next-line missing-inheritance
-contract RootValidatorSet is Initializable, OwnableUpgradeable {
-    struct Validator {
-        address _address;
-        uint256[4] blsKey;
-    }
-
+contract RootValidatorSet is Initializable, OwnableUpgradeable, IRootValidatorSet {
     uint256 public currentValidatorId;
     address public checkpointManager;
 
