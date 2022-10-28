@@ -23,8 +23,10 @@ abstract contract Uninitialized is TestPlus {
     bytes32 public domain;
     bytes32 public eventRoot;
     uint256[4][] public pubkeys;
-    uint256[2] public aggMessagePoint;
+    uint256[2][] public aggMessagePoints;
     uint256[] public validatorIds;
+    RootValidatorSet.Validator public newValidator;
+    RootValidatorSet.Validator[] public validators;
 
     // using Checkpoint for CheckpointManager.Checkpoint;
 
@@ -37,18 +39,22 @@ abstract contract Uninitialized is TestPlus {
         governance = makeAddr("governance");
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
+        newValidator._address = governance;
 
+        domain = keccak256(abi.encodePacked(block.timestamp));
+        eventRoot = keccak256(abi.encodePacked(block.timestamp, block.number));
         //initialize RootValidatorSet
         address[] memory addresses = new address[](validatorSetSize);
-        string[] memory cmd = new string[](3);
+        string[] memory cmd = new string[](4);
         cmd[0] = "npx";
         cmd[1] = "ts-node";
         cmd[2] = "test/forge/root/generateMsg.ts";
+        cmd[3] = vm.toString(abi.encode(domain, eventRoot, governance));
         bytes memory out = vm.ffi(cmd);
 
-        (validatorSetSize, addresses, domain, pubkeys, eventRoot, validatorIds, aggMessagePoint) = abi.decode(
+        (validatorSetSize, addresses, pubkeys, validatorIds, aggMessagePoints, newValidator.blsKey) = abi.decode(
             out,
-            (uint256, address[], bytes32, uint256[4][], bytes32, uint256[], uint256[2])
+            (uint256, address[], uint256[4][], uint256[], uint256[2][], uint256[4])
         );
 
         rootValidatorSet.initialize(governance, address(checkpointManager), addresses, pubkeys);
@@ -105,7 +111,7 @@ contract CheckpointManager_Submit is Initialized {
         checkpointManager.submit(
             id,
             checkpoint,
-            aggMessagePoint,
+            aggMessagePoints[0],
             new uint256[](0),
             new RootValidatorSet.Validator[](0)
         );
@@ -120,18 +126,106 @@ contract CheckpointManager_Submit is Initialized {
         });
 
         vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
-        checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, new RootValidatorSet.Validator[](0));
+        checkpointManager.submit(
+            id,
+            checkpoint,
+            aggMessagePoints[0],
+            validatorIds,
+            new RootValidatorSet.Validator[](0)
+        );
     }
 
     function testCannotSubmit_NonSequentialId() public {
-        uint256 id = submitCounter + 1;
+        uint256 id = submitCounter + 1; //For Not Sequential id
         CheckpointManager.Checkpoint memory checkpoint = CheckpointManager.Checkpoint({
             startBlock: 1,
-            endBlock: 101, //For Invalid Signature
+            endBlock: 101,
             eventRoot: eventRoot
         });
 
         vm.expectRevert("ID_NOT_SEQUENTIAL");
-        checkpointManager.submit(id, checkpoint, aggMessagePoint, validatorIds, new RootValidatorSet.Validator[](0));
+        validators.push(newValidator);
+        checkpointManager.submit(id, checkpoint, aggMessagePoints[1], validatorIds, validators);
+    }
+
+    function testCannotSubmit_InvalidStartBlock() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint = CheckpointManager.Checkpoint({
+            startBlock: 2, //Invalid Start Block
+            endBlock: 102,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("INVALID_START_BLOCK");
+        validators.push(newValidator);
+        checkpointManager.submit(id, checkpoint, aggMessagePoints[2], validatorIds, validators);
+    }
+
+    function testCannotSubmit_EmptyCheckpoint() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 0, //endBlock < startBlock for EnptyCheckpoint
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("EMPTY_CHECKPOINT");
+        validators.push(newValidator);
+        checkpointManager.submit(id, checkpoint, aggMessagePoints[3], validatorIds, validators);
+    }
+
+    function testSubmit_WithoutValidators() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101, //endBlock < startBlock for EnptyCheckpoint
+            eventRoot: eventRoot
+        });
+
+        uint256 currentValidatorIdBeforeSubmit = rootValidatorSet.currentValidatorId();
+        checkpointManager.submit(
+            id,
+            checkpoint,
+            aggMessagePoints[4],
+            validatorIds,
+            new RootValidatorSet.Validator[](0)
+        );
+
+        submitCounter = checkpointManager.currentCheckpointId() + 1;
+        assertEq(submitCounter, 2);
+
+        (, uint256 endBlock, ) = checkpointManager.checkpoints(submitCounter - 1);
+        assertEq(endBlock, 101);
+        startBlock = endBlock + 1;
+
+        uint256 currentValidatorIdAfterSubmit = rootValidatorSet.currentValidatorId();
+        assertEq(currentValidatorIdAfterSubmit, currentValidatorIdBeforeSubmit);
+    }
+
+    function testSubmit_WithAValidator() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101, //endBlock < startBlock for EnptyCheckpoint
+            eventRoot: eventRoot
+        });
+
+        validators.push(newValidator);
+        uint256 currentValidatorIdBeforeSubmit = rootValidatorSet.currentValidatorId();
+        checkpointManager.submit(id, checkpoint, aggMessagePoints[5], validatorIds, validators);
+
+        submitCounter = checkpointManager.currentCheckpointId() + 1;
+        assertEq(submitCounter, 2);
+
+        (, uint256 endBlock, ) = checkpointManager.checkpoints(submitCounter - 1);
+        assertEq(endBlock, 101);
+        startBlock = endBlock + 1;
+
+        uint256 currentValidatorIdAfterSubmit = rootValidatorSet.currentValidatorId();
+        assertEq(currentValidatorIdAfterSubmit - 1, currentValidatorIdBeforeSubmit);
+
+        RootValidatorSet.Validator memory validator = rootValidatorSet.getValidator(currentValidatorIdAfterSubmit);
+        assertEq(keccak256(abi.encode(newValidator._address)), keccak256(abi.encode(validator._address)));
+        assertEq(keccak256(abi.encode(newValidator.blsKey)), keccak256(abi.encode(validator.blsKey)));
     }
 }
