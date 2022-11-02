@@ -32,8 +32,8 @@ contract ChildValidatorSet is
     using ArraysUpgradeable for uint256[];
 
     // more granular commission?
-    uint256 public doubleSigningSlashingPercent = 10;
-
+    uint256 public constant DOUBLE_SIGNING_SLASHING_PERCENT = 10;
+    // epochNumber -> roundNumber -> validator address -> bool
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public doubleSignerSlashes;
 
     /**
@@ -249,8 +249,8 @@ contract ChildValidatorSet is
         Validator storage validator = _validators.get(key);
         uint256 valTotalStake = validator.totalStake;
         uint256 valStake = validator.stake;
-        validator.totalStake -= (valTotalStake * doubleSigningSlashingPercent) / 100;
-        validator.stake -= (valStake * doubleSigningSlashingPercent) / 100;
+        validator.totalStake -= (valTotalStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
+        validator.stake -= (valStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
 
@@ -277,15 +277,16 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = (epochReward * (((epoch.endBlock - epoch.startBlock) * 100) / 64)) / 100;
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock) * 100) / (64 * 100);
 
         for (uint256 i = 0; i < length; ++i) {
             // skip reward distribution for slashed validators
-            if (slashingSet[i] == true) {
+            if (slashingSet[i]) {
                 continue;
             }
             UptimeData memory uptimeData = uptime.uptimeData[i];
             Validator storage validator = _validators.get(uptimeData.validator);
+            // slither-disable-next-line divide-before-multiply
             uint256 validatorReward = (reward * validator.totalStake * uptimeData.signedBlocks) /
                 (activeStake * uptime.totalBlocks);
             (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
@@ -335,7 +336,6 @@ contract ChildValidatorSet is
         bytes calldata bitmap
     ) private view {
         // verify signatures` for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
