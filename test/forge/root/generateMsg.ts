@@ -50,6 +50,22 @@ async function generateMsg() {
   aggMessagePoints.push(aggMessagePoint);
   generateSignature5();
   aggMessagePoints.push(aggMessagePoint);
+  generateSignature6();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature7();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature8();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature9();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature10();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature11();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature12();
+  aggMessagePoints.push(aggMessagePoint);
+  generateSignature13();
+  aggMessagePoints.push(aggMessagePoint);
 
   const output = ethers.utils.defaultAbiCoder.encode(
     ["uint256", "address[]", "uint256[4][]", "uint256[]", "uint256[2][]", "uint256[4]"],
@@ -253,4 +269,287 @@ function generateSignature5() {
 
   aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 }
+
+function generateSignature6() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 101,
+    eventRoot,
+  };
+
+  const checkpoint2 = {
+    startBlock: 102,
+    endBlock: 202,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id], [checkpoint1, checkpoint2], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature7() {
+  const id = 1 + 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 101,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id], [checkpoint1], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature8() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 2,
+    endBlock: 102,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id], [checkpoint1], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature9() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 1,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id], [checkpoint1], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature10() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 101,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id], [checkpoint1], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature11() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 101,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id], [checkpoint1], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature12() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 101,
+    eventRoot,
+  };
+
+  const checkpoint2 = {
+    startBlock: 102,
+    endBlock: 202,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id, id + 1], [checkpoint1, checkpoint2], []]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
+function generateSignature13() {
+  const id = 1;
+  const checkpoint1 = {
+    startBlock: 1,
+    endBlock: 101,
+    eventRoot,
+  };
+
+  const checkpoint2 = {
+    startBlock: 102,
+    endBlock: 202,
+    eventRoot,
+  };
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      [
+        "uint[]",
+        "tuple(uint startBlock, uint endBlock, bytes32 eventRoot)[]",
+        "tuple[](address _address, uint[4] blsKey)",
+      ],
+      [[id, id + 1], [checkpoint1, checkpoint2], [newValidator]]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+
+  for (let i = 0; i < minLength; i++) {
+    const { signature, messagePoint } = mcl.sign(
+      message,
+      validatorSecretKeys[validatorIds[i] - 1],
+      ethers.utils.arrayify(domain)
+    );
+    signatures.push(signature);
+  }
+
+  aggMessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+}
+
 generateMsg();

@@ -27,6 +27,8 @@ abstract contract Uninitialized is TestPlus {
     uint256[] public validatorIds;
     RootValidatorSet.Validator public newValidator;
     RootValidatorSet.Validator[] public validators;
+    CheckpointManager.Checkpoint[] public checkpoints;
+    uint256[] public ids;
 
     // using Checkpoint for CheckpointManager.Checkpoint;
 
@@ -219,6 +221,186 @@ contract CheckpointManager_Submit is Initialized {
 
         (, uint256 endBlock, ) = checkpointManager.checkpoints(submitCounter - 1);
         assertEq(endBlock, 101);
+        startBlock = endBlock + 1;
+
+        uint256 currentValidatorIdAfterSubmit = rootValidatorSet.currentValidatorId();
+        assertEq(currentValidatorIdAfterSubmit - 1, currentValidatorIdBeforeSubmit);
+
+        RootValidatorSet.Validator memory validator = rootValidatorSet.getValidator(currentValidatorIdAfterSubmit);
+        assertEq(keccak256(abi.encode(newValidator._address)), keccak256(abi.encode(validator._address)));
+        assertEq(keccak256(abi.encode(newValidator.blsKey)), keccak256(abi.encode(validator.blsKey)));
+    }
+
+    function testCannotSubmitBatch_LengthMismatch() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101,
+            eventRoot: eventRoot
+        });
+
+        CheckpointManager.Checkpoint memory checkpoint2 = CheckpointManager.Checkpoint({
+            startBlock: 102,
+            endBlock: 202,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("LENGTH_MISMATCH");
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        checkpoints.push(checkpoint2);
+        ids.push(id);
+        checkpointManager.submitBatch(ids, checkpoints, aggMessagePoints[6], validatorIds, validators);
+    }
+
+    function testCannotSubmitBatch_NonSequentialId() public {
+        uint256 id = submitCounter + 1;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("ID_NOT_SEQUENTIAL");
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        ids.push(id);
+        checkpointManager.submitBatch(ids, checkpoints, aggMessagePoints[7], validatorIds, validators);
+    }
+
+    function testCannotSubmitBatch_InvalidStartBlock() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 2, //Invalid Start Block
+            endBlock: 102,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("INVALID_START_BLOCK");
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        ids.push(id);
+        checkpointManager.submitBatch(ids, checkpoints, aggMessagePoints[8], validatorIds, validators);
+    }
+
+    function testCannotSubmitBatch_EmptyCheckpoint() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 1,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("EMPTY_CHECKPOINT");
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        ids.push(id);
+        checkpointManager.submitBatch(ids, checkpoints, aggMessagePoints[9], validatorIds, validators);
+    }
+
+    function testCannotSubmitBatch_InvalidLength() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("NOT_ENOUGH_SIGNATURES");
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        ids.push(id);
+        checkpointManager.submitBatch(
+            ids,
+            checkpoints,
+            aggMessagePoints[10],
+            new uint256[](0),
+            new RootValidatorSet.Validator[](0)
+        );
+    }
+
+    function testCannotSubmitBatch_InvalidSignature() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 102,
+            eventRoot: eventRoot
+        });
+
+        vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        ids.push(id);
+        checkpointManager.submitBatch(ids, checkpoints, aggMessagePoints[11], validatorIds, validators);
+    }
+
+    function testSubmitBatch_WithoutValidators() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101,
+            eventRoot: eventRoot
+        });
+
+        CheckpointManager.Checkpoint memory checkpoint2 = CheckpointManager.Checkpoint({
+            startBlock: 102,
+            endBlock: 202,
+            eventRoot: eventRoot
+        });
+
+        checkpoints.push(checkpoint1);
+        checkpoints.push(checkpoint2);
+        ids.push(id);
+        ids.push(id + 1);
+
+        uint256 currentValidatorIdBeforeSubmit = rootValidatorSet.currentValidatorId();
+        checkpointManager.submitBatch(
+            ids,
+            checkpoints,
+            aggMessagePoints[12],
+            validatorIds,
+            new RootValidatorSet.Validator[](0)
+        );
+
+        submitCounter = checkpointManager.currentCheckpointId() + 1;
+        assertEq(submitCounter, 3);
+
+        (, uint256 endBlock, ) = checkpointManager.checkpoints(submitCounter - 1);
+        assertEq(endBlock, 202);
+        startBlock = endBlock + 1;
+
+        uint256 currentValidatorIdAfterSubmit = rootValidatorSet.currentValidatorId();
+        assertEq(currentValidatorIdAfterSubmit, currentValidatorIdBeforeSubmit);
+    }
+
+    function testSubmitBatch_WithoutANewValidator() public {
+        uint256 id = submitCounter;
+        CheckpointManager.Checkpoint memory checkpoint1 = CheckpointManager.Checkpoint({
+            startBlock: 1,
+            endBlock: 101,
+            eventRoot: eventRoot
+        });
+
+        CheckpointManager.Checkpoint memory checkpoint2 = CheckpointManager.Checkpoint({
+            startBlock: 102,
+            endBlock: 202,
+            eventRoot: eventRoot
+        });
+
+        validators.push(newValidator);
+        checkpoints.push(checkpoint1);
+        checkpoints.push(checkpoint2);
+        ids.push(id);
+        ids.push(id + 1);
+
+        uint256 currentValidatorIdBeforeSubmit = rootValidatorSet.currentValidatorId();
+        checkpointManager.submitBatch(ids, checkpoints, aggMessagePoints[13], validatorIds, validators);
+
+        submitCounter = checkpointManager.currentCheckpointId() + 1;
+        assertEq(submitCounter, 3);
+
+        (, uint256 endBlock, ) = checkpointManager.checkpoints(submitCounter - 1);
+        assertEq(endBlock, 202);
         startBlock = endBlock + 1;
 
         uint256 currentValidatorIdAfterSubmit = rootValidatorSet.currentValidatorId();
