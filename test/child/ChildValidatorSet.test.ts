@@ -4,14 +4,16 @@ import { ethers, upgrades } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
 import { expandMsg } from "../../ts/hashToField";
-// import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
+import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
 import { BLS, ChildValidatorSet } from "../../typechain";
 import { customError } from "../util";
 import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import { assert } from "console";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
 const MAX_COMMISSION = 100;
+const DOUBLE_SIGNING_SLASHING_PERCENT = 10;
 
 describe("ChildValidatorSet", () => {
   let bls: BLS,
@@ -19,8 +21,6 @@ describe("ChildValidatorSet", () => {
     governance: string,
     childValidatorSet: ChildValidatorSet,
     systemChildValidatorSet: ChildValidatorSet,
-    childValidatorSetValidatorSet: ChildValidatorSet,
-    stateSyncChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     validatorStake: BigNumber,
     epochReward: BigNumber,
@@ -29,6 +29,7 @@ describe("ChildValidatorSet", () => {
     id: number,
     epoch: any,
     uptime: any,
+    doubleSignerSlashingInput: any,
     childValidatorSetBalance: BigNumber,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
@@ -67,13 +68,7 @@ describe("ChildValidatorSet", () => {
       params: ["0x0000000000000000000000000000000000001001"],
     });
     const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
-    const stateSyncSigner = await ethers.getSigner("0x0000000000000000000000000000000000001001");
-    // await hre.network.provider.send("hardhat_setCode", [
-    //   "0x0000000000000000000000000000000000002030",
-    //   alwaysTrueBytecode,
-    // ]);
     systemChildValidatorSet = childValidatorSet.connect(systemSigner);
-    stateSyncChildValidatorSet = childValidatorSet.connect(stateSyncSigner);
   });
   it("Initialize without system call", async () => {
     await expect(
@@ -158,7 +153,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 0,
       endBlock: 0,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -175,7 +169,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 0,
       endBlock: 0,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -192,7 +185,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 0,
       endBlock: 0,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -209,7 +201,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 1,
       endBlock: 63,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -228,7 +219,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 1,
       endBlock: 64,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -245,7 +235,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 1,
       endBlock: 64,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
@@ -270,7 +259,6 @@ describe("ChildValidatorSet", () => {
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
-    const currentValidatorId = await childValidatorSet.currentEpochId();
 
     uptime = {
       epochId: currentEpochId,
@@ -278,7 +266,12 @@ describe("ChildValidatorSet", () => {
       totalBlocks: 1,
     };
 
-    await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    const tx = await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+
+    await expect(tx)
+      .to.emit(childValidatorSet, "NewEpoch")
+      .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
     const storedEpoch: any = await childValidatorSet.epochs(1);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
@@ -290,7 +283,6 @@ describe("ChildValidatorSet", () => {
       startBlock: 64,
       endBlock: 127,
       epochRoot: ethers.utils.randomBytes(32),
-      validatorSet: [],
     };
 
     uptime = {
@@ -328,7 +320,6 @@ describe("ChildValidatorSet", () => {
     };
 
     const currentEpochId = await childValidatorSet.currentEpochId();
-    const currentValidatorId = await childValidatorSet.currentEpochId();
 
     uptime = {
       epochId: currentEpochId,
@@ -336,33 +327,16 @@ describe("ChildValidatorSet", () => {
       totalBlocks: 1,
     };
 
-    await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    const tx = await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+    await expect(tx)
+      .to.emit(childValidatorSet, "NewEpoch")
+      .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
     const storedEpoch: any = await childValidatorSet.epochs(2);
     expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
     expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
     expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
   });
-
-  // it("Get and set current validators when exceeds active validator set size", async () => {
-  //   const currentValidatorId = await childValidatorSet.currentEpochId();
-
-  //   epoch = {
-  //     startBlock: 129,
-  //     endBlock: 192,
-  //     epochRoot: ethers.utils.randomBytes(32),
-  //     validatorSet: [],
-  //   };
-
-  //   const currentEpochId = await childValidatorSet.currentEpochId();
-
-  //   uptime = {
-  //     epochId: currentEpochId,
-  //     uptimeData: [{ validator: accounts[0].address, signedBlocks: 1000000000000 }],
-  //     totalBlocks: 1,
-  //   };
-
-  //   await systemChildValidatorSet.commitEpoch(3, epoch, uptime); // commit epoch to update validator set
-  // });
 
   describe("whitelist", async () => {
     it("only owner should be able to modify whitelist", async () => {
@@ -453,7 +427,11 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to stake", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
+      const tx = await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "Staked")
+        .withArgs(accounts[2].address, minStake * 2);
       expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
     });
 
@@ -508,8 +486,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to partially unstake", async () => {
-      // await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
-      await childValidatorSet.connect(accounts[2]).unstake(minStake);
+      const tx = await childValidatorSet.connect(accounts[2]).unstake(minStake);
+      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
     });
 
     it("should take pending unstakes into account", async () => {
@@ -522,7 +500,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should be able to completely unstake", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      const tx = await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
     });
 
     it("should place in withdrawal queue", async () => {
@@ -741,6 +720,706 @@ describe("ChildValidatorSet", () => {
     });
   });
 
+  describe("commitEpochWithDoubleSignerSlashing", async () => {
+    it("failed by invalid length", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash = ethers.utils.randomBytes(32);
+      const signature = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash,
+          bitmap: "0x",
+          signature,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("INVALID_LENGTH");
+    });
+
+    it("failed by blockhash not unique", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash = ethers.utils.randomBytes(32);
+      const signature = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash,
+          bitmap: "0x",
+          signature,
+        },
+        {
+          blockHash,
+          bitmap: "0x",
+          signature,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("BLOCKHASH_NOT_UNIQUE");
+    });
+
+    it("failed by signature verification failed", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x",
+          signature: signature2,
+        },
+      ];
+
+      await hre.network.provider.send("hardhat_setCode", [
+        "0x0000000000000000000000000000000000002030",
+        alwaysFalseBytecode,
+      ]);
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
+    });
+
+    it("failed by unexpected epoch id", async () => {
+      id = 8;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await hre.network.provider.send("hardhat_setCode", [
+        "0x0000000000000000000000000000000000002030",
+        alwaysTrueBytecode,
+      ]);
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("UNEXPECTED_EPOCH_ID");
+    });
+    it("failed by no blocks committed", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 513,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("NO_BLOCKS_COMMITTED");
+    });
+    it("failed by invalid length", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+        ],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("INVALID_LENGTH");
+    });
+    it("success", async () => {
+      id = 9;
+      epoch = {
+        startBlock: 513,
+        endBlock: 577,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+        id,
+        epoch,
+        uptime,
+        blockNumber,
+        pbftRound,
+        epochId,
+        doubleSignerSlashingInput
+      );
+    });
+    it("failed by old block", async () => {
+      id = 10;
+      epoch = {
+        startBlock: 576,
+        endBlock: 600,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0x000000000000000000000000",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x000000000000000000000000",
+          signature: signature2,
+        },
+      ];
+
+      await expect(
+        systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+          id,
+          epoch,
+          uptime,
+          blockNumber,
+          pbftRound,
+          epochId,
+          doubleSignerSlashingInput
+        )
+      ).to.be.revertedWith("INVALID_START_BLOCK");
+    });
+    it("success with fuzzy bitmap for fuzzy length of validators", async () => {
+      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
+      const { pubkey, secret } = mcl.newKeyPair();
+      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
+      const parsedPubkey = mcl.g2ToHex(pubkey);
+
+      const newValidatorsCount = Math.floor(Math.random() * 4 + 6); // Randomly pick 6-10
+      for (let i = 0; i < newValidatorsCount; i++) {
+        const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
+        await setBalance(signer.address, ethers.utils.parseEther("1000000"));
+        await expect(childValidatorSet.addToWhitelist([signer.address])).to.not.be.reverted;
+
+        await childValidatorSet.connect(signer).register(mcl.g1ToHex(signature), parsedPubkey);
+        await childValidatorSet.connect(signer).stake({ value: minStake * 2 });
+        const validator = await childValidatorSet.getValidator(signer.address);
+
+        expect(validator.active).to.equal(true);
+
+        epoch = {
+          startBlock: BigNumber.from(578 + i * 64),
+          endBlock: BigNumber.from(641 + i * 64),
+          epochRoot: ethers.utils.randomBytes(32),
+          validatorSet: [signer.address],
+        };
+
+        const currentEpochId = await childValidatorSet.currentEpochId();
+
+        uptime = {
+          epochId: currentEpochId,
+          uptimeData: [{ validator: signer.address, signedBlocks: 1000000000000 }],
+          totalBlocks: 1,
+        };
+
+        await systemChildValidatorSet.commitEpoch(id, epoch, uptime);
+        id++;
+      }
+
+      epoch = {
+        startBlock: parseInt(epoch.startBlock, 10) + 64,
+        endBlock: parseInt(epoch.endBlock, 10) + 64,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+      const blockHash1 = ethers.utils.randomBytes(32);
+      const blockHash2 = ethers.utils.randomBytes(32);
+      const blockHash3 = ethers.utils.randomBytes(32);
+      const signature1 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash1]
+        )
+      );
+      const signature2 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash2]
+        )
+      );
+      const signature3 = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["uint", "uint", "uint", "bytes32"],
+          [blockNumber, pbftRound, epochId, blockHash3]
+        )
+      );
+
+      const bitmap = Math.floor(Math.random() * 0xffffffffffffffff);
+      let bitmapStr = bitmap.toString(16);
+      const bitmapLength = bitmapStr.length;
+      for (let j = 0; j < 16 - bitmapLength; j++) {
+        bitmapStr = "0" + bitmapStr;
+      }
+
+      doubleSignerSlashingInput = [
+        {
+          blockHash: blockHash1,
+          bitmap: "0xff",
+          signature: signature1,
+        },
+        {
+          blockHash: blockHash2,
+          bitmap: "0x" + bitmapStr,
+          signature: signature2,
+        },
+        {
+          blockHash: blockHash3,
+          bitmap: "0xffffffffffffffff",
+          signature: signature3,
+        },
+      ];
+
+      const validators = await childValidatorSet.getCurrentValidatorSet();
+      const validatorsInfoBeforeCommitSlash = [];
+      for (let i = 0; i < validators.length; i++) {
+        validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
+      }
+
+      const tx = await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+        id,
+        epoch,
+        uptime,
+        blockNumber,
+        pbftRound,
+        epochId,
+        doubleSignerSlashingInput
+      );
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "NewEpoch")
+        .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
+      const validatorsInfoAfterCommitSlash = [];
+      for (let i = 0; i < validators.length; i++) {
+        validatorsInfoAfterCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
+      }
+
+      expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
+
+      for (let i = 0; i < validators.length; i++) {
+        let count = 0;
+        for (let j = 0; j < doubleSignerSlashingInput.length; j++) {
+          const byteNumber = Math.floor(i / 8);
+          const bitNumber = i % 8;
+
+          if (byteNumber >= doubleSignerSlashingInput[j].bitmap.length / 2 - 1) {
+            continue;
+          }
+
+          // Get the value of the bit at the given 'index' in a byte.
+          const oneByte = parseInt(
+            doubleSignerSlashingInput[j].bitmap[2 + byteNumber * 2] +
+              doubleSignerSlashingInput[j].bitmap[3 + byteNumber * 2],
+            16
+          );
+          if ((oneByte & (1 << bitNumber)) > 0) {
+            count++;
+          }
+
+          if (count > 1) {
+            expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(
+              validatorsInfoBeforeCommitSlash[i].stake.sub(
+                validatorsInfoBeforeCommitSlash[i].stake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
+              )
+            );
+            expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(
+              validatorsInfoBeforeCommitSlash[i].totalStake.sub(
+                validatorsInfoBeforeCommitSlash[i].totalStake.mul(DOUBLE_SIGNING_SLASHING_PERCENT).div(100)
+              )
+            );
+            break;
+          }
+        }
+        if (count <= 1) {
+          expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(validatorsInfoBeforeCommitSlash[i].stake);
+          expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(validatorsInfoBeforeCommitSlash[i].totalStake);
+        }
+      }
+
+      const storedEpoch: any = await childValidatorSet.epochs(id);
+      expect(storedEpoch.startBlock).to.equal(epoch.startBlock);
+      expect(storedEpoch.endBlock).to.equal(epoch.endBlock);
+      expect(storedEpoch.epochRoot).to.equal(ethers.utils.hexlify(epoch.epochRoot));
+    });
+    it("success try double sign for same epoch & pbftRound & key", async () => {
+      id++;
+
+      const startBlock = parseInt(epoch.startBlock, 10) + 64;
+      const endBlock = parseInt(epoch.endBlock, 10) + 64;
+
+      epoch = {
+        startBlock: startBlock,
+        endBlock: endBlock,
+        epochRoot: ethers.utils.randomBytes(32),
+      };
+
+      const currentEpochId = await childValidatorSet.currentEpochId();
+
+      uptime = {
+        epochId: currentEpochId,
+        uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+        totalBlocks: 2,
+      };
+
+      const blockNumber = 0;
+      const pbftRound = 0;
+      const epochId = 0;
+
+      const validators = await childValidatorSet.getCurrentValidatorSet();
+      const validatorsInfoBeforeCommitSlash = [];
+      for (let i = 0; i < validators.length; i++) {
+        validatorsInfoBeforeCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
+      }
+
+      const tx = await systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
+        id,
+        epoch,
+        uptime,
+        blockNumber,
+        pbftRound,
+        epochId,
+        doubleSignerSlashingInput
+      );
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "NewEpoch")
+        .withArgs(currentEpochId, epoch.startBlock, epoch.endBlock, ethers.utils.hexlify(epoch.epochRoot));
+
+      const validatorsInfoAfterCommitSlash = [];
+      for (let i = 0; i < validators.length; i++) {
+        validatorsInfoAfterCommitSlash.push(await childValidatorSet.getValidator(validators[i]));
+      }
+
+      expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
+
+      for (let i = 0; i < validators.length; i++) {
+        expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(validatorsInfoBeforeCommitSlash[i].stake);
+        expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(validatorsInfoBeforeCommitSlash[i].totalStake);
+      }
+    });
+  });
+
   describe("undelegate", async () => {
     it("undelegate insufficient amount", async () => {
       const delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
@@ -763,7 +1442,15 @@ describe("ChildValidatorSet", () => {
     });
 
     it("undelegate", async () => {
-      await childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, minDelegation * 3 + 3);
+      let delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      const tx = await childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount);
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "Undelegated")
+        .withArgs(accounts[3].address, accounts[2].address, delegatedAmount);
+
+      delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      expect(delegatedAmount).to.equal(0);
     });
   });
 

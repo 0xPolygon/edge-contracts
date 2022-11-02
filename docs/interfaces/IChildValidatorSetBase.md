@@ -24,6 +24,24 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 | epoch  | Epoch   | undefined   |
 | uptime | Uptime  | undefined   |
 
+### commitEpochWithDoubleSignerSlashing
+
+```solidity
+function commitEpochWithDoubleSignerSlashing(uint256 curEpochId, Epoch epoch, Uptime uptime, uint256 blockNumber, uint256 pbftRound, uint256 epochId, IChildValidatorSetBase.DoubleSignerSlashingInput[] inputs) external nonpayable
+```
+
+#### Parameters
+
+| Name        | Type                                               | Description |
+| ----------- | -------------------------------------------------- | ----------- |
+| curEpochId  | uint256                                            | undefined   |
+| epoch       | Epoch                                              | undefined   |
+| uptime      | Uptime                                             | undefined   |
+| blockNumber | uint256                                            | undefined   |
+| pbftRound   | uint256                                            | undefined   |
+| epochId     | uint256                                            | undefined   |
+| inputs      | IChildValidatorSetBase.DoubleSignerSlashingInput[] | undefined   |
+
 ### getCurrentValidatorSet
 
 ```solidity
@@ -73,6 +91,20 @@ Calculates total stake of active validators (self-stake + delegation).
 | \_0  | uint256 | Total stake of active validators (in MATIC wei) |
 
 ## Events
+
+### DoubleSignerSlashed
+
+```solidity
+event DoubleSignerSlashed(address indexed key, uint256 indexed epoch, uint256 indexed pbftRound)
+```
+
+#### Parameters
+
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| key `indexed`       | address | undefined   |
+| epoch `indexed`     | uint256 | undefined   |
+| pbftRound `indexed` | uint256 | undefined   |
 
 ### NewEpoch
 
