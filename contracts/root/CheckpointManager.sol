@@ -27,6 +27,8 @@ contract CheckpointManager is Initializable {
 
     mapping(uint256 => Checkpoint) public checkpoints;
 
+    event NewCheckpoint(uint256 checkpointId);
+
     /**
      * @notice Initialization function for CheckpointManager
      * @dev Contract can only be initialized once
@@ -65,6 +67,7 @@ contract CheckpointManager is Initializable {
         bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint, newValidators)));
 
         uint256[2] memory message = bls.hashToPoint(domain, hash);
+        emit NewCheckpoint(id);
 
         // slither-disable-next-line reentrancy-benign
         require(_verifySignature(message, signature, validatorIds), "SIGNATURE_VERIFICATION_FAILED");
@@ -110,6 +113,8 @@ contract CheckpointManager is Initializable {
         for (uint256 i = 0; i < length; ++i) {
             _verifyCheckpoint(prevId++, ids[i], checkpointBatch[i]);
             checkpoints[ids[i]] = checkpointBatch[i];
+            // slither-disable-next-line reentrancy-events
+            emit NewCheckpoint(ids[i]);
         }
 
         currentCheckpointId = prevId;

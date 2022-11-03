@@ -231,6 +231,24 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 | epoch  | Epoch   | undefined   |
 | uptime | Uptime  | undefined   |
 
+### commitEpochWithDoubleSignerSlashing
+
+```solidity
+function commitEpochWithDoubleSignerSlashing(uint256 curEpochId, Epoch epoch, Uptime uptime, uint256 blockNumber, uint256 pbftRound, uint256 epochId, IChildValidatorSetBase.DoubleSignerSlashingInput[] inputs) external nonpayable
+```
+
+#### Parameters
+
+| Name        | Type                                               | Description |
+| ----------- | -------------------------------------------------- | ----------- |
+| curEpochId  | uint256                                            | undefined   |
+| epoch       | Epoch                                              | undefined   |
+| uptime      | Uptime                                             | undefined   |
+| blockNumber | uint256                                            | undefined   |
+| pbftRound   | uint256                                            | undefined   |
+| epochId     | uint256                                            | undefined   |
+| inputs      | IChildValidatorSetBase.DoubleSignerSlashingInput[] | undefined   |
+
 ### currentEpochId
 
 ```solidity
@@ -278,6 +296,38 @@ Gets amount delegated by delegator to validator.
 | Name | Type    | Description                     |
 | ---- | ------- | ------------------------------- |
 | \_0  | uint256 | Amount delegated (in MATIC wei) |
+
+### doubleSignerSlashes
+
+```solidity
+function doubleSignerSlashes(uint256, uint256, address) external view returns (bool)
+```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+| \_1  | uint256 | undefined   |
+| \_2  | address | undefined   |
+
+#### Returns
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
+
+### doubleSigningSlashingPercent
+
+```solidity
+function doubleSigningSlashingPercent() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 ### epochEndBlocks
 
@@ -791,6 +841,20 @@ event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 | ------------------- | ------- | ----------- |
 | validator `indexed` | address | undefined   |
 | amount              | uint256 | undefined   |
+
+### DoubleSignerSlashed
+
+```solidity
+event DoubleSignerSlashed(address indexed key, uint256 indexed epoch, uint256 indexed pbftRound)
+```
+
+#### Parameters
+
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| key `indexed`       | address | undefined   |
+| epoch `indexed`     | uint256 | undefined   |
+| pbftRound `indexed` | uint256 | undefined   |
 
 ### Initialized
 

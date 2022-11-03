@@ -11,7 +11,14 @@ import "./modules/ICVSStorage.sol";
  * It manages staking, epoch committing, and reward distribution.
  */
 interface IChildValidatorSetBase {
+    struct DoubleSignerSlashingInput {
+        bytes32 blockHash;
+        bytes bitmap;
+        bytes signature;
+    }
+
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
+    event DoubleSignerSlashed(address indexed key, uint256 indexed epoch, uint256 indexed pbftRound);
 
     /**
      * @notice Allows the v3 client to commit epochs to this contract.
@@ -23,6 +30,26 @@ interface IChildValidatorSetBase {
         uint256 id,
         Epoch calldata epoch,
         Uptime calldata uptime
+    ) external;
+
+    /**
+     * @notice Allows the v3 client to commit epoch and slash double signers.
+     * @param curEpochId ID of epoch to be committed
+     * @param epoch Epoch data to be committed
+     * @param uptime Uptime data for the epoch being committed
+     * @param blockNumber Block number at which double signer occurred
+     * @param pbftRound Round number at which double signing occurred
+     * @param epochId ID of epoch where double signing occurred
+     * @param inputs Information about double signers to be slashed along with signatures and bitmap
+     */
+    function commitEpochWithDoubleSignerSlashing(
+        uint256 curEpochId,
+        Epoch calldata epoch,
+        Uptime calldata uptime,
+        uint256 blockNumber,
+        uint256 pbftRound,
+        uint256 epochId,
+        DoubleSignerSlashingInput[] calldata inputs
     ) external;
 
     /**
