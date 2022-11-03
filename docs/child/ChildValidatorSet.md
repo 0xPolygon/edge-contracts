@@ -14,6 +14,18 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 | ---- | ------- | ----------- |
 | \_0  | uint256 | undefined   |
 
+### DOUBLE_SIGNING_SLASHING_PERCENT
+
+```solidity
+function DOUBLE_SIGNING_SLASHING_PERCENT() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
 ### MAX_COMMISSION
 
 ```solidity
@@ -316,18 +328,6 @@ function doubleSignerSlashes(uint256, uint256, address) external view returns (b
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | \_0  | bool | undefined   |
-
-### doubleSigningSlashingPercent
-
-```solidity
-function doubleSigningSlashingPercent() external view returns (uint256)
-```
-
-#### Returns
-
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
 
 ### epochEndBlocks
 

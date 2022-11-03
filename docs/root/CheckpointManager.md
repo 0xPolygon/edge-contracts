@@ -66,6 +66,37 @@ function currentCheckpointId() external view returns (uint256)
 | ---- | ------- | ----------- |
 | \_0  | uint256 | undefined   |
 
+### currentValidatorSet
+
+```solidity
+function currentValidatorSet(uint256) external view returns (address _address, uint256 votingPower)
+```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+#### Returns
+
+| Name        | Type    | Description |
+| ----------- | ------- | ----------- |
+| \_address   | address | undefined   |
+| votingPower | uint256 | undefined   |
+
+### currentValidatorSetLength
+
+```solidity
+function currentValidatorSetLength() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
 ### domain
 
 ```solidity
@@ -81,65 +112,51 @@ function domain() external view returns (bytes32)
 ### initialize
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, contract IRootValidatorSet newRootValidatorSet, bytes32 newDomain) external nonpayable
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, CheckpointManager.Validator[] newValidatorSet) external nonpayable
 ```
-
-Initialization function for CheckpointManager
-
-_Contract can only be initialized once_
 
 #### Parameters
 
-| Name                | Type                       | Description                                            |
-| ------------------- | -------------------------- | ------------------------------------------------------ |
-| newBls              | contract IBLS              | Address of the BLS library contract                    |
-| newBn256G2          | contract IBN256G2          | Address of the BLS library contract                    |
-| newRootValidatorSet | contract IRootValidatorSet | Array of validator addresses to seed the contract with |
-| newDomain           | bytes32                    | Domain to use when hashing messages to a point         |
-
-### rootValidatorSet
-
-```solidity
-function rootValidatorSet() external view returns (contract IRootValidatorSet)
-```
-
-#### Returns
-
-| Name | Type                       | Description |
-| ---- | -------------------------- | ----------- |
-| \_0  | contract IRootValidatorSet | undefined   |
+| Name            | Type                          | Description |
+| --------------- | ----------------------------- | ----------- |
+| newBls          | contract IBLS                 | undefined   |
+| newBn256G2      | contract IBN256G2             | undefined   |
+| newDomain       | bytes32                       | undefined   |
+| newValidatorSet | CheckpointManager.Validator[] | undefined   |
 
 ### submit
 
 ```solidity
-function submit(uint256 id, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, uint256[] validatorIds, IRootValidatorSet.Validator[] newValidators) external nonpayable
+function submit(uint256 chainId, uint256 id, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 #### Parameters
 
-| Name          | Type                          | Description |
-| ------------- | ----------------------------- | ----------- |
-| id            | uint256                       | undefined   |
-| checkpoint    | CheckpointManager.Checkpoint  | undefined   |
-| signature     | uint256[2]                    | undefined   |
-| validatorIds  | uint256[]                     | undefined   |
-| newValidators | IRootValidatorSet.Validator[] | undefined   |
+| Name            | Type                          | Description |
+| --------------- | ----------------------------- | ----------- |
+| chainId         | uint256                       | undefined   |
+| id              | uint256                       | undefined   |
+| checkpoint      | CheckpointManager.Checkpoint  | undefined   |
+| signature       | uint256[2]                    | undefined   |
+| newValidatorSet | CheckpointManager.Validator[] | undefined   |
+| bitmap          | bytes                         | undefined   |
 
 ### submitBatch
 
 ```solidity
-function submitBatch(uint256[] ids, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, uint256[] validatorIds, IRootValidatorSet.Validator[] newValidators) external nonpayable
+function submitBatch(uint256 chainId, uint256[] ids, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 #### Parameters
 
 | Name            | Type                           | Description |
 | --------------- | ------------------------------ | ----------- |
+| chainId         | uint256                        | undefined   |
 | ids             | uint256[]                      | undefined   |
 | checkpointBatch | CheckpointManager.Checkpoint[] | undefined   |
 | signature       | uint256[2]                     | undefined   |
-| validatorIds    | uint256[]                      | undefined   |
-| newValidators   | IRootValidatorSet.Validator[]  | undefined   |
+| newValidatorSet | CheckpointManager.Validator[]  | undefined   |
+| bitmap          | bytes                          | undefined   |
 
 ## Events
 
