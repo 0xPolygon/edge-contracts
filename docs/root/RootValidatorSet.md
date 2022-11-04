@@ -39,14 +39,14 @@ returns number of active validators
 ### addValidators
 
 ```solidity
-function addValidators(RootValidatorSet.Validator[] newValidators) external nonpayable
+function addValidators(IRootValidatorSet.Validator[] newValidators) external nonpayable
 ```
 
 #### Parameters
 
-| Name          | Type                         | Description |
-| ------------- | ---------------------------- | ----------- |
-| newValidators | RootValidatorSet.Validator[] | undefined   |
+| Name          | Type                          | Description |
+| ------------- | ----------------------------- | ----------- |
+| newValidators | IRootValidatorSet.Validator[] | undefined   |
 
 ### checkpointManager
 
@@ -75,7 +75,7 @@ function currentValidatorId() external view returns (uint256)
 ### getValidator
 
 ```solidity
-function getValidator(uint256 id) external view returns (struct RootValidatorSet.Validator)
+function getValidator(uint256 id) external view returns (struct IRootValidatorSet.Validator)
 ```
 
 returns validator struct by id
@@ -88,9 +88,9 @@ returns validator struct by id
 
 #### Returns
 
-| Name | Type                       | Description      |
-| ---- | -------------------------- | ---------------- |
-| \_0  | RootValidatorSet.Validator | Validator struct |
+| Name | Type                        | Description      |
+| ---- | --------------------------- | ---------------- |
+| \_0  | IRootValidatorSet.Validator | Validator struct |
 
 ### getValidatorBlsKey
 

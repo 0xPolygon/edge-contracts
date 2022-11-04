@@ -154,3 +154,15 @@ event Initialized(uint8 version)
 | Name    | Type  | Description |
 | ------- | ----- | ----------- |
 | version | uint8 | undefined   |
+
+### NewCheckpoint
+
+```solidity
+event NewCheckpoint(uint256 checkpointId)
+```
+
+#### Parameters
+
+| Name         | Type    | Description |
+| ------------ | ------- | ----------- |
+| checkpointId | uint256 | undefined   |

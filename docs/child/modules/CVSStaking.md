@@ -148,13 +148,6 @@ function currentEpochId() external view returns (uint256)
 function epochEndBlocks(uint256) external view returns (uint256)
 ```
 
-<<<<<<< HEAD:docs/interfaces/IChildValidatorSet.md
-Gets delegators&#39;s unclaimed rewards with validator.
-
-=======
-
-> > > > > > > f67a2b053d5093c9604fbfedfc0031ecd1728720:docs/child/modules/CVSStaking.md
-
 #### Parameters
 
 | Name | Type    | Description |
@@ -163,16 +156,9 @@ Gets delegators&#39;s unclaimed rewards with validator.
 
 #### Returns
 
-<<<<<<< HEAD:docs/interfaces/IChildValidatorSet.md
-| Name | Type | Description |
-| ---- | ------- | --------------------------------------------------------------- |
-| \_0 | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
-=======
-| Name | Type | Description |
+| Name | Type    | Description |
 | ---- | ------- | ----------- |
-| \_0 | uint256 | undefined |
-
-> > > > > > > f67a2b053d5093c9604fbfedfc0031ecd1728720:docs/child/modules/CVSStaking.md
+| \_0  | uint256 | undefined   |
 
 ### epochReward
 
@@ -246,8 +232,6 @@ Gets validator&#39;s unclaimed rewards.
 | ---- | ------- | ------------------------------------------------ |
 | \_0  | uint256 | Validator&#39;s unclaimed rewards (in MATIC wei) |
 
-# <<<<<<< HEAD:docs/interfaces/IChildValidatorSet.md
-
 ### message
 
 ```solidity
@@ -305,8 +289,6 @@ the address of the owner
 | Name | Type    | Description |
 | ---- | ------- | ----------- |
 | \_0  | address | undefined   |
-
-> > > > > > > f67a2b053d5093c9604fbfedfc0031ecd1728720:docs/child/modules/CVSStaking.md
 
 ### pendingWithdrawals
 

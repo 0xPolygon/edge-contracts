@@ -86,7 +86,7 @@ abstract contract Initialized is Uninitialized {
     }
 }
 
-contract CheckpointManager_Initialize is Uninitialized {
+contract CheckpointManagerTest_Initialize is Uninitialized {
     function testInitialize() public {
         checkpointManager.initialize(bls, bn256G2, rootValidatorSet, domain);
         assertEq(keccak256(abi.encode(checkpointManager.bls())), keccak256(abi.encode(address(bls))));
@@ -100,7 +100,7 @@ contract CheckpointManager_Initialize is Uninitialized {
     }
 }
 
-contract CheckpointManager_Submit is Initialized {
+contract CheckpointManagerTest_Submit is Initialized {
     function testCannotSubmit_InvalidLength() public {
         uint256 id = submitCounter;
         CheckpointManager.Checkpoint memory checkpoint = CheckpointManager.Checkpoint({
