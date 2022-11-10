@@ -14,3 +14,4 @@ out
 !/broadcast
 /broadcast/*
 /broadcast/*/31337/
+slither.db.json
