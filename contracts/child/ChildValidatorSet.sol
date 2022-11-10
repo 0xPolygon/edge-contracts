@@ -39,9 +39,9 @@ contract ChildValidatorSet is
     /**
      * @notice Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
      * @dev only callable by client, can only be called once
-     * @param newEpochReward reward for a proposed epoch
-     * @param newMinStake minimum stake to become a validator
-     * @param newMinDelegation minimum amount to delegate to a validator
+     * @param init: newEpochReward reward for a proposed epoch
+     *              newMinStake minimum stake to become a validator
+     *              newMinDelegation minimum amount to delegate to a validator
      * @param validatorAddresses addresses of initial validators
      * @param validatorPubkeys uint256[4] BLS public keys of initial validators
      * @param validatorStakes amount staked per initial validator
@@ -50,9 +50,7 @@ contract ChildValidatorSet is
      * @param governance Governance address to set as owner of the contract
      */
     function initialize(
-        uint256 newEpochReward,
-        uint256 newMinStake,
-        uint256 newMinDelegation,
+        InitStruct calldata init,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
         uint256[] calldata validatorStakes,
@@ -66,9 +64,9 @@ contract ChildValidatorSet is
         __ReentrancyGuard_init();
 
         // slither-disable-next-line events-maths
-        epochReward = newEpochReward;
-        minStake = newMinStake;
-        minDelegation = newMinDelegation;
+        epochReward = init.epochReward;
+        minStake = init.minStake;
+        minDelegation = init.minDelegation;
 
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             _addToWhitelist(validatorAddresses[i]);

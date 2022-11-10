@@ -84,10 +84,14 @@ abstract contract Initialized is Uninitialized {
 
         (messagePoint, signature, pubkey) = abi.decode(out, (uint256[2], uint256[2], uint256[4]));
 
-        childValidatorSet.initialize(
+        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation,
+            minDelegation
+        );
+
+        childValidatorSet.initialize(
+            init,
             validatorAddresses,
             validatorPubkeys,
             validatorStakes,
@@ -309,11 +313,14 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
 
     function testCannotInitialize_Unauthorized() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-
-        childValidatorSet.initialize(
+        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation,
+            minDelegation
+        );
+
+        childValidatorSet.initialize(
+            init,
             validatorAddresses,
             validatorPubkeys,
             validatorStakes,
@@ -328,10 +335,14 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
 
         assertEq(childValidatorSet.totalActiveStake(), 0);
 
-        childValidatorSet.initialize(
+        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation,
+            minDelegation
+        );
+
+        childValidatorSet.initialize(
+            init,
             validatorAddresses,
             validatorPubkeys,
             validatorStakes,
@@ -366,10 +377,14 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
         vm.expectRevert("Initializable: contract is already initialized");
 
         vm.startPrank(SYSTEM);
-        childValidatorSet.initialize(
+        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation,
+            minDelegation
+        );
+
+        childValidatorSet.initialize(
+            init,
             validatorAddresses,
             validatorPubkeys,
             validatorStakes,
