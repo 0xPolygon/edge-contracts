@@ -73,9 +73,7 @@ describe("ChildValidatorSet", () => {
   it("Initialize without system call", async () => {
     await expect(
       childValidatorSet.initialize(
-        epochReward,
-        minStake,
-        minDelegation,
+        { epochReward, minStake, minDelegation },
         [accounts[0].address],
         [[0, 0, 0, 0]],
         [minStake * 2],
@@ -101,9 +99,7 @@ describe("ChildValidatorSet", () => {
     expect(await childValidatorSet.totalActiveStake()).to.equal(0);
 
     await systemChildValidatorSet.initialize(
-      epochReward,
-      minStake,
-      minDelegation,
+      { epochReward, minStake, minDelegation },
       [accounts[0].address],
       [[0, 0, 0, 0]],
       [minStake * 2],
@@ -135,9 +131,7 @@ describe("ChildValidatorSet", () => {
   it("Attempt reinitialization", async () => {
     await expect(
       systemChildValidatorSet.initialize(
-        epochReward,
-        minStake,
-        minDelegation,
+        { epochReward, minStake, minDelegation },
         [accounts[0].address],
         [[0, 0, 0, 0]],
         [minStake * 2],
