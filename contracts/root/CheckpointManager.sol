@@ -219,7 +219,7 @@ contract CheckpointManager is Initializable {
             } else {
                 continue;
             }
-            if ((aggVotingPower * 100) > 6666) {
+            if ((aggVotingPower / (10**18)) > 66) {
                 flag = true;
                 break;
             }
