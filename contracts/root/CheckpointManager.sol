@@ -83,8 +83,12 @@ contract CheckpointManager is Initializable {
     /**
      * @notice Function to submit a single checkpoint to CheckpointManager
      * @dev Contract internally verifies provided signature against stored validator set
+     * @param chainId The chain ID of the checkpoint being signed
+     * @param checkpointMetadata The checkpoint metadata to verify with the signature
      * @param checkpoint The checkpoint to store
-     * @param signature The aggregated signature submitted by proposer
+     * @param signature The aggregated signature submitted by the proposer
+     * @param newValidatorSet The new validator set to store
+     * @param bitmap The bitmap of the old valdiator set that signed the message
      */
     function submit(
         uint256 chainId,
@@ -109,8 +113,12 @@ contract CheckpointManager is Initializable {
     /**
      * @notice Function to submit a batch of checkpoints to CheckpointManager
      * @dev Contract internally verifies provided signature against stored validator set
+     * @param chainId The chain ID of the checkpoint being signed
+     * @param checkpointMetadata The checkpoint metadata to verify with the signature
      * @param checkpointBatch The checkpoint batch to store
      * @param signature The aggregated signature submitted by the proposer
+     * @param newValidatorSet The new validator set to store
+     * @param bitmap The bitmap of the old valdiator set that signed the message
      */
     function submitBatch(
         uint256 chainId,
