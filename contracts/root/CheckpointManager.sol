@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/Arrays.sol";
 import "../interfaces/IBLS.sol";
 
 interface IBN256G2 {
@@ -33,9 +34,14 @@ interface IBN256G2 {
     */
 contract CheckpointManager is Initializable {
     struct Checkpoint {
-        uint256 startBlock;
         uint256 endBlock;
         bytes32 eventRoot;
+    }
+
+    struct CheckpointMetadata {
+        uint256 id;
+        uint256 round;
+        bytes32 blockHash;
     }
 
     struct Validator {
@@ -52,6 +58,7 @@ contract CheckpointManager is Initializable {
 
     mapping(uint256 => Checkpoint) public checkpoints;
     mapping(uint256 => Validator) public currentValidatorSet;
+    uint256[] public checkpointEndBlocks;
 
     /**
      * @notice Initialization function for CheckpointManager
@@ -76,58 +83,61 @@ contract CheckpointManager is Initializable {
     /**
      * @notice Function to submit a single checkpoint to CheckpointManager
      * @dev Contract internally verifies provided signature against stored validator set
-     * @param id ID of the checkpoint
      * @param checkpoint The checkpoint to store
      * @param signature The aggregated signature submitted by proposer
      */
     function submit(
         uint256 chainId,
-        uint256 id,
+        CheckpointMetadata calldata checkpointMetadata,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,
         Validator[] calldata newValidatorSet,
         bytes calldata bitmap
     ) external {
-        bytes memory hash = abi.encode(keccak256(abi.encode(chainId, id, checkpoint, newValidatorSet)));
+        bytes memory hash = abi.encode(keccak256(abi.encode(chainId, checkpointMetadata, checkpoint, newValidatorSet)));
 
         // slither-disable-next-line reentrancy-benign
         require(_verifySignature(bls.hashToPoint(domain, hash), signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
 
-        _verifyCheckpoint(currentCheckpointId, id, checkpoint);
+        _verifyCheckpoint(currentCheckpointId, checkpointMetadata.id, checkpoint);
 
         checkpoints[++currentCheckpointId] = checkpoint;
+        checkpointEndBlocks.push(checkpoint.endBlock);
         _setNewValidatorSet(newValidatorSet);
     }
 
     /**
      * @notice Function to submit a batch of checkpoints to CheckpointManager
      * @dev Contract internally verifies provided signature against stored validator set
-     * @param ids IDs of the checkpoint batch
      * @param checkpointBatch The checkpoint batch to store
      * @param signature The aggregated signature submitted by the proposer
      */
     function submitBatch(
         uint256 chainId,
-        uint256[] calldata ids,
+        CheckpointMetadata[] calldata checkpointMetadata,
         Checkpoint[] calldata checkpointBatch,
         uint256[2] calldata signature,
         Validator[] calldata newValidatorSet,
         bytes calldata bitmap
     ) external {
-        bytes memory hash = abi.encode(keccak256(abi.encode(chainId, ids, checkpointBatch, newValidatorSet)));
+        bytes memory hash = abi.encode(
+            keccak256(abi.encode(chainId, checkpointMetadata, checkpointBatch, newValidatorSet))
+        );
+
+        uint256[2] memory message = bls.hashToPoint(domain, hash);
 
         // slither-disable-next-line reentrancy-benign
-        require(_verifySignature(bls.hashToPoint(domain, hash), signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
-
-        uint256 length = ids.length;
-
-        require(length == checkpointBatch.length, "LENGTH_MISMATCH");
+        require(_verifySignature(message, signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
 
         uint256 prevId = currentCheckpointId;
 
-        for (uint256 i = 0; i < length; ++i) {
-            _verifyCheckpoint(prevId++, ids[i], checkpointBatch[i]);
-            checkpoints[ids[i]] = checkpointBatch[i];
+        for (uint256 i = 0; i < checkpointBatch.length; ) {
+            _verifyCheckpoint(prevId++, checkpointMetadata[i].id, checkpointBatch[i]);
+            checkpoints[checkpointMetadata[i].id] = checkpointBatch[i];
+            checkpointEndBlocks.push(checkpointBatch[i].endBlock);
+            unchecked {
+                ++i;
+            }
         }
 
         currentCheckpointId = prevId;
@@ -155,8 +165,7 @@ contract CheckpointManager is Initializable {
     ) internal view {
         require(id == prevId + 1, "ID_NOT_SEQUENTIAL");
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(oldCheckpoint.endBlock + 1 == checkpoint.startBlock, "INVALID_START_BLOCK");
-        require(checkpoint.endBlock > checkpoint.startBlock, "EMPTY_CHECKPOINT");
+        require(checkpoint.endBlock > oldCheckpoint.endBlock, "EMPTY_CHECKPOINT");
     }
 
     /**

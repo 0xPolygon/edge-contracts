@@ -34,10 +34,10 @@ function bn256G2() external view returns (contract IBN256G2)
 | ---- | ----------------- | ----------- |
 | \_0  | contract IBN256G2 | undefined   |
 
-### checkpoints
+### checkpointEndBlocks
 
 ```solidity
-function checkpoints(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 eventRoot)
+function checkpointEndBlocks(uint256) external view returns (uint256)
 ```
 
 #### Parameters
@@ -48,11 +48,28 @@ function checkpoints(uint256) external view returns (uint256 startBlock, uint256
 
 #### Returns
 
-| Name       | Type    | Description |
-| ---------- | ------- | ----------- |
-| startBlock | uint256 | undefined   |
-| endBlock   | uint256 | undefined   |
-| eventRoot  | bytes32 | undefined   |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+### checkpoints
+
+```solidity
+function checkpoints(uint256) external view returns (uint256 endBlock, bytes32 eventRoot)
+```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
+#### Returns
+
+| Name      | Type    | Description |
+| --------- | ------- | ----------- |
+| endBlock  | uint256 | undefined   |
+| eventRoot | bytes32 | undefined   |
 
 ### currentCheckpointId
 
@@ -127,36 +144,36 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 
 ### submit
 
 ```solidity
-function submit(uint256 chainId, uint256 id, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
+function submit(uint256 chainId, CheckpointManager.CheckpointMetadata checkpointMetadata, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 #### Parameters
 
-| Name            | Type                          | Description |
-| --------------- | ----------------------------- | ----------- |
-| chainId         | uint256                       | undefined   |
-| id              | uint256                       | undefined   |
-| checkpoint      | CheckpointManager.Checkpoint  | undefined   |
-| signature       | uint256[2]                    | undefined   |
-| newValidatorSet | CheckpointManager.Validator[] | undefined   |
-| bitmap          | bytes                         | undefined   |
+| Name               | Type                                 | Description |
+| ------------------ | ------------------------------------ | ----------- |
+| chainId            | uint256                              | undefined   |
+| checkpointMetadata | CheckpointManager.CheckpointMetadata | undefined   |
+| checkpoint         | CheckpointManager.Checkpoint         | undefined   |
+| signature          | uint256[2]                           | undefined   |
+| newValidatorSet    | CheckpointManager.Validator[]        | undefined   |
+| bitmap             | bytes                                | undefined   |
 
 ### submitBatch
 
 ```solidity
-function submitBatch(uint256 chainId, uint256[] ids, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
+function submitBatch(uint256 chainId, CheckpointManager.CheckpointMetadata[] checkpointMetadata, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 #### Parameters
 
-| Name            | Type                           | Description |
-| --------------- | ------------------------------ | ----------- |
-| chainId         | uint256                        | undefined   |
-| ids             | uint256[]                      | undefined   |
-| checkpointBatch | CheckpointManager.Checkpoint[] | undefined   |
-| signature       | uint256[2]                     | undefined   |
-| newValidatorSet | CheckpointManager.Validator[]  | undefined   |
-| bitmap          | bytes                          | undefined   |
+| Name               | Type                                   | Description |
+| ------------------ | -------------------------------------- | ----------- |
+| chainId            | uint256                                | undefined   |
+| checkpointMetadata | CheckpointManager.CheckpointMetadata[] | undefined   |
+| checkpointBatch    | CheckpointManager.Checkpoint[]         | undefined   |
+| signature          | uint256[2]                             | undefined   |
+| newValidatorSet    | CheckpointManager.Validator[]          | undefined   |
+| bitmap             | bytes                                  | undefined   |
 
 ## Events
 
