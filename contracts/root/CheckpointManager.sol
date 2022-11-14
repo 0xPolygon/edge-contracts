@@ -2,7 +2,8 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/utils/Arrays.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
+import "../common/Merkle.sol";
 import "../interfaces/IBLS.sol";
 
 interface IBN256G2 {
@@ -33,6 +34,9 @@ interface IBN256G2 {
     @dev The contract is used to submit checkpoints and verify that they have been signed as expected.
     */
 contract CheckpointManager is Initializable {
+    using ArraysUpgradeable for uint256[];
+    using Merkle for bytes32;
+
     struct Checkpoint {
         uint256 endBlock;
         bytes32 eventRoot;
@@ -150,6 +154,50 @@ contract CheckpointManager is Initializable {
 
         currentCheckpointId = prevId;
         _setNewValidatorSet(newValidatorSet);
+    }
+
+    /**
+     * @notice Function to get if a event is part of the event root for a block number
+     * @param blockNumber The block number to get the event root from (i.e. blockN <-- eventRoot --> blockN+M)
+     * @param leaf The leaf of the event (keccak256-encoded log)
+     * @param leafIndex The leaf index of the event in the Merkle root tree
+     * @param proof The proof for leaf membership in the event root tree
+     */
+    function getEventMembershipByBlockNumber(
+        uint256 blockNumber,
+        bytes32 leaf,
+        uint256 leafIndex,
+        bytes32[] calldata proof
+    ) external view returns (bool) {
+        bytes32 eventRoot = getEventRootByBlock(blockNumber);
+        require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
+        return leaf.checkMembership(leafIndex, eventRoot, proof);
+    }
+
+    /**
+     * @notice Function to get if a event is part of the event root for a checkpoint id
+     * @param checkpointId The checkpoint id to get the event root from
+     * @param leaf The leaf of the event (keccak256-encoded log)
+     * @param leafIndex The leaf index of the event in the Merkle root tree
+     * @param proof The proof for leaf membership in the event root tree
+     */
+    function getEventMembershipByCheckpointId(
+        uint256 checkpointId,
+        bytes32 leaf,
+        uint256 leafIndex,
+        bytes32[] calldata proof
+    ) external view returns (bool) {
+        bytes32 eventRoot = checkpoints[checkpointId].eventRoot;
+        require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_CHECKPOINT_ID");
+        return leaf.checkMembership(leafIndex, eventRoot, proof);
+    }
+
+    /**
+     * @notice Function to get the event root for a block number
+     * @param blockNumber The block number to get the event root for
+     */
+    function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
+        return checkpoints[checkpointEndBlocks.findUpperBound(blockNumber)].eventRoot;
     }
 
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {

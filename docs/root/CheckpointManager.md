@@ -126,6 +126,72 @@ function domain() external view returns (bytes32)
 | ---- | ------- | ----------- |
 | \_0  | bytes32 | undefined   |
 
+### getEventMembershipByBlockNumber
+
+```solidity
+function getEventMembershipByBlockNumber(uint256 blockNumber, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
+```
+
+Function to get if a event is part of the event root for a block number
+
+#### Parameters
+
+| Name        | Type      | Description                                                                                |
+| ----------- | --------- | ------------------------------------------------------------------------------------------ |
+| blockNumber | uint256   | The block number to get the event root from (i.e. blockN &lt;-- eventRoot --&gt; blockN+M) |
+| leaf        | bytes32   | The leaf of the event (keccak256-encoded log)                                              |
+| leafIndex   | uint256   | The leaf index of the event in the Merkle root tree                                        |
+| proof       | bytes32[] | The proof for leaf membership in the event root tree                                       |
+
+#### Returns
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
+
+### getEventMembershipByCheckpointId
+
+```solidity
+function getEventMembershipByCheckpointId(uint256 checkpointId, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
+```
+
+Function to get if a event is part of the event root for a checkpoint id
+
+#### Parameters
+
+| Name         | Type      | Description                                          |
+| ------------ | --------- | ---------------------------------------------------- |
+| checkpointId | uint256   | The checkpoint id to get the event root from         |
+| leaf         | bytes32   | The leaf of the event (keccak256-encoded log)        |
+| leafIndex    | uint256   | The leaf index of the event in the Merkle root tree  |
+| proof        | bytes32[] | The proof for leaf membership in the event root tree |
+
+#### Returns
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
+
+### getEventRootByBlock
+
+```solidity
+function getEventRootByBlock(uint256 blockNumber) external view returns (bytes32)
+```
+
+Function to get the event root for a block number
+
+#### Parameters
+
+| Name        | Type    | Description                                |
+| ----------- | ------- | ------------------------------------------ |
+| blockNumber | uint256 | The block number to get the event root for |
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
+
 ### initialize
 
 ```solidity
