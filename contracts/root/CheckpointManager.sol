@@ -43,7 +43,7 @@ contract CheckpointManager is Initializable {
     }
 
     struct CheckpointMetadata {
-        uint256 id;
+        uint256 epoch;
         uint256 round;
         bytes32 blockHash;
     }
@@ -107,9 +107,11 @@ contract CheckpointManager is Initializable {
         // slither-disable-next-line reentrancy-benign
         require(_verifySignature(bls.hashToPoint(domain, hash), signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
 
-        _verifyCheckpoint(currentCheckpointId, checkpointMetadata.id, checkpoint);
+        uint256 prevCheckpointId = currentCheckpointId++;
 
-        checkpoints[++currentCheckpointId] = checkpoint;
+        _verifyCheckpoint(prevCheckpointId, checkpoint);
+
+        checkpoints[prevCheckpointId + 1] = checkpoint;
         checkpointEndBlocks.push(checkpoint.endBlock);
         _setNewValidatorSet(newValidatorSet);
     }
@@ -144,8 +146,8 @@ contract CheckpointManager is Initializable {
         uint256 prevId = currentCheckpointId;
 
         for (uint256 i = 0; i < checkpointBatch.length; ) {
-            _verifyCheckpoint(prevId++, checkpointMetadata[i].id, checkpointBatch[i]);
-            checkpoints[checkpointMetadata[i].id] = checkpointBatch[i];
+            _verifyCheckpoint(prevId++, checkpointBatch[i]);
+            checkpoints[prevId] = checkpointBatch[i];
             checkpointEndBlocks.push(checkpointBatch[i].endBlock);
             unchecked {
                 ++i;
@@ -211,15 +213,9 @@ contract CheckpointManager is Initializable {
     /**
      * @notice Internal function that performs checks on the checkpoint
      * @param prevId Current checkpoint ID
-     * @param id ID of the checkpoint
      * @param checkpoint The checkpoint to store
      */
-    function _verifyCheckpoint(
-        uint256 prevId,
-        uint256 id,
-        Checkpoint calldata checkpoint
-    ) internal view {
-        require(id == prevId + 1, "ID_NOT_SEQUENTIAL");
+    function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) internal view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
         require(checkpoint.endBlock > oldCheckpoint.endBlock, "EMPTY_CHECKPOINT");
     }
@@ -267,6 +263,7 @@ contract CheckpointManager is Initializable {
             } else {
                 continue;
             }
+            // if voting power >= 67%, checkpoint is accepted
             if ((aggVotingPower / (10**18)) > 66) {
                 flag = true;
                 break;
