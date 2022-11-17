@@ -44,8 +44,10 @@ contract CheckpointManager is Initializable {
 
     struct CheckpointMetadata {
         uint256 epoch;
-        uint256 round;
         bytes32 blockHash;
+        uint256 blockRound;
+        bytes32 currentValidatorSetHash;
+        bytes32 nextValidatorSetHash;
     }
 
     struct Validator {
