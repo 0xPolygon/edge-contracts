@@ -3,40 +3,8 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IBLS.sol";
-
-interface IRootValidatorSet {
-    struct Validator {
-        address _address;
-        uint256[4] blsKey;
-    }
-
-    function addValidators(Validator[] calldata newValidators) external;
-
-    function getValidatorBlsKey(uint256 id) external view returns (uint256[4] memory);
-
-    function activeValidatorSetSize() external returns (uint256);
-}
-
-interface IBN256G2 {
-    function ecTwistAdd(
-        uint256 pt1xx,
-        uint256 pt1xy,
-        uint256 pt1yx,
-        uint256 pt1yy,
-        uint256 pt2xx,
-        uint256 pt2xy,
-        uint256 pt2yx,
-        uint256 pt2yy
-    )
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        );
-}
+import "../interfaces/IBN256G2.sol";
+import "../interfaces/IRootValidatorSet.sol";
 
 /**
     @title CheckpointManager
