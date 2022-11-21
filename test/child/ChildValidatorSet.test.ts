@@ -1280,7 +1280,7 @@ describe("ChildValidatorSet", () => {
         },
         {
           blockHash: blockHash2,
-          bitmap: "0x" + bitmapStr,
+          bitmap: `0x${bitmapStr}`,
           signature: signature2,
         },
         {
