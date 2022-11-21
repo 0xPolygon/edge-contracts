@@ -34,10 +34,10 @@ function bn256G2() external view returns (contract IBN256G2)
 | ---- | ----------------- | ----------- |
 | \_0  | contract IBN256G2 | undefined   |
 
-### checkpointEndBlocks
+### checkpointBlockNumbers
 
 ```solidity
-function checkpointEndBlocks(uint256) external view returns (uint256)
+function checkpointBlockNumbers(uint256) external view returns (uint256)
 ```
 
 #### Parameters
@@ -55,7 +55,7 @@ function checkpointEndBlocks(uint256) external view returns (uint256)
 ### checkpoints
 
 ```solidity
-function checkpoints(uint256) external view returns (uint256 epoch, uint256 endBlock, bytes32 eventRoot)
+function checkpoints(uint256) external view returns (uint256 epoch, uint256 blockNumber, bytes32 eventRoot)
 ```
 
 #### Parameters
@@ -66,11 +66,11 @@ function checkpoints(uint256) external view returns (uint256 epoch, uint256 endB
 
 #### Returns
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| epoch     | uint256 | undefined   |
-| endBlock  | uint256 | undefined   |
-| eventRoot | bytes32 | undefined   |
+| Name        | Type    | Description |
+| ----------- | ------- | ----------- |
+| epoch       | uint256 | undefined   |
+| blockNumber | uint256 | undefined   |
+| eventRoot   | bytes32 | undefined   |
 
 ### currentEpoch
 

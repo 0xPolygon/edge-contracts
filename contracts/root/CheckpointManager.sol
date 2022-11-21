@@ -39,7 +39,7 @@ contract CheckpointManager is Initializable {
 
     struct Checkpoint {
         uint256 epoch;
-        uint256 endBlock;
+        uint256 blockNumber;
         bytes32 eventRoot;
     }
 
@@ -63,7 +63,7 @@ contract CheckpointManager is Initializable {
 
     mapping(uint256 => Checkpoint) public checkpoints; // epochId -> root
     mapping(uint256 => Validator) public currentValidatorSet;
-    uint256[] public checkpointEndBlocks;
+    uint256[] public checkpointBlockNumbers;
 
     /**
      * @notice Initialization function for CheckpointManager
@@ -107,7 +107,7 @@ contract CheckpointManager is Initializable {
             keccak256(
                 abi.encode(
                     chainId,
-                    checkpoint.endBlock,
+                    checkpoint.blockNumber,
                     checkpointMetadata.blockHash,
                     checkpointMetadata.blockRound,
                     checkpoint.epoch,
@@ -129,10 +129,10 @@ contract CheckpointManager is Initializable {
 
         if (checkpoint.epoch > prevEpoch) {
             // if new epoch, push new end block
-            checkpointEndBlocks.push(checkpoint.endBlock);
+            checkpointBlockNumbers.push(checkpoint.blockNumber);
         } else {
             // update last end block if updating event root for epoch
-            checkpointEndBlocks[checkpointEndBlocks.length - 1] = checkpoint.endBlock;
+            checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
         }
 
         _setNewValidatorSet(newValidatorSet);
@@ -179,7 +179,7 @@ contract CheckpointManager is Initializable {
      * @param blockNumber The block number to get the event root for
      */
     function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
-        return checkpoints[checkpointEndBlocks.findUpperBound(blockNumber)].eventRoot;
+        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber)].eventRoot;
     }
 
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
@@ -198,7 +198,7 @@ contract CheckpointManager is Initializable {
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) internal view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
         require(checkpoint.epoch >= oldCheckpoint.epoch, "CheckpointManager: INVALID_EPOCH");
-        require(checkpoint.endBlock > oldCheckpoint.endBlock, "CheckpointManager: EMPTY_CHECKPOINT");
+        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "CheckpointManager: EMPTY_CHECKPOINT");
     }
 
     /**
