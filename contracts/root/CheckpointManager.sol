@@ -38,16 +38,15 @@ contract CheckpointManager is Initializable {
     using Merkle for bytes32;
 
     struct Checkpoint {
-        uint256 endBlock;
+        uint256 epoch;
+        uint256 blockNumber;
         bytes32 eventRoot;
     }
 
     struct CheckpointMetadata {
-        uint256 epoch;
         bytes32 blockHash;
         uint256 blockRound;
         bytes32 currentValidatorSetHash;
-        bytes32 nextValidatorSetHash;
     }
 
     struct Validator {
@@ -56,15 +55,15 @@ contract CheckpointManager is Initializable {
         uint256 votingPower;
     }
 
-    uint256 public currentCheckpointId;
+    uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
     bytes32 public domain;
     IBLS public bls;
     IBN256G2 public bn256G2;
 
-    mapping(uint256 => Checkpoint) public checkpoints;
+    mapping(uint256 => Checkpoint) public checkpoints; // epochId -> root
     mapping(uint256 => Validator) public currentValidatorSet;
-    uint256[] public checkpointEndBlocks;
+    uint256[] public checkpointBlockNumbers;
 
     /**
      * @notice Initialization function for CheckpointManager
@@ -87,7 +86,7 @@ contract CheckpointManager is Initializable {
     }
 
     /**
-     * @notice Function to submit a single checkpoint to CheckpointManager
+     * @notice Function to submit a single checkpoint for an epoch to CheckpointManager
      * @dev Contract internally verifies provided signature against stored validator set
      * @param chainId The chain ID of the checkpoint being signed
      * @param checkpointMetadata The checkpoint metadata to verify with the signature
@@ -104,59 +103,38 @@ contract CheckpointManager is Initializable {
         Validator[] calldata newValidatorSet,
         bytes calldata bitmap
     ) external {
-        bytes memory hash = abi.encode(keccak256(abi.encode(chainId, checkpointMetadata, checkpoint, newValidatorSet)));
+        bytes memory hash = abi.encode(
+            keccak256(
+                abi.encode(
+                    chainId,
+                    checkpoint.blockNumber,
+                    checkpointMetadata.blockHash,
+                    checkpointMetadata.blockRound,
+                    checkpoint.epoch,
+                    checkpoint.eventRoot,
+                    checkpointMetadata.currentValidatorSetHash,
+                    keccak256(abi.encode(newValidatorSet))
+                )
+            )
+        );
 
         // slither-disable-next-line reentrancy-benign
         require(_verifySignature(bls.hashToPoint(domain, hash), signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
 
-        uint256 prevCheckpointId = currentCheckpointId++;
+        uint256 prevEpoch = currentEpoch++;
 
-        _verifyCheckpoint(prevCheckpointId, checkpoint);
+        _verifyCheckpoint(prevEpoch, checkpoint);
 
-        checkpoints[prevCheckpointId + 1] = checkpoint;
-        checkpointEndBlocks.push(checkpoint.endBlock);
-        _setNewValidatorSet(newValidatorSet);
-    }
+        checkpoints[checkpoint.epoch] = checkpoint;
 
-    /**
-     * @notice Function to submit a batch of checkpoints to CheckpointManager
-     * @dev Contract internally verifies provided signature against stored validator set
-     * @param chainId The chain ID of the checkpoint being signed
-     * @param checkpointMetadata The checkpoint metadata to verify with the signature
-     * @param checkpointBatch The checkpoint batch to store
-     * @param signature The aggregated signature submitted by the proposer
-     * @param newValidatorSet The new validator set to store
-     * @param bitmap The bitmap of the old valdiator set that signed the message
-     */
-    function submitBatch(
-        uint256 chainId,
-        CheckpointMetadata[] calldata checkpointMetadata,
-        Checkpoint[] calldata checkpointBatch,
-        uint256[2] calldata signature,
-        Validator[] calldata newValidatorSet,
-        bytes calldata bitmap
-    ) external {
-        bytes memory hash = abi.encode(
-            keccak256(abi.encode(chainId, checkpointMetadata, checkpointBatch, newValidatorSet))
-        );
-
-        uint256[2] memory message = bls.hashToPoint(domain, hash);
-
-        // slither-disable-next-line reentrancy-benign
-        require(_verifySignature(message, signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
-
-        uint256 prevId = currentCheckpointId;
-
-        for (uint256 i = 0; i < checkpointBatch.length; ) {
-            _verifyCheckpoint(prevId++, checkpointBatch[i]);
-            checkpoints[prevId] = checkpointBatch[i];
-            checkpointEndBlocks.push(checkpointBatch[i].endBlock);
-            unchecked {
-                ++i;
-            }
+        if (checkpoint.epoch > prevEpoch) {
+            // if new epoch, push new end block
+            checkpointBlockNumbers.push(checkpoint.blockNumber);
+        } else {
+            // update last end block if updating event root for epoch
+            checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
         }
 
-        currentCheckpointId = prevId;
         _setNewValidatorSet(newValidatorSet);
     }
 
@@ -179,20 +157,20 @@ contract CheckpointManager is Initializable {
     }
 
     /**
-     * @notice Function to get if a event is part of the event root for a checkpoint id
+     * @notice Function to get if a event is part of the event root for an epoch
      * @param checkpointId The checkpoint id to get the event root from
      * @param leaf The leaf of the event (keccak256-encoded log)
      * @param leafIndex The leaf index of the event in the Merkle root tree
      * @param proof The proof for leaf membership in the event root tree
      */
-    function getEventMembershipByCheckpointId(
+    function getEventMembershipByEpoch(
         uint256 checkpointId,
         bytes32 leaf,
         uint256 leafIndex,
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = checkpoints[checkpointId].eventRoot;
-        require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_CHECKPOINT_ID");
+        require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_EPOCH");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -201,7 +179,7 @@ contract CheckpointManager is Initializable {
      * @param blockNumber The block number to get the event root for
      */
     function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
-        return checkpoints[checkpointEndBlocks.findUpperBound(blockNumber)].eventRoot;
+        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber)].eventRoot;
     }
 
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
@@ -219,7 +197,8 @@ contract CheckpointManager is Initializable {
      */
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) internal view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(checkpoint.endBlock > oldCheckpoint.endBlock, "EMPTY_CHECKPOINT");
+        require(checkpoint.epoch >= oldCheckpoint.epoch, "CheckpointManager: INVALID_EPOCH");
+        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "CheckpointManager: EMPTY_CHECKPOINT");
     }
 
     /**
@@ -244,7 +223,7 @@ contract CheckpointManager is Initializable {
                 break;
             }
         }
-        require(flag, "BITMAP_IS_EMPTY");
+        require(flag, "CheckpointManager: BITMAP_IS_EMPTY");
         uint256 aggVotingPower = 0;
         flag = false;
         for (uint256 i = firstIndex + 1; i < length; ++i) {
@@ -272,7 +251,7 @@ contract CheckpointManager is Initializable {
             }
         }
 
-        require(flag, "VOTING_POWER_IS_INSUFFICIENT");
+        require(flag, "CheckpointManager: INSUFFICIENT_VOTING_POWER");
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 

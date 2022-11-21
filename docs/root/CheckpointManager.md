@@ -34,10 +34,10 @@ function bn256G2() external view returns (contract IBN256G2)
 | ---- | ----------------- | ----------- |
 | \_0  | contract IBN256G2 | undefined   |
 
-### checkpointEndBlocks
+### checkpointBlockNumbers
 
 ```solidity
-function checkpointEndBlocks(uint256) external view returns (uint256)
+function checkpointBlockNumbers(uint256) external view returns (uint256)
 ```
 
 #### Parameters
@@ -55,7 +55,7 @@ function checkpointEndBlocks(uint256) external view returns (uint256)
 ### checkpoints
 
 ```solidity
-function checkpoints(uint256) external view returns (uint256 endBlock, bytes32 eventRoot)
+function checkpoints(uint256) external view returns (uint256 epoch, uint256 blockNumber, bytes32 eventRoot)
 ```
 
 #### Parameters
@@ -66,15 +66,16 @@ function checkpoints(uint256) external view returns (uint256 endBlock, bytes32 e
 
 #### Returns
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| endBlock  | uint256 | undefined   |
-| eventRoot | bytes32 | undefined   |
+| Name        | Type    | Description |
+| ----------- | ------- | ----------- |
+| epoch       | uint256 | undefined   |
+| blockNumber | uint256 | undefined   |
+| eventRoot   | bytes32 | undefined   |
 
-### currentCheckpointId
+### currentEpoch
 
 ```solidity
-function currentCheckpointId() external view returns (uint256)
+function currentEpoch() external view returns (uint256)
 ```
 
 #### Returns
@@ -149,13 +150,13 @@ Function to get if a event is part of the event root for a block number
 | ---- | ---- | ----------- |
 | \_0  | bool | undefined   |
 
-### getEventMembershipByCheckpointId
+### getEventMembershipByEpoch
 
 ```solidity
-function getEventMembershipByCheckpointId(uint256 checkpointId, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
+function getEventMembershipByEpoch(uint256 checkpointId, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
 ```
 
-Function to get if a event is part of the event root for a checkpoint id
+Function to get if a event is part of the event root for an epoch
 
 #### Parameters
 
@@ -223,23 +224,6 @@ function submit(uint256 chainId, CheckpointManager.CheckpointMetadata checkpoint
 | signature          | uint256[2]                           | undefined   |
 | newValidatorSet    | CheckpointManager.Validator[]        | undefined   |
 | bitmap             | bytes                                | undefined   |
-
-### submitBatch
-
-```solidity
-function submitBatch(uint256 chainId, CheckpointManager.CheckpointMetadata[] checkpointMetadata, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
-```
-
-#### Parameters
-
-| Name               | Type                                   | Description |
-| ------------------ | -------------------------------------- | ----------- |
-| chainId            | uint256                                | undefined   |
-| checkpointMetadata | CheckpointManager.CheckpointMetadata[] | undefined   |
-| checkpointBatch    | CheckpointManager.Checkpoint[]         | undefined   |
-| signature          | uint256[2]                             | undefined   |
-| newValidatorSet    | CheckpointManager.Validator[]          | undefined   |
-| bitmap             | bytes                                  | undefined   |
 
 ## Events
 
