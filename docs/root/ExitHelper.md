@@ -38,14 +38,16 @@ function checkpointManager() external view returns (contract ICheckpointManager)
 function exit(uint256 blockNumber, uint256 leafIndex, bytes unhashedLeaf, bytes32[] proof) external nonpayable
 ```
 
+Perform an exit for one event
+
 #### Parameters
 
-| Name         | Type      | Description |
-| ------------ | --------- | ----------- |
-| blockNumber  | uint256   | undefined   |
-| leafIndex    | uint256   | undefined   |
-| unhashedLeaf | bytes     | undefined   |
-| proof        | bytes32[] | undefined   |
+| Name         | Type      | Description                                     |
+| ------------ | --------- | ----------------------------------------------- |
+| blockNumber  | uint256   | Block number of the exit event on L2            |
+| leafIndex    | uint256   | Index of the leaf in the exit event Merkle tree |
+| unhashedLeaf | bytes     | ABI-encoded exit event leaf                     |
+| proof        | bytes32[] | Proof of the event inclusion in the tree        |
 
 ### initialize
 
@@ -53,11 +55,15 @@ function exit(uint256 blockNumber, uint256 leafIndex, bytes unhashedLeaf, bytes3
 function initialize(contract ICheckpointManager newCheckpointManager) external nonpayable
 ```
 
+Initialize the contract with the checkpoint manager address
+
+_The checkpoint manager contract must be deployed first_
+
 #### Parameters
 
-| Name                 | Type                        | Description |
-| -------------------- | --------------------------- | ----------- |
-| newCheckpointManager | contract ICheckpointManager | undefined   |
+| Name                 | Type                        | Description                                |
+| -------------------- | --------------------------- | ------------------------------------------ |
+| newCheckpointManager | contract ICheckpointManager | Address of the checkpoint manager contract |
 
 ### processedExits
 
