@@ -61,7 +61,7 @@ contract ExitHelper is Initializable {
         bytes calldata unhashedLeaf,
         bytes32[] calldata proof
     ) external onlyInitialized {
-        _exit(blockNumber, leafIndex, unhashedLeaf, proof);
+        _exit(blockNumber, leafIndex, unhashedLeaf, proof, false);
     }
 
     /**
@@ -72,7 +72,7 @@ contract ExitHelper is Initializable {
         uint256 length = inputs.length;
 
         for (uint256 i = 0; i < length; ) {
-            _exit(inputs[i].blockNumber, inputs[i].leafIndex, inputs[i].unhashedLeaf, inputs[i].proof);
+            _exit(inputs[i].blockNumber, inputs[i].leafIndex, inputs[i].unhashedLeaf, inputs[i].proof, true);
             unchecked {
                 ++i;
             }
@@ -83,22 +83,31 @@ contract ExitHelper is Initializable {
         uint256 blockNumber,
         uint256 leafIndex,
         bytes calldata unhashedLeaf,
-        bytes32[] calldata proof
+        bytes32[] calldata proof,
+        bool isBatch
     ) private {
         (uint256 id, address sender, address receiver, bytes memory data) = abi.decode(
             unhashedLeaf,
             (uint256, address, address, bytes)
         );
+        if (isBatch) {
+            if (processedExits[id]) {
+                return;
+            }
+        } else {
+            require(!processedExits[id], "ExitHelper: EXIT_ALREADY_PROCESSED");
+        }
+
         require(
             checkpointManager.getEventMembershipByBlockNumber(blockNumber, keccak256(unhashedLeaf), leafIndex, proof),
             "ExitHelper: INVALID_PROOF"
         );
 
-        bytes memory paramData = abi.encodeWithSignature("onL2StateReceive(uint256,address,bytes)", id, sender, data);
-
-        (bool success, bytes memory returnData) = receiver.call(paramData);
-
         processedExits[id] = true;
+
+        (bool success, bytes memory returnData) = receiver.call(
+            abi.encodeWithSignature("onL2StateReceive(uint256,address,bytes)", id, sender, data)
+        );
 
         emit ExitProcessed(id, success, returnData);
     }
