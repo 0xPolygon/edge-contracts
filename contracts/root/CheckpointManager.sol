@@ -219,7 +219,7 @@ contract CheckpointManager is Initializable {
             if (_getValueFromBitmap(bitmap, i)) {
                 aggPubkey = currentValidatorSet[i].blsKey;
                 firstIndex = i;
-                flag = false;
+                flag = true;
                 break;
             }
         }
