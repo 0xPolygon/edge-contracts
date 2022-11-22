@@ -184,11 +184,11 @@ contract ChildValidatorSet is
         if (length == 0) return 0;
 
         address tmpValidator = _validators.last();
-        activeStake += getValidator(tmpValidator).totalStake;
+        activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
 
         for (uint256 i = 1; i < length; i++) {
             tmpValidator = _validators.prev(tmpValidator);
-            activeStake += getValidator(tmpValidator).totalStake;
+            activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
         }
     }
 
@@ -205,8 +205,9 @@ contract ChildValidatorSet is
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
             Validator storage validator = _validators.get(uptimeData.validator);
-            uint256 validatorReward = (reward * validator.totalStake * uptimeData.signedBlocks) /
-                (activeStake * uptime.totalBlocks);
+            uint256 validatorReward = (reward *
+                (validator.stake + _validators.getDelegationPool(uptimeData.validator).supply) *
+                uptimeData.signedBlocks) / (activeStake * uptime.totalBlocks);
             (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
                 uptimeData.validator,
                 validatorReward
@@ -285,8 +286,9 @@ contract ChildValidatorSet is
             UptimeData memory uptimeData = uptime.uptimeData[i];
             Validator storage validator = _validators.get(uptimeData.validator);
             // slither-disable-next-line divide-before-multiply
-            uint256 validatorReward = (reward * validator.totalStake * uptimeData.signedBlocks) /
-                (activeStake * uptime.totalBlocks);
+            uint256 validatorReward = (reward *
+                (validator.stake + _validators.getDelegationPool(uptimeData.validator).supply) *
+                uptimeData.signedBlocks) / (activeStake * uptime.totalBlocks);
             (uint256 validatorShares, uint256 delegatorShares) = _calculateValidatorAndDelegatorShares(
                 uptimeData.validator,
                 validatorReward
