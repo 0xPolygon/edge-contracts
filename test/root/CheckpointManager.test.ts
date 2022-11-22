@@ -68,61 +68,92 @@ describe("CheckpointManager", () => {
       expect(validator.votingPower).to.equal(ethers.utils.parseEther(((i + 1) * 10).toString()));
     }
 
-    const endBlock = (await checkpointManager.checkpoints(0)).endBlock;
+    const endBlock = (await checkpointManager.checkpoints(0)).blockNumber;
     expect(endBlock).to.equal(0);
     startBlock = endBlock.toNumber() + 1;
-    const prevId = await checkpointManager.currentCheckpointId();
+    const prevId = await checkpointManager.currentEpoch();
     submitCounter = prevId.toNumber() + 1;
   });
 
   it("Submit checkpoint with invalid length", async () => {
     const chainId = submitCounter;
     const checkpoint = {
-      endBlock: startBlock + 100,
+      epoch: 0,
+      blockNumber: startBlock + 100,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
     const checkpointMetadata = {
-      epoch: 0,
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
       currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-      nextValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
-    const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);
+    const bitmapNum = Math.floor(Math.random() * 0xfffffffffffffffe) + 0x01;
     let bitmapStr = bitmapNum.toString(16);
     const length = bitmapStr.length;
     for (let j = 0; j < 16 - length; j++) {
       bitmapStr = "0" + bitmapStr;
     }
+    bitmapStr = "ffff";
 
     const bitmap = `0x${bitmapStr}`;
+    const messageOfValidatorSet = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+        [validatorSet]
+      )
+    );
     const message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "uint256", "bytes32", "uint256", "uint256", "bytes32", "bytes32", "bytes"],
         [
-          "uint",
-          "tuple(uint256 epoch, bytes32 blockHash, uint256 blockRound, bytes32 currentValidatorSetHash, bytes32 nextValidatorSetHash)",
-          "tuple(uint endBlock, bytes32 eventRoot)",
-          "tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]",
-          "bytes",
-        ],
-        [chainId, checkpointMetadata, checkpoint, validatorSet, bitmap]
+          chainId,
+          checkpoint.blockNumber,
+          checkpointMetadata.blockHash,
+          checkpointMetadata.blockRound,
+          checkpoint.epoch,
+          checkpoint.eventRoot,
+          checkpointMetadata.currentValidatorSetHash,
+          messageOfValidatorSet,
+        ]
       )
     );
 
     const signatures: mcl.Signature[] = [];
+    let flag = false;
 
-    for (const key of validatorSecretKeys) {
-      const { signature, messagePoint } = mcl.sign(message, key, ethers.utils.arrayify(DOMAIN));
-      signatures.push(signature);
+    let aggVotingPower = 0;
+    for (let i = 0; i < validatorSecretKeys.length; i++) {
+      const byteNumber = Math.floor(i / 8);
+      const bitNumber = i % 8;
+
+      if (byteNumber >= bitmap.length / 2 - 1) {
+        continue;
+      }
+
+      // Get the value of the bit at the given 'index' in a byte.
+      const oneByte = parseInt(bitmap[2 + byteNumber * 2] + bitmap[3 + byteNumber * 2], 16);
+      if ((oneByte & (1 << bitNumber)) > 0) {
+        const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(DOMAIN));
+        signatures.push(signature);
+        aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+        console.log(validatorSet[i].votingPower);
+        console.log(aggVotingPower);
+      } else {
+        continue;
+      }
+
+      if (aggVotingPower > 66) {
+        console.log("Enough Voting Power");
+        flag = true;
+        break;
+      }
     }
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
-    ).to.be.revertedWith("NOT_ENOUGH_SIGNATURES");
+    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
   });
 
   // it("Submit checkpoint with invalid signature", async () => {
