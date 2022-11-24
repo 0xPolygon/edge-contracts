@@ -72,6 +72,18 @@ function checkpoints(uint256) external view returns (uint256 epoch, uint256 bloc
 | blockNumber | uint256 | undefined   |
 | eventRoot   | bytes32 | undefined   |
 
+### currentCheckpointBlockNumber
+
+```solidity
+function currentCheckpointBlockNumber() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
 ### currentEpoch
 
 ```solidity
@@ -153,19 +165,19 @@ Function to get if a event is part of the event root for a block number
 ### getEventMembershipByEpoch
 
 ```solidity
-function getEventMembershipByEpoch(uint256 checkpointId, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
+function getEventMembershipByEpoch(uint256 epoch, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
 ```
 
 Function to get if a event is part of the event root for an epoch
 
 #### Parameters
 
-| Name         | Type      | Description                                          |
-| ------------ | --------- | ---------------------------------------------------- |
-| checkpointId | uint256   | The checkpoint id to get the event root from         |
-| leaf         | bytes32   | The leaf of the event (keccak256-encoded log)        |
-| leafIndex    | uint256   | The leaf index of the event in the Merkle root tree  |
-| proof        | bytes32[] | The proof for leaf membership in the event root tree |
+| Name      | Type      | Description                                          |
+| --------- | --------- | ---------------------------------------------------- |
+| epoch     | uint256   | The epoch id to get the event root for               |
+| leaf      | bytes32   | The leaf of the event (keccak256-encoded log)        |
+| leafIndex | uint256   | The leaf index of the event in the Merkle root tree  |
+| proof     | bytes32[] | The proof for leaf membership in the event root tree |
 
 #### Returns
 

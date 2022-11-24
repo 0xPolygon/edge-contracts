@@ -57,6 +57,7 @@ contract CheckpointManager is Initializable {
 
     uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
+    uint256 public currentCheckpointBlockNumber;
     bytes32 public domain;
     IBLS public bls;
     IBN256G2 public bn256G2;
@@ -135,6 +136,8 @@ contract CheckpointManager is Initializable {
             checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
         }
 
+        currentCheckpointBlockNumber = checkpoint.blockNumber;
+
         _setNewValidatorSet(newValidatorSet);
     }
 
@@ -158,18 +161,18 @@ contract CheckpointManager is Initializable {
 
     /**
      * @notice Function to get if a event is part of the event root for an epoch
-     * @param checkpointId The checkpoint id to get the event root from
+     * @param epoch The epoch id to get the event root for
      * @param leaf The leaf of the event (keccak256-encoded log)
      * @param leafIndex The leaf index of the event in the Merkle root tree
      * @param proof The proof for leaf membership in the event root tree
      */
     function getEventMembershipByEpoch(
-        uint256 checkpointId,
+        uint256 epoch,
         bytes32 leaf,
         uint256 leafIndex,
         bytes32[] calldata proof
     ) external view returns (bool) {
-        bytes32 eventRoot = checkpoints[checkpointId].eventRoot;
+        bytes32 eventRoot = checkpoints[epoch].eventRoot;
         require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_EPOCH");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
@@ -179,7 +182,7 @@ contract CheckpointManager is Initializable {
      * @param blockNumber The block number to get the event root for
      */
     function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
-        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber)].eventRoot;
+        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber) + 1].eventRoot;
     }
 
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
