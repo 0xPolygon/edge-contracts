@@ -170,11 +170,13 @@ function execute(bytes32[] proof, StateReceiver.StateSync obj) external nonpayab
 function getBundleByStateSyncId(uint256 id) external view returns (struct StateReceiver.StateSyncBundle)
 ```
 
+get bundle for a state sync id
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| id   | uint256 | undefined   |
+| Name | Type    | Description                    |
+| ---- | ------- | ------------------------------ |
+| id   | uint256 | state sync to get the root for |
 
 #### Returns
 
@@ -188,11 +190,13 @@ function getBundleByStateSyncId(uint256 id) external view returns (struct StateR
 function getRootByStateSyncId(uint256 id) external view returns (bytes32)
 ```
 
+get submitted root for a state sync id
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| id   | uint256 | undefined   |
+| Name | Type    | Description                    |
+| ---- | ------- | ------------------------------ |
+| id   | uint256 | state sync to get the root for |
 
 #### Returns
 

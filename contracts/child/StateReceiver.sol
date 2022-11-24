@@ -28,10 +28,8 @@ contract StateReceiver is System {
         bytes32 root;
     }
 
-    // Index of the next event which needs to be processed
-    uint256 public counter;
     /// @custom:security write-protection="onlySystemCall()"
-    uint256 public bundleCounter = 1;
+    uint256 public bundleCounter;
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
     // Maximum gas provided for each message call
@@ -61,13 +59,12 @@ contract StateReceiver is System {
         bytes calldata signature,
         bytes calldata bitmap
     ) external onlySystemCall {
-        uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
         require(bundle.endId >= bundle.startId, "INVALID_END_ID");
 
         _checkPubkeyAggregation(keccak256(abi.encode(bundle)), signature, bitmap);
 
-        bundles[currentBundleCounter] = bundle;
+        bundles[bundleCounter++] = bundle;
 
         stateSyncBundleIds.push(bundle.endId);
         lastCommittedId = bundle.endId;
@@ -120,10 +117,34 @@ contract StateReceiver is System {
     }
 
     /**
+     * @notice get submitted root for a state sync id
+     * @param id state sync to get the root for
+     */
+    function getRootByStateSyncId(uint256 id) external view returns (bytes32) {
+        bytes32 root = bundles[stateSyncBundleIds.findUpperBound(id)].root;
+
+        require(root != bytes32(0), "StateReceiver: NO_ROOT_FOR_STATESYNC_ID");
+
+        return root;
+    }
+
+    /**
+     * @notice get bundle for a state sync id
+     * @param id state sync to get the root for
+     */
+    function getBundleByStateSyncId(uint256 id) public view returns (StateSyncBundle memory) {
+        uint256 idx = stateSyncBundleIds.findUpperBound(id);
+
+        require(idx != stateSyncBundleIds.length, "StateReceiver: NO_BUNDLE_FOR_STATESYNC_ID");
+
+        return bundles[idx];
+    }
+
+    /**
      * @notice internal function to execute a state sync object
      * @param obj StateSync object to be executed
      */
-    function _executeStateSync(StateSync calldata obj) internal {
+    function _executeStateSync(StateSync calldata obj) private {
         // Skip transaction if client has added flag, or receiver has no code
         if (obj.skip || obj.receiver.code.length == 0) {
             emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
@@ -149,21 +170,6 @@ contract StateReceiver is System {
             // slither-disable-next-line reentrancy-events
             emit StateSyncResult(obj.id, ResultStatus.FAILURE, returnData);
         }
-    }
-
-    function getRootByStateSyncId(uint256 id) public view returns (bytes32) {
-        bytes32 root = bundles[stateSyncBundleIds.findUpperBound(id)].root;
-
-        require(root != bytes32(0), "StateReceiver: NO_ROOT_FOR_STATESYNC_ID");
-
-        return root;
-    }
-
-    function getBundleByStateSyncId(uint256 id) public view returns (StateSyncBundle memory) {
-        uint256 idx = stateSyncBundleIds.findUpperBound(id);
-        require(idx != stateSyncBundleIds.length, "StateReceiver: NO_BUNDLE_FOR_STATESYNC_ID");
-
-        return bundles[idx];
     }
 
     /**
