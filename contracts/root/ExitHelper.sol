@@ -98,6 +98,7 @@ contract ExitHelper is Initializable {
             require(!processedExits[id], "ExitHelper: EXIT_ALREADY_PROCESSED");
         }
 
+        // slither-disable-next-line calls-loop
         require(
             checkpointManager.getEventMembershipByBlockNumber(blockNumber, keccak256(unhashedLeaf), leafIndex, proof),
             "ExitHelper: INVALID_PROOF"
@@ -105,6 +106,7 @@ contract ExitHelper is Initializable {
 
         processedExits[id] = true;
 
+        // slither-disable-next-line calls-loop,low-level-calls,reentrancy-events
         (bool success, bytes memory returnData) = receiver.call(
             abi.encodeWithSignature("onL2StateReceive(uint256,address,bytes)", id, sender, data)
         );
