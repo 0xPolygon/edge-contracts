@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../common/Merkle.sol";
 import "../interfaces/IBLS.sol";
+import "hardhat/console.sol";
 
 interface IBN256G2 {
     function ecTwistAdd(
@@ -132,7 +133,9 @@ contract CheckpointManager is Initializable {
             checkpointBlockNumbers.push(checkpoint.blockNumber);
         } else {
             // update last end block if updating event root for epoch
-            checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
+            if (checkpointBlockNumbers.length > 0)
+                checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
+            else checkpointBlockNumbers[0] = checkpoint.blockNumber;
         }
 
         _setNewValidatorSet(newValidatorSet);
@@ -179,6 +182,7 @@ contract CheckpointManager is Initializable {
      * @param blockNumber The block number to get the event root for
      */
     function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
+        console.log(checkpointBlockNumbers.findUpperBound(blockNumber));
         return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber)].eventRoot;
     }
 
