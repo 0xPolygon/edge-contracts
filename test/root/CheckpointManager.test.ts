@@ -42,7 +42,7 @@ describe("CheckpointManager", () => {
   });
 
   it("Initialize and validate initialization", async () => {
-    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 4); // Randomly pick 4-8
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 8); // Randomly pick 8 - 12
 
     validatorSecretKeys = [];
     validatorSet = [];
@@ -52,7 +52,7 @@ describe("CheckpointManager", () => {
       validatorSet.push({
         _address: accounts[i].address,
         blsKey: mcl.g2ToHex(pubkey),
-        votingPower: ethers.utils.parseEther(((i + 1) * 10).toString()),
+        votingPower: ethers.utils.parseEther(((i + 1) * 2).toString()),
       });
     }
 
@@ -65,7 +65,7 @@ describe("CheckpointManager", () => {
     for (let i = 0; i < validatorSetSize; i++) {
       const validator = await checkpointManager.currentValidatorSet(i);
       expect(validator._address).to.equal(accounts[i].address);
-      expect(validator.votingPower).to.equal(ethers.utils.parseEther(((i + 1) * 10).toString()));
+      expect(validator.votingPower).to.equal(ethers.utils.parseEther(((i + 1) * 2).toString()));
     }
 
     const endBlock = (await checkpointManager.checkpoints(0)).blockNumber;
@@ -78,7 +78,7 @@ describe("CheckpointManager", () => {
   it("Submit checkpoint with invalid signature", async () => {
     const chainId = submitCounter;
     const checkpoint = {
-      epoch: 0,
+      epoch: 1,
       blockNumber: 0,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
@@ -314,15 +314,15 @@ describe("CheckpointManager", () => {
       currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
-    const bitmapNum = Math.floor(Math.random() * 0xfffffffffffffffe) + 0x01;
-    let bitmapStr = bitmapNum.toString(16);
-    const length = bitmapStr.length;
-    for (let j = 0; j < 16 - length; j++) {
-      bitmapStr = "0" + bitmapStr;
-    }
-    bitmapStr = "ffff";
+    // const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);
+    // let bitmapStr = bitmapNum.toString(16);
+    // const length = bitmapStr.length;
+    // for (let j = 0; j < 16 - length; j++) {
+    //   bitmapStr = "0" + bitmapStr;
+    // }
 
-    const bitmap = `0x${bitmapStr}`;
+    // const bitmap = `0x${bitmapStr}`;
+    const bitmap = "0xff";
     const messageOfValidatorSet = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
@@ -378,7 +378,19 @@ describe("CheckpointManager", () => {
 
     await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
-    console.log(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber));
+    expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
+    expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
+
+    const leafIndex = 0;
+    let proof = [];
+    proof.push(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+    await checkpointManager.getEventMembershipByBlockNumber(
+      checkpoint.blockNumber,
+      checkpoint.eventRoot,
+      leafIndex,
+      proof
+    );
+    await checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
   });
 
   it("Submit checkpoint with invalid epoch", async () => {
@@ -531,8 +543,101 @@ describe("CheckpointManager", () => {
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
+  it("Submit checkpoint success with same epoch", async () => {
+    const chainId = submitCounter;
+    const checkpoint = {
+      epoch: 1,
+      blockNumber: 2,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const checkpointMetadata = {
+      blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      blockRound: 0,
+      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    // const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);
+    // let bitmapStr = bitmapNum.toString(16);
+    // const length = bitmapStr.length;
+    // for (let j = 0; j < 16 - length; j++) {
+    //   bitmapStr = "0" + bitmapStr;
+    // }
+
+    // const bitmap = `0x${bitmapStr}`;
+    const bitmap = "0xff";
+    const messageOfValidatorSet = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+        [validatorSet]
+      )
+    );
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "uint256", "bytes32", "uint256", "uint256", "bytes32", "bytes32", "bytes32"],
+        [
+          chainId,
+          checkpoint.blockNumber,
+          checkpointMetadata.blockHash,
+          checkpointMetadata.blockRound,
+          checkpoint.epoch,
+          checkpoint.eventRoot,
+          checkpointMetadata.currentValidatorSetHash,
+          messageOfValidatorSet,
+        ]
+      )
+    );
+
+    const signatures: mcl.Signature[] = [];
+    let flag = false;
+
+    let aggVotingPower = 0;
+    for (let i = 0; i < validatorSecretKeys.length; i++) {
+      const byteNumber = Math.floor(i / 8);
+      const bitNumber = i % 8;
+
+      if (byteNumber >= bitmap.length / 2 - 1) {
+        continue;
+      }
+
+      // Get the value of the bit at the given 'index' in a byte.
+      const oneByte = parseInt(bitmap[2 + byteNumber * 2] + bitmap[3 + byteNumber * 2], 16);
+      if ((oneByte & (1 << bitNumber)) > 0) {
+        const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(DOMAIN));
+        signatures.push(signature);
+        aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      } else {
+        continue;
+      }
+
+      if (aggVotingPower > 66) {
+        flag = true;
+        break;
+      }
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
+
+    expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
+    expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
+
+    const leafIndex = 0;
+    let proof = [];
+    proof.push(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+    await checkpointManager.getEventMembershipByBlockNumber(
+      checkpoint.blockNumber,
+      checkpoint.eventRoot,
+      leafIndex,
+      proof
+    );
+    await checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
+  });
+
   it("Get Event Membership By BlockNumber with invalid eventRoot", async () => {
-    const blockNumber = 0;
+    const blockNumber = 3;
     const leaf = ethers.utils.hexlify(ethers.utils.randomBytes(32));
     const leafIndex = 0;
     let proof = [];
@@ -541,5 +646,17 @@ describe("CheckpointManager", () => {
     await expect(
       checkpointManager.getEventMembershipByBlockNumber(blockNumber, leaf, leafIndex, proof)
     ).to.be.revertedWith("NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
+  });
+
+  it("Get Event Membership By epoch with invalid eventRoot", async () => {
+    const epoch = 2;
+    const leaf = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+    const leafIndex = 0;
+    let proof = [];
+    proof.push(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+
+    await expect(checkpointManager.getEventMembershipByEpoch(epoch, leaf, leafIndex, proof)).to.be.revertedWith(
+      "NO_EVENT_ROOT_FOR_EPOCH"
+    );
   });
 });
