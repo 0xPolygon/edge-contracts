@@ -139,18 +139,6 @@ function commit(StateReceiver.StateSyncBundle bundle, bytes signature, bytes bit
 | signature | bytes                         | undefined   |
 | bitmap    | bytes                         | undefined   |
 
-### counter
-
-```solidity
-function counter() external view returns (uint256)
-```
-
-#### Returns
-
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
-
 ### execute
 
 ```solidity

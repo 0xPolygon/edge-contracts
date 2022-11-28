@@ -80,7 +80,10 @@ contract StateReceiver is System {
     function execute(bytes32[] calldata proof, StateSync calldata obj) external {
         StateSyncBundle memory bundle = getBundleByStateSyncId(obj.id);
 
-        require(keccak256(abi.encode(obj)).checkMembership(bundle.endId - obj.id, bundle.root, proof), "INVALID_PROOF");
+        require(
+            keccak256(abi.encode(obj)).checkMembership(obj.id - bundle.startId, bundle.root, proof),
+            "INVALID_PROOF"
+        );
 
         _executeStateSync(obj);
     }
@@ -99,12 +102,15 @@ contract StateReceiver is System {
             StateSyncBundle memory bundle = getBundleByStateSyncId(objs[i].id);
 
             bool isMember = keccak256(abi.encode(objs[i])).checkMembership(
-                bundle.endId - objs[i].id,
+                objs[i].id - bundle.startId,
                 bundle.root,
                 proofs[i]
             );
 
             if (!isMember) {
+                unchecked {
+                    ++i;
+                }
                 continue; // skip execution for bad proofs
             }
 
