@@ -464,13 +464,14 @@ describe("CheckpointManager", () => {
     expect(await exitHelper.processedExits(id)).to.equal(false);
     expect(await exitHelper.processedExits(id + 1)).to.equal(false);
 
-    const tx = await exitHelper.batchExit([batchExitInput1, batchExitInput2]);
+    const tx = await exitHelper.batchExit([batchExitInput1]);
 
     await expect(tx).to.emit(exitHelper, "ExitProcessed");
 
     expect(await exitHelper.processedExits(id)).to.equal(true);
-    expect(await exitHelper.processedExits(id + 1)).to.equal(true);
+    expect(await exitHelper.processedExits(id + 1)).to.equal(false);
 
     await exitHelper.batchExit([batchExitInput1, batchExitInput2]);
+    expect(await exitHelper.processedExits(id + 1)).to.equal(true);
   });
 });
