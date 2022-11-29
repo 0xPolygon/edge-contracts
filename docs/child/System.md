@@ -1,5 +1,13 @@
 # System
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### NATIVE_TOKEN_CONTRACT
@@ -8,11 +16,16 @@
 function NATIVE_TOKEN_CONTRACT() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TRANSFER_PRECOMPILE
 
@@ -20,11 +33,16 @@ function NATIVE_TOKEN_CONTRACT() external view returns (address)
 function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TRANSFER_PRECOMPILE_GAS
 
@@ -32,11 +50,16 @@ function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### SYSTEM
 
@@ -44,11 +67,16 @@ function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
 function SYSTEM() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### VALIDATOR_PKCHECK_PRECOMPILE
 
@@ -56,11 +84,16 @@ function SYSTEM() external view returns (address)
 function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### VALIDATOR_PKCHECK_PRECOMPILE_GAS
 
@@ -68,8 +101,17 @@ function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+
+
+

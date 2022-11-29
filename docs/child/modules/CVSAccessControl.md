@@ -1,5 +1,13 @@
 # CVSAccessControl
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### ACTIVE_VALIDATOR_SET_SIZE
@@ -8,11 +16,16 @@
 function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### MAX_COMMISSION
 
@@ -20,11 +33,16 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 function MAX_COMMISSION() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### MAX_VALIDATOR_SET_SIZE
 
@@ -32,11 +50,16 @@ function MAX_COMMISSION() external view returns (uint256)
 function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### NEW_VALIDATOR_SIG
 
@@ -44,11 +67,16 @@ function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
 function NEW_VALIDATOR_SIG() external view returns (bytes32)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### REWARD_PRECISION
 
@@ -56,11 +84,16 @@ function NEW_VALIDATOR_SIG() external view returns (bytes32)
 function REWARD_PRECISION() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### SPRINT
 
@@ -68,11 +101,16 @@ function REWARD_PRECISION() external view returns (uint256)
 function SPRINT() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### WITHDRAWAL_WAIT_PERIOD
 
@@ -80,11 +118,16 @@ function SPRINT() external view returns (uint256)
 function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### addToWhitelist
 
@@ -94,10 +137,12 @@ function addToWhitelist(address[] whitelistAddreses) external nonpayable
 
 Adds addresses that are allowed to register as validators.
 
+
+
 #### Parameters
 
-| Name              | Type      | Description                   |
-| ----------------- | --------- | ----------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | whitelistAddreses | address[] | Array of address to whitelist |
 
 ### bls
@@ -106,11 +151,16 @@ Adds addresses that are allowed to register as validators.
 function bls() external view returns (contract IBLS)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type          | Description |
-| ---- | ------------- | ----------- |
-| \_0  | contract IBLS | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IBLS | undefined |
 
 ### claimOwnership
 
@@ -120,7 +170,8 @@ function claimOwnership() external nonpayable
 
 allows proposed owner to claim ownership (step 2 of transferring ownership)
 
-_can only be called by the new proposed owner_
+*can only be called by the new proposed owner*
+
 
 ### currentEpochId
 
@@ -128,11 +179,16 @@ _can only be called by the new proposed owner_
 function currentEpochId() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochEndBlocks
 
@@ -140,17 +196,21 @@ function currentEpochId() external view returns (uint256)
 function epochEndBlocks(uint256) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochReward
 
@@ -158,11 +218,16 @@ function epochEndBlocks(uint256) external view returns (uint256)
 function epochReward() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochs
 
@@ -170,19 +235,23 @@ function epochReward() external view returns (uint256)
 function epochs(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 epochRoot)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name       | Type    | Description |
-| ---------- | ------- | ----------- |
-| startBlock | uint256 | undefined   |
-| endBlock   | uint256 | undefined   |
-| epochRoot  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| startBlock | uint256 | undefined |
+| endBlock | uint256 | undefined |
+| epochRoot | bytes32 | undefined |
 
 ### getValidator
 
@@ -192,17 +261,19 @@ function getValidator(address validator) external view returns (struct Validator
 
 Gets validator by address.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 #### Returns
 
-| Name | Type      | Description                                                                                            |
-| ---- | --------- | ------------------------------------------------------------------------------------------------------ |
-| \_0  | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
+| Name | Type | Description |
+|---|---|---|
+| _0 | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
 
 ### message
 
@@ -212,17 +283,19 @@ function message(uint256) external view returns (uint256)
 
 Message to sign for registration
 
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### minDelegation
 
@@ -230,11 +303,16 @@ Message to sign for registration
 function minDelegation() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### minStake
 
@@ -242,11 +320,16 @@ function minDelegation() external view returns (uint256)
 function minStake() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### owner
 
@@ -256,11 +339,14 @@ function owner() external view returns (address)
 
 the address of the owner
 
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### proposeOwner
 
@@ -270,13 +356,13 @@ function proposeOwner(address payable newOwner) external nonpayable
 
 proposes a new owner (step 1 of transferring ownership)
 
-_can only be called by the current owner_
+*can only be called by the current owner*
 
 #### Parameters
 
-| Name     | Type            | Description |
-| -------- | --------------- | ----------- |
-| newOwner | address payable | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address payable | undefined |
 
 ### proposedOwner
 
@@ -286,11 +372,14 @@ function proposedOwner() external view returns (address)
 
 the address of a proposed owner
 
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### removeFromWhitelist
 
@@ -300,10 +389,12 @@ function removeFromWhitelist(address[] whitelistAddreses) external nonpayable
 
 Deletes addresses that are allowed to register as validators.
 
+
+
 #### Parameters
 
-| Name              | Type      | Description                               |
-| ----------------- | --------- | ----------------------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | whitelistAddreses | address[] | Array of address to remove from whitelist |
 
 ### whitelist
@@ -312,17 +403,23 @@ Deletes addresses that are allowed to register as validators.
 function whitelist(address) external view returns (bool)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
-| ---- | ---- | ----------- |
-| \_0  | bool | undefined   |
+|---|---|---|
+| _0 | bool | undefined |
+
+
 
 ## Events
 
@@ -332,11 +429,15 @@ function whitelist(address) external view returns (bool)
 event AddedToWhitelist(address indexed validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
 
 ### Initialized
 
@@ -344,11 +445,15 @@ event AddedToWhitelist(address indexed validator)
 event Initialized(uint8 version)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type  | Description |
-| ------- | ----- | ----------- |
-| version | uint8 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### OwnershipProposed
 
@@ -356,11 +461,15 @@ event Initialized(uint8 version)
 event OwnershipProposed(address indexed proposedOwner)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                    | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| proposedOwner `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| proposedOwner `indexed` | address | undefined |
 
 ### OwnershipTransferred
 
@@ -368,12 +477,16 @@ event OwnershipProposed(address indexed proposedOwner)
 event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                    | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| previousOwner `indexed` | address | undefined   |
-| newOwner `indexed`      | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### RemovedFromWhitelist
 
@@ -381,11 +494,17 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 event RemovedFromWhitelist(address indexed validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+
+
 
 ## Errors
 
@@ -395,8 +514,14 @@ event RemovedFromWhitelist(address indexed validator)
 error Unauthorized(string only)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type   | Description |
-| ---- | ------ | ----------- |
-| only | string | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| only | string | undefined |
+
+
