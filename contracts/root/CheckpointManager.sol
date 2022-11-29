@@ -155,7 +155,7 @@ contract CheckpointManager is Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = getEventRootByBlock(blockNumber);
-        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_EPOCH");
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
