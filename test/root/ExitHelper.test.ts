@@ -11,7 +11,6 @@ describe("CheckpointManager", () => {
   let bls: BLS,
     bn256G2: BN256G2,
     governance: string,
-    rootValidatorSet: RootValidatorSet,
     checkpointManager: CheckpointManager,
     exitHelper: ExitHelper,
     submitCounter: number,
@@ -36,10 +35,6 @@ describe("CheckpointManager", () => {
     const BN256G2 = await ethers.getContractFactory("BN256G2");
     bn256G2 = await BN256G2.deploy();
     await bn256G2.deployed();
-
-    const RootValidatorSet = await ethers.getContractFactory("RootValidatorSet");
-    rootValidatorSet = await RootValidatorSet.deploy();
-    await rootValidatorSet.deployed();
 
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
     checkpointManager = await CheckpointManager.deploy();

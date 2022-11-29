@@ -11,7 +11,7 @@ describe("Owned", () => {
   before(async () => {
     accounts = await ethers.getSigners();
     const factory = await ethers.getContractFactory("MockOwned");
-    owned = (await upgrades.deployProxy(factory, [])) as MockOwned;
+    owned = (await upgrades.deployProxy(factory, [], { unsafeAllow: ["delegatecall"] })) as MockOwned;
   });
 
   it("only owner should be able to propose a new owner", async () => {
