@@ -1,7 +1,12 @@
 # WithdrawalQueueLib
 
-_Polygon Technology (Daniel Gretzke @gretzke)_
+*Polygon Technology (Daniel Gretzke @gretzke)*
 
 > Withdrawal Queue Lib
 
 queue for withdrawals
+
+
+
+
+

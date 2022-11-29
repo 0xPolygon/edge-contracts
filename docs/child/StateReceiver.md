@@ -1,10 +1,12 @@
 # StateReceiver
 
-_Polygon Technology (JD Kanani @jdkanani, @QEDK)_
+*Polygon Technology (JD Kanani @jdkanani, @QEDK)*
 
 > State Receiver
 
 executes and relays the state data on the child chain
+
+
 
 ## Methods
 
@@ -14,11 +16,16 @@ executes and relays the state data on the child chain
 function NATIVE_TOKEN_CONTRACT() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TRANSFER_PRECOMPILE
 
@@ -26,11 +33,16 @@ function NATIVE_TOKEN_CONTRACT() external view returns (address)
 function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TRANSFER_PRECOMPILE_GAS
 
@@ -38,11 +50,16 @@ function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### SYSTEM
 
@@ -50,11 +67,16 @@ function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
 function SYSTEM() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### VALIDATOR_PKCHECK_PRECOMPILE
 
@@ -62,11 +84,16 @@ function SYSTEM() external view returns (address)
 function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### VALIDATOR_PKCHECK_PRECOMPILE_GAS
 
@@ -74,11 +101,16 @@ function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### batchExecute
 
@@ -86,12 +118,16 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 function batchExecute(bytes32[][] proofs, StateReceiver.StateSync[] objs) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name   | Type                      | Description |
-| ------ | ------------------------- | ----------- |
-| proofs | bytes32[][]               | undefined   |
-| objs   | StateReceiver.StateSync[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| proofs | bytes32[][] | undefined |
+| objs | StateReceiver.StateSync[] | undefined |
 
 ### bundleCounter
 
@@ -99,11 +135,16 @@ function batchExecute(bytes32[][] proofs, StateReceiver.StateSync[] objs) extern
 function bundleCounter() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### bundles
 
@@ -111,19 +152,23 @@ function bundleCounter() external view returns (uint256)
 function bundles(uint256) external view returns (uint256 startId, uint256 endId, bytes32 root)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| startId | uint256 | undefined   |
-| endId   | uint256 | undefined   |
-| root    | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| startId | uint256 | undefined |
+| endId | uint256 | undefined |
+| root | bytes32 | undefined |
 
 ### commit
 
@@ -131,13 +176,17 @@ function bundles(uint256) external view returns (uint256 startId, uint256 endId,
 function commit(StateReceiver.StateSyncBundle bundle, bytes signature, bytes bitmap) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type                          | Description |
-| --------- | ----------------------------- | ----------- |
-| bundle    | StateReceiver.StateSyncBundle | undefined   |
-| signature | bytes                         | undefined   |
-| bitmap    | bytes                         | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| bundle | StateReceiver.StateSyncBundle | undefined |
+| signature | bytes | undefined |
+| bitmap | bytes | undefined |
 
 ### execute
 
@@ -145,12 +194,16 @@ function commit(StateReceiver.StateSyncBundle bundle, bytes signature, bytes bit
 function execute(bytes32[] proof, StateReceiver.StateSync obj) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name  | Type                    | Description |
-| ----- | ----------------------- | ----------- |
-| proof | bytes32[]               | undefined   |
-| obj   | StateReceiver.StateSync | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| proof | bytes32[] | undefined |
+| obj | StateReceiver.StateSync | undefined |
 
 ### getBundleByStateSyncId
 
@@ -160,17 +213,19 @@ function getBundleByStateSyncId(uint256 id) external view returns (struct StateR
 
 get bundle for a state sync id
 
+
+
 #### Parameters
 
-| Name | Type    | Description                    |
-| ---- | ------- | ------------------------------ |
-| id   | uint256 | state sync to get the root for |
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | state sync to get the root for |
 
 #### Returns
 
-| Name | Type                          | Description |
-| ---- | ----------------------------- | ----------- |
-| \_0  | StateReceiver.StateSyncBundle | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | StateReceiver.StateSyncBundle | undefined |
 
 ### getRootByStateSyncId
 
@@ -180,17 +235,19 @@ function getRootByStateSyncId(uint256 id) external view returns (bytes32)
 
 get submitted root for a state sync id
 
+
+
 #### Parameters
 
-| Name | Type    | Description                    |
-| ---- | ------- | ------------------------------ |
-| id   | uint256 | state sync to get the root for |
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | state sync to get the root for |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### lastCommittedId
 
@@ -198,11 +255,16 @@ get submitted root for a state sync id
 function lastCommittedId() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### stateSyncBundleIds
 
@@ -210,17 +272,23 @@ function lastCommittedId() external view returns (uint256)
 function stateSyncBundleIds(uint256) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+
 
 ## Events
 
@@ -230,13 +298,19 @@ function stateSyncBundleIds(uint256) external view returns (uint256)
 event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus indexed status, bytes message)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name              | Type                            | Description |
-| ----------------- | ------------------------------- | ----------- |
-| counter `indexed` | uint256                         | undefined   |
-| status `indexed`  | enum StateReceiver.ResultStatus | undefined   |
-| message           | bytes                           | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| counter `indexed` | uint256 | undefined |
+| status `indexed` | enum StateReceiver.ResultStatus | undefined |
+| message  | bytes | undefined |
+
+
 
 ## Errors
 
@@ -246,8 +320,14 @@ event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus i
 error Unauthorized(string only)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type   | Description |
-| ---- | ------ | ----------- |
-| only | string | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| only | string | undefined |
+
+

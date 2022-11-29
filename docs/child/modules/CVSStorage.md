@@ -1,5 +1,13 @@
 # CVSStorage
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### ACTIVE_VALIDATOR_SET_SIZE
@@ -8,11 +16,16 @@
 function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### MAX_COMMISSION
 
@@ -20,11 +33,16 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 function MAX_COMMISSION() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### MAX_VALIDATOR_SET_SIZE
 
@@ -32,11 +50,16 @@ function MAX_COMMISSION() external view returns (uint256)
 function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### NEW_VALIDATOR_SIG
 
@@ -44,11 +67,16 @@ function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
 function NEW_VALIDATOR_SIG() external view returns (bytes32)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### REWARD_PRECISION
 
@@ -56,11 +84,16 @@ function NEW_VALIDATOR_SIG() external view returns (bytes32)
 function REWARD_PRECISION() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### SPRINT
 
@@ -68,11 +101,16 @@ function REWARD_PRECISION() external view returns (uint256)
 function SPRINT() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### WITHDRAWAL_WAIT_PERIOD
 
@@ -80,11 +118,16 @@ function SPRINT() external view returns (uint256)
 function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### bls
 
@@ -92,11 +135,16 @@ function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 function bls() external view returns (contract IBLS)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type          | Description |
-| ---- | ------------- | ----------- |
-| \_0  | contract IBLS | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IBLS | undefined |
 
 ### currentEpochId
 
@@ -104,11 +152,16 @@ function bls() external view returns (contract IBLS)
 function currentEpochId() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochEndBlocks
 
@@ -116,17 +169,21 @@ function currentEpochId() external view returns (uint256)
 function epochEndBlocks(uint256) external view returns (uint256)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochReward
 
@@ -134,11 +191,16 @@ function epochEndBlocks(uint256) external view returns (uint256)
 function epochReward() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### epochs
 
@@ -146,19 +208,23 @@ function epochReward() external view returns (uint256)
 function epochs(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 epochRoot)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name       | Type    | Description |
-| ---------- | ------- | ----------- |
-| startBlock | uint256 | undefined   |
-| endBlock   | uint256 | undefined   |
-| epochRoot  | bytes32 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| startBlock | uint256 | undefined |
+| endBlock | uint256 | undefined |
+| epochRoot | bytes32 | undefined |
 
 ### getValidator
 
@@ -168,17 +234,19 @@ function getValidator(address validator) external view returns (struct Validator
 
 Gets validator by address.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 #### Returns
 
-| Name | Type      | Description                                                                                            |
-| ---- | --------- | ------------------------------------------------------------------------------------------------------ |
-| \_0  | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
+| Name | Type | Description |
+|---|---|---|
+| _0 | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
 
 ### message
 
@@ -188,17 +256,19 @@ function message(uint256) external view returns (uint256)
 
 Message to sign for registration
 
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### minDelegation
 
@@ -206,11 +276,16 @@ Message to sign for registration
 function minDelegation() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### minStake
 
@@ -218,11 +293,16 @@ function minDelegation() external view returns (uint256)
 function minStake() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### whitelist
 
@@ -230,14 +310,22 @@ function minStake() external view returns (uint256)
 function whitelist(address) external view returns (bool)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
-| ---- | ---- | ----------- |
-| \_0  | bool | undefined   |
+|---|---|---|
+| _0 | bool | undefined |
+
+
+
+

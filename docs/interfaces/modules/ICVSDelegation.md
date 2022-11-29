@@ -1,5 +1,13 @@
 # ICVSDelegation
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### claimDelegatorReward
@@ -10,12 +18,14 @@ function claimDelegatorReward(address validator, bool restake) external nonpayab
 
 Claims delegator rewards for sender.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description                               |
-| --------- | ------- | ----------------------------------------- |
-| validator | address | Validator to claim from                   |
-| restake   | bool    | Whether to redelegate the claimed rewards |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | Validator to claim from |
+| restake | bool | Whether to redelegate the claimed rewards |
 
 ### delegate
 
@@ -25,12 +35,14 @@ function delegate(address validator, bool restake) external payable
 
 Delegates sent amount to validator. Claims rewards beforehand.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description                               |
-| --------- | ------- | ----------------------------------------- |
-| validator | address | Validator to delegate to                  |
-| restake   | bool    | Whether to redelegate the claimed rewards |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | Validator to delegate to |
+| restake | bool | Whether to redelegate the claimed rewards |
 
 ### delegationOf
 
@@ -40,18 +52,20 @@ function delegationOf(address validator, address delegator) external view return
 
 Gets amount delegated by delegator to validator.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
+| Name | Type | Description |
+|---|---|---|
 | validator | address | Address of validator |
 | delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description                     |
-| ---- | ------- | ------------------------------- |
-| \_0  | uint256 | Amount delegated (in MATIC wei) |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | Amount delegated (in MATIC wei) |
 
 ### getDelegatorReward
 
@@ -61,18 +75,20 @@ function getDelegatorReward(address validator, address delegator) external view 
 
 Gets delegators&#39;s unclaimed rewards with validator.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
+| Name | Type | Description |
+|---|---|---|
 | validator | address | Address of validator |
 | delegator | address | Address of delegator |
 
 #### Returns
 
-| Name | Type    | Description                                                     |
-| ---- | ------- | --------------------------------------------------------------- |
-| \_0  | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
 
 ### undelegate
 
@@ -82,12 +98,16 @@ function undelegate(address validator, uint256 amount) external nonpayable
 
 Undelegates amount from validator for sender. Claims rewards beforehand.
 
+
+
 #### Parameters
 
-| Name      | Type    | Description                  |
-| --------- | ------- | ---------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | validator | address | Validator to undelegate from |
-| amount    | uint256 | The amount to undelegate     |
+| amount | uint256 | The amount to undelegate |
+
+
 
 ## Events
 
@@ -97,13 +117,17 @@ Undelegates amount from validator for sender. Claims rewards beforehand.
 event Delegated(address indexed delegator, address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### DelegatorRewardClaimed
 
@@ -111,14 +135,18 @@ event Delegated(address indexed delegator, address indexed validator, uint256 am
 event DelegatorRewardClaimed(address indexed delegator, address indexed validator, bool indexed restake, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| restake `indexed`   | bool    | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| validator `indexed` | address | undefined |
+| restake `indexed` | bool | undefined |
+| amount  | uint256 | undefined |
 
 ### DelegatorRewardDistributed
 
@@ -126,12 +154,16 @@ event DelegatorRewardClaimed(address indexed delegator, address indexed validato
 event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### Undelegated
 
@@ -139,10 +171,17 @@ event DelegatorRewardDistributed(address indexed validator, uint256 amount)
 event Undelegated(address indexed delegator, address indexed validator, uint256 amount)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| delegator `indexed` | address | undefined   |
-| validator `indexed` | address | undefined   |
-| amount              | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| delegator `indexed` | address | undefined |
+| validator `indexed` | address | undefined |
+| amount  | uint256 | undefined |
+
+
+
