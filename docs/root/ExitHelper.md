@@ -1,10 +1,12 @@
 # ExitHelper
 
-_@QEDK (Polygon Technology)_
+*@QEDK (Polygon Technology)*
 
 > ExitHelper
 
 Helper contract to process exits from stored event roots in CheckpointManager
+
+
 
 ## Methods
 
@@ -14,11 +16,15 @@ Helper contract to process exits from stored event roots in CheckpointManager
 function batchExit(ExitHelper.BatchExitInput[] inputs) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name   | Type                        | Description |
-| ------ | --------------------------- | ----------- |
-| inputs | ExitHelper.BatchExitInput[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| inputs | ExitHelper.BatchExitInput[] | undefined |
 
 ### checkpointManager
 
@@ -26,11 +32,16 @@ function batchExit(ExitHelper.BatchExitInput[] inputs) external nonpayable
 function checkpointManager() external view returns (contract ICheckpointManager)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type                        | Description |
-| ---- | --------------------------- | ----------- |
-| \_0  | contract ICheckpointManager | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract ICheckpointManager | undefined |
 
 ### exit
 
@@ -40,14 +51,16 @@ function exit(uint256 blockNumber, uint256 leafIndex, bytes unhashedLeaf, bytes3
 
 Perform an exit for one event
 
+
+
 #### Parameters
 
-| Name         | Type      | Description                                     |
-| ------------ | --------- | ----------------------------------------------- |
-| blockNumber  | uint256   | Block number of the exit event on L2            |
-| leafIndex    | uint256   | Index of the leaf in the exit event Merkle tree |
-| unhashedLeaf | bytes     | ABI-encoded exit event leaf                     |
-| proof        | bytes32[] | Proof of the event inclusion in the tree        |
+| Name | Type | Description |
+|---|---|---|
+| blockNumber | uint256 | Block number of the exit event on L2 |
+| leafIndex | uint256 | Index of the leaf in the exit event Merkle tree |
+| unhashedLeaf | bytes | ABI-encoded exit event leaf |
+| proof | bytes32[] | Proof of the event inclusion in the tree |
 
 ### initialize
 
@@ -57,12 +70,12 @@ function initialize(contract ICheckpointManager newCheckpointManager) external n
 
 Initialize the contract with the checkpoint manager address
 
-_The checkpoint manager contract must be deployed first_
+*The checkpoint manager contract must be deployed first*
 
 #### Parameters
 
-| Name                 | Type                        | Description                                |
-| -------------------- | --------------------------- | ------------------------------------------ |
+| Name | Type | Description |
+|---|---|---|
 | newCheckpointManager | contract ICheckpointManager | Address of the checkpoint manager contract |
 
 ### processedExits
@@ -71,17 +84,23 @@ _The checkpoint manager contract must be deployed first_
 function processedExits(uint256) external view returns (bool)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
-| ---- | ---- | ----------- |
-| \_0  | bool | undefined   |
+|---|---|---|
+| _0 | bool | undefined |
+
+
 
 ## Events
 
@@ -91,13 +110,17 @@ function processedExits(uint256) external view returns (bool)
 event ExitProcessed(uint256 indexed id, bool indexed success, bytes returnData)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name              | Type    | Description |
-| ----------------- | ------- | ----------- |
-| id `indexed`      | uint256 | undefined   |
-| success `indexed` | bool    | undefined   |
-| returnData        | bytes   | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| id `indexed` | uint256 | undefined |
+| success `indexed` | bool | undefined |
+| returnData  | bytes | undefined |
 
 ### Initialized
 
@@ -105,8 +128,15 @@ event ExitProcessed(uint256 indexed id, bool indexed success, bytes returnData)
 event Initialized(uint8 version)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type  | Description |
-| ------- | ----- | ----------- |
-| version | uint8 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
+
+

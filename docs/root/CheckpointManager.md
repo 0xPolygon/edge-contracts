@@ -44,10 +44,10 @@ function bn256G2() external view returns (contract IBN256G2)
 |---|---|---|
 | _0 | contract IBN256G2 | undefined |
 
-### checkpoints
+### checkpointBlockNumbers
 
 ```solidity
-function checkpoints(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 eventRoot)
+function checkpointBlockNumbers(uint256) external view returns (uint256)
 ```
 
 
@@ -64,14 +64,93 @@ function checkpoints(uint256) external view returns (uint256 startBlock, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| startBlock | uint256 | undefined |
-| endBlock | uint256 | undefined |
-| eventRoot | bytes32 | undefined |
+| _0 | uint256 | undefined |
 
-### currentCheckpointId
+### checkpoints
 
 ```solidity
-function currentCheckpointId() external view returns (uint256)
+function checkpoints(uint256) external view returns (uint256 epoch, uint256 blockNumber, bytes32 eventRoot)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| epoch | uint256 | undefined |
+| blockNumber | uint256 | undefined |
+| eventRoot | bytes32 | undefined |
+
+### currentCheckpointBlockNumber
+
+```solidity
+function currentCheckpointBlockNumber() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### currentEpoch
+
+```solidity
+function currentEpoch() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### currentValidatorSet
+
+```solidity
+function currentValidatorSet(uint256) external view returns (address _address, uint256 votingPower)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _address | address | undefined |
+| votingPower | uint256 | undefined |
+
+### currentValidatorSetLength
+
+```solidity
+function currentValidatorSetLength() external view returns (uint256)
 ```
 
 
@@ -102,29 +181,122 @@ function domain() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### initialize
+### getEventMembershipByBlockNumber
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, contract IRootValidatorSet newRootValidatorSet, bytes32 newDomain) external nonpayable
+function getEventMembershipByBlockNumber(uint256 blockNumber, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
 ```
 
-Initialization function for CheckpointManager
+Function to get if a event is part of the event root for a block number
 
-*Contract can only be initialized once*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| newBls | contract IBLS | Address of the BLS library contract |
-| newBn256G2 | contract IBN256G2 | Address of the BLS library contract |
-| newRootValidatorSet | contract IRootValidatorSet | Array of validator addresses to seed the contract with |
-| newDomain | bytes32 | Domain to use when hashing messages to a point |
+| blockNumber | uint256 | The block number to get the event root from (i.e. blockN &lt;-- eventRoot --&gt; blockN+M) |
+| leaf | bytes32 | The leaf of the event (keccak256-encoded log) |
+| leafIndex | uint256 | The leaf index of the event in the Merkle root tree |
+| proof | bytes32[] | The proof for leaf membership in the event root tree |
 
-### rootValidatorSet
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### getEventMembershipByEpoch
 
 ```solidity
-function rootValidatorSet() external view returns (contract IRootValidatorSet)
+function getEventMembershipByEpoch(uint256 epoch, bytes32 leaf, uint256 leafIndex, bytes32[] proof) external view returns (bool)
+```
+
+Function to get if a event is part of the event root for an epoch
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| epoch | uint256 | The epoch id to get the event root for |
+| leaf | bytes32 | The leaf of the event (keccak256-encoded log) |
+| leafIndex | uint256 | The leaf index of the event in the Merkle root tree |
+| proof | bytes32[] | The proof for leaf membership in the event root tree |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### getEventRootByBlock
+
+```solidity
+function getEventRootByBlock(uint256 blockNumber) external view returns (bytes32)
+```
+
+Function to get the event root for a block number
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| blockNumber | uint256 | The block number to get the event root for |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
+### initialize
+
+```solidity
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, CheckpointManager.Validator[] newValidatorSet) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newBls | contract IBLS | undefined |
+| newBn256G2 | contract IBN256G2 | undefined |
+| newDomain | bytes32 | undefined |
+| newValidatorSet | CheckpointManager.Validator[] | undefined |
+
+### submit
+
+```solidity
+function submit(uint256 chainId, CheckpointManager.CheckpointMetadata checkpointMetadata, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| chainId | uint256 | undefined |
+| checkpointMetadata | CheckpointManager.CheckpointMetadata | undefined |
+| checkpoint | CheckpointManager.Checkpoint | undefined |
+| signature | uint256[2] | undefined |
+| newValidatorSet | CheckpointManager.Validator[] | undefined |
+| bitmap | bytes | undefined |
+
+### totalVotingPower
+
+```solidity
+function totalVotingPower() external view returns (uint256)
 ```
 
 
@@ -136,47 +308,7 @@ function rootValidatorSet() external view returns (contract IRootValidatorSet)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IRootValidatorSet | undefined |
-
-### submit
-
-```solidity
-function submit(uint256 id, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, uint256[] validatorIds, IRootValidatorSet.Validator[] newValidators) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined |
-| checkpoint | CheckpointManager.Checkpoint | undefined |
-| signature | uint256[2] | undefined |
-| validatorIds | uint256[] | undefined |
-| newValidators | IRootValidatorSet.Validator[] | undefined |
-
-### submitBatch
-
-```solidity
-function submitBatch(uint256[] ids, CheckpointManager.Checkpoint[] checkpointBatch, uint256[2] signature, uint256[] validatorIds, IRootValidatorSet.Validator[] newValidators) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| ids | uint256[] | undefined |
-| checkpointBatch | CheckpointManager.Checkpoint[] | undefined |
-| signature | uint256[2] | undefined |
-| validatorIds | uint256[] | undefined |
-| newValidators | IRootValidatorSet.Validator[] | undefined |
+| _0 | uint256 | undefined |
 
 
 
@@ -197,22 +329,6 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
-
-### NewCheckpoint
-
-```solidity
-event NewCheckpoint(uint256 checkpointId)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| checkpointId  | uint256 | undefined |
 
 
 
