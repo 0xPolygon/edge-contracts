@@ -80,6 +80,19 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 | ---- | ------- | ----------- |
 | \_0  | uint256 | undefined   |
 
+### batchExecute
+
+```solidity
+function batchExecute(bytes32[][] proofs, StateReceiver.StateSync[] objs) external nonpayable
+```
+
+#### Parameters
+
+| Name   | Type                      | Description |
+| ------ | ------------------------- | ----------- |
+| proofs | bytes32[][]               | undefined   |
+| objs   | StateReceiver.StateSync[] | undefined   |
+
 ### bundleCounter
 
 ```solidity
@@ -95,7 +108,7 @@ function bundleCounter() external view returns (uint256)
 ### bundles
 
 ```solidity
-function bundles(uint256) external view returns (uint256 startId, uint256 endId, uint256 leaves, bytes32 root)
+function bundles(uint256) external view returns (uint256 startId, uint256 endId, bytes32 root)
 ```
 
 #### Parameters
@@ -110,7 +123,6 @@ function bundles(uint256) external view returns (uint256 startId, uint256 endId,
 | ------- | ------- | ----------- |
 | startId | uint256 | undefined   |
 | endId   | uint256 | undefined   |
-| leaves  | uint256 | undefined   |
 | root    | bytes32 | undefined   |
 
 ### commit
@@ -127,42 +139,58 @@ function commit(StateReceiver.StateSyncBundle bundle, bytes signature, bytes bit
 | signature | bytes                         | undefined   |
 | bitmap    | bytes                         | undefined   |
 
-### counter
-
-```solidity
-function counter() external view returns (uint256)
-```
-
-#### Returns
-
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
-
-### currentLeafIndex
-
-```solidity
-function currentLeafIndex() external view returns (uint256)
-```
-
-#### Returns
-
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
-
 ### execute
 
 ```solidity
-function execute(bytes32[] proof, StateReceiver.StateSync[] objs) external nonpayable
+function execute(bytes32[] proof, StateReceiver.StateSync obj) external nonpayable
 ```
 
 #### Parameters
 
-| Name  | Type                      | Description |
-| ----- | ------------------------- | ----------- |
-| proof | bytes32[]                 | undefined   |
-| objs  | StateReceiver.StateSync[] | undefined   |
+| Name  | Type                    | Description |
+| ----- | ----------------------- | ----------- |
+| proof | bytes32[]               | undefined   |
+| obj   | StateReceiver.StateSync | undefined   |
+
+### getBundleByStateSyncId
+
+```solidity
+function getBundleByStateSyncId(uint256 id) external view returns (struct StateReceiver.StateSyncBundle)
+```
+
+get bundle for a state sync id
+
+#### Parameters
+
+| Name | Type    | Description                    |
+| ---- | ------- | ------------------------------ |
+| id   | uint256 | state sync to get the root for |
+
+#### Returns
+
+| Name | Type                          | Description |
+| ---- | ----------------------------- | ----------- |
+| \_0  | StateReceiver.StateSyncBundle | undefined   |
+
+### getRootByStateSyncId
+
+```solidity
+function getRootByStateSyncId(uint256 id) external view returns (bytes32)
+```
+
+get submitted root for a state sync id
+
+#### Parameters
+
+| Name | Type    | Description                    |
+| ---- | ------- | ------------------------------ |
+| id   | uint256 | state sync to get the root for |
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | bytes32 | undefined   |
 
 ### lastCommittedId
 
@@ -176,11 +204,17 @@ function lastCommittedId() external view returns (uint256)
 | ---- | ------- | ----------- |
 | \_0  | uint256 | undefined   |
 
-### lastExecutedBundleCounter
+### stateSyncBundleIds
 
 ```solidity
-function lastExecutedBundleCounter() external view returns (uint256)
+function stateSyncBundleIds(uint256) external view returns (uint256)
 ```
+
+#### Parameters
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
 
 #### Returns
 
@@ -193,7 +227,7 @@ function lastExecutedBundleCounter() external view returns (uint256)
 ### StateSyncResult
 
 ```solidity
-event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus indexed status, bytes32 message)
+event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus indexed status, bytes message)
 ```
 
 #### Parameters
@@ -202,7 +236,7 @@ event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus i
 | ----------------- | ------------------------------- | ----------- |
 | counter `indexed` | uint256                         | undefined   |
 | status `indexed`  | enum StateReceiver.ResultStatus | undefined   |
-| message           | bytes32                         | undefined   |
+| message           | bytes                           | undefined   |
 
 ## Errors
 
