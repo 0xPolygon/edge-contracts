@@ -58,6 +58,7 @@ contract CheckpointManager is Initializable {
     uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
     uint256 public currentCheckpointBlockNumber;
+    uint256 public totalVotingPower;
     bytes32 public domain;
     IBLS public bls;
     IBN256G2 public bn256G2;
@@ -119,8 +120,7 @@ contract CheckpointManager is Initializable {
             )
         );
 
-        // slither-disable-next-line reentrancy-benign
-        require(_verifySignature(bls.hashToPoint(domain, hash), signature, bitmap), "SIGNATURE_VERIFICATION_FAILED");
+        _verifySignature(bls.hashToPoint(domain, hash), signature, bitmap);
 
         uint256 prevEpoch = currentEpoch++;
 
@@ -155,7 +155,7 @@ contract CheckpointManager is Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = getEventRootByBlock(blockNumber);
-        require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_EPOCH");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -173,7 +173,7 @@ contract CheckpointManager is Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = checkpoints[epoch].eventRoot;
-        require(eventRoot != bytes32(0), "CheckpointManager: NO_EVENT_ROOT_FOR_EPOCH");
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_EPOCH");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -194,17 +194,6 @@ contract CheckpointManager is Initializable {
     }
 
     /**
-     * @notice Internal function that performs checks on the checkpoint
-     * @param prevId Current checkpoint ID
-     * @param checkpoint The checkpoint to store
-     */
-    function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) internal view {
-        Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(checkpoint.epoch >= oldCheckpoint.epoch, "CheckpointManager: INVALID_EPOCH");
-        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "CheckpointManager: EMPTY_CHECKPOINT");
-    }
-
-    /**
      * @notice Internal function that asserts that the signature is valid and that the required threshold is met
      * @param message The message that was signed by validators (i.e. checkpoint hash)
      * @param signature The aggregated signature submitted by the proposer
@@ -213,23 +202,28 @@ contract CheckpointManager is Initializable {
         uint256[2] memory message,
         uint256[2] calldata signature,
         bytes calldata bitmap
-    ) private view returns (bool) {
+    ) private {
         uint256 length = currentValidatorSetLength;
         uint256[4] memory aggPubkey;
         uint256 firstIndex = 0;
         bool flag = false;
-        for (uint256 i = 0; i < length; ++i) {
+        for (uint256 i = 0; i < length; ) {
             if (_getValueFromBitmap(bitmap, i)) {
                 aggPubkey = currentValidatorSet[i].blsKey;
                 firstIndex = i;
                 flag = true;
                 break;
             }
+
+            unchecked {
+                ++i;
+            }
         }
-        require(flag, "CheckpointManager: BITMAP_IS_EMPTY");
+
+        require(flag, "BITMAP_IS_EMPTY");
+
         uint256 aggVotingPower = 0;
-        flag = false;
-        for (uint256 i = firstIndex + 1; i < length; ++i) {
+        for (uint256 i = firstIndex + 1; i < length; ) {
             if (_getValueFromBitmap(bitmap, i)) {
                 uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
                 // slither-disable-next-line calls-loop
@@ -244,21 +238,31 @@ contract CheckpointManager is Initializable {
                     blsKey[3]
                 );
                 aggVotingPower += currentValidatorSet[i].votingPower;
-            } else {
-                continue;
             }
-            // if voting power >= 67%, checkpoint is accepted
-            if ((aggVotingPower / (10**18)) > 66) {
-                flag = true;
-                break;
+
+            unchecked {
+                ++i;
             }
         }
 
-        require(flag, "CheckpointManager: INSUFFICIENT_VOTING_POWER");
+        require(aggVotingPower > ((2 * totalVotingPower) / 3), "INSUFFICIENT_VOTING_POWER");
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
-        return callSuccess && result;
+        require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
+
+        totalVotingPower = aggVotingPower;
+    }
+
+    /**
+     * @notice Internal function that performs checks on the checkpoint
+     * @param prevId Current checkpoint ID
+     * @param checkpoint The checkpoint to store
+     */
+    function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
+        Checkpoint memory oldCheckpoint = checkpoints[prevId];
+        require(checkpoint.epoch >= oldCheckpoint.epoch, "INVALID_EPOCH");
+        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "EMPTY_CHECKPOINT");
     }
 
     function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {

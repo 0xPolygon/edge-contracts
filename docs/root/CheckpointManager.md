@@ -237,6 +237,18 @@ function submit(uint256 chainId, CheckpointManager.CheckpointMetadata checkpoint
 | newValidatorSet    | CheckpointManager.Validator[]        | undefined   |
 | bitmap             | bytes                                | undefined   |
 
+### totalVotingPower
+
+```solidity
+function totalVotingPower() external view returns (uint256)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | uint256 | undefined   |
+
 ## Events
 
 ### Initialized
