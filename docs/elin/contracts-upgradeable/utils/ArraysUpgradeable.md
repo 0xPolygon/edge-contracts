@@ -1,3 +1,12 @@
 # ArraysUpgradeable
 
-_Collection of functions related to array types._
+
+
+
+
+
+
+*Collection of functions related to array types.*
+
+
+
