@@ -31,6 +31,7 @@
     "prettier": "npx prettier -w .",
     "slither": "slither .",
     "coverage": "npx hardhat coverage",
+    "coverage:foundry": "forge coverage --report lcov && genhtml -o forge-coverage lcov.info",
     "prepare": "husky install",
     "husky:pre-commit": "npm run prettier && git add ."
   },
@@ -42,7 +43,7 @@
     "hardhat": "^2.10.2",
     "keccak256": "^1.0.6",
     "mcl-wasm": "^1.0.2",
-    "merkletreejs": "^0.2.31"
+    "merkletreejs": "^0.2.32"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.4",

@@ -477,26 +477,20 @@ Gets validator&#39;s unclaimed rewards.
 ### initialize
 
 ```solidity
-function initialize(uint256 newEpochReward, uint256 newMinStake, uint256 newMinDelegation, address[] validatorAddresses, uint256[4][] validatorPubkeys, uint256[] validatorStakes, contract IBLS newBls, uint256[2] newMessage, address governance) external nonpayable
+function initialize(IChildValidatorSetBase.InitStruct init, address[] validatorAddresses, uint256[4][] validatorPubkeys, uint256[] validatorStakes, contract IBLS newBls, uint256[2] newMessage, address governance) external nonpayable
 ```
-
-Initializer function for genesis contract, called by v3 client at genesis to set up the initial set.
-
-_only callable by client, can only be called once_
 
 #### Parameters
 
-| Name               | Type          | Description                                        |
-| ------------------ | ------------- | -------------------------------------------------- |
-| newEpochReward     | uint256       | reward for a proposed epoch                        |
-| newMinStake        | uint256       | minimum stake to become a validator                |
-| newMinDelegation   | uint256       | minimum amount to delegate to a validator          |
-| validatorAddresses | address[]     | addresses of initial validators                    |
-| validatorPubkeys   | uint256[4][]  | uint256[4] BLS public keys of initial validators   |
-| validatorStakes    | uint256[]     | amount staked per initial validator                |
-| newBls             | contract IBLS | address pf BLS contract/precompile                 |
-| newMessage         | uint256[2]    | message for BLS signing                            |
-| governance         | address       | Governance address to set as owner of the contract |
+| Name               | Type                              | Description |
+| ------------------ | --------------------------------- | ----------- |
+| init               | IChildValidatorSetBase.InitStruct | undefined   |
+| validatorAddresses | address[]                         | undefined   |
+| validatorPubkeys   | uint256[4][]                      | undefined   |
+| validatorStakes    | uint256[]                         | undefined   |
+| newBls             | contract IBLS                     | undefined   |
+| newMessage         | uint256[2]                        | undefined   |
+| governance         | address                           | undefined   |
 
 ### message
 

@@ -11,6 +11,12 @@ import "./modules/ICVSStorage.sol";
  * It manages staking, epoch committing, and reward distribution.
  */
 interface IChildValidatorSetBase {
+    struct InitStruct {
+        uint256 epochReward;
+        uint256 minStake;
+        uint256 minDelegation;
+    }
+
     struct DoubleSignerSlashingInput {
         bytes32 blockHash;
         bytes bitmap;
