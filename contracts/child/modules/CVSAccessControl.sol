@@ -3,9 +3,9 @@ pragma solidity 0.8.17;
 
 import "../../interfaces/modules/ICVSAccessControl.sol";
 import "./CVSStorage.sol";
-import "../../common/Owned.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-abstract contract CVSAccessControl is ICVSAccessControl, CVSStorage, Owned {
+abstract contract CVSAccessControl is ICVSAccessControl, CVSStorage, Ownable2StepUpgradeable {
     /**
      * @inheritdoc ICVSAccessControl
      */

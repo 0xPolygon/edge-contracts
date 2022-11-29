@@ -37,8 +37,8 @@
   },
   "dependencies": {
     "@defi-wonderland/smock": "^2.0.7",
-    "@openzeppelin/contracts": "^4.7.3",
-    "@openzeppelin/contracts-upgradeable": "^4.7.3",
+    "@openzeppelin/contracts": "^4.8.0",
+    "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "hardhat": "^2.10.2",
     "keccak256": "^1.0.6",

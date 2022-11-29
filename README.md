@@ -37,7 +37,6 @@ There are a number of different contracts with different roles in the suite, as 
 ├─ BLS - "BLS signature operations"
 ├─ BN256G2 - "elliptic curve operations on G2 for BN256 (used for BLS)"
 ├─ Merkle - "checks membership of a hash in a merkle tree"
-├─ Owned - "single-owner with two-step changes"
 │ interfaces/ "interfaces for all contracts"
 │ libs/ "libraries used for specific applications"
 ├─ ModExp — "modular exponentiation (from Hubble Project, for BLS)"
