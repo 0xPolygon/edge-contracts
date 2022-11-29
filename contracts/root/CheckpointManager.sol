@@ -5,27 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../common/Merkle.sol";
 import "../interfaces/IBLS.sol";
-
-interface IBN256G2 {
-    function ecTwistAdd(
-        uint256 pt1xx,
-        uint256 pt1xy,
-        uint256 pt1yx,
-        uint256 pt1yy,
-        uint256 pt2xx,
-        uint256 pt2xy,
-        uint256 pt2yx,
-        uint256 pt2yy
-    )
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        );
-}
+import "../interfaces/IBN256G2.sol";
 
 /**
     @title CheckpointManager
