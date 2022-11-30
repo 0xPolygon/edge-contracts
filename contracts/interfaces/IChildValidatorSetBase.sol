@@ -15,6 +15,7 @@ interface IChildValidatorSetBase {
         uint256 epochReward;
         uint256 minStake;
         uint256 minDelegation;
+        uint256 epochSize;
     }
 
     struct DoubleSignerSlashingInput {
