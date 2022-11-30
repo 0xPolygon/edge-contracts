@@ -95,23 +95,6 @@ function REWARD_PRECISION() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### SPRINT
-
-```solidity
-function SPRINT() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### WITHDRAWAL_WAIT_PERIOD
 
 ```solidity
@@ -291,6 +274,23 @@ function minDelegation() external view returns (uint256)
 
 ```solidity
 function minStake() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### sprint
+
+```solidity
+function sprint() external view returns (uint256)
 ```
 
 
