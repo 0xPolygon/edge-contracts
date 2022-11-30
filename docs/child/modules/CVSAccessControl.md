@@ -212,6 +212,23 @@ function epochReward() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### epochSize
+
+```solidity
+function epochSize() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### epochs
 
 ```solidity
@@ -375,39 +392,6 @@ function renounceOwnership() external nonpayable
 *Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
 
 
-### setSprint
-
-```solidity
-function setSprint(uint256 newSprint) external nonpayable
-```
-
-Set the amount of blocks per epoch
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newSprint | uint256 | the new amount of blocks per epoch |
-
-### sprint
-
-```solidity
-function sprint() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### transferOwnership
 
 ```solidity
@@ -531,23 +515,6 @@ event RemovedFromWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
-
-### SprintUpdated
-
-```solidity
-event SprintUpdated(uint256 oldSprint, uint256 newSprint)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| oldSprint  | uint256 | undefined |
-| newSprint  | uint256 | undefined |
 
 
 

@@ -185,6 +185,23 @@ function epochReward() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### epochSize
+
+```solidity
+function epochSize() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### epochs
 
 ```solidity
@@ -274,23 +291,6 @@ function minDelegation() external view returns (uint256)
 
 ```solidity
 function minStake() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### sprint
-
-```solidity
-function sprint() external view returns (uint256)
 ```
 
 

@@ -9,14 +9,6 @@ abstract contract CVSAccessControl is ICVSAccessControl, CVSStorage, Ownable2Ste
     /**
      * @inheritdoc ICVSAccessControl
      */
-    function setSprint(uint256 newSprint) external onlyOwner {
-        emit SprintUpdated(sprint, newSprint);
-        sprint = newSprint;
-    }
-
-    /**
-     * @inheritdoc ICVSAccessControl
-     */
     function addToWhitelist(address[] calldata whitelistAddreses) external onlyOwner {
         for (uint256 i = 0; i < whitelistAddreses.length; i++) {
             _addToWhitelist(whitelistAddreses[i]);

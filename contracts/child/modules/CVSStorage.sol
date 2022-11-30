@@ -19,7 +19,7 @@ abstract contract CVSStorage is ICVSStorage {
     // more granular commission?
     uint256 public constant MAX_COMMISSION = 100;
 
-    uint256 public sprint;
+    uint256 public epochSize;
     uint256 public currentEpochId;
     uint256[] public epochEndBlocks;
     uint256 public epochReward;

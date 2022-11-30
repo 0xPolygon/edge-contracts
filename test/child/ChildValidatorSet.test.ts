@@ -73,7 +73,7 @@ describe("ChildValidatorSet", () => {
   it("Initialize without system call", async () => {
     await expect(
       childValidatorSet.initialize(
-        { epochReward, minStake, minDelegation },
+        { epochReward, minStake, minDelegation, epochSize: 64 },
         [accounts[0].address],
         [[0, 0, 0, 0]],
         [minStake * 2],
@@ -99,7 +99,7 @@ describe("ChildValidatorSet", () => {
     expect(await childValidatorSet.totalActiveStake()).to.equal(0);
 
     await systemChildValidatorSet.initialize(
-      { epochReward, minStake, minDelegation },
+      { epochReward, minStake, minDelegation, epochSize: 64 },
       [accounts[0].address],
       [[0, 0, 0, 0]],
       [minStake * 2],
@@ -131,7 +131,7 @@ describe("ChildValidatorSet", () => {
   it("Attempt reinitialization", async () => {
     await expect(
       systemChildValidatorSet.initialize(
-        { epochReward, minStake, minDelegation },
+        { epochReward, minStake, minDelegation, epochSize: 64 },
         [accounts[0].address],
         [[0, 0, 0, 0]],
         [minStake * 2],
@@ -189,7 +189,7 @@ describe("ChildValidatorSet", () => {
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("NO_BLOCKS_COMMITTED");
   });
-  it("Commit epoch with incomplete sprint", async () => {
+  it("Commit epoch with incomplete epochSize", async () => {
     id = 1;
     epoch = {
       startBlock: 1,
@@ -204,7 +204,7 @@ describe("ChildValidatorSet", () => {
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith(
-      "EPOCH_MUST_BE_DIVISIBLE_BY_SPRINT"
+      "EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE"
     );
   });
   it("Commit epoch with not committed epoch", async () => {

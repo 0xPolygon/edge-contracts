@@ -463,6 +463,23 @@ function epochReward() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### epochSize
+
+```solidity
+function epochSize() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### epochs
 
 ```solidity
@@ -787,22 +804,6 @@ Sets commission for validator.
 |---|---|---|
 | newCommission | uint256 | New commission (100 = 100%) |
 
-### setSprint
-
-```solidity
-function setSprint(uint256 newSprint) external nonpayable
-```
-
-Set the amount of blocks per epoch
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newSprint | uint256 | the new amount of blocks per epoch |
-
 ### sortedValidators
 
 ```solidity
@@ -824,23 +825,6 @@ Gets first n active validators sorted by total stake.
 | Name | Type | Description |
 |---|---|---|
 | _0 | address[] | Returns array of addresses of first n active validators sorted by total stake, or fewer if there are not enough active validators |
-
-### sprint
-
-```solidity
-function sprint() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### stake
 
@@ -1189,23 +1173,6 @@ event RemovedFromWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
-
-### SprintUpdated
-
-```solidity
-event SprintUpdated(uint256 oldSprint, uint256 newSprint)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| oldSprint  | uint256 | undefined |
-| newSprint  | uint256 | undefined |
 
 ### Staked
 

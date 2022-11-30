@@ -185,6 +185,23 @@ function epochReward() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### epochSize
+
+```solidity
+function epochSize() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### epochs
 
 ```solidity
@@ -308,23 +325,6 @@ Calculates how much is yet to become withdrawable for account.
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
-
-### sprint
-
-```solidity
-function sprint() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### whitelist
 

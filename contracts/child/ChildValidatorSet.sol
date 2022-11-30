@@ -59,7 +59,7 @@ contract ChildValidatorSet is
         address governance
     ) external initializer onlySystemCall {
         currentEpochId = 1;
-        sprint = 64;
+        epochSize = init.epochSize;
         _transferOwnership(governance);
         __ReentrancyGuard_init();
 
@@ -95,7 +95,7 @@ contract ChildValidatorSet is
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
-        require((epoch.endBlock - epoch.startBlock + 1) % sprint == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_SPRINT");
+        require((epoch.endBlock - epoch.startBlock + 1) % epochSize == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
         require(epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock, "INVALID_START_BLOCK");
 
         Epoch storage newEpoch = epochs[newEpochId];
@@ -276,7 +276,7 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock) * 100) / (sprint * 100);
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock) * 100) / (epochSize * 100);
 
         for (uint256 i = 0; i < length; ++i) {
             // skip reward distribution for slashed validators

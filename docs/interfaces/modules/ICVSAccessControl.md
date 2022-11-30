@@ -42,22 +42,6 @@ Deletes addresses that are allowed to register as validators.
 |---|---|---|
 | whitelistAddreses | address[] | Array of address to remove from whitelist |
 
-### setSprint
-
-```solidity
-function setSprint(uint256 newSprint) external nonpayable
-```
-
-Set the amount of blocks per epoch
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newSprint | uint256 | the new amount of blocks per epoch |
-
 
 
 ## Events
@@ -93,23 +77,6 @@ event RemovedFromWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
-
-### SprintUpdated
-
-```solidity
-event SprintUpdated(uint256 oldSprint, uint256 newSprint)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| oldSprint  | uint256 | undefined |
-| newSprint  | uint256 | undefined |
 
 
 

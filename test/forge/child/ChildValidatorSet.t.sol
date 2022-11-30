@@ -87,7 +87,8 @@ abstract contract Initialized is Uninitialized {
         IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation
+            minDelegation,
+            64
         );
 
         childValidatorSet.initialize(
@@ -316,7 +317,8 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation
+            minDelegation,
+            64
         );
 
         childValidatorSet.initialize(
@@ -338,7 +340,8 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation
+            minDelegation,
+            64
         );
 
         childValidatorSet.initialize(
@@ -380,7 +383,8 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
         IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
-            minDelegation
+            minDelegation,
+            64
         );
 
         childValidatorSet.initialize(
@@ -448,7 +452,7 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
 
         vm.startPrank(SYSTEM);
 
-        vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_SPRINT");
+        vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
         childValidatorSet.commitEpoch(id, epoch, uptime);
     }
 
