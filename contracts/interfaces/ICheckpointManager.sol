@@ -1,34 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./IBLS.sol";
-import "./IBN256G2.sol";
-
-struct Checkpoint {
-    uint256 epoch;
-    uint256 blockNumber;
-    bytes32 eventRoot;
-}
-
-struct CheckpointMetadata {
-    bytes32 blockHash;
-    uint256 blockRound;
-    bytes32 currentValidatorSetHash;
-}
-
-struct Validator {
-    address _address;
-    uint256[4] blsKey;
-    uint256 votingPower;
-}
-
+/**
+    @title CheckpointManager
+    @author Polygon Technology
+    @notice Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
+    @dev The contract is used to submit checkpoints and verify that they have been signed as expected.
+    */
 interface ICheckpointManager {
-    function initialize(
-        IBLS newBls,
-        IBN256G2 newBn256G2,
-        bytes32 newDomain,
-        Validator[] calldata newValidatorSet
-    ) external;
+    struct Checkpoint {
+        uint256 epoch;
+        uint256 blockNumber;
+        bytes32 eventRoot;
+    }
+
+    struct CheckpointMetadata {
+        bytes32 blockHash;
+        uint256 blockRound;
+        bytes32 currentValidatorSetHash;
+    }
+
+    struct Validator {
+        address _address;
+        uint256[4] blsKey;
+        uint256 votingPower;
+    }
 
     /**
      * @notice Function to submit a single checkpoint for an epoch to CheckpointManager

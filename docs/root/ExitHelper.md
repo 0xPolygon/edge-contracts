@@ -1,10 +1,10 @@
 # ExitHelper
 
-*@QEDK (Polygon Technology)*
 
-> ExitHelper
 
-Helper contract to process exits from stored event roots in CheckpointManager
+
+
+
 
 
 
@@ -13,7 +13,7 @@ Helper contract to process exits from stored event roots in CheckpointManager
 ### batchExit
 
 ```solidity
-function batchExit(ExitHelper.BatchExitInput[] inputs) external nonpayable
+function batchExit(IExitHelper.BatchExitInput[] inputs) external nonpayable
 ```
 
 
@@ -24,7 +24,7 @@ function batchExit(ExitHelper.BatchExitInput[] inputs) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| inputs | ExitHelper.BatchExitInput[] | undefined |
+| inputs | IExitHelper.BatchExitInput[] | undefined |
 
 ### checkpointManager
 

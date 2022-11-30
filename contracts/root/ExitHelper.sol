@@ -3,19 +3,9 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/ICheckpointManager.sol";
+import "../interfaces/IExitHelper.sol";
 
-/**
- * @title ExitHelper
- * @author @QEDK (Polygon Technology)
- * @notice Helper contract to process exits from stored event roots in CheckpointManager
- */
-contract ExitHelper is Initializable {
-    struct BatchExitInput {
-        uint256 blockNumber;
-        uint256 leafIndex;
-        bytes unhashedLeaf;
-        bytes32[] proof;
-    }
+contract ExitHelper is IExitHelper, Initializable {
     mapping(uint256 => bool) public processedExits;
     ICheckpointManager public checkpointManager;
 
@@ -41,11 +31,7 @@ contract ExitHelper is Initializable {
     }
 
     /**
-     * @notice Perform an exit for one event
-     * @param blockNumber Block number of the exit event on L2
-     * @param leafIndex Index of the leaf in the exit event Merkle tree
-     * @param unhashedLeaf ABI-encoded exit event leaf
-     * @param proof Proof of the event inclusion in the tree
+     * @inheritdoc IExitHelper
      */
     function exit(
         uint256 blockNumber,
@@ -57,8 +43,7 @@ contract ExitHelper is Initializable {
     }
 
     /**
-     * @notice Perform a batch exit for multiple events
-     * @param inputs Batch exit inputs for multiple event leaves
+     * @inheritdoc IExitHelper
      */
     function batchExit(BatchExitInput[] calldata inputs) external onlyInitialized {
         uint256 length = inputs.length;

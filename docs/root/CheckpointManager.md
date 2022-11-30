@@ -1,12 +1,12 @@
 # CheckpointManager
 
-*Polygon Technology*
 
-> CheckpointManager
 
-Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
 
-*The contract is used to submit checkpoints and verify that they have been signed as expected.*
+
+
+
+
 
 ## Methods
 
@@ -256,7 +256,7 @@ Function to get the event root for a block number
 ### initialize
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, Validator[] newValidatorSet) external nonpayable
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, ICheckpointManager.Validator[] newValidatorSet) external nonpayable
 ```
 
 
@@ -270,12 +270,12 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 
 | newBls | contract IBLS | undefined |
 | newBn256G2 | contract IBN256G2 | undefined |
 | newDomain | bytes32 | undefined |
-| newValidatorSet | Validator[] | undefined |
+| newValidatorSet | ICheckpointManager.Validator[] | undefined |
 
 ### submit
 
 ```solidity
-function submit(uint256 chainId, CheckpointMetadata checkpointMetadata, Checkpoint checkpoint, uint256[2] signature, Validator[] newValidatorSet, bytes bitmap) external nonpayable
+function submit(uint256 chainId, ICheckpointManager.CheckpointMetadata checkpointMetadata, ICheckpointManager.Checkpoint checkpoint, uint256[2] signature, ICheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 
@@ -287,10 +287,10 @@ function submit(uint256 chainId, CheckpointMetadata checkpointMetadata, Checkpoi
 | Name | Type | Description |
 |---|---|---|
 | chainId | uint256 | undefined |
-| checkpointMetadata | CheckpointMetadata | undefined |
-| checkpoint | Checkpoint | undefined |
+| checkpointMetadata | ICheckpointManager.CheckpointMetadata | undefined |
+| checkpoint | ICheckpointManager.Checkpoint | undefined |
 | signature | uint256[2] | undefined |
-| newValidatorSet | Validator[] | undefined |
+| newValidatorSet | ICheckpointManager.Validator[] | undefined |
 | bitmap | bytes | undefined |
 
 ### totalVotingPower
