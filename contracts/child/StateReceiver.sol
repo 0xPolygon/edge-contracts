@@ -27,7 +27,7 @@ contract StateReceiver is System {
         uint256 endId;
         bytes32 root;
     }
-
+    uint256 public counter;
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public bundleCounter;
     /// @custom:security write-protection="onlySystemCall()"
@@ -85,6 +85,7 @@ contract StateReceiver is System {
             "INVALID_PROOF"
         );
 
+        counter += 1;
         _executeStateSync(obj);
     }
 
@@ -120,6 +121,8 @@ contract StateReceiver is System {
                 ++i;
             }
         }
+
+        counter += length;
     }
 
     /**
