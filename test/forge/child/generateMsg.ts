@@ -25,6 +25,8 @@ async function generateMsg() {
     ["uint256[2]", "uint256[2]", "uint256[4]", "bytes32[]", "bytes[]"],
     [messagePointForInit, parsedSignature, parsedPubkey, blockHashs, signatures]
   );
+
+  console.log(output);
 }
 
 function generateSignature() {

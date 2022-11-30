@@ -71,6 +71,8 @@ async function generateMsg() {
     ["uint256", "address[]", "uint256[4][]", "uint256[]", "uint256[2][]", "uint256[4]"],
     [validatorSetSize, addresses, pubkeys, validatorIds, aggMessagePoints, newValidator.blsKey]
   );
+
+  console.log(output);
 }
 
 function generateSignature0() {
