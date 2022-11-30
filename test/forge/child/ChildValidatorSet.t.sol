@@ -448,7 +448,7 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
 
         vm.startPrank(SYSTEM);
 
-        vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_64");
+        vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_SPRINT");
         childValidatorSet.commitEpoch(id, epoch, uptime);
     }
 

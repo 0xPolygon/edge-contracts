@@ -204,7 +204,7 @@ describe("ChildValidatorSet", () => {
     };
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith(
-      "EPOCH_MUST_BE_DIVISIBLE_BY_64"
+      "EPOCH_MUST_BE_DIVISIBLE_BY_SPRINT"
     );
   });
   it("Commit epoch with not committed epoch", async () => {
