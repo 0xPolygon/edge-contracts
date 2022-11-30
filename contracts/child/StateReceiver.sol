@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
 
@@ -11,7 +10,6 @@ import {Merkle} from "../common/Merkle.sol";
  * @notice executes and relays the state data on the child chain
  */
 contract StateReceiver is System {
-    using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
 
     struct StateSync {
@@ -25,19 +23,22 @@ contract StateReceiver is System {
     struct StateSyncBundle {
         uint256 startId;
         uint256 endId;
+        uint256 leaves;
         bytes32 root;
     }
+    // Index of the next event which needs to be processed
     uint256 public counter;
     /// @custom:security write-protection="onlySystemCall()"
-    uint256 public bundleCounter;
+    uint256 public bundleCounter = 1;
+    uint256 public lastExecutedBundleCounter = 1;
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
+    uint256 public currentLeafIndex;
     // Maximum gas provided for each message call
     // slither-disable-next-line too-many-digits
     uint256 private constant MAX_GAS = 300000;
 
     mapping(uint256 => StateSyncBundle) public bundles;
-    uint256[] public stateSyncBundleIds;
 
     // 0=success, 1=failure, 2=skip
     enum ResultStatus {
@@ -46,12 +47,12 @@ contract StateReceiver is System {
         SKIP
     }
 
-    event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes message);
+    event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
 
     /**
      * @notice commits merkle root of multiple StateSync objects
-     * @param bundle Bundle of state sync objects to be committed
-     * @param signature bundle signed by validators
+     * @param bundle StateSync struct with root to be committed
+     * @param signature bundle signed (by BLS)
      * @param bitmap bitmap of which validators signed the message
      */
     function commit(
@@ -59,14 +60,20 @@ contract StateReceiver is System {
         bytes calldata signature,
         bytes calldata bitmap
     ) external onlySystemCall {
+        uint256 currentBundleCounter = bundleCounter++;
         require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
         require(bundle.endId >= bundle.startId, "INVALID_END_ID");
+        // create sig data for verification
+        // counter, sender, receiver, data and result (skip) should be
+        // part of the dataHash. Otherwise data can be manipulated for same sigs
+        //
+        // dataHash = hash(counter, sender, receiver, data, result)
+        bytes32 dataHash = keccak256(abi.encode(bundle));
 
-        _checkPubkeyAggregation(keccak256(abi.encode(bundle)), signature, bitmap);
+        _checkPubkeyAggregation(dataHash, signature, bitmap);
 
-        bundles[bundleCounter++] = bundle;
+        bundles[currentBundleCounter] = bundle;
 
-        stateSyncBundleIds.push(bundle.endId);
         lastCommittedId = bundle.endId;
     }
 
@@ -75,85 +82,44 @@ contract StateReceiver is System {
      * @dev function does not have to be called from client
      * and can be called arbitrarily so long as proper data/proofs are supplied
      * @param proof array of merkle proofs
-     * @param obj state sync objects being executed
+     * @param objs array of StateSync objects being proven (the keccak of which is the leaf)
      */
-    function execute(bytes32[] calldata proof, StateSync calldata obj) external {
-        StateSyncBundle memory bundle = getBundleByStateSyncId(obj.id);
+    function execute(bytes32[] calldata proof, StateSync[] calldata objs) external {
+        require(lastExecutedBundleCounter < bundleCounter, "NOTHING_TO_EXECUTE");
 
-        require(
-            keccak256(abi.encode(obj)).checkMembership(obj.id - bundle.startId, bundle.root, proof),
-            "INVALID_PROOF"
-        );
+        bytes32 dataHash = keccak256(abi.encode(objs));
 
-        counter += 1;
-        _executeStateSync(obj);
-    }
+        StateSyncBundle memory bundle = bundles[lastExecutedBundleCounter];
 
-    /**
-     * @notice submits leaf of tree of root data for execution
-     * @dev function does not have to be called from client
-     * and can be called arbitrarily so long as proper data/proofs are supplied
-     * @param proofs array of merkle proofs
-     * @param objs array of state sync objects being executed
-     */
-    function batchExecute(bytes32[][] calldata proofs, StateSync[] calldata objs) external {
-        uint256 length = proofs.length;
+        uint256 leafIndex = currentLeafIndex;
 
-        for (uint256 i = 0; i < length; ) {
-            StateSyncBundle memory bundle = getBundleByStateSyncId(objs[i].id);
+        require(dataHash.checkMembership(leafIndex++, bundle.root, proof), "INVALID_PROOF");
 
-            bool isMember = keccak256(abi.encode(objs[i])).checkMembership(
-                objs[i].id - bundle.startId,
-                bundle.root,
-                proofs[i]
-            );
-
-            if (!isMember) {
-                unchecked {
-                    ++i;
-                }
-                continue; // skip execution for bad proofs
-            }
-
-            _executeStateSync(objs[i]);
-
-            unchecked {
-                ++i;
-            }
+        if (leafIndex == bundle.leaves) {
+            currentLeafIndex = 0;
+            delete bundles[lastExecutedBundleCounter++];
+        } else {
+            currentLeafIndex++;
         }
 
-        counter += length;
+        uint256 currentId = counter;
+        uint256 length = objs.length;
+        counter += objs.length;
+
+        // execute state sync
+        for (uint256 i = 0; i < length; ++i) {
+            _executeStateSync(currentId++, objs[i]);
+        }
     }
 
     /**
-     * @notice get submitted root for a state sync id
-     * @param id state sync to get the root for
-     */
-    function getRootByStateSyncId(uint256 id) external view returns (bytes32) {
-        bytes32 root = bundles[stateSyncBundleIds.findUpperBound(id)].root;
-
-        require(root != bytes32(0), "StateReceiver: NO_ROOT_FOR_STATESYNC_ID");
-
-        return root;
-    }
-
-    /**
-     * @notice get bundle for a state sync id
-     * @param id state sync to get the root for
-     */
-    function getBundleByStateSyncId(uint256 id) public view returns (StateSyncBundle memory) {
-        uint256 idx = stateSyncBundleIds.findUpperBound(id);
-
-        require(idx != stateSyncBundleIds.length, "StateReceiver: NO_BUNDLE_FOR_STATESYNC_ID");
-
-        return bundles[idx];
-    }
-
-    /**
-     * @notice internal function to execute a state sync object
+     * @notice internal function to execute StateSync objects received by StateReceiver
+     * @param prevId id of last executed StateSync object
      * @param obj StateSync object to be executed
      */
-    function _executeStateSync(StateSync calldata obj) private {
+    function _executeStateSync(uint256 prevId, StateSync calldata obj) internal {
+        require(prevId + 1 == obj.id, "ID_NOT_SEQUENTIAL");
+
         // Skip transaction if client has added flag, or receiver has no code
         if (obj.skip || obj.receiver.code.length == 0) {
             emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
@@ -171,13 +137,15 @@ contract StateReceiver is System {
         // slither-disable-next-line calls-loop,low-level-calls
         (bool success, bytes memory returnData) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
 
+        bytes32 message = bytes32(returnData);
+
         // emit a ResultEvent indicating whether invocation of state sync was successful or not
         if (success) {
             // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, returnData);
+            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, message);
         } else {
             // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.FAILURE, returnData);
+            emit StateSyncResult(obj.id, ResultStatus.FAILURE, message);
         }
     }
 
