@@ -129,6 +129,17 @@ function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### acceptOwnership
+
+```solidity
+function acceptOwnership() external nonpayable
+```
+
+
+
+*The new owner accepts the ownership transfer.*
+
+
 ### addToWhitelist
 
 ```solidity
@@ -161,17 +172,6 @@ function bls() external view returns (contract IBLS)
 | Name | Type | Description |
 |---|---|---|
 | _0 | contract IBLS | undefined |
-
-### claimOwnership
-
-```solidity
-function claimOwnership() external nonpayable
-```
-
-allows proposed owner to claim ownership (step 2 of transferring ownership)
-
-*can only be called by the new proposed owner*
-
 
 ### currentEpochId
 
@@ -337,9 +337,9 @@ function minStake() external view returns (uint256)
 function owner() external view returns (address)
 ```
 
-the address of the owner
 
 
+*Returns the address of the current owner.*
 
 
 #### Returns
@@ -348,31 +348,15 @@ the address of the owner
 |---|---|---|
 | _0 | address | undefined |
 
-### proposeOwner
+### pendingOwner
 
 ```solidity
-function proposeOwner(address payable newOwner) external nonpayable
+function pendingOwner() external view returns (address)
 ```
 
-proposes a new owner (step 1 of transferring ownership)
-
-*can only be called by the current owner*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newOwner | address payable | undefined |
-
-### proposedOwner
-
-```solidity
-function proposedOwner() external view returns (address)
-```
-
-the address of a proposed owner
 
 
+*Returns the address of the pending owner.*
 
 
 #### Returns
@@ -396,6 +380,33 @@ Deletes addresses that are allowed to register as validators.
 | Name | Type | Description |
 |---|---|---|
 | whitelistAddreses | address[] | Array of address to remove from whitelist |
+
+### renounceOwnership
+
+```solidity
+function renounceOwnership() external nonpayable
+```
+
+
+
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+
+
+### transferOwnership
+
+```solidity
+function transferOwnership(address newOwner) external nonpayable
+```
+
+
+
+*Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one. Can only be called by the current owner.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address | undefined |
 
 ### whitelist
 
@@ -455,10 +466,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### OwnershipProposed
+### OwnershipTransferStarted
 
 ```solidity
-event OwnershipProposed(address indexed proposedOwner)
+event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)
 ```
 
 
@@ -469,7 +480,8 @@ event OwnershipProposed(address indexed proposedOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| proposedOwner `indexed` | address | undefined |
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### OwnershipTransferred
 
@@ -504,24 +516,5 @@ event RemovedFromWhitelist(address indexed validator)
 |---|---|---|
 | validator `indexed` | address | undefined |
 
-
-
-## Errors
-
-### Unauthorized
-
-```solidity
-error Unauthorized(string only)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| only | string | undefined |
 
 

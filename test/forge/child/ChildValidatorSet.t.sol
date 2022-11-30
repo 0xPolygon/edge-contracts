@@ -568,7 +568,7 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
         address[] memory whitelistAddresses = new address[](1);
         whitelistAddresses[0] = alice;
 
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "OWNER"));
+        vm.expectRevert("Ownable: caller is not the owner");
         childValidatorSet.addToWhitelist(whitelistAddresses);
     }
 
@@ -578,7 +578,7 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
         address[] memory whitelistAddresses = new address[](1);
         whitelistAddresses[0] = alice;
 
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "OWNER"));
+        vm.expectRevert("Ownable: caller is not the owner");
         childValidatorSet.removeFromWhitelist(whitelistAddresses);
     }
 

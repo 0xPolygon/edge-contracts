@@ -9,7 +9,6 @@ The contracts in this directory are:
 - `BLS.sol`: BLS signature functions
 - `BN256G2.sol`: BN256 curve functions (this is the curve we use for BLS)
 - `Merkle.sol`: merkle verification
-- `Owned.sol`: single address access control with a two-step transfer process
 
 There is extensive natspec on the contracts, along with markdown docs automatically generated from the natspec in the [`docs/`](../../docs/) directory at the project root. We'll provide a high-level overview of the contracts here.
 
@@ -24,7 +23,3 @@ BLS needs a curve. We use the BN256 curve. This contract exposes the mathematica
 ## `Merkle.sol`
 
 Merkle trees are a common form of compressing verification data in the suite. This contract exposes a function for verifying that a given leaf is a part of a merkle tree (given the root and proof).
-
-## `Owned.sol`
-
-Similar to OpenZeppelin's well-known `Ownable`, `Owned` provides a template for functions to have their access locked to a `msg.sender` single address. The primary difference is that OZ's `Ownable` has a one-step ownership transferral process - the current owner calls `transferOwnership` and transfers to the new owner. This contract uses a two-step process similar to those found in a number of other popular projects where first the current owner proposes a new owner, and then the new owner can accept ownership. This reduces the likelihood of mishap due to error in the input address.

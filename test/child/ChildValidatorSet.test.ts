@@ -335,11 +335,11 @@ describe("ChildValidatorSet", () => {
   describe("whitelist", async () => {
     it("only owner should be able to modify whitelist", async () => {
       await expect(childValidatorSet.connect(accounts[1]).addToWhitelist([accounts[1].address])).to.be.revertedWith(
-        customError("Unauthorized", "OWNER")
+        "Ownable: caller is not the owner"
       );
       await expect(
         childValidatorSet.connect(accounts[1]).removeFromWhitelist([accounts[1].address])
-      ).to.be.revertedWith(customError("Unauthorized", "OWNER"));
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("should be able to add to whitelist", async () => {
       await expect(childValidatorSet.addToWhitelist([accounts[1].address, accounts[2].address])).to.not.be.reverted;
@@ -1274,7 +1274,7 @@ describe("ChildValidatorSet", () => {
         },
         {
           blockHash: blockHash2,
-          bitmap: "0x" + bitmapStr,
+          bitmap: `0x${bitmapStr}`,
           signature: signature2,
         },
         {
