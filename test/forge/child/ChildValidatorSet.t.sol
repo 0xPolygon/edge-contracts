@@ -437,6 +437,21 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
         childValidatorSet.commitEpoch(id, epoch, uptime);
     }
 
+    function testCannotCommitEpoch_IncompleteSprint() public {
+        id = 1;
+        epoch = Epoch({startBlock: 1, endBlock: 63, epochRoot: keccak256(abi.encodePacked(block.number))});
+
+        UptimeData[] storage uptimeData = uptime.uptimeData;
+        uptimeData.push(UptimeData({validator: admin, signedBlocks: 0}));
+        uptime.epochId = 0;
+        uptime.totalBlocks = 0;
+
+        vm.startPrank(SYSTEM);
+
+        vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_64");
+        childValidatorSet.commitEpoch(id, epoch, uptime);
+    }
+
     function testCannotCommitEpoch_NoCommittedEpoch() public {
         id = 1;
         epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
