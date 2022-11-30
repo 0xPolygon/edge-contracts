@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../common/Merkle.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IBN256G2.sol";
+import "../interfaces/ICheckpointManager.sol";
 
 /**
     @title CheckpointManager
@@ -13,27 +14,9 @@ import "../interfaces/IBN256G2.sol";
     @notice Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
     @dev The contract is used to submit checkpoints and verify that they have been signed as expected.
     */
-contract CheckpointManager is Initializable {
+contract CheckpointManager is Initializable, ICheckpointManager {
     using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
-
-    struct Checkpoint {
-        uint256 epoch;
-        uint256 blockNumber;
-        bytes32 eventRoot;
-    }
-
-    struct CheckpointMetadata {
-        bytes32 blockHash;
-        uint256 blockRound;
-        bytes32 currentValidatorSetHash;
-    }
-
-    struct Validator {
-        address _address;
-        uint256[4] blsKey;
-        uint256 votingPower;
-    }
 
     uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
@@ -184,6 +167,7 @@ contract CheckpointManager is Initializable {
         bytes calldata bitmap
     ) private {
         uint256 length = currentValidatorSetLength;
+        // slither-disable-next-line uninitialized-local
         uint256[4] memory aggPubkey;
         uint256 firstIndex = 0;
         bool flag = false;

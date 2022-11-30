@@ -2,15 +2,7 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
-interface ICheckpointManager {
-    function getEventMembershipByBlockNumber(
-        uint256 blockNumber,
-        bytes32 leaf,
-        uint256 leafIndex,
-        bytes32[] calldata proof
-    ) external view returns (bool);
-}
+import "../interfaces/ICheckpointManager.sol";
 
 /**
  * @title ExitHelper

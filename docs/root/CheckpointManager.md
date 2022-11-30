@@ -256,7 +256,7 @@ Function to get the event root for a block number
 ### initialize
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, CheckpointManager.Validator[] newValidatorSet) external nonpayable
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, Validator[] newValidatorSet) external nonpayable
 ```
 
 
@@ -270,12 +270,12 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 
 | newBls | contract IBLS | undefined |
 | newBn256G2 | contract IBN256G2 | undefined |
 | newDomain | bytes32 | undefined |
-| newValidatorSet | CheckpointManager.Validator[] | undefined |
+| newValidatorSet | Validator[] | undefined |
 
 ### submit
 
 ```solidity
-function submit(uint256 chainId, CheckpointManager.CheckpointMetadata checkpointMetadata, CheckpointManager.Checkpoint checkpoint, uint256[2] signature, CheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
+function submit(uint256 chainId, CheckpointMetadata checkpointMetadata, Checkpoint checkpoint, uint256[2] signature, Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 
@@ -287,10 +287,10 @@ function submit(uint256 chainId, CheckpointManager.CheckpointMetadata checkpoint
 | Name | Type | Description |
 |---|---|---|
 | chainId | uint256 | undefined |
-| checkpointMetadata | CheckpointManager.CheckpointMetadata | undefined |
-| checkpoint | CheckpointManager.Checkpoint | undefined |
+| checkpointMetadata | CheckpointMetadata | undefined |
+| checkpoint | Checkpoint | undefined |
 | signature | uint256[2] | undefined |
-| newValidatorSet | CheckpointManager.Validator[] | undefined |
+| newValidatorSet | Validator[] | undefined |
 | bitmap | bytes | undefined |
 
 ### totalVotingPower
