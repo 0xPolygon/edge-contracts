@@ -189,24 +189,6 @@ describe("ChildValidatorSet", () => {
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("NO_BLOCKS_COMMITTED");
   });
-  it("Commit epoch with incomplete sprint", async () => {
-    id = 1;
-    epoch = {
-      startBlock: 1,
-      endBlock: 63,
-      epochRoot: ethers.utils.randomBytes(32),
-    };
-
-    uptime = {
-      epochId: 0,
-      uptimeData: [{ validator: accounts[0].address, signedBlocks: 0 }],
-      totalBlocks: 0,
-    };
-
-    await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith(
-      "EPOCH_MUST_BE_DIVISIBLE_BY_64"
-    );
-  });
   it("Commit epoch with not committed epoch", async () => {
     id = 1;
     epoch = {

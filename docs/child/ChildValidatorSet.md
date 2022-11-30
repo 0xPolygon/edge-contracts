@@ -163,23 +163,6 @@ function REWARD_PRECISION() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### SPRINT
-
-```solidity
-function SPRINT() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### SYSTEM
 
 ```solidity
