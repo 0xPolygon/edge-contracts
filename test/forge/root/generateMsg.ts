@@ -20,10 +20,8 @@ let validatorSet: any[] = [];
 
 async function generateMsg() {
   const input = process.argv[2];
-  const data = ethers.utils.defaultAbiCoder.decode(["bytes32", "bytes32", "address"], input);
+  const data = ethers.utils.defaultAbiCoder.decode(["bytes32"], input);
   domain = data[0];
-  eventRoot = data[1];
-  newAddress = data[2];
 
   await mcl.init();
 
@@ -39,12 +37,12 @@ async function generateMsg() {
     });
   }
 
-  generateSignature0();
-  aggMessagePoints.push(aggMessagePoint);
+  // generateSignature0();
+  // aggMessagePoints.push(aggMessagePoint);
 
   const output = ethers.utils.defaultAbiCoder.encode(
-    ["uint256", "tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]", "uint256[2][]"],
-    [validatorSetSize, validatorSet, aggMessagePoints]
+    ["uint256", "tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+    [validatorSetSize, validatorSet]
   );
 
   console.log(output);

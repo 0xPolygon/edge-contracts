@@ -5,8 +5,8 @@ import {CheckpointManager} from "contracts/root/CheckpointManager.sol";
 import {BLS} from "contracts/common/BLS.sol";
 import {BN256G2} from "contracts/common/BN256G2.sol";
 import "contracts/interfaces/Errors.sol";
-import "contracts/interfaces/IValidator.sol";
-import "contracts/common/Merkle.sol";
+import "contracts/interfaces/ICheckpointManager.sol";
+
 import "../utils/TestPlus.sol";
 
 abstract contract Uninitialized is TestPlus {
@@ -16,11 +16,13 @@ abstract contract Uninitialized is TestPlus {
 
     uint256 submitCounter;
     uint256 validatorSetSize;
-    address[] public validatorSet;
+    ICheckpointManager.Validator[] public validatorSet;
 
     address public admin;
     address public alice;
     address public bob;
+    bytes32 public domain;
+    uint256[2][] public aggMessagePoints;
 
     function setUp() public virtual {
         bls = new BLS();
@@ -30,47 +32,44 @@ abstract contract Uninitialized is TestPlus {
         admin = makeAddr("admin");
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
+
+        domain = keccak256(abi.encodePacked(block.timestamp));
+
+        string[] memory cmd = new string[](4);
+        cmd[0] = "npx";
+        cmd[1] = "ts-node";
+        cmd[2] = "test/forge/root/generateMsg.ts";
+        cmd[3] = vm.toString(abi.encode(domain));
+        bytes memory out = vm.ffi(cmd);
+
+        ICheckpointManager.Validator[] memory validatorSetTmp;
+
+        (validatorSetSize, validatorSetTmp) = abi.decode(out, (uint256, ICheckpointManager.Validator[]));
+
+        for (uint256 i = 0; i < validatorSetSize; i++) {
+            validatorSet.push(validatorSetTmp[i]);
+        }
+    }
+}
+
+abstract contract Initialized is Uninitialized {
+    function setUp() public virtual override {
+        checkpointManager.initialize(bls, bn256G2, domain, validatorSet);
     }
 }
 
 contract CheckpointManager_Initialize is Uninitialized {
     function testInitialize() public {
-        assertEq(childValidatorSet.totalActiveStake(), 0);
+        checkpointManager.initialize(bls, bn256G2, domain, validatorSet);
 
-        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
-            epochReward,
-            minStake,
-            minDelegation,
-            64
-        );
-
-        childValidatorSet.initialize(
-            init,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
-        );
-
-        assertEq(childValidatorSet.epochReward(), epochReward);
-        assertEq(childValidatorSet.minStake(), minStake);
-        assertEq(childValidatorSet.minDelegation(), minDelegation);
-        assertEq(childValidatorSet.currentEpochId(), 1);
-        assertEq(childValidatorSet.owner(), governance);
-
-        assertEq(childValidatorSet.currentEpochId(), 1);
-        assertEq(childValidatorSet.whitelist(validatorAddresses[0]), true);
-
-        Validator memory validator = childValidatorSet.getValidator(validatorAddresses[0]);
-        Validator memory validatorExpected = Validator(validatorPubkeys[0], minStake * 2, minStake * 2, 0, 0, true);
-
-        address blsAddr = address(childValidatorSet.bls());
-        assertEq(validator, validatorExpected, "validator check");
-        assertEq(blsAddr, address(bls));
-        assertEq(childValidatorSet.message(0), messagePoint[0]);
-        assertEq(childValidatorSet.message(1), messagePoint[1]);
-        assertEq(childValidatorSet.totalActiveStake(), minStake * 2);
+        assertEq(keccak256(abi.encode(checkpointManager.bls())), keccak256(abi.encode(address(bls))));
+        assertEq(keccak256(abi.encode(checkpointManager.bn256G2())), keccak256(abi.encode(address(bn256G2))));
+        assertEq(checkpointManager.domain(), domain);
+        assertEq(checkpointManager.currentValidatorSetLength(), validatorSetSize);
+        for (uint256 i = 0; i < validatorSetSize; i++) {
+            (address _address, uint256 votingPower) = checkpointManager.currentValidatorSet(i);
+            assertEq(_address, validatorSet[i]._address);
+            assertEq(votingPower, validatorSet[i].votingPower);
+        }
     }
 }
