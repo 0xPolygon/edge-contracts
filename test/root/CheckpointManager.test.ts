@@ -11,20 +11,15 @@ const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 describe("CheckpointManager", () => {
   let bls: BLS,
     bn256G2: BN256G2,
-    governance: string,
     checkpointManager: CheckpointManager,
     submitCounter: number,
-    startBlock: number,
     validatorSetSize: number,
-    eventRoot: any,
     validatorSecretKeys: any[],
     validatorSet: any[],
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
-
-    governance = accounts[0].address;
 
     const BLS = await ethers.getContractFactory("BLS");
     bls = await BLS.deploy();
@@ -37,8 +32,6 @@ describe("CheckpointManager", () => {
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
     checkpointManager = await CheckpointManager.deploy();
     await checkpointManager.deployed();
-
-    eventRoot = ethers.utils.randomBytes(32);
   });
 
   it("Initialize failed by zero voting power", async () => {
@@ -90,7 +83,6 @@ describe("CheckpointManager", () => {
 
     const endBlock = (await checkpointManager.checkpoints(0)).blockNumber;
     expect(endBlock).to.equal(0);
-    startBlock = endBlock.toNumber() + 1;
     const prevId = await checkpointManager.currentEpoch();
     submitCounter = prevId.toNumber() + 1;
   });
