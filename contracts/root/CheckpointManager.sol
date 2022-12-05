@@ -130,9 +130,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
         uint256 length = newValidatorSet.length;
         currentValidatorSetLength = length;
+        uint256 totalPower = 0;
         for (uint256 i = 0; i < length; ++i) {
             currentValidatorSet[i] = newValidatorSet[i];
+            totalPower += currentValidatorSet[i].votingPower;
         }
+        totalVotingPower = totalPower;
     }
 
     /**
@@ -144,7 +147,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256[2] memory message,
         uint256[2] calldata signature,
         bytes calldata bitmap
-    ) private {
+    ) private view {
         uint256 length = currentValidatorSetLength;
         // slither-disable-next-line uninitialized-local
         uint256[4] memory aggPubkey;
@@ -193,8 +196,6 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
         require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
-
-        totalVotingPower = aggVotingPower;
     }
 
     /**
