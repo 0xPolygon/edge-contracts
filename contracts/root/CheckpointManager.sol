@@ -130,8 +130,10 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
         uint256 length = newValidatorSet.length;
         currentValidatorSetLength = length;
+        totalVotingPower = 0;
         for (uint256 i = 0; i < length; ++i) {
             currentValidatorSet[i] = newValidatorSet[i];
+            totalVotingPower += currentValidatorSet[i].votingPower;
         }
     }
 
@@ -144,15 +146,17 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256[2] memory message,
         uint256[2] calldata signature,
         bytes calldata bitmap
-    ) private {
+    ) private view {
         uint256 length = currentValidatorSetLength;
         // slither-disable-next-line uninitialized-local
         uint256[4] memory aggPubkey;
         uint256 firstIndex = 0;
         bool flag = false;
+        uint256 aggVotingPower = 0;
         for (uint256 i = 0; i < length; ) {
             if (_getValueFromBitmap(bitmap, i)) {
                 aggPubkey = currentValidatorSet[i].blsKey;
+                aggVotingPower += currentValidatorSet[i].votingPower;
                 firstIndex = i;
                 flag = true;
                 break;
@@ -165,7 +169,6 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
         require(flag, "BITMAP_IS_EMPTY");
 
-        uint256 aggVotingPower = 0;
         for (uint256 i = firstIndex + 1; i < length; ) {
             if (_getValueFromBitmap(bitmap, i)) {
                 uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
@@ -193,8 +196,6 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
         require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
-
-        totalVotingPower = aggVotingPower;
     }
 
     /**
