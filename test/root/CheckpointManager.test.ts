@@ -136,11 +136,6 @@ describe("CheckpointManager", () => {
       } else {
         continue;
       }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
-      }
     }
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
@@ -210,11 +205,6 @@ describe("CheckpointManager", () => {
         aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
       } else {
         continue;
-      }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
       }
     }
 
@@ -286,11 +276,6 @@ describe("CheckpointManager", () => {
       } else {
         continue;
       }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
-      }
     }
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
@@ -322,7 +307,7 @@ describe("CheckpointManager", () => {
     // }
 
     // const bitmap = `0x${bitmapStr}`;
-    const bitmap = "0xff";
+    const bitmap = "0xffff";
     const messageOfValidatorSet = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
@@ -366,11 +351,6 @@ describe("CheckpointManager", () => {
         aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
       } else {
         continue;
-      }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
       }
     }
 
@@ -555,7 +535,7 @@ describe("CheckpointManager", () => {
     // }
 
     // const bitmap = `0x${bitmapStr}`;
-    const bitmap = "0xff";
+    const bitmap = "0xffff";
     const messageOfValidatorSet = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
@@ -599,11 +579,6 @@ describe("CheckpointManager", () => {
         aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
       } else {
         continue;
-      }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
       }
     }
 
