@@ -132,8 +132,10 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         currentValidatorSetLength = length;
         uint256 totalPower = 0;
         for (uint256 i = 0; i < length; ++i) {
+            uint256 votingPower = newValidatorSet[i].votingPower;
+            require(votingPower > 0, "VOTING_POWER_ZERO");
+            totalPower += votingPower;
             currentValidatorSet[i] = newValidatorSet[i];
-            totalPower += currentValidatorSet[i].votingPower;
         }
         totalVotingPower = totalPower;
     }
