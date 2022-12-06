@@ -130,9 +130,14 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
         uint256 length = newValidatorSet.length;
         currentValidatorSetLength = length;
+        uint256 totalPower = 0;
         for (uint256 i = 0; i < length; ++i) {
+            uint256 votingPower = newValidatorSet[i].votingPower;
+            require(votingPower > 0, "VOTING_POWER_ZERO");
+            totalPower += votingPower;
             currentValidatorSet[i] = newValidatorSet[i];
         }
+        totalVotingPower = totalPower;
     }
 
     /**
@@ -144,57 +149,42 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256[2] memory message,
         uint256[2] calldata signature,
         bytes calldata bitmap
-    ) private {
+    ) private view {
         uint256 length = currentValidatorSetLength;
         // slither-disable-next-line uninitialized-local
         uint256[4] memory aggPubkey;
-        uint256 firstIndex = 0;
-        bool flag = false;
+        uint256 aggVotingPower = 0;
         for (uint256 i = 0; i < length; ) {
             if (_getValueFromBitmap(bitmap, i)) {
-                aggPubkey = currentValidatorSet[i].blsKey;
-                firstIndex = i;
-                flag = true;
-                break;
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        require(flag, "BITMAP_IS_EMPTY");
-
-        uint256 aggVotingPower = 0;
-        for (uint256 i = firstIndex + 1; i < length; ) {
-            if (_getValueFromBitmap(bitmap, i)) {
-                uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
-                // slither-disable-next-line calls-loop
-                (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
-                    aggPubkey[0],
-                    aggPubkey[1],
-                    aggPubkey[2],
-                    aggPubkey[3],
-                    blsKey[0],
-                    blsKey[1],
-                    blsKey[2],
-                    blsKey[3]
-                );
+                if (aggVotingPower == 0) {
+                    aggPubkey = currentValidatorSet[i].blsKey;
+                } else {
+                    uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
+                    // slither-disable-next-line calls-loop
+                    (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
+                        aggPubkey[0],
+                        aggPubkey[1],
+                        aggPubkey[2],
+                        aggPubkey[3],
+                        blsKey[0],
+                        blsKey[1],
+                        blsKey[2],
+                        blsKey[3]
+                    );
+                }
                 aggVotingPower += currentValidatorSet[i].votingPower;
             }
-
             unchecked {
                 ++i;
             }
         }
 
+        require(aggVotingPower != 0, "BITMAP_IS_EMPTY");
         require(aggVotingPower > ((2 * totalVotingPower) / 3), "INSUFFICIENT_VOTING_POWER");
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
         require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
-
-        totalVotingPower = aggVotingPower;
     }
 
     /**

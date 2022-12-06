@@ -3,11 +3,11 @@ import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 import { MerkleTree } from "merkletreejs";
 import * as mcl from "../../ts/mcl";
-import { BLS, BN256G2, RootValidatorSet, CheckpointManager, ExitHelper } from "../../typechain";
+import { BLS, BN256G2, CheckpointManager, ExitHelper } from "../../typechain";
 
 const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 
-describe("CheckpointManager", () => {
+describe("ExitHelper", () => {
   let bls: BLS,
     bn256G2: BN256G2,
     governance: string,
@@ -151,7 +151,7 @@ describe("CheckpointManager", () => {
       currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
-    const bitmap = "0xff";
+    const bitmap = "0xffff";
     const messageOfValidatorSet = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
@@ -176,7 +176,6 @@ describe("CheckpointManager", () => {
     );
 
     const signatures: mcl.Signature[] = [];
-    let flag = false;
 
     let aggVotingPower = 0;
     for (let i = 0; i < validatorSecretKeys.length; i++) {
@@ -192,14 +191,9 @@ describe("CheckpointManager", () => {
       if ((oneByte & (1 << bitNumber)) > 0) {
         const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(DOMAIN));
         signatures.push(signature);
-        aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+        aggVotingPower += parseInt(validatorSet[i].votingPower, 10);
       } else {
         continue;
-      }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
       }
     }
 
@@ -314,7 +308,7 @@ describe("CheckpointManager", () => {
       currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
-    const bitmap = "0xff";
+    const bitmap = "0xffff";
     const messageOfValidatorSet = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
         ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
@@ -339,7 +333,6 @@ describe("CheckpointManager", () => {
     );
 
     const signatures1: mcl.Signature[] = [];
-    let flag = false;
 
     let aggVotingPower = 0;
     for (let i = 0; i < validatorSecretKeys.length; i++) {
@@ -358,11 +351,6 @@ describe("CheckpointManager", () => {
         aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
       } else {
         continue;
-      }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
       }
     }
 
@@ -387,7 +375,6 @@ describe("CheckpointManager", () => {
     );
 
     const signatures2: mcl.Signature[] = [];
-    flag = false;
 
     aggVotingPower = 0;
     for (let i = 0; i < validatorSecretKeys.length; i++) {
@@ -406,11 +393,6 @@ describe("CheckpointManager", () => {
         aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
       } else {
         continue;
-      }
-
-      if (aggVotingPower > 66) {
-        flag = true;
-        break;
       }
     }
 
