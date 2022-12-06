@@ -176,7 +176,6 @@ describe("ExitHelper", () => {
     );
 
     const signatures: mcl.Signature[] = [];
-    let flag = false;
 
     let aggVotingPower = 0;
     for (let i = 0; i < validatorSecretKeys.length; i++) {
@@ -334,7 +333,6 @@ describe("ExitHelper", () => {
     );
 
     const signatures1: mcl.Signature[] = [];
-    let flag = false;
 
     let aggVotingPower = 0;
     for (let i = 0; i < validatorSecretKeys.length; i++) {
@@ -377,7 +375,6 @@ describe("ExitHelper", () => {
     );
 
     const signatures2: mcl.Signature[] = [];
-    flag = false;
 
     aggVotingPower = 0;
     for (let i = 0; i < validatorSecretKeys.length; i++) {
