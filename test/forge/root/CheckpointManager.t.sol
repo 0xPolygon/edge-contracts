@@ -26,6 +26,7 @@ abstract contract Uninitialized is TestPlus {
     bytes32[] public proof;
     bytes[] public bitmaps;
     uint256[2][] public aggMessagePoints;
+    uint256[] public aggVotingPowers;
 
     function setUp() public virtual {
         bls = new BLS();
@@ -47,9 +48,9 @@ abstract contract Uninitialized is TestPlus {
 
         ICheckpointManager.Validator[] memory validatorSetTmp;
 
-        (validatorSetSize, validatorSetTmp, aggMessagePoints, hashes, bitmaps) = abi.decode(
+        (validatorSetSize, validatorSetTmp, aggMessagePoints, hashes, bitmaps, aggVotingPowers) = abi.decode(
             out,
-            (uint256, ICheckpointManager.Validator[], uint256[2][], bytes32[], bytes[])
+            (uint256, ICheckpointManager.Validator[], uint256[2][], bytes32[], bytes[], uint256[])
         );
 
         for (uint256 i = 0; i < validatorSetSize; i++) {
@@ -310,6 +311,109 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
             proof
         );
         checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
+    }
+
+    function testSubmit_ShortBitmap() public {
+        uint256 chainId = submitCounter;
+        ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
+            epoch: 1,
+            blockNumber: 2,
+            eventRoot: hashes[0]
+        });
+
+        ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
+            blockHash: hashes[1],
+            blockRound: 0,
+            currentValidatorSetHash: hashes[2]
+        });
+
+        if (aggVotingPowers[7] > (checkpointManager.totalVotingPower() * 2) / 3) {
+            checkpointManager.submit(
+                chainId,
+                checkpointMetadata,
+                checkpoint,
+                aggMessagePoints[7],
+                validatorSet,
+                bitmaps[7]
+            );
+
+            assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
+            assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
+
+            uint256 leafIndex = 0;
+            proof.push(keccak256(abi.encodePacked(block.timestamp)));
+            checkpointManager.getEventMembershipByBlockNumber(
+                checkpoint.blockNumber,
+                checkpoint.eventRoot,
+                leafIndex,
+                proof
+            );
+            checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
+        } else {
+            vm.expectRevert("INSUFFICIENT_VOTING_POWER");
+            checkpointManager.submit(
+                chainId,
+                checkpointMetadata,
+                checkpoint,
+                aggMessagePoints[7],
+                validatorSet,
+                bitmaps[7]
+            );
+        }
+    }
+
+    function testSubmit_FuzzyBitmap() public {
+        uint256 chainId = submitCounter;
+        ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
+            epoch: 1,
+            blockNumber: 2,
+            eventRoot: hashes[0]
+        });
+
+        ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
+            blockHash: hashes[1],
+            blockRound: 0,
+            currentValidatorSetHash: hashes[2]
+        });
+
+        if (aggVotingPowers[8] > (checkpointManager.totalVotingPower() * 2) / 3) {
+            checkpointManager.submit(
+                chainId,
+                checkpointMetadata,
+                checkpoint,
+                aggMessagePoints[8],
+                validatorSet,
+                bitmaps[8]
+            );
+
+            assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
+            assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
+
+            uint256 leafIndex = 0;
+            proof.push(keccak256(abi.encodePacked(block.timestamp)));
+            checkpointManager.getEventMembershipByBlockNumber(
+                checkpoint.blockNumber,
+                checkpoint.eventRoot,
+                leafIndex,
+                proof
+            );
+            checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
+        } else {
+            if (aggVotingPowers[8] == 0) {
+                vm.expectRevert("BITMAP_IS_EMPTY");
+            } else {
+                vm.expectRevert("INSUFFICIENT_VOTING_POWER");
+            }
+
+            checkpointManager.submit(
+                chainId,
+                checkpointMetadata,
+                checkpoint,
+                aggMessagePoints[8],
+                validatorSet,
+                bitmaps[8]
+            );
+        }
     }
 
     function testCannot_InvalidEventRootByBlockNumber() public {

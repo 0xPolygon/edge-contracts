@@ -20,6 +20,7 @@ let eventRoot: any;
 let blockHash: any;
 let currentValidatorSetHash: any;
 let bitmaps: any[] = [];
+let aggVotingPowers: any[] = [];
 
 async function generateMsg() {
   const input = process.argv[2];
@@ -51,6 +52,8 @@ async function generateMsg() {
   generateSignature4();
   generateSignature5();
   generateSignature6();
+  generateSignature7();
+  generateSignature8();
 
   const output = ethers.utils.defaultAbiCoder.encode(
     [
@@ -59,8 +62,16 @@ async function generateMsg() {
       "uint256[2][]",
       "bytes32[]",
       "bytes[]",
+      "uint256[]",
     ],
-    [validatorSetSize, validatorSet, aggMessagePoints, [eventRoot, blockHash, currentValidatorSetHash], bitmaps]
+    [
+      validatorSetSize,
+      validatorSet,
+      aggMessagePoints,
+      [eventRoot, blockHash, currentValidatorSetHash],
+      bitmaps,
+      aggVotingPowers,
+    ]
   );
 
   console.log(output);
@@ -123,20 +134,16 @@ function generateSignature0() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
-    }
-
-    if (aggVotingPower > 66) {
-      flag = true;
-      break;
     }
   }
 
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 function generateSignature1() {
@@ -196,20 +203,16 @@ function generateSignature1() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
-    }
-
-    if (aggVotingPower > 66) {
-      flag = true;
-      break;
     }
   }
 
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 function generateSignature2() {
@@ -269,20 +272,16 @@ function generateSignature2() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
-    }
-
-    if (aggVotingPower > 66) {
-      flag = true;
-      break;
     }
   }
 
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 function generateSignature3() {
@@ -299,7 +298,7 @@ function generateSignature3() {
     currentValidatorSetHash,
   };
 
-  const bitmapStr = "ff";
+  const bitmapStr = "ffff";
 
   const bitmap = `0x${bitmapStr}`;
   const messageOfValidatorSet = ethers.utils.keccak256(
@@ -342,20 +341,16 @@ function generateSignature3() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
-    }
-
-    if (aggVotingPower > 66) {
-      flag = true;
-      break;
     }
   }
 
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 function generateSignature4() {
@@ -415,7 +410,7 @@ function generateSignature4() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
     }
@@ -424,6 +419,7 @@ function generateSignature4() {
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 function generateSignature5() {
@@ -483,7 +479,7 @@ function generateSignature5() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
     }
@@ -492,9 +488,79 @@ function generateSignature5() {
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 function generateSignature6() {
+  const chainId = submitCounter;
+  const checkpoint = {
+    epoch: 1,
+    blockNumber: 2,
+    eventRoot,
+  };
+
+  const checkpointMetadata = {
+    blockHash,
+    blockRound: 0,
+    currentValidatorSetHash,
+  };
+
+  const bitmapStr = "ffff";
+
+  const bitmap = `0x${bitmapStr}`;
+  const messageOfValidatorSet = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+      [validatorSet]
+    )
+  );
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "uint256", "bytes32", "uint256", "uint256", "bytes32", "bytes32", "bytes32"],
+      [
+        chainId,
+        checkpoint.blockNumber,
+        checkpointMetadata.blockHash,
+        checkpointMetadata.blockRound,
+        checkpoint.epoch,
+        checkpoint.eventRoot,
+        checkpointMetadata.currentValidatorSetHash,
+        messageOfValidatorSet,
+      ]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+  let flag = false;
+
+  let aggVotingPower = 0;
+  for (let i = 0; i < validatorSecretKeys.length; i++) {
+    const byteNumber = Math.floor(i / 8);
+    const bitNumber = i % 8;
+
+    if (byteNumber >= bitmap.length / 2 - 1) {
+      continue;
+    }
+
+    // Get the value of the bit at the given 'index' in a byte.
+    const oneByte = parseInt(bitmap[2 + byteNumber * 2] + bitmap[3 + byteNumber * 2], 16);
+    if ((oneByte & (1 << bitNumber)) > 0) {
+      const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
+      signatures.push(signature);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
+    } else {
+      continue;
+    }
+  }
+
+  const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+  aggMessagePoints.push(aggMessagePoint);
+  bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
+}
+
+function generateSignature7() {
   const chainId = submitCounter;
   const checkpoint = {
     epoch: 1,
@@ -551,20 +617,90 @@ function generateSignature6() {
     if ((oneByte & (1 << bitNumber)) > 0) {
       const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
       signatures.push(signature);
-      aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
     } else {
       continue;
-    }
-
-    if (aggVotingPower > 66) {
-      flag = true;
-      break;
     }
   }
 
   const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
   aggMessagePoints.push(aggMessagePoint);
   bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
+}
+
+function generateSignature8() {
+  const chainId = submitCounter;
+  const checkpoint = {
+    epoch: 1,
+    blockNumber: 2,
+    eventRoot,
+  };
+
+  const checkpointMetadata = {
+    blockHash,
+    blockRound: 0,
+    currentValidatorSetHash,
+  };
+
+  const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);
+  let bitmapStr = bitmapNum.toString(16);
+  const length = bitmapStr.length;
+  for (let j = 0; j < 16 - length; j++) {
+    bitmapStr = "0" + bitmapStr;
+  }
+
+  const bitmap = `0x${bitmapStr}`;
+  const messageOfValidatorSet = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+      [validatorSet]
+    )
+  );
+
+  const message = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "uint256", "bytes32", "uint256", "uint256", "bytes32", "bytes32", "bytes32"],
+      [
+        chainId,
+        checkpoint.blockNumber,
+        checkpointMetadata.blockHash,
+        checkpointMetadata.blockRound,
+        checkpoint.epoch,
+        checkpoint.eventRoot,
+        checkpointMetadata.currentValidatorSetHash,
+        messageOfValidatorSet,
+      ]
+    )
+  );
+
+  const signatures: mcl.Signature[] = [];
+  let flag = false;
+
+  let aggVotingPower = 0;
+  for (let i = 0; i < validatorSecretKeys.length; i++) {
+    const byteNumber = Math.floor(i / 8);
+    const bitNumber = i % 8;
+
+    if (byteNumber >= bitmap.length / 2 - 1) {
+      continue;
+    }
+
+    // Get the value of the bit at the given 'index' in a byte.
+    const oneByte = parseInt(bitmap[2 + byteNumber * 2] + bitmap[3 + byteNumber * 2], 16);
+    if ((oneByte & (1 << bitNumber)) > 0) {
+      const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(domain));
+      signatures.push(signature);
+      aggVotingPower = validatorSet[i].votingPower.add(aggVotingPower);
+    } else {
+      continue;
+    }
+  }
+
+  const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+  aggMessagePoints.push(aggMessagePoint);
+  bitmaps.push(bitmap);
+  aggVotingPowers.push(aggVotingPower);
 }
 
 generateMsg();
