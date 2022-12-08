@@ -41,10 +41,10 @@ async function generateMsg() {
     });
   }
 
-  (eventRoot = ethers.utils.hexlify(ethers.utils.randomBytes(32))),
-    (blockHash = ethers.utils.hexlify(ethers.utils.randomBytes(32))),
-    (currentValidatorSetHash = ethers.utils.hexlify(ethers.utils.randomBytes(32))),
-    (submitCounter = 1);
+  eventRoot = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+  blockHash = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+  currentValidatorSetHash = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+  submitCounter = 1;
   generateSignature0();
   generateSignature1();
   generateSignature2();
