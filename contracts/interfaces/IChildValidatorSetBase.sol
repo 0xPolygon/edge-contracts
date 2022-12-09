@@ -19,6 +19,10 @@ interface IChildValidatorSetBase {
     }
 
     struct DoubleSignerSlashingInput {
+        uint256 epochId;
+        bytes32 eventRoot;
+        bytes32 currentValidatorSetHash;
+        bytes32 nextValidatorSetHash;
         bytes32 blockHash;
         bytes bitmap;
         bytes signature;
@@ -46,16 +50,15 @@ interface IChildValidatorSetBase {
      * @param uptime Uptime data for the epoch being committed
      * @param blockNumber Block number at which double signer occurred
      * @param pbftRound Round number at which double signing occurred
-     * @param epochId ID of epoch where double signing occurred
      * @param inputs Information about double signers to be slashed along with signatures and bitmap
      */
     function commitEpochWithDoubleSignerSlashing(
+        uint256 chainId,
         uint256 curEpochId,
-        Epoch calldata epoch,
-        Uptime calldata uptime,
         uint256 blockNumber,
         uint256 pbftRound,
-        uint256 epochId,
+        Epoch calldata epoch,
+        Uptime calldata uptime,
         DoubleSignerSlashingInput[] calldata inputs
     ) external;
 
