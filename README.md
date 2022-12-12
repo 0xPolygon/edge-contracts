@@ -92,24 +92,6 @@ curl -L https://foundry.paradigm.xyz | bash
 
 Note that this only works on Linux and Mac. For Windows, or if `foundryup` doesn't work, consult [their documentation](https://book.getfoundry.sh/getting-started/installation).
 
-### Installation
-
-**You do not need to clone this repo in order to interact with Polygon POS v3.**
-
-If you would like to work with these contracts in a development environment, first clone the repo:
-
-```bash
-git clone git@github.com:maticnetwork/v3-contracts.git
-```
-
-If you have [nvm](https://github.com/nvm-sh/nvm) installed (recommended), you can run `nvm use #` to set your version of Node to the same as used in development and testing.
-
-Install JS/TS (Hardhat) dependencies:
-
-```bash
-npm i
-```
-
 ### General Repo Layout
 
 This repo is a hybrid [Hardhat](https://hardhat.org) and [Foundry](https://getfoundry.sh/) environment. There are a number of add-ons, some of which we will detail here. Unlike standard Foundry environments, the contracts are located in `contracts/` (as opposed to `src/`) in order to conform with the general Hardhat project architecture. The Foundry/Solidity tests live in `test/forge/` whereas the Hardhat/Typescript tests are at the root level of `test/`. (For more details on the tests, see [Running Tests](#running-tests) in the [Using This Repo](#using-this-repo) section.)
@@ -126,7 +108,7 @@ Note that this only works on Linux and Mac. For Windows, or if `foundryup` doesn
 
 ### Installation
 
-**You do not need to clone this repo in order to interact with Polygon POS v3.**
+**You do not need to clone this repo in order to interact with the Polygon core contracts**
 
 If you would like to work with these contracts in a development environment, first clone the repo:
 
@@ -147,10 +129,6 @@ Install Foundry libs:
 ```bash
 forge install
 ```
-
-### Environment Setup
-
-There are a few things that should be done to set up the repo once you've cloned it and installed the dependencies and libraries. An important step for various parts of the repo to work properly is to set up a `.env` file. There is an `.example.env` file provided, copy it and rename the copy `.env`.
 
 ### Environment Setup
 
@@ -245,15 +223,6 @@ slither .
 
 npm run slither
 ```
-
-### Continuous Integration
-
-There is a CI script for Github Actions in `.github/workflows/`. Currently it runs:
-
-- linters
-- both test suites (fails if any tests fail)
-- coverage report (currently only HH)
-- Slither
 
 ### Continuous Integration
 
