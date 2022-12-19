@@ -247,8 +247,9 @@ contract ChildValidatorSet is
         _validators.delegationPools[key].underlyingSupply -=
             (_validators.delegationPools[key].underlyingSupply * DOUBLE_SIGNING_SLASHING_PERCENT) /
             100;
-        uint256 valStake = validator.stake;
-        validator.stake -= (valStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
+        uint256 slashedAmount = (validator.stake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
+        validator.stake -= slashedAmount;
+        _validators.totalStake -= slashedAmount;
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
 
