@@ -19,7 +19,6 @@ contract StateReceiver is System {
         address sender;
         address receiver;
         bytes data;
-        bool skip;
     }
 
     struct StateSyncBundle {
@@ -39,11 +38,10 @@ contract StateReceiver is System {
     mapping(uint256 => StateSyncBundle) public bundles;
     uint256[] public stateSyncBundleIds;
 
-    // 0=success, 1=failure, 2=skip
+    // 0=success, 1=failure
     enum ResultStatus {
         SUCCESS,
-        FAILURE,
-        SKIP
+        FAILURE
     }
 
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes message);
@@ -154,12 +152,6 @@ contract StateReceiver is System {
      * @param obj StateSync object to be executed
      */
     function _executeStateSync(StateSync calldata obj) private {
-        // Skip transaction if client has added flag, or receiver has no code
-        if (obj.skip || obj.receiver.code.length == 0) {
-            emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
-            return;
-        }
-
         // Execute `onStateReceive` method on target using max gas limit
         bytes memory paramData = abi.encodeWithSignature(
             "onStateReceive(uint256,address,bytes)",
