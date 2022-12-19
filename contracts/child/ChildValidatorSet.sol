@@ -105,7 +105,7 @@ contract ChildValidatorSet is
 
         epochEndBlocks.push(epoch.endBlock);
 
-        _distributeRewards(uptime);
+        _distributeRewards(epoch, uptime);
         _processQueue();
 
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
@@ -192,7 +192,7 @@ contract ChildValidatorSet is
         }
     }
 
-    function _distributeRewards(Uptime calldata uptime) internal {
+    function _distributeRewards(Epoch calldata epoch, Uptime calldata uptime) internal {
         require(uptime.epochId == currentEpochId - 1, "EPOCH_NOT_COMMITTED");
 
         uint256 length = uptime.uptimeData.length;
@@ -200,7 +200,8 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = epochReward;
+        uint256 numEpochs = (epoch.endBlock - epoch.startBlock + 1) / epochSize;
+        uint256 reward = epochReward * numEpochs;
 
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
