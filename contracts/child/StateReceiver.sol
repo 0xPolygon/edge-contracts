@@ -54,21 +54,21 @@ contract StateReceiver is System {
      * @param bitmap bitmap of which validators signed the message
      */
     function commit(
-        StateSyncBundle calldata bundle,
+        StateSyncBundle calldata commitment,
         bytes calldata signature,
         bytes calldata bitmap
     ) external onlySystemCall {
-        require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
-        require(bundle.endId >= bundle.startId, "INVALID_END_ID");
+        require(commitment.startId == lastCommittedId + 1, "INVALID_START_ID");
+        require(commitment.endId >= bundle.startId, "INVALID_END_ID");
 
-        _checkPubkeyAggregation(keccak256(abi.encode(bundle)), signature, bitmap);
+        _checkPubkeyAggregation(keccak256(abi.encode(commitment)), signature, bitmap);
 
-        bundles[bundleCounter++] = bundle;
+        bundles[bundleCounter++] = commitment;
 
-        stateSyncBundleIds.push(bundle.endId);
-        lastCommittedId = bundle.endId;
+        stateSyncBundleIds.push(commitment.endId);
+        lastCommittedId = commitment.endId;
 
-        emit NewBundleCommit(bundle.startId, bundle.endId, bundle.root);
+        emit NewBundleCommit(commitment.startId, commitment.endId, commitment.root);
     }
 
     /**
