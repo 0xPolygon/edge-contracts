@@ -74,6 +74,13 @@ abstract contract CVSDelegation is ICVSDelegation, CVSStorage, CVSWithdrawal {
     /**
      * @inheritdoc ICVSDelegation
      */
+    function totalDelegationOf(address validator) external view returns (uint256) {
+        return _validators.getDelegationPool(validator).underlyingSupply;
+    }
+
+    /**
+     * @inheritdoc ICVSDelegation
+     */
     function delegationOf(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).balanceOf(delegator);
     }

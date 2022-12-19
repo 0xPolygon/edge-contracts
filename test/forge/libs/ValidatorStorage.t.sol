@@ -25,13 +25,6 @@ contract ValidatorStorageTest_EmptyState is EmptyState {
         validatorStorageLibUser.insert(address(0), validator);
     }
 
-    function testCannotInsert_InvalidTotalStake() public {
-        validator.stake = validator.totalStake + 1;
-
-        vm.expectRevert(stdError.assertionError);
-        validatorStorageLibUser.insert(account, validator);
-    }
-
     function testCannotInsert_Exists() public {
         validatorStorageLibUser.insert(account, validator);
 
@@ -317,7 +310,6 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
 
 function _createValidator(uint256 amount) pure returns (Validator memory validator) {
     validator.stake = amount;
-    validator.totalStake = amount;
 }
 
 /*//////////////////////////////////////////////////////////////////////////

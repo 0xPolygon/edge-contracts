@@ -73,7 +73,6 @@ contract ChildValidatorSet is
             Validator memory validator = Validator({
                 blsKey: validatorPubkeys[i],
                 stake: validatorStakes[i],
-                totalStake: validatorStakes[i],
                 commission: 0,
                 withdrawableRewards: 0,
                 active: true
@@ -229,7 +228,6 @@ contract ChildValidatorSet is
                 _validators.remove(validatorAddr);
             }
             validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
-            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
             _validators.insert(validatorAddr, validator);
             _queue.resetIndex(validatorAddr);
         }
@@ -246,9 +244,10 @@ contract ChildValidatorSet is
         }
         doubleSignerSlashes[epoch][pbftRound][key] = true;
         Validator storage validator = _validators.get(key);
-        uint256 valTotalStake = validator.totalStake;
+        _validators.delegationPools[key].underlyingSupply -=
+            (_validators.delegationPools[key].underlyingSupply * DOUBLE_SIGNING_SLASHING_PERCENT) /
+            100;
         uint256 valStake = validator.stake;
-        validator.totalStake -= (valTotalStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
         validator.stake -= (valStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
