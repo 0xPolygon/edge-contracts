@@ -195,7 +195,10 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      */
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(checkpoint.epoch >= oldCheckpoint.epoch, "INVALID_EPOCH");
+        require(
+            checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1),
+            "INVALID_EPOCH"
+        );
         require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "EMPTY_CHECKPOINT");
     }
 
