@@ -4,7 +4,7 @@
 
 pragma solidity 0.8.17;
 
-/*import {StateReceiver} from "contracts/child/StateReceiver.sol";
+import {StateReceiver} from "contracts/child/StateReceiver.sol";
 import {System} from "contracts/child/StateReceiver.sol";
 import {StateReceivingContract} from "contracts/mocks/StateReceivingContract.sol";
 import "contracts/interfaces/Errors.sol";
@@ -36,7 +36,7 @@ abstract contract EmptyState is TestPlus, System, StateReceiver {
 
     /// @notice Helper for passing obj in calldata
     function executeStateSyncHelper(uint256 prevId, StateSync calldata obj) external {
-        _executeStateSync(prevId, obj);
+        // _executeStateSync(prevId, obj);
     }
 }
 
@@ -102,7 +102,7 @@ contract StateReceiverTest_EmptyState is EmptyState {
 /*INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-/*StateSync state;
+    /*StateSync state;
 
     function testCannotExecuteStateSync_IdNotSequential() public {
         state.id = 0;
@@ -245,5 +245,5 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
 
         vm.expectRevert("NOTHING_TO_EXECUTE");
         stateReceiver.execute(proof, states);
-    }
-}*/
+    } */
+}
