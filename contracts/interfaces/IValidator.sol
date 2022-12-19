@@ -32,7 +32,7 @@ struct RewardPool {
  * @param blsKey the public BLS key of the validator
  * @param stake amount staked by the validator
  * @param totalStake amount staked by self + amount delegated to
- * @param comission fee taken from delegators' rewards and given to the validator
+ * @param commission fee taken from delegators' rewards and given to the validator
  * @param withdrawableRewards amount that can be withdrawn from
  * @param active if this validator is actively proposing/attesting
  */
