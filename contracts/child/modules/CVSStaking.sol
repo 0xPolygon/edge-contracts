@@ -77,6 +77,7 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
     function setCommission(uint256 newCommission) external onlyValidator {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
         Validator storage validator = _validators.get(msg.sender);
+        emit CommissionUpdated(msg.sender, validator.commission, newCommission);
         validator.commission = newCommission;
     }
 
