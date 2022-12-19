@@ -69,7 +69,6 @@ contract ChildValidatorSet is
         minDelegation = init.minDelegation;
 
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
-            _addToWhitelist(validatorAddresses[i]);
             Validator memory validator = Validator({
                 blsKey: validatorPubkeys[i],
                 stake: validatorStakes[i],
