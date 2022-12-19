@@ -597,7 +597,7 @@ describe("CheckpointManager", () => {
   it("Submit checkpoint success with short bitmap", async () => {
     const chainId = submitCounter;
     const checkpoint = {
-      epoch: 1,
+      epoch: 2,
       blockNumber: 2,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
