@@ -137,7 +137,9 @@ contract ChildValidatorSet is
         }
 
         // get full validator set
-        uint256 validatorSetLength = _validators.count;
+        uint256 validatorSetLength = _validators.count < ACTIVE_VALIDATOR_SET_SIZE
+            ? _validators.count
+            : ACTIVE_VALIDATOR_SET_SIZE;
         address[] memory validatorSet = sortedValidators(validatorSetLength);
         bool[] memory slashingSet = new bool[](validatorSetLength);
 
