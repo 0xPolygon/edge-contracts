@@ -132,8 +132,8 @@ contract ChildValidatorSet is
         for (uint256 i = 0; i < length; i++) {
             _checkPubkeyAggregation(
                 keccak256(abi.encode(blockNumber, pbftRound, epochId, inputs[i].blockHash)),
-                inputs[i].bitmap,
-                inputs[i].signature
+                inputs[i].signature,
+                inputs[i].bitmap
             );
         }
 
