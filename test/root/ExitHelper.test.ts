@@ -21,7 +21,7 @@ describe("ExitHelper", () => {
     leaves: any[],
     tree: MerkleTree,
     accounts: any[]; // we use any so we can access address directly from object
-
+  const chainId = 12345;
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
@@ -60,7 +60,7 @@ describe("ExitHelper", () => {
       });
     }
 
-    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, validatorSet);
+    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet);
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
     expect(await checkpointManager.domain()).to.equal(DOMAIN);
@@ -138,7 +138,6 @@ describe("ExitHelper", () => {
     const tree = new MerkleTree(leaves, ethers.utils.keccak256);
 
     //----------------- Checkpoint Submit --------------------
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 1,
@@ -199,7 +198,7 @@ describe("ExitHelper", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
+    await checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
     expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
     expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
@@ -289,7 +288,6 @@ describe("ExitHelper", () => {
     const tree = new MerkleTree(leaves, ethers.utils.keccak256);
 
     //----------------- Checkpoint Submit --------------------
-    const chainId = submitCounter;
     const checkpoint1 = {
       epoch: 2,
       blockNumber: 2,
@@ -356,7 +354,7 @@ describe("ExitHelper", () => {
 
     const aggMessagePoint1: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures1));
 
-    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint1, aggMessagePoint1, validatorSet, bitmap);
+    await checkpointManager.submit(checkpointMetadata, checkpoint1, aggMessagePoint1, validatorSet, bitmap);
 
     const message2 = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
@@ -397,7 +395,7 @@ describe("ExitHelper", () => {
     }
 
     const aggMessagePoint2: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures2));
-    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint2, aggMessagePoint2, validatorSet, bitmap);
+    await checkpointManager.submit(checkpointMetadata, checkpoint2, aggMessagePoint2, validatorSet, bitmap);
 
     const leafIndex1 = 0;
     const leafIndex2 = 1;
