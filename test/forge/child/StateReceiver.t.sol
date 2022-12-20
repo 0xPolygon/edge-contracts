@@ -31,9 +31,6 @@ abstract contract EmptyState is TestPlus, System, StateReceiver {
         (uint256 _startId, uint256 _endId, bytes32 _root) = stateReceiver.bundles(index);
         return StateReceiver.StateSyncBundle(_startId, _endId, _root);
     }
-
-    /// @notice Helper for passing obj in calldata
-    function executeStateSyncHelper(uint256 prevId, StateSync calldata obj) external {}
 }
 
 contract StateReceiverTest_EmptyState is EmptyState {
