@@ -3,9 +3,9 @@ pragma solidity 0.8.17;
 
 import {Withdrawal, WithdrawalQueue, WithdrawalQueueLib} from "contracts/libs/WithdrawalQueue.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-abstract contract EmptyState is TestPlus {
+abstract contract EmptyState is Test {
     uint256 constant AMOUNT = 2 ether;
     uint256 EPOCH = 1;
 

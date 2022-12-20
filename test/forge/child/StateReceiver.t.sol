@@ -6,7 +6,7 @@ import {System} from "contracts/child/StateReceiver.sol";
 import {StateReceivingContract} from "contracts/mocks/StateReceivingContract.sol";
 import "contracts/interfaces/Errors.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 import {MurkyBase} from "murky/common/MurkyBase.sol";
 
 abstract contract EmptyState is TestPlus, System, StateReceiver {

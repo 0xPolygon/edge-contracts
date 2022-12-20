@@ -10,9 +10,9 @@ import "contracts/interfaces/modules/ICVSStorage.sol";
 import "contracts/interfaces/IValidator.sol";
 import "contracts/interfaces/IChildValidatorSetBase.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-abstract contract Uninitialized is TestPlus, System {
+abstract contract Uninitialized is Test, System {
     ChildValidatorSet childValidatorSet;
     BLS bls;
 

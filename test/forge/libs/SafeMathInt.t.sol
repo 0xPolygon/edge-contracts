@@ -3,9 +3,9 @@ pragma solidity 0.8.17;
 
 import {SafeMathInt, SafeMathUint} from "contracts/libs/SafeMathInt.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-contract SafeMathIntTest is TestPlus {
+contract SafeMathIntTest is Test {
     SafeMathUser safeMathUser;
 
     function setUp() public {

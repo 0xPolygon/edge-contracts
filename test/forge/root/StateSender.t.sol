@@ -3,9 +3,9 @@ pragma solidity 0.8.17;
 
 import {StateSender} from "contracts/root/StateSender.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-contract StateSenderTest is TestPlus {
+contract StateSenderTest is Test {
     event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
 
     StateSender stateSender;

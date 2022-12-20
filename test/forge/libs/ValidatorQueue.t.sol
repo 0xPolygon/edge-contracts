@@ -4,9 +4,9 @@ pragma solidity 0.8.17;
 import {QueuedValidator, ValidatorQueue, ValidatorQueueLib} from "contracts/libs/ValidatorQueue.sol";
 import "contracts/interfaces/IValidator.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-abstract contract EmptyState is TestPlus {
+abstract contract EmptyState is Test {
     int256 constant STAKE = 2 ether;
     int256 constant DELEGATED = 0.5 ether;
 
