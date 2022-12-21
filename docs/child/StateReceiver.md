@@ -292,6 +292,24 @@ function stateSyncBundleIds(uint256) external view returns (uint256)
 
 ## Events
 
+### NewBundleCommit
+
+```solidity
+event NewBundleCommit(uint256 indexed startId, uint256 indexed endId, bytes32 root)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startId `indexed` | uint256 | undefined |
+| endId `indexed` | uint256 | undefined |
+| root  | bytes32 | undefined |
+
 ### StateSyncResult
 
 ```solidity
