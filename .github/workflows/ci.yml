@@ -12,9 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - run: npm ci
       - run: npx hardhat compile --show-stack-traces
@@ -30,9 +30,9 @@ jobs:
         with:
           version: nightly
       - name: Install Node modules
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - run: npm ci
       - name: Run tests
@@ -42,20 +42,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - run: npm ci
-      - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test
+      - run: npm run test:gas
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - run: npm ci
       - run: npx solhint "contracts/**/*.sol"
@@ -68,7 +68,7 @@ jobs:
       - name: Get node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - uses: crytic/slither-action@v0.1.1
   coverage:
@@ -76,9 +76,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - run: npm ci
       - run: npx hardhat compile
@@ -99,9 +99,9 @@ jobs:
         with:
           version: nightly
       - name: Install Node modules
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
           cache: "npm"
       - run: npm ci
       - name: Print coverage

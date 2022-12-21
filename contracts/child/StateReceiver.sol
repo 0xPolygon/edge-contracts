@@ -47,6 +47,7 @@ contract StateReceiver is System {
     }
 
     event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes message);
+    event NewBundleCommit(uint256 indexed startId, uint256 indexed endId, bytes32 root);
 
     /**
      * @notice commits merkle root of multiple StateSync objects
@@ -68,6 +69,8 @@ contract StateReceiver is System {
 
         stateSyncBundleIds.push(bundle.endId);
         lastCommittedId = bundle.endId;
+
+        emit NewBundleCommit(bundle.startId, bundle.endId, bundle.root);
     }
 
     /**
