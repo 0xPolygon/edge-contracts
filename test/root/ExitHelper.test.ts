@@ -148,7 +148,7 @@ describe("ExitHelper", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmap = "0xffff";
@@ -305,7 +305,7 @@ describe("ExitHelper", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmap = "0xffff";

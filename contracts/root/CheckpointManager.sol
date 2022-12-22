@@ -24,6 +24,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     mapping(uint256 => Checkpoint) public checkpoints; // epochId -> root
     mapping(uint256 => Validator) public currentValidatorSet;
     uint256[] public checkpointBlockNumbers;
+    bytes32 public currentValidatorSetHash;
 
     /**
      * @notice Initialization function for CheckpointManager
@@ -56,6 +57,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         Validator[] calldata newValidatorSet,
         bytes calldata bitmap
     ) external {
+        require(currentValidatorSetHash == checkpointMetadata.currentValidatorSetHash, "INVALID_VALIDATOR_SET_HASH");
         bytes memory hash = abi.encode(
             keccak256(
                 abi.encode(
@@ -130,6 +132,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
         uint256 length = newValidatorSet.length;
         currentValidatorSetLength = length;
+        currentValidatorSetHash = keccak256(abi.encode(newValidatorSet));
         uint256 totalPower = 0;
         for (uint256 i = 0; i < length; ++i) {
             uint256 votingPower = newValidatorSet[i].votingPower;
