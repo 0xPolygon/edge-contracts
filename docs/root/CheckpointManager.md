@@ -147,6 +147,23 @@ function currentValidatorSet(uint256) external view returns (address _address, u
 | _address | address | undefined |
 | votingPower | uint256 | undefined |
 
+### currentValidatorSetHash
+
+```solidity
+function currentValidatorSetHash() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### currentValidatorSetLength
 
 ```solidity
