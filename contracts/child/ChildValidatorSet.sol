@@ -116,7 +116,6 @@ contract ChildValidatorSet is
      * @inheritdoc IChildValidatorSetBase
      */
     function commitEpochWithDoubleSignerSlashing(
-        uint256 chainId,
         uint256 curEpochId,
         uint256 blockNumber,
         uint256 pbftRound,
@@ -134,7 +133,7 @@ contract ChildValidatorSet is
             _checkPubkeyAggregation(
                 keccak256(
                     abi.encode(
-                        chainId,
+                        block.chainid,
                         blockNumber,
                         inputs[i].blockHash,
                         pbftRound,

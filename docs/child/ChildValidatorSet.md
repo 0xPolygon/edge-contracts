@@ -273,7 +273,7 @@ function commitEpoch(uint256 id, Epoch epoch, Uptime uptime) external nonpayable
 ### commitEpochWithDoubleSignerSlashing
 
 ```solidity
-function commitEpochWithDoubleSignerSlashing(uint256 chainId, uint256 curEpochId, uint256 blockNumber, uint256 pbftRound, Epoch epoch, Uptime uptime, IChildValidatorSetBase.DoubleSignerSlashingInput[] inputs) external nonpayable
+function commitEpochWithDoubleSignerSlashing(uint256 curEpochId, uint256 blockNumber, uint256 pbftRound, Epoch epoch, Uptime uptime, IChildValidatorSetBase.DoubleSignerSlashingInput[] inputs) external nonpayable
 ```
 
 
@@ -284,7 +284,6 @@ function commitEpochWithDoubleSignerSlashing(uint256 chainId, uint256 curEpochId
 
 | Name | Type | Description |
 |---|---|---|
-| chainId | uint256 | undefined |
 | curEpochId | uint256 | undefined |
 | blockNumber | uint256 | undefined |
 | pbftRound | uint256 | undefined |

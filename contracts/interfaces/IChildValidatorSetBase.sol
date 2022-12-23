@@ -53,7 +53,6 @@ interface IChildValidatorSetBase {
      * @param inputs Information about double signers to be slashed along with signatures and bitmap
      */
     function commitEpochWithDoubleSignerSlashing(
-        uint256 chainId,
         uint256 curEpochId,
         uint256 blockNumber,
         uint256 pbftRound,
