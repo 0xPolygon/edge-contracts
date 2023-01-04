@@ -64,7 +64,10 @@ abstract contract TestPlus is Test {
         }
     }
 
-    function assertEq(StateReceiver.StateSyncBundle memory a, StateReceiver.StateSyncBundle memory b) internal virtual {
+    function assertEq(StateReceiver.StateSyncCommitment memory a, StateReceiver.StateSyncCommitment memory b)
+        internal
+        virtual
+    {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [StateSyncBundle]");
             fail();
