@@ -7,9 +7,9 @@ import {BN256G2} from "contracts/common/BN256G2.sol";
 import "contracts/interfaces/Errors.sol";
 import "contracts/interfaces/ICheckpointManager.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-abstract contract Uninitialized is TestPlus {
+abstract contract Uninitialized is Test {
     CheckpointManager checkpointManager;
     BLS bls;
     BN256G2 bn256G2;

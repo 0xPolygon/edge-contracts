@@ -9,9 +9,9 @@ import "contracts/interfaces/Errors.sol";
 import "contracts/interfaces/ICheckpointManager.sol";
 import "contracts/interfaces/IExitHelper.sol";
 
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 
-abstract contract Uninitialized is TestPlus {
+abstract contract Uninitialized is Test {
     ExitHelper exitHelper;
     CheckpointManager checkpointManager;
     BLS bls;
