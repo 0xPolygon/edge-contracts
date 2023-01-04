@@ -13,7 +13,7 @@ abstract contract EmptyState is TestPlus, System, StateReceiver {
     StateReceiver stateReceiver;
     StateReceivingContract stateReceivingContract;
 
-    StateSyncBundle bundle;
+    StateSyncCommitment commitment;
     bytes32[] public proof;
     address receiver;
 
@@ -27,15 +27,15 @@ abstract contract EmptyState is TestPlus, System, StateReceiver {
     }
 
     /// @dev Use with assertEq
-    function _getBundle(uint256 index) internal view returns (StateReceiver.StateSyncBundle memory) {
-        (uint256 _startId, uint256 _endId, bytes32 _root) = stateReceiver.bundles(index);
-        return StateReceiver.StateSyncBundle(_startId, _endId, _root);
+    function _getBundle(uint256 index) internal view returns (StateReceiver.StateSyncCommitment memory) {
+        (uint256 _startId, uint256 _endId, bytes32 _root) = stateReceiver.commitments(index);
+        return StateReceiver.StateSyncCommitment(_startId, _endId, _root);
     }
 }
 
 contract StateReceiverTest_EmptyState is EmptyState {
     function testConstructor() public {
-        assertEq(stateReceiver.bundleCounter(), 0, "Bundle counter");
+        assertEq(stateReceiver.commitmentCounter(), 0, "Bundle counter");
         assertEq(stateReceiver.lastCommittedId(), 0, "Last committed ID");
     }
 
@@ -43,46 +43,49 @@ contract StateReceiverTest_EmptyState is EmptyState {
         changePrank(address(this));
 
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        stateReceiver.commit(bundle, "", "");
+        stateReceiver.commit(commitment, "", "");
     }
 
     function testCannotCommit_InvalidStartId() public {
-        bundle.startId = 0;
+        commitment.startId = 0;
 
         vm.expectRevert("INVALID_START_ID");
-        stateReceiver.commit(bundle, "", "");
+        stateReceiver.commit(commitment, "", "");
 
-        bundle.startId = 2;
+        commitment.startId = 2;
 
         vm.expectRevert("INVALID_START_ID");
-        stateReceiver.commit(bundle, "", "");
+        stateReceiver.commit(commitment, "", "");
     }
 
     function testCannotCommit_InvalidEndId() public {
-        bundle.startId = 1;
-        bundle.endId = 0;
+        commitment.startId = 1;
+        commitment.endId = 0;
 
         vm.expectRevert("INVALID_END_ID");
-        stateReceiver.commit(bundle, "", "");
+        stateReceiver.commit(commitment, "", "");
     }
 
     function testCannotCommit_SignatureVerificationFailed() public {
-        bundle.startId = 1;
-        bundle.endId = 1337;
+        commitment.startId = 1;
+        commitment.endId = 1337;
         vm.mockCall(VALIDATOR_PKCHECK_PRECOMPILE, "", abi.encode(false));
 
         vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
-        stateReceiver.commit(bundle, "", "");
+        stateReceiver.commit(commitment, "", "");
     }
 
     function testCommit() public {
-        bundle.startId = 1;
-        bundle.endId = 1337;
+        commitment.startId = 1;
+        commitment.endId = 1337;
 
-        stateReceiver.commit(bundle, "", "");
+        vm.expectEmit(false, false, false, true);
+        emit NewCommitment(commitment.startId, commitment.startId, commitment.root);
 
-        assertEq(stateReceiver.bundleCounter(), 1, "Bundle counter");
-        assertEq(_getBundle(0), bundle);
+        stateReceiver.commit(commitment, "", "");
+
+        assertEq(stateReceiver.commitmentCounter(), 1, "Bundle counter");
+        assertEq(_getBundle(0), commitment);
         assertEq(stateReceiver.lastCommittedId(), 1337, "Last committed ID");
     }
 }
@@ -111,23 +114,22 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
             leaves.push(keccak256(abi.encode(_state)));
         }
 
-        // this will be skipped because receiver has no code
+        // this will fail because receiver has no code
         _state.receiver = address(0);
         _state.id = ++counter;
         stateSyncs.push(_state);
         leaves.push(keccak256(abi.encode(_state)));
 
-        // this will be skipped because it's flagged
         _state.receiver = receiver;
         _state.id = ++counter;
-        _state.skip = true;
+        //_state.skip = true;
         stateSyncs.push(_state);
         leaves.push(keccak256(abi.encode(_state)));
 
         // StateReceivingContract will revert on empty data
         _state.receiver = receiver;
         _state.id = ++counter;
-        _state.skip = false;
+        //_state.skip = false;
         _state.data = "";
         stateSyncs.push(_state);
         leaves.push(keccak256(abi.encode(_state)));
@@ -137,7 +139,7 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
         }
 
         // commit bundle
-        StateSyncBundle memory _bundle;
+        StateSyncCommitment memory _bundle;
         _bundle.startId = 1;
         _bundle.endId = bundleSize;
         _bundle.root = getRoot(leaves);
@@ -160,11 +162,11 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
         StateSync memory state;
         state.id = 6;
 
-        vm.expectRevert("StateReceiver: NO_BUNDLE_FOR_STATESYNC_ID");
+        vm.expectRevert("StateReceiver: NO_COMMITMENT_FOR_ID");
         stateReceiver.execute(proof, state);
     }
 
-    function testExecuteStateSync_Skip() public {
+    /*function testExecuteStateSync_Skip() public {
         // this will be skipped because receiver has no code
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(stateSyncs[2].id, ResultStatus.SKIP, "");
@@ -174,10 +176,10 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
         vm.expectEmit(true, true, false, true);
         emit StateSyncResult(stateSyncs[3].id, ResultStatus.SKIP, "");
         stateReceiver.execute(proofs[3], stateSyncs[3]);
-    }
+    }*/
 
     function testExecuteStateSync_Success() public {
-        emit StateSyncResult(stateSyncs[0].id, ResultStatus.SUCCESS, abi.encode(uint256(1337)));
+        emit StateSyncResult(stateSyncs[0].id, true, abi.encode(uint256(1337)));
         stateReceiver.execute(proofs[0], stateSyncs[0]);
         assertEq(stateReceivingContract.counter(), 1337);
     }
@@ -186,14 +188,20 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
         vm.expectCall(receiver, stateSyncs[4].data);
         // StateReceivingContract will revert on empty data
         vm.expectEmit(true, true, false, true);
-        emit StateSyncResult(stateSyncs[4].id, ResultStatus.FAILURE, "");
+        emit StateSyncResult(stateSyncs[4].id, false, "");
         stateReceiver.execute(proofs[4], stateSyncs[4]);
     }
 
     function testBatchExecute_Success() public {
         stateReceiver.batchExecute(proofs, stateSyncs);
 
-        //Only 2 cases were executed
-        assertEq(stateReceivingContract.counter(), 1337 * 2);
+        assertEq(stateReceivingContract.counter(), 1337 * 3);
+    }
+
+    function testCannotReplayCommitment() public {
+        stateReceiver.execute(proofs[0], stateSyncs[0]);
+
+        vm.expectRevert("StateReceiver: STATE_SYNC_IS_PROCESSED");
+        stateReceiver.execute(proofs[0], stateSyncs[0]);
     }
 }
