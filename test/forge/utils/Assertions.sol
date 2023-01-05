@@ -55,8 +55,11 @@ abstract contract Assertions is StdAssertions {
         _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "Withdrawal");
     }
 
-    function assertEq(StateReceiver.StateSyncCommitment memory a, StateReceiver.StateSyncCommitment memory b) internal virtual {
-        _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "StateSyncBundle");
+    function assertEq(StateReceiver.StateSyncCommitment memory a, StateReceiver.StateSyncCommitment memory b)
+        internal
+        virtual
+    {
+        _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "StateSyncCommitment");
     }
 
     function _compareHash(

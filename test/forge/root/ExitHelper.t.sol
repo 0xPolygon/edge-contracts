@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {CheckpointManager} from "contracts/root/CheckpointManager.sol";
 import {ExitHelper} from "contracts/root/ExitHelper.sol";
 import {BLS} from "contracts/common/BLS.sol";
@@ -8,8 +10,6 @@ import {BN256G2} from "contracts/common/BN256G2.sol";
 import "contracts/interfaces/Errors.sol";
 import "contracts/interfaces/ICheckpointManager.sol";
 import "contracts/interfaces/IExitHelper.sol";
-
-import "@utils/Test.sol";
 
 abstract contract Uninitialized is Test {
     ExitHelper exitHelper;

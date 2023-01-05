@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {QueuedValidator, ValidatorQueue, ValidatorQueueLib} from "contracts/libs/ValidatorQueue.sol";
 import "contracts/interfaces/IValidator.sol";
-
-import "@utils/Test.sol";
 
 abstract contract EmptyState is Test {
     int256 constant STAKE = 2 ether;

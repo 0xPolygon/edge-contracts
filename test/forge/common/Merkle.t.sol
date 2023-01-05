@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import {Merkle} from "contracts/common/Merkle.sol";
-
 import "@utils/Test.sol";
 import {MurkyBase} from "murky/common/MurkyBase.sol";
+
+import {Merkle} from "contracts/common/Merkle.sol";
 
 contract MerkleTest is Test, MurkyBase {
     MerkleUser merkleUser;

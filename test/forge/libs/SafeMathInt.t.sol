@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import {SafeMathInt, SafeMathUint} from "contracts/libs/SafeMathInt.sol";
-
 import "@utils/Test.sol";
+
+import {SafeMathInt, SafeMathUint} from "contracts/libs/SafeMathInt.sol";
 
 contract SafeMathIntTest is Test {
     SafeMathUser safeMathUser;
