@@ -46,7 +46,12 @@ async function generateMsg() {
   }
 
   blockHash = ethers.utils.hexlify(ethers.utils.randomBytes(32));
-  currentValidatorSetHash = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+  currentValidatorSetHash = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+      [validatorSet]
+    )
+  );
   submitCounter = 1;
   generateSignature0();
   generateSignature1();
