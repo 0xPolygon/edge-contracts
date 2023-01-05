@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+import {MurkyBase} from "murky/common/MurkyBase.sol";
+
 import {StateReceiver} from "contracts/child/StateReceiver.sol";
 import {System} from "contracts/child/StateReceiver.sol";
 import {StateReceivingContract} from "contracts/mocks/StateReceivingContract.sol";
 import "contracts/interfaces/Errors.sol";
 
-import "../utils/TestPlus.sol";
-import {MurkyBase} from "murky/common/MurkyBase.sol";
-
-abstract contract EmptyState is TestPlus, System, StateReceiver {
+abstract contract EmptyState is Test, System, StateReceiver {
     StateReceiver stateReceiver;
     StateReceivingContract stateReceivingContract;
 

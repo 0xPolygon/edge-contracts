@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {ChildValidatorSet} from "contracts/child/ChildValidatorSet.sol";
 import {System} from "contracts/child/ChildValidatorSet.sol";
 import {BLS} from "contracts/common/BLS.sol";
@@ -10,9 +12,7 @@ import "contracts/interfaces/modules/ICVSStorage.sol";
 import "contracts/interfaces/IValidator.sol";
 import "contracts/interfaces/IChildValidatorSetBase.sol";
 
-import "../utils/TestPlus.sol";
-
-abstract contract Uninitialized is TestPlus, System {
+abstract contract Uninitialized is Test, System {
     ChildValidatorSet childValidatorSet;
     BLS bls;
 
