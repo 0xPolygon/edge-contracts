@@ -112,6 +112,31 @@ contract CheckpointManager_Initialize is Uninitialized {
 }
 
 contract CheckpointManager_Submit is Initialized {
+    function testCannotSubmit_InvalidValidatorSetHash() public {
+        uint256 chainId = submitCounter;
+        ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
+            epoch: 1,
+            blockNumber: 0, //For Invalid Signature
+            eventRoot: hashes[0]
+        });
+
+        ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
+            blockHash: hashes[1],
+            blockRound: 0,
+            currentValidatorSetHash: hashes[1] //Invalid Hash
+        });
+
+        vm.expectRevert("INVALID_VALIDATOR_SET_HASH");
+        checkpointManager.submit(
+            chainId,
+            checkpointMetadata,
+            checkpoint,
+            aggMessagePoints[0],
+            validatorSet,
+            bitmaps[0]
+        );
+    }
+
     function testCannotSubmit_InvalidSignature() public {
         uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
