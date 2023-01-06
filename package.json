@@ -70,7 +70,7 @@
     "ethereum-waffle": "^3.4.4",
     "ethers": "^5.7.2",
     "hardhat-gas-reporter": "^1.0.8",
-    "husky": "^8.0.2",
+    "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "prettier": "^2.8.1",
     "prettier-plugin-solidity": "^1.0.0-beta.30",
