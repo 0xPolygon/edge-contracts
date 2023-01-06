@@ -332,6 +332,29 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         );
     }
 
+    function testCannotInitialize_UnmatchedLengthParams() public {
+        vm.startPrank(SYSTEM);
+
+        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
+            epochReward,
+            minStake,
+            minDelegation,
+            64
+        );
+        vm.expectRevert("UNMATCHED_LENGTH_PARAMETERS");
+
+        validatorStakes.push(minStake * 2); //For mismtach the length of the parameters
+        childValidatorSet.initialize(
+            init,
+            validatorAddresses,
+            validatorPubkeys,
+            validatorStakes,
+            bls,
+            messagePoint,
+            governance
+        );
+    }
+
     function testInitialize() public {
         vm.startPrank(SYSTEM);
 

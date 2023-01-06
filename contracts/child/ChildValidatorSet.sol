@@ -31,7 +31,6 @@ contract ChildValidatorSet is
     using SafeMathInt for int256;
     using ArraysUpgradeable for uint256[];
 
-    // more granular commission?
     uint256 public constant DOUBLE_SIGNING_SLASHING_PERCENT = 10;
     // epochNumber -> roundNumber -> validator address -> bool
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public doubleSignerSlashes;
@@ -63,6 +62,10 @@ contract ChildValidatorSet is
         _transferOwnership(governance);
         __ReentrancyGuard_init();
 
+        require(
+            validatorAddresses.length == validatorPubkeys.length && validatorAddresses.length == validatorStakes.length,
+            "UNMATCHED_LENGTH_PARAMETERS"
+        );
         // slither-disable-next-line events-maths
         epochReward = init.epochReward;
         minStake = init.minStake;
