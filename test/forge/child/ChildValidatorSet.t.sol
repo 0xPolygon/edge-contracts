@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {ChildValidatorSet} from "contracts/child/ChildValidatorSet.sol";
 import {System} from "contracts/child/ChildValidatorSet.sol";
 import {BLS} from "contracts/common/BLS.sol";
@@ -10,9 +12,7 @@ import "contracts/interfaces/modules/ICVSStorage.sol";
 import "contracts/interfaces/IValidator.sol";
 import "contracts/interfaces/IChildValidatorSetBase.sol";
 
-import "../utils/TestPlus.sol";
-
-abstract contract Uninitialized is TestPlus, System {
+abstract contract Uninitialized is Test, System {
     ChildValidatorSet childValidatorSet;
     BLS bls;
 
@@ -361,7 +361,7 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         assertEq(childValidatorSet.owner(), governance);
 
         assertEq(childValidatorSet.currentEpochId(), 1);
-        assertEq(childValidatorSet.whitelist(validatorAddresses[0]), true);
+        assertEq(childValidatorSet.whitelist(validatorAddresses[0]), false);
 
         Validator memory validator = childValidatorSet.getValidator(validatorAddresses[0]);
         Validator memory validatorExpected = Validator(validatorPubkeys[0], minStake * 2, 0, 0, true);
@@ -598,8 +598,11 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
     }
 
     function testRemoveWhitelist() public {
-        assertEq(childValidatorSet.whitelist(admin), true);
         vm.startPrank(governance);
+        address[] memory whitelistAddress = new address[](1);
+        whitelistAddress[0] = admin;
+        childValidatorSet.addToWhitelist(whitelistAddress);
+        assertEq(childValidatorSet.whitelist(admin), true);
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = admin;
 
