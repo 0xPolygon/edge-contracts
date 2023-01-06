@@ -201,12 +201,12 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 numEpochs = (epoch.endBlock - epoch.startBlock + 1) / epochSize;
-        uint256 reward = epochReward * numEpochs;
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock + 1)) / epochSize;
 
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
             Validator storage validator = _validators.get(uptimeData.validator);
+            // slither-disable-next-line divide-before-multiply
             uint256 validatorReward = (reward *
                 (validator.stake + _validators.getDelegationPool(uptimeData.validator).supply) *
                 uptimeData.signedBlocks) / (activeStake * uptime.totalBlocks);
