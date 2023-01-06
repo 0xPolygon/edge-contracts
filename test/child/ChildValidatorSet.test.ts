@@ -83,6 +83,33 @@ describe("ChildValidatorSet", () => {
       )
     ).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
   });
+  it("Initialize with unmatched length of parameters", async () => {
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
+    validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));
+    const epochValidatorSet = [];
+
+    for (let i = 0; i < validatorSetSize; i++) {
+      epochValidatorSet.push(accounts[i].address);
+    }
+
+    const messagePoint = mcl.g1ToHex(
+      mcl.hashToPoint(ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")), DOMAIN)
+    );
+
+    expect(await childValidatorSet.totalActiveStake()).to.equal(0);
+
+    await expect(
+      systemChildValidatorSet.initialize(
+        { epochReward, minStake, minDelegation, epochSize: 64 },
+        [accounts[0].address],
+        [[0, 0, 0, 0]],
+        [minStake * 2, minStake * 2],
+        bls.address,
+        messagePoint,
+        governance
+      )
+    ).to.be.revertedWith("UNMATCHED_LENGTH_PARAMETERS");
+  });
   it("Initialize and validate initialization", async () => {
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
     validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));

@@ -63,6 +63,10 @@ contract ChildValidatorSet is
         _transferOwnership(governance);
         __ReentrancyGuard_init();
 
+        require(
+            validatorAddresses.length == validatorPubkeys.length && validatorAddresses.length == validatorStakes.length,
+            "UNMATCHED_LENGTH_PARAMETERS"
+        );
         // slither-disable-next-line events-maths
         epochReward = init.epochReward;
         minStake = init.minStake;
