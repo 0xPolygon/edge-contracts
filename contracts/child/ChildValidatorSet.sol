@@ -338,7 +338,7 @@ contract ChildValidatorSet is
         bytes calldata bitmap
     ) private view {
         // verify signatures` for provided sig data and sigs bytes
-        // slither-disable-next-line low-level-calls
+        // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
         }(abi.encode(hash, signature, bitmap));
