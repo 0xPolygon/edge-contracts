@@ -61,23 +61,6 @@ function MAX_COMMISSION() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### MAX_VALIDATOR_SET_SIZE
-
-```solidity
-function MAX_VALIDATOR_SET_SIZE() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### NATIVE_TOKEN_CONTRACT
 
 ```solidity
@@ -116,40 +99,6 @@ function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 
 ```solidity
 function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### NEW_VALIDATOR_SIG
-
-```solidity
-function NEW_VALIDATOR_SIG() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### REWARD_PRECISION
-
-```solidity
-function REWARD_PRECISION() external view returns (uint256)
 ```
 
 

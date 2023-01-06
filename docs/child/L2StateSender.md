@@ -10,6 +10,23 @@ Arbitrary message passing contract from L2 -&gt; L1
 
 ## Methods
 
+### MAX_LENGTH
+
+```solidity
+function MAX_LENGTH() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### counter
 
 ```solidity
@@ -33,7 +50,7 @@ function counter() external view returns (uint256)
 function syncState(address receiver, bytes data) external nonpayable
 ```
 
-Emits an event which is indexed by v3 validators and submitted as a commitment on L1, allowing for lazy execution
+Emits an event which is indexed by v3 validators and submitted as a commitment on L1 allowing for lazy execution
 
 
 
