@@ -91,6 +91,7 @@ contract StateReceiver is System {
     function batchExecute(bytes32[][] calldata proofs, StateSync[] calldata objs) external {
         uint256 length = proofs.length;
 
+        require(proofs.length == objs.length, "StateReceiver: UNMATCHED_LENGTH_PARAMETERS");
         for (uint256 i = 0; i < length; ) {
             StateSyncCommitment memory commitment = getCommitmentByStateSyncId(objs[i].id);
 
