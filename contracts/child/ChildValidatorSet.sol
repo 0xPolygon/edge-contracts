@@ -31,7 +31,6 @@ contract ChildValidatorSet is
     using SafeMathInt for int256;
     using ArraysUpgradeable for uint256[];
 
-    // more granular commission?
     uint256 public constant DOUBLE_SIGNING_SLASHING_PERCENT = 10;
     // epochNumber -> roundNumber -> validator address -> bool
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public doubleSignerSlashes;
