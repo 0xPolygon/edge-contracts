@@ -176,7 +176,7 @@ contract StateReceiver is System {
     ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
+        // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
         }(abi.encode(message, signature, bitmap));

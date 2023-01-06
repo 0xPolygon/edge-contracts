@@ -15,12 +15,18 @@ describe("L2StateSender", () => {
   });
 
   it("validate initialization", async () => {
+    expect(await l2StateSender.MAX_LENGTH()).to.equal(2048);
     expect(await l2StateSender.counter()).to.equal(0);
   });
 
   it("sync state fail: exceeds max length", async () => {
     const data = ethers.utils.hexlify(ethers.utils.randomBytes(2049));
-    await expect(l2StateSender.syncState(ethers.constants.AddressZero, data)).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
+    await expect(l2StateSender.syncState(accounts[2].address, data)).to.be.revertedWith("EXCEEDS_MAX_LENGTH");
+  });
+
+  it("sync state fail: invalid receiver", async () => {
+    const data = ethers.utils.hexlify(ethers.utils.randomBytes(2048));
+    await expect(l2StateSender.syncState(ethers.constants.AddressZero, data)).to.be.revertedWith("INVALID_RECEIVER");
   });
 
   it("sync state", async () => {

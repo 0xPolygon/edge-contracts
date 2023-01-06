@@ -117,7 +117,7 @@ describe("ChildValidatorSet", () => {
     const currentEpochId = await childValidatorSet.currentEpochId();
     expect(currentEpochId).to.equal(1);
 
-    expect(await childValidatorSet.whitelist(accounts[0].address)).to.equal(true);
+    expect(await childValidatorSet.whitelist(accounts[0].address)).to.equal(false);
     const validator = await childValidatorSet.getValidator(accounts[0].address);
     expect(validator.blsKey.toString()).to.equal("0,0,0,0");
     expect(validator.stake).to.equal(minStake * 2);

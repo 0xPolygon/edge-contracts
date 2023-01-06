@@ -86,7 +86,9 @@ library WithdrawalQueueLib {
      * @return amount the amount withdrawable from beyond the specified epoch
      */
     function pending(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {
-        for (uint256 i = self.tail - 1; i >= self.head; i--) {
+        uint256 tail = self.tail;
+        if (tail == 0) return 0;
+        for (uint256 i = tail - 1; i >= self.head; i--) {
             Withdrawal memory withdrawal = self.withdrawals[i];
             if (withdrawal.epoch <= currentEpoch) break;
             amount += withdrawal.amount;

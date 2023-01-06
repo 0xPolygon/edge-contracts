@@ -11,10 +11,7 @@ import "../../libs/ValidatorStorage.sol";
 abstract contract CVSStorage is ICVSStorage {
     using ValidatorStorageLib for ValidatorTree;
 
-    bytes32 public constant NEW_VALIDATOR_SIG = 0xbddc396dfed8423aa810557cfed0b5b9e7b7516dac77d0b0cdf3cfbca88518bc;
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
-    uint256 public constant MAX_VALIDATOR_SET_SIZE = 500;
-    uint256 public constant REWARD_PRECISION = 10**18;
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
     uint256 public constant MAX_COMMISSION = 100;
 
