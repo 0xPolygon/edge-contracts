@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {ValidatorStorageLib, AmountZero, Exists, NotFound} from "contracts/libs/ValidatorStorage.sol";
 import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/IValidator.sol";
 
-import "../utils/TestPlus.sol";
-
-abstract contract EmptyState is TestPlus {
+abstract contract EmptyState is Test {
     address account;
     Validator validator;
 

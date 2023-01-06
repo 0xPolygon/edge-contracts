@@ -129,10 +129,28 @@ function batchExecute(bytes32[][] proofs, StateReceiver.StateSync[] objs) extern
 | proofs | bytes32[][] | undefined |
 | objs | StateReceiver.StateSync[] | undefined |
 
-### bundleCounter
+### commit
 
 ```solidity
-function bundleCounter() external view returns (uint256)
+function commit(StateReceiver.StateSyncCommitment commitment, bytes signature, bytes bitmap) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| commitment | StateReceiver.StateSyncCommitment | undefined |
+| signature | bytes | undefined |
+| bitmap | bytes | undefined |
+
+### commitmentCounter
+
+```solidity
+function commitmentCounter() external view returns (uint256)
 ```
 
 
@@ -146,10 +164,32 @@ function bundleCounter() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### bundles
+### commitmentIds
 
 ```solidity
-function bundles(uint256) external view returns (uint256 startId, uint256 endId, bytes32 root)
+function commitmentIds(uint256) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### commitments
+
+```solidity
+function commitments(uint256) external view returns (uint256 startId, uint256 endId, bytes32 root)
 ```
 
 
@@ -170,24 +210,6 @@ function bundles(uint256) external view returns (uint256 startId, uint256 endId,
 | endId | uint256 | undefined |
 | root | bytes32 | undefined |
 
-### commit
-
-```solidity
-function commit(StateReceiver.StateSyncBundle bundle, bytes signature, bytes bitmap) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| bundle | StateReceiver.StateSyncBundle | undefined |
-| signature | bytes | undefined |
-| bitmap | bytes | undefined |
-
 ### execute
 
 ```solidity
@@ -205,13 +227,13 @@ function execute(bytes32[] proof, StateReceiver.StateSync obj) external nonpayab
 | proof | bytes32[] | undefined |
 | obj | StateReceiver.StateSync | undefined |
 
-### getBundleByStateSyncId
+### getCommitmentByStateSyncId
 
 ```solidity
-function getBundleByStateSyncId(uint256 id) external view returns (struct StateReceiver.StateSyncBundle)
+function getCommitmentByStateSyncId(uint256 id) external view returns (struct StateReceiver.StateSyncCommitment)
 ```
 
-get bundle for a state sync id
+get commitment for a state sync id
 
 
 
@@ -225,7 +247,7 @@ get bundle for a state sync id
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | StateReceiver.StateSyncBundle | undefined |
+| _0 | StateReceiver.StateSyncCommitment | undefined |
 
 ### getRootByStateSyncId
 
@@ -266,10 +288,10 @@ function lastCommittedId() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### stateSyncBundleIds
+### processedStateSyncs
 
 ```solidity
-function stateSyncBundleIds(uint256) external view returns (uint256)
+function processedStateSyncs(uint256) external view returns (bool)
 ```
 
 
@@ -286,16 +308,16 @@ function stateSyncBundleIds(uint256) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _0 | bool | undefined |
 
 
 
 ## Events
 
-### NewBundleCommit
+### NewCommitment
 
 ```solidity
-event NewBundleCommit(uint256 indexed startId, uint256 indexed endId, bytes32 root)
+event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root)
 ```
 
 
@@ -313,7 +335,7 @@ event NewBundleCommit(uint256 indexed startId, uint256 indexed endId, bytes32 ro
 ### StateSyncResult
 
 ```solidity
-event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus indexed status, bytes message)
+event StateSyncResult(uint256 indexed counter, bool indexed status, bytes message)
 ```
 
 
@@ -325,7 +347,7 @@ event StateSyncResult(uint256 indexed counter, enum StateReceiver.ResultStatus i
 | Name | Type | Description |
 |---|---|---|
 | counter `indexed` | uint256 | undefined |
-| status `indexed` | enum StateReceiver.ResultStatus | undefined |
+| status `indexed` | bool | undefined |
 | message  | bytes | undefined |
 
 
