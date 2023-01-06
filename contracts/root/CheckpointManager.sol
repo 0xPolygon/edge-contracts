@@ -13,7 +13,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
 
-    uint256 public CHAIN_ID;
+    uint256 public chainId;
     uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
     uint256 public currentCheckpointBlockNumber;
@@ -33,16 +33,16 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      * @param newBls Address of the BLS library contract
      * @param newBn256G2 Address of the BLS library contract
      * @param newDomain Domain to use when hashing messages to a point
-     * @param chainId Chain ID of the child chain
+     * @param chainId_ Chain ID of the child chain
      */
     function initialize(
         IBLS newBls,
         IBN256G2 newBn256G2,
         bytes32 newDomain,
-        uint256 chainId,
+        uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
-        CHAIN_ID = chainId;
+        chainId = chainId_;
         bls = newBls;
         bn256G2 = newBn256G2;
         domain = newDomain;
@@ -64,7 +64,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         bytes memory hash = abi.encode(
             keccak256(
                 abi.encode(
-                    CHAIN_ID,
+                    chainId,
                     checkpoint.blockNumber,
                     checkpointMetadata.blockHash,
                     checkpointMetadata.blockRound,

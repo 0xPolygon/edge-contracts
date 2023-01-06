@@ -10,23 +10,6 @@
 
 ## Methods
 
-### CHAIN_ID
-
-```solidity
-function CHAIN_ID() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### bls
 
 ```solidity
@@ -60,6 +43,23 @@ function bn256G2() external view returns (contract IBN256G2)
 | Name | Type | Description |
 |---|---|---|
 | _0 | contract IBN256G2 | undefined |
+
+### chainId
+
+```solidity
+function chainId() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### checkpointBlockNumbers
 
@@ -290,7 +290,7 @@ Function to get the event root for a block number
 ### initialize
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, uint256 chainId, ICheckpointManager.Validator[] newValidatorSet) external nonpayable
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, uint256 chainId_, ICheckpointManager.Validator[] newValidatorSet) external nonpayable
 ```
 
 
@@ -304,7 +304,7 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 
 | newBls | contract IBLS | undefined |
 | newBn256G2 | contract IBN256G2 | undefined |
 | newDomain | bytes32 | undefined |
-| chainId | uint256 | undefined |
+| chainId_ | uint256 | undefined |
 | newValidatorSet | ICheckpointManager.Validator[] | undefined |
 
 ### submit
