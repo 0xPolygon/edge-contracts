@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {StateSender} from "contracts/root/StateSender.sol";
 
-import "../utils/TestPlus.sol";
-
-contract StateSenderTest is TestPlus {
+contract StateSenderTest is Test {
     event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
 
     StateSender stateSender;

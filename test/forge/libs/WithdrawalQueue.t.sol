@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {Withdrawal, WithdrawalQueue, WithdrawalQueueLib} from "contracts/libs/WithdrawalQueue.sol";
 
-import "../utils/TestPlus.sol";
-
-abstract contract EmptyState is TestPlus {
+abstract contract EmptyState is Test {
     uint256 constant AMOUNT = 2 ether;
     uint256 EPOCH = 1;
 
