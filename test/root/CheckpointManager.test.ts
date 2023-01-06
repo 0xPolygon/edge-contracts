@@ -11,12 +11,9 @@ const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 describe("CheckpointManager", () => {
   let bls: BLS,
     bn256G2: BN256G2,
-    governance: string,
     checkpointManager: CheckpointManager,
     submitCounter: number,
-    startBlock: number,
     validatorSetSize: number,
-    eventRoot: any,
     validatorSecretKeys: any[],
     validatorSet: any[],
     accounts: any[]; // we use any so we can access address directly from object
@@ -24,8 +21,6 @@ describe("CheckpointManager", () => {
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
-
-    governance = accounts[0].address;
 
     const BLS = await ethers.getContractFactory("BLS");
     bls = await BLS.deploy();
@@ -38,8 +33,26 @@ describe("CheckpointManager", () => {
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
     checkpointManager = await CheckpointManager.deploy();
     await checkpointManager.deployed();
+  });
 
-    eventRoot = ethers.utils.randomBytes(32);
+  it("Initialize failed by zero voting power", async () => {
+    validatorSetSize = Math.floor(Math.random() * (5 - 1) + 8); // Randomly pick 8 - 12
+
+    validatorSecretKeys = [];
+    validatorSet = [];
+    for (let i = 0; i < validatorSetSize; i++) {
+      const { pubkey, secret } = mcl.newKeyPair();
+      validatorSecretKeys.push(secret);
+      validatorSet.push({
+        _address: accounts[i].address,
+        blsKey: mcl.g2ToHex(pubkey),
+        votingPower: 0,
+      });
+    }
+
+    await expect(checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, validatorSet)).to.be.revertedWith(
+      "VOTING_POWER_ZERO"
+    );
   });
 
   it("Initialize and validate initialization", async () => {
@@ -71,9 +84,77 @@ describe("CheckpointManager", () => {
 
     const endBlock = (await checkpointManager.checkpoints(0)).blockNumber;
     expect(endBlock).to.equal(0);
-    startBlock = endBlock.toNumber() + 1;
     const prevId = await checkpointManager.currentEpoch();
     submitCounter = prevId.toNumber() + 1;
+  });
+
+  it("Submit checkpoint with invalid validator set hash", async () => {
+    const chainId = submitCounter;
+    const checkpoint = {
+      epoch: 1,
+      blockNumber: 0,
+      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const checkpointMetadata = {
+      blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      blockRound: 0,
+      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+    };
+
+    const bitmapStr = "ffff";
+
+    const bitmap = `0x${bitmapStr}`;
+    const messageOfValidatorSet = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["tuple(address _address, uint256[4] blsKey, uint256 votingPower)[]"],
+        [validatorSet]
+      )
+    );
+
+    const message = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "uint256", "bytes32", "uint256", "uint256", "bytes32", "bytes32", "bytes32"],
+        [
+          chainId + 1, //for signature verify fail
+          checkpoint.blockNumber,
+          checkpointMetadata.blockHash,
+          checkpointMetadata.blockRound,
+          checkpoint.epoch,
+          checkpoint.eventRoot,
+          checkpointMetadata.currentValidatorSetHash,
+          messageOfValidatorSet,
+        ]
+      )
+    );
+
+    const signatures: mcl.Signature[] = [];
+
+    let aggVotingPower = 0;
+    for (let i = 0; i < validatorSecretKeys.length; i++) {
+      const byteNumber = Math.floor(i / 8);
+      const bitNumber = i % 8;
+
+      if (byteNumber >= bitmap.length / 2 - 1) {
+        continue;
+      }
+
+      // Get the value of the bit at the given 'index' in a byte.
+      const oneByte = parseInt(bitmap[2 + byteNumber * 2] + bitmap[3 + byteNumber * 2], 16);
+      if ((oneByte & (1 << bitNumber)) > 0) {
+        const { signature, messagePoint } = mcl.sign(message, validatorSecretKeys[i], ethers.utils.arrayify(DOMAIN));
+        signatures.push(signature);
+        aggVotingPower += parseInt(ethers.utils.formatEther(validatorSet[i].votingPower), 10);
+      } else {
+        continue;
+      }
+    }
+
+    const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
+
+    await expect(
+      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+    ).to.be.revertedWith("INVALID_VALIDATOR_SET_HASH");
   });
 
   it("Submit checkpoint with invalid signature", async () => {
@@ -86,7 +167,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmapStr = "ffff";
@@ -154,7 +235,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmapStr = "00";
@@ -222,7 +303,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmapStr = "01";
@@ -290,7 +371,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     // const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);
@@ -376,7 +457,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmapStr = "ffff";
@@ -444,7 +525,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmapStr = "ffff";
@@ -512,7 +593,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     // const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);
@@ -598,7 +679,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmap = "0xff";
@@ -706,7 +787,7 @@ describe("CheckpointManager", () => {
     const checkpointMetadata = {
       blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
       blockRound: 0,
-      currentValidatorSetHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      currentValidatorSetHash: await checkpointManager.currentValidatorSetHash(),
     };
 
     const bitmapNum = Math.floor(Math.random() * 0xffffffffffffffff);

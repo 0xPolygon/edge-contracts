@@ -69,7 +69,6 @@ contract ChildValidatorSet is
         minDelegation = init.minDelegation;
 
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
-            _addToWhitelist(validatorAddresses[i]);
             Validator memory validator = Validator({
                 blsKey: validatorPubkeys[i],
                 stake: validatorStakes[i],
@@ -105,7 +104,7 @@ contract ChildValidatorSet is
 
         epochEndBlocks.push(epoch.endBlock);
 
-        _distributeRewards(uptime);
+        _distributeRewards(epoch, uptime);
         _processQueue();
 
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
@@ -132,13 +131,15 @@ contract ChildValidatorSet is
         for (uint256 i = 0; i < length; i++) {
             _checkPubkeyAggregation(
                 keccak256(abi.encode(blockNumber, pbftRound, epochId, inputs[i].blockHash)),
-                inputs[i].bitmap,
-                inputs[i].signature
+                inputs[i].signature,
+                inputs[i].bitmap
             );
         }
 
         // get full validator set
-        uint256 validatorSetLength = _validators.count;
+        uint256 validatorSetLength = _validators.count < ACTIVE_VALIDATOR_SET_SIZE
+            ? _validators.count
+            : ACTIVE_VALIDATOR_SET_SIZE;
         address[] memory validatorSet = sortedValidators(validatorSetLength);
         bool[] memory slashingSet = new bool[](validatorSetLength);
 
@@ -192,7 +193,7 @@ contract ChildValidatorSet is
         }
     }
 
-    function _distributeRewards(Uptime calldata uptime) internal {
+    function _distributeRewards(Epoch calldata epoch, Uptime calldata uptime) internal {
         require(uptime.epochId == currentEpochId - 1, "EPOCH_NOT_COMMITTED");
 
         uint256 length = uptime.uptimeData.length;
@@ -200,11 +201,12 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = epochReward;
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock + 1)) / epochSize;
 
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
             Validator storage validator = _validators.get(uptimeData.validator);
+            // slither-disable-next-line divide-before-multiply
             uint256 validatorReward = (reward *
                 (validator.stake + _validators.getDelegationPool(uptimeData.validator).supply) *
                 uptimeData.signedBlocks) / (activeStake * uptime.totalBlocks);
@@ -336,7 +338,7 @@ contract ChildValidatorSet is
         bytes calldata bitmap
     ) private view {
         // verify signatures` for provided sig data and sigs bytes
-        // slither-disable-next-line low-level-calls
+        // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
         }(abi.encode(hash, signature, bitmap));

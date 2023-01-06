@@ -43,8 +43,9 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
      * @inheritdoc ICVSStaking
      */
     function stake() external payable onlyValidator {
-        uint256 currentStake = _validators.stakeOf(msg.sender);
-        if (msg.value + currentStake < minStake) revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
+        int256 totalValidatorStake = int256(_validators.stakeOf(msg.sender)) + _queue.pendingStake(msg.sender);
+        if (msg.value.toInt256Safe() + totalValidatorStake < int256(minStake))
+            revert StakeRequirement({src: "stake", msg: "STAKE_TOO_LOW"});
         claimValidatorReward();
         _queue.insert(msg.sender, int256(msg.value), 0);
         emit Staked(msg.sender, msg.value);
@@ -77,6 +78,7 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
     function setCommission(uint256 newCommission) external onlyValidator {
         require(newCommission <= MAX_COMMISSION, "INVALID_COMMISSION");
         Validator storage validator = _validators.get(msg.sender);
+        emit CommissionUpdated(msg.sender, validator.commission, newCommission);
         validator.commission = newCommission;
     }
 

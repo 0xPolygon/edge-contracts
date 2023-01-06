@@ -19,58 +19,48 @@ contract StateReceiver is System {
         address sender;
         address receiver;
         bytes data;
-        bool skip;
     }
 
-    struct StateSyncBundle {
+    struct StateSyncCommitment {
         uint256 startId;
         uint256 endId;
         bytes32 root;
     }
 
     /// @custom:security write-protection="onlySystemCall()"
-    uint256 public bundleCounter;
+    uint256 public commitmentCounter;
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
-    // Maximum gas provided for each message call
-    // slither-disable-next-line too-many-digits
-    uint256 private constant MAX_GAS = 300000;
 
-    mapping(uint256 => StateSyncBundle) public bundles;
-    uint256[] public stateSyncBundleIds;
+    mapping(uint256 => bool) public processedStateSyncs;
+    mapping(uint256 => StateSyncCommitment) public commitments;
+    uint256[] public commitmentIds;
 
-    // 0=success, 1=failure, 2=skip
-    enum ResultStatus {
-        SUCCESS,
-        FAILURE,
-        SKIP
-    }
-
-    event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes message);
-    event NewBundleCommit(uint256 indexed startId, uint256 indexed endId, bytes32 root);
+    event StateSyncResult(uint256 indexed counter, bool indexed status, bytes message);
+    event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root);
 
     /**
      * @notice commits merkle root of multiple StateSync objects
-     * @param bundle Bundle of state sync objects to be committed
-     * @param signature bundle signed by validators
+     * @param commitment commitment of state sync objects
+     * @param signature commitment signed by validators
      * @param bitmap bitmap of which validators signed the message
      */
     function commit(
-        StateSyncBundle calldata bundle,
+        StateSyncCommitment calldata commitment,
         bytes calldata signature,
         bytes calldata bitmap
     ) external onlySystemCall {
-        require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
-        require(bundle.endId >= bundle.startId, "INVALID_END_ID");
+        require(commitment.startId == lastCommittedId + 1, "INVALID_START_ID");
+        require(commitment.endId >= commitment.startId, "INVALID_END_ID");
 
-        _checkPubkeyAggregation(keccak256(abi.encode(bundle)), signature, bitmap);
+        _checkPubkeyAggregation(keccak256(abi.encode(commitment)), signature, bitmap);
 
-        bundles[bundleCounter++] = bundle;
+        commitments[commitmentCounter++] = commitment;
 
-        stateSyncBundleIds.push(bundle.endId);
-        lastCommittedId = bundle.endId;
+        commitmentIds.push(commitment.endId);
+        lastCommittedId = commitment.endId;
 
-        emit NewBundleCommit(bundle.startId, bundle.endId, bundle.root);
+        emit NewCommitment(commitment.startId, commitment.endId, commitment.root);
     }
 
     /**
@@ -81,10 +71,10 @@ contract StateReceiver is System {
      * @param obj state sync objects being executed
      */
     function execute(bytes32[] calldata proof, StateSync calldata obj) external {
-        StateSyncBundle memory bundle = getBundleByStateSyncId(obj.id);
+        StateSyncCommitment memory commitment = getCommitmentByStateSyncId(obj.id);
 
         require(
-            keccak256(abi.encode(obj)).checkMembership(obj.id - bundle.startId, bundle.root, proof),
+            keccak256(abi.encode(obj)).checkMembership(obj.id - commitment.startId, commitment.root, proof),
             "INVALID_PROOF"
         );
 
@@ -102,11 +92,11 @@ contract StateReceiver is System {
         uint256 length = proofs.length;
 
         for (uint256 i = 0; i < length; ) {
-            StateSyncBundle memory bundle = getBundleByStateSyncId(objs[i].id);
+            StateSyncCommitment memory commitment = getCommitmentByStateSyncId(objs[i].id);
 
             bool isMember = keccak256(abi.encode(objs[i])).checkMembership(
-                objs[i].id - bundle.startId,
-                bundle.root,
+                objs[i].id - commitment.startId,
+                commitment.root,
                 proofs[i]
             );
 
@@ -130,23 +120,23 @@ contract StateReceiver is System {
      * @param id state sync to get the root for
      */
     function getRootByStateSyncId(uint256 id) external view returns (bytes32) {
-        bytes32 root = bundles[stateSyncBundleIds.findUpperBound(id)].root;
+        bytes32 root = commitments[commitmentIds.findUpperBound(id)].root;
 
-        require(root != bytes32(0), "StateReceiver: NO_ROOT_FOR_STATESYNC_ID");
+        require(root != bytes32(0), "StateReceiver: NO_ROOT_FOR_ID");
 
         return root;
     }
 
     /**
-     * @notice get bundle for a state sync id
+     * @notice get commitment for a state sync id
      * @param id state sync to get the root for
      */
-    function getBundleByStateSyncId(uint256 id) public view returns (StateSyncBundle memory) {
-        uint256 idx = stateSyncBundleIds.findUpperBound(id);
+    function getCommitmentByStateSyncId(uint256 id) public view returns (StateSyncCommitment memory) {
+        uint256 idx = commitmentIds.findUpperBound(id);
 
-        require(idx != stateSyncBundleIds.length, "StateReceiver: NO_BUNDLE_FOR_STATESYNC_ID");
+        require(idx != commitmentIds.length, "StateReceiver: NO_COMMITMENT_FOR_ID");
 
-        return bundles[idx];
+        return commitments[idx];
     }
 
     /**
@@ -154,31 +144,23 @@ contract StateReceiver is System {
      * @param obj StateSync object to be executed
      */
     function _executeStateSync(StateSync calldata obj) private {
+        require(!processedStateSyncs[obj.id], "StateReceiver: STATE_SYNC_IS_PROCESSED");
         // Skip transaction if client has added flag, or receiver has no code
-        if (obj.skip || obj.receiver.code.length == 0) {
-            emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
+        if (obj.receiver.code.length == 0) {
+            emit StateSyncResult(obj.id, false, "");
             return;
         }
 
-        // Execute `onStateReceive` method on target using max gas limit
-        bytes memory paramData = abi.encodeWithSignature(
-            "onStateReceive(uint256,address,bytes)",
-            obj.id,
-            obj.sender,
-            obj.data
-        );
+        processedStateSyncs[obj.id] = true;
 
         // slither-disable-next-line calls-loop,low-level-calls
-        (bool success, bytes memory returnData) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
+        (bool success, bytes memory returnData) = obj.receiver.call(
+            abi.encodeWithSignature("onStateReceive(uint256,address,bytes)", obj.id, obj.sender, obj.data)
+        );
 
         // emit a ResultEvent indicating whether invocation of state sync was successful or not
-        if (success) {
-            // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, returnData);
-        } else {
-            // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.FAILURE, returnData);
-        }
+        // slither-disable-next-line reentrancy-events
+        emit StateSyncResult(obj.id, success, returnData);
     }
 
     /**
@@ -194,7 +176,7 @@ contract StateReceiver is System {
     ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
+        // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
         }(abi.encode(message, signature, bitmap));
