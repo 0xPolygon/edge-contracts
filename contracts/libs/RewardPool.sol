@@ -42,6 +42,7 @@ library RewardPoolLib {
         pool.balances[account] += share;
         pool.supply += share;
         pool.underlyingSupply += amount;
+        // slither-disable-next-line divide-before-multiply
         pool.magnifiedRewardCorrections[account] -= (pool.magnifiedRewardPerShare * share).toInt256Safe();
     }
 
@@ -59,6 +60,7 @@ library RewardPoolLib {
         uint256 share = (amount * pool.supply) / pool.underlyingSupply;
         pool.balances[account] -= share;
         pool.supply -= share;
+        // slither-disable-next-line divide-before-multiply
         pool.magnifiedRewardCorrections[account] += (pool.magnifiedRewardPerShare * share).toInt256Safe();
         pool.underlyingSupply -= amount;
     }
