@@ -679,7 +679,7 @@ describe("CheckpointManager", () => {
     const chainId = submitCounter;
     const checkpoint = {
       epoch: 2,
-      blockNumber: 2,
+      blockNumber: 3,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
@@ -741,7 +741,7 @@ describe("CheckpointManager", () => {
       await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
       expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
-      expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
+      expect(await checkpointManager.checkpointBlockNumbers(1)).to.equal(checkpoint.blockNumber);
 
       const leafIndex = 0;
       let proof = [];
