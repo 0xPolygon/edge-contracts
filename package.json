@@ -36,7 +36,7 @@
     "husky:pre-commit": "npm run prettier && git add ."
   },
   "dependencies": {
-    "@defi-wonderland/smock": "^2.3.0",
+    "@defi-wonderland/smock": "^2.3.4",
     "@openzeppelin/contracts": "^4.8.0",
     "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
