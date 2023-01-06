@@ -63,7 +63,7 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        checkpointManager.initialize(bls, bn256G2, domain, validatorSet);
+        checkpointManager.initialize(bls, bn256G2, domain, submitCounter, validatorSet);
     }
 }
 
@@ -71,7 +71,6 @@ abstract contract FirstSubmitted is Initialized {
     function setUp() public virtual override {
         super.setUp();
 
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 1,
@@ -84,20 +83,13 @@ abstract contract FirstSubmitted is Initialized {
             currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[3],
-            validatorSet,
-            bitmaps[3]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[3], validatorSet, bitmaps[3]);
     }
 }
 
 contract CheckpointManager_Initialize is Uninitialized {
     function testInitialize() public {
-        checkpointManager.initialize(bls, bn256G2, domain, validatorSet);
+        checkpointManager.initialize(bls, bn256G2, domain, submitCounter, validatorSet);
 
         assertEq(keccak256(abi.encode(checkpointManager.bls())), keccak256(abi.encode(address(bls))));
         assertEq(keccak256(abi.encode(checkpointManager.bn256G2())), keccak256(abi.encode(address(bn256G2))));
@@ -113,7 +105,6 @@ contract CheckpointManager_Initialize is Uninitialized {
 
 contract CheckpointManager_Submit is Initialized {
     function testCannotSubmit_InvalidValidatorSetHash() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 0, //For Invalid Signature
@@ -127,18 +118,10 @@ contract CheckpointManager_Submit is Initialized {
         });
 
         vm.expectRevert("INVALID_VALIDATOR_SET_HASH");
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[0],
-            validatorSet,
-            bitmaps[0]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSet, bitmaps[0]);
     }
 
     function testCannotSubmit_InvalidSignature() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 0, //For Invalid Signature
@@ -152,18 +135,10 @@ contract CheckpointManager_Submit is Initialized {
         });
 
         vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[0],
-            validatorSet,
-            bitmaps[0]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSet, bitmaps[0]);
     }
 
     function testCannotSubmit_EmptyBitmap() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 1,
@@ -177,18 +152,10 @@ contract CheckpointManager_Submit is Initialized {
         });
 
         vm.expectRevert("BITMAP_IS_EMPTY");
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[1],
-            validatorSet,
-            bitmaps[1]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[1], validatorSet, bitmaps[1]);
     }
 
     function testCannotSubmit_NotEnoughPower() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 1,
@@ -202,18 +169,10 @@ contract CheckpointManager_Submit is Initialized {
         });
 
         vm.expectRevert("INSUFFICIENT_VOTING_POWER");
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[2],
-            validatorSet,
-            bitmaps[2]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[2], validatorSet, bitmaps[2]);
     }
 
     function testSubmit_First() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 1,
@@ -226,14 +185,7 @@ contract CheckpointManager_Submit is Initialized {
             currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[3],
-            validatorSet,
-            bitmaps[3]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[3], validatorSet, bitmaps[3]);
 
         assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
         assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -252,7 +204,6 @@ contract CheckpointManager_Submit is Initialized {
 
 contract CheckpointManager_SubmitSecond is FirstSubmitted {
     function testCannotSubmit_InvalidEpoch() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 0,
             blockNumber: 0,
@@ -266,18 +217,10 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         });
 
         vm.expectRevert("INVALID_EPOCH");
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[4],
-            validatorSet,
-            bitmaps[4]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[4], validatorSet, bitmaps[4]);
     }
 
     function testCannotSubmit_EmptyCheckpoint() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 0,
@@ -291,18 +234,10 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         });
 
         vm.expectRevert("EMPTY_CHECKPOINT");
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[5],
-            validatorSet,
-            bitmaps[5]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[5], validatorSet, bitmaps[5]);
     }
 
     function testSubmit_SameEpoch() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 2,
@@ -315,14 +250,7 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
             currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[6],
-            validatorSet,
-            bitmaps[6]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[6], validatorSet, bitmaps[6]);
 
         assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
         assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -339,7 +267,6 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
     }
 
     function testSubmit_ShortBitmap() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 2,
@@ -353,14 +280,7 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         });
 
         if (aggVotingPowers[7] > (checkpointManager.totalVotingPower() * 2) / 3) {
-            checkpointManager.submit(
-                chainId,
-                checkpointMetadata,
-                checkpoint,
-                aggMessagePoints[7],
-                validatorSet,
-                bitmaps[7]
-            );
+            checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[7], validatorSet, bitmaps[7]);
 
             assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
             assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -376,19 +296,11 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
             checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
         } else {
             vm.expectRevert("INSUFFICIENT_VOTING_POWER");
-            checkpointManager.submit(
-                chainId,
-                checkpointMetadata,
-                checkpoint,
-                aggMessagePoints[7],
-                validatorSet,
-                bitmaps[7]
-            );
+            checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[7], validatorSet, bitmaps[7]);
         }
     }
 
     function testSubmit_FuzzyBitmap() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 2,
@@ -402,14 +314,7 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         });
 
         if (aggVotingPowers[8] > (checkpointManager.totalVotingPower() * 2) / 3) {
-            checkpointManager.submit(
-                chainId,
-                checkpointMetadata,
-                checkpoint,
-                aggMessagePoints[8],
-                validatorSet,
-                bitmaps[8]
-            );
+            checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[8], validatorSet, bitmaps[8]);
 
             assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
             assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -430,14 +335,7 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
                 vm.expectRevert("INSUFFICIENT_VOTING_POWER");
             }
 
-            checkpointManager.submit(
-                chainId,
-                checkpointMetadata,
-                checkpoint,
-                aggMessagePoints[8],
-                validatorSet,
-                bitmaps[8]
-            );
+            checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[8], validatorSet, bitmaps[8]);
         }
     }
 
