@@ -43,18 +43,22 @@ contract ChildValidatorSet is
      *              newMinDelegation minimum amount to delegate to a validator
      * @param validatorAddresses addresses of initial validators
      * @param validatorPubkeys uint256[4] BLS public keys of initial validators
+     * @param validatorMessages uint256[2] messages that initial validators signed
+     * @param validatorsSignature uint256[2] signature of initial validators
      * @param validatorStakes amount staked per initial validator
      * @param newBls address pf BLS contract/precompile
-     * @param newMessage message for BLS signing
-     * @param governance Governance address to set as owner of the contract
+     * @param _messageSalt salt part of message for BLS signing
+     * @param governance Governance address to set as owner of the
      */
     function initialize(
         InitStruct calldata init,
         address[] calldata validatorAddresses,
         uint256[4][] calldata validatorPubkeys,
+        uint256[2][] calldata validatorMessages,
+        uint256[2] calldata validatorsSignature,
         uint256[] calldata validatorStakes,
         IBLS newBls,
-        uint256[2] calldata newMessage,
+        uint256 _messageSalt,
         address governance
     ) external initializer onlySystemCall {
         currentEpochId = 1;
@@ -71,6 +75,12 @@ contract ChildValidatorSet is
         minStake = init.minStake;
         minDelegation = init.minDelegation;
 
+        // set BLS contract
+        bls = newBls;
+        // verify signatures of initial validators
+        (bool result, bool callSuccess) = bls.verifyMultiple(validatorsSignature, validatorPubkeys, validatorMessages);
+        require(callSuccess && result, "INVALID_SIGNATURE");
+        // add initial validators
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator memory validator = Validator({
                 blsKey: validatorPubkeys[i],
@@ -81,8 +91,8 @@ contract ChildValidatorSet is
             });
             _validators.insert(validatorAddresses[i], validator);
         }
-        bls = newBls;
-        message = newMessage;
+        // set message salt
+        messageSalt = _messageSalt;
     }
 
     /**

@@ -24,8 +24,8 @@ abstract contract CVSStorage is ICVSStorage {
 
     IBLS public bls;
 
-    /// @notice Message to sign for registration
-    uint256[2] public message;
+    /// @notice Salt part of message to sign for registration
+    uint256 internal messageSalt;
 
     // slither-disable-next-line naming-convention
     ValidatorTree internal _validators;
@@ -45,5 +45,10 @@ abstract contract CVSStorage is ICVSStorage {
      */
     function getValidator(address validator) public view returns (Validator memory) {
         return _validators.get(validator);
+    }
+
+    /// @notice Message to sign for registration
+    function message(address signer) external view returns (uint256[2] memory) {
+        return [uint256(uint160(signer)), messageSalt];
     }
 }
