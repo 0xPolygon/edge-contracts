@@ -17,6 +17,7 @@ describe("CheckpointManager", () => {
     validatorSecretKeys: any[],
     validatorSet: any[],
     accounts: any[]; // we use any so we can access address directly from object
+  const chainId = 12345;
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
@@ -49,9 +50,9 @@ describe("CheckpointManager", () => {
       });
     }
 
-    await expect(checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, validatorSet)).to.be.revertedWith(
-      "VOTING_POWER_ZERO"
-    );
+    await expect(
+      checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet)
+    ).to.be.revertedWith("VOTING_POWER_ZERO");
   });
 
   it("Initialize and validate initialization", async () => {
@@ -69,7 +70,7 @@ describe("CheckpointManager", () => {
       });
     }
 
-    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, validatorSet);
+    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet);
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
     expect(await checkpointManager.domain()).to.equal(DOMAIN);
@@ -152,12 +153,11 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+      checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
     ).to.be.revertedWith("INVALID_VALIDATOR_SET_HASH");
   });
 
   it("Submit checkpoint with invalid signature", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 0,
@@ -221,12 +221,11 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+      checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
     ).to.be.revertedWith("SIGNATURE_VERIFICATION_FAILED");
   });
 
   it("Submit checkpoint with empty bitmap", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 1,
@@ -290,12 +289,11 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+      checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
     ).to.be.revertedWith("BITMAP_IS_EMPTY");
   });
 
   it("Submit checkpoint with not enough voting power", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 1,
@@ -359,12 +357,11 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+      checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
     ).to.be.revertedWith("INSUFFICIENT_VOTING_POWER");
   });
 
   it("Submit checkpoint success", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 1,
@@ -433,7 +430,7 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
+    await checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
     expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
     expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
@@ -451,7 +448,6 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint with invalid epoch", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 0,
       blockNumber: 0,
@@ -515,12 +511,11 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+      checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
     ).to.be.revertedWith("INVALID_EPOCH");
   });
 
   it("Submit checkpoint with empty checkpoint", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 0,
@@ -584,12 +579,11 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     await expect(
-      checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+      checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
     ).to.be.revertedWith("EMPTY_CHECKPOINT");
   });
 
   it("Submit checkpoint success with same epoch", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 2,
@@ -658,7 +652,7 @@ describe("CheckpointManager", () => {
 
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
-    await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
+    await checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
     expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
     expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
@@ -676,7 +670,6 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint success with short bitmap", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 2,
@@ -738,7 +731,7 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     if (aggVotingPower > (Number(await checkpointManager.totalVotingPower()) * 2) / 3) {
-      await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
+      await checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
       expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
       expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
@@ -755,7 +748,7 @@ describe("CheckpointManager", () => {
       await checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
     } else {
       await expect(
-        checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
       ).to.be.revertedWith("INSUFFICIENT_VOTING_POWER");
     }
   });
@@ -785,7 +778,6 @@ describe("CheckpointManager", () => {
   });
 
   it("Submit checkpoint success with fuzzy bitmap", async () => {
-    const chainId = submitCounter;
     const checkpoint = {
       epoch: 1,
       blockNumber: 1,
@@ -854,7 +846,7 @@ describe("CheckpointManager", () => {
     const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
 
     if (aggVotingPower > (Number(await checkpointManager.totalVotingPower()) * 2) / 3) {
-      await checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
+      await checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap);
 
       expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
       expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
@@ -872,11 +864,11 @@ describe("CheckpointManager", () => {
     } else {
       if (aggVotingPower === 0) {
         await expect(
-          checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+          checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
         ).to.be.revertedWith("BITMAP_IS_EMPTY");
       } else {
         await expect(
-          checkpointManager.submit(chainId, checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
+          checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoint, validatorSet, bitmap)
         ).to.be.revertedWith("INSUFFICIENT_VOTING_POWER");
       }
     }
