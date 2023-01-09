@@ -761,7 +761,7 @@ describe("CheckpointManager", () => {
   });
 
   it("Get Event Membership By BlockNumber with invalid eventRoot", async () => {
-    const blockNumber = 3;
+    const blockNumber = 4;
     const leaf = ethers.utils.hexlify(ethers.utils.randomBytes(32));
     const leafIndex = 0;
     let proof = [];
@@ -773,7 +773,7 @@ describe("CheckpointManager", () => {
   });
 
   it("Get Event Membership By epoch with invalid eventRoot", async () => {
-    const epoch = 2;
+    const epoch = 3;
     const leaf = ethers.utils.hexlify(ethers.utils.randomBytes(32));
     const leafIndex = 0;
     let proof = [];
@@ -787,8 +787,8 @@ describe("CheckpointManager", () => {
   it("Submit checkpoint success with fuzzy bitmap", async () => {
     const chainId = submitCounter;
     const checkpoint = {
-      epoch: 1,
-      blockNumber: 1,
+      epoch: 3,
+      blockNumber: 4,
       eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     };
 
