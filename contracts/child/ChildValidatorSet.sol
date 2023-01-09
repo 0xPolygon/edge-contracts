@@ -43,7 +43,6 @@ contract ChildValidatorSet is
      *              newMinDelegation minimum amount to delegate to a validator
      * @param validatorAddresses addresses of initial validators
      * @param validatorPubkeys uint256[4] BLS public keys of initial validators
-     * @param validatorMessages uint256[2] messages that initial validators signed
      * @param validatorsSignature uint256[2] signature of initial validators
      * @param validatorStakes amount staked per initial validator
      * @param newBls address pf BLS contract/precompile
@@ -72,9 +71,9 @@ contract ChildValidatorSet is
         minStake = init.minStake;
         minDelegation = init.minDelegation;
 
+        uint256[2][] memory validatorMessages = new uint256[2][](validatorPubkeys.length);
         // set BLS contract
         bls = newBls;
-        uint256[2][] memory validatorMessages = new uint256[2][](validatorPubkeys.length);
         // add initial validators
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             Validator memory validator = Validator({
