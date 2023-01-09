@@ -83,7 +83,7 @@ abstract contract Uninitialized is Test {
         }
         submitCounter = 1;
 
-        checkpointManager.initialize(bls, bn256G2, domain, validatorSet);
+        checkpointManager.initialize(bls, bn256G2, domain, submitCounter, validatorSet);
     }
 }
 
@@ -98,7 +98,6 @@ abstract contract CheckpointSubmitted is Initialized {
     function setUp() public virtual override {
         super.setUp();
 
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 1,
@@ -111,14 +110,7 @@ abstract contract CheckpointSubmitted is Initialized {
             currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[0],
-            validatorSet,
-            bitmaps[0]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSet, bitmaps[0]);
 
         assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
         assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -189,7 +181,6 @@ contract ExitHelper_ExitFailedBeforeInitialized is Uninitialized {
 
 contract ExitHelper_Exit is Initialized {
     function testExit() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,
             blockNumber: 1,
@@ -202,14 +193,7 @@ contract ExitHelper_Exit is Initialized {
             currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint,
-            aggMessagePoints[0],
-            validatorSet,
-            bitmaps[0]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSet, bitmaps[0]);
 
         assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
         assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -256,7 +240,6 @@ contract ExitHelper_ExitFailedAfterSubmitted is ExitHelperExitted {
 
 contract ExitHelper_BatchExit is ExitHelperExitted {
     function testBatchExit() public {
-        uint256 chainId = submitCounter;
         ICheckpointManager.Checkpoint memory checkpoint1 = ICheckpointManager.Checkpoint({
             epoch: 2,
             blockNumber: 2,
@@ -275,23 +258,9 @@ contract ExitHelper_BatchExit is ExitHelperExitted {
             currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint1,
-            aggMessagePoints[1],
-            validatorSet,
-            bitmaps[1]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint1, aggMessagePoints[1], validatorSet, bitmaps[1]);
 
-        checkpointManager.submit(
-            chainId,
-            checkpointMetadata,
-            checkpoint2,
-            aggMessagePoints[2],
-            validatorSet,
-            bitmaps[1]
-        );
+        checkpointManager.submit(checkpointMetadata, checkpoint2, aggMessagePoints[2], validatorSet, bitmaps[1]);
 
         uint256 leafIndex1 = 0;
         uint256 leafIndex2 = 1;

@@ -192,6 +192,12 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
         stateReceiver.execute(proofs[4], stateSyncs[4]);
     }
 
+    function testBatchExecute_Failure() public {
+        vm.expectRevert("StateReceiver: UNMATCHED_LENGTH_PARAMETERS");
+        proofs.push(proofs[0]); //For mismatch of the length
+        stateReceiver.batchExecute(proofs, stateSyncs);
+    }
+
     function testBatchExecute_Success() public {
         stateReceiver.batchExecute(proofs, stateSyncs);
 

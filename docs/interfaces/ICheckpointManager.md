@@ -85,7 +85,7 @@ Function to get the event root for a block number
 ### submit
 
 ```solidity
-function submit(uint256 chainId, ICheckpointManager.CheckpointMetadata checkpointMetadata, ICheckpointManager.Checkpoint checkpoint, uint256[2] signature, ICheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
+function submit(ICheckpointManager.CheckpointMetadata checkpointMetadata, ICheckpointManager.Checkpoint checkpoint, uint256[2] signature, ICheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
 ```
 
 
@@ -96,7 +96,6 @@ function submit(uint256 chainId, ICheckpointManager.CheckpointMetadata checkpoin
 
 | Name | Type | Description |
 |---|---|---|
-| chainId | uint256 | undefined |
 | checkpointMetadata | ICheckpointManager.CheckpointMetadata | undefined |
 | checkpoint | ICheckpointManager.Checkpoint | undefined |
 | signature | uint256[2] | undefined |

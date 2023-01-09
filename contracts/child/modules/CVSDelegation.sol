@@ -48,7 +48,6 @@ abstract contract CVSDelegation is ICVSDelegation, CVSStorage, CVSWithdrawal {
         int256 amountInt = amount.toInt256Safe();
 
         _queue.insert(validator, 0, amountInt * -1);
-        // delegation.amount -= amount;
 
         _registerWithdrawal(msg.sender, amount);
         emit Undelegated(msg.sender, validator, amount);
@@ -74,6 +73,13 @@ abstract contract CVSDelegation is ICVSDelegation, CVSStorage, CVSWithdrawal {
     /**
      * @inheritdoc ICVSDelegation
      */
+    function totalDelegationOf(address validator) external view returns (uint256) {
+        return _validators.getDelegationPool(validator).underlyingSupply;
+    }
+
+    /**
+     * @inheritdoc ICVSDelegation
+     */
     function delegationOf(address validator, address delegator) external view returns (uint256) {
         return _validators.getDelegationPool(validator).balanceOf(delegator);
     }
@@ -93,7 +99,6 @@ abstract contract CVSDelegation is ICVSDelegation, CVSStorage, CVSWithdrawal {
         if (!getValidator(validator).active) revert Unauthorized("INVALID_VALIDATOR");
         _queue.insert(validator, 0, amount.toInt256Safe());
         _validators.getDelegationPool(validator).deposit(delegator, amount);
-        // delegations[delegator][validator].amount += amount;
         emit Delegated(delegator, validator, amount);
     }
 

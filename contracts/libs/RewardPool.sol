@@ -38,9 +38,12 @@ library RewardPoolLib {
         address account,
         uint256 amount
     ) internal {
-        pool.balances[account] += amount;
-        pool.supply += amount;
-        pool.magnifiedRewardCorrections[account] -= (pool.magnifiedRewardPerShare * amount).toInt256Safe();
+        uint256 share = pool.supply == 0 ? amount : (amount * pool.supply) / pool.underlyingSupply;
+        pool.balances[account] += share;
+        pool.supply += share;
+        pool.underlyingSupply += amount;
+        // slither-disable-next-line divide-before-multiply
+        pool.magnifiedRewardCorrections[account] -= (pool.magnifiedRewardPerShare * share).toInt256Safe();
     }
 
     /**
@@ -54,9 +57,12 @@ library RewardPoolLib {
         address account,
         uint256 amount
     ) internal {
-        pool.balances[account] -= amount;
-        pool.supply -= amount;
-        pool.magnifiedRewardCorrections[account] += (pool.magnifiedRewardPerShare * amount).toInt256Safe();
+        uint256 share = (amount * pool.supply) / pool.underlyingSupply;
+        pool.balances[account] -= share;
+        pool.supply -= share;
+        // slither-disable-next-line divide-before-multiply
+        pool.magnifiedRewardCorrections[account] += (pool.magnifiedRewardPerShare * share).toInt256Safe();
+        pool.underlyingSupply -= amount;
     }
 
     /**
@@ -77,7 +83,8 @@ library RewardPoolLib {
      * @return uint256 the balance of the account
      */
     function balanceOf(RewardPool storage pool, address account) internal view returns (uint256) {
-        return pool.balances[account];
+        if (pool.supply == 0) return 0;
+        return (pool.balances[account] * pool.underlyingSupply) / pool.supply;
     }
 
     /**

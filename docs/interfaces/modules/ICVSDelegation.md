@@ -90,6 +90,28 @@ Gets delegators&#39;s unclaimed rewards with validator.
 |---|---|---|
 | _0 | uint256 | Delegator&#39;s unclaimed rewards with validator (in MATIC wei) |
 
+### totalDelegationOf
+
+```solidity
+function totalDelegationOf(address validator) external view returns (uint256)
+```
+
+Gets the total amount delegated to a validator.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator | address | Address of validator |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | Amount delegated (in MATIC wei) |
+
 ### undelegate
 
 ```solidity
