@@ -78,7 +78,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
         _verifySignature(bls.hashToPoint(domain, hash), signature, bitmap);
 
-        uint256 prevEpoch = currentEpoch++;
+        uint256 prevEpoch = currentEpoch;
 
         _verifyCheckpoint(prevEpoch, checkpoint);
 
@@ -87,6 +87,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         if (checkpoint.epoch > prevEpoch) {
             // if new epoch, push new end block
             checkpointBlockNumbers.push(checkpoint.blockNumber);
+            ++currentEpoch;
         } else {
             // update last end block if updating event root for epoch
             checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
@@ -200,7 +201,10 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      */
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(checkpoint.epoch >= oldCheckpoint.epoch, "INVALID_EPOCH");
+        require(
+            checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1),
+            "INVALID_EPOCH"
+        );
         require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "EMPTY_CHECKPOINT");
     }
 
