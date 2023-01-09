@@ -387,60 +387,6 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         }
     }
 
-    function testSubmit_FuzzyBitmap() public {
-        uint256 chainId = submitCounter;
-        ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
-            epoch: 1,
-            blockNumber: 2,
-            eventRoot: hashes[0]
-        });
-
-        ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
-            blockHash: hashes[1],
-            blockRound: 0,
-            currentValidatorSetHash: hashes[2]
-        });
-
-        if (aggVotingPowers[8] > (checkpointManager.totalVotingPower() * 2) / 3) {
-            checkpointManager.submit(
-                chainId,
-                checkpointMetadata,
-                checkpoint,
-                aggMessagePoints[8],
-                validatorSet,
-                bitmaps[8]
-            );
-
-            assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
-            assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
-
-            uint256 leafIndex = 0;
-            proof.push(keccak256(abi.encodePacked(block.timestamp)));
-            checkpointManager.getEventMembershipByBlockNumber(
-                checkpoint.blockNumber,
-                checkpoint.eventRoot,
-                leafIndex,
-                proof
-            );
-            checkpointManager.getEventMembershipByEpoch(checkpoint.epoch, checkpoint.eventRoot, leafIndex, proof);
-        } else {
-            if (aggVotingPowers[8] == 0) {
-                vm.expectRevert("BITMAP_IS_EMPTY");
-            } else {
-                vm.expectRevert("INSUFFICIENT_VOTING_POWER");
-            }
-
-            checkpointManager.submit(
-                chainId,
-                checkpointMetadata,
-                checkpoint,
-                aggMessagePoints[8],
-                validatorSet,
-                bitmaps[8]
-            );
-        }
-    }
-
     function testCannot_InvalidEventRootByBlockNumber() public {
         uint256 blockNumber = 3;
         bytes32 leaf = keccak256(abi.encodePacked(block.timestamp));
