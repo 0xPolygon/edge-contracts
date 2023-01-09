@@ -30,7 +30,7 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
         (bool result, bool callSuccess) = bls.verifySingle(
             signature,
             pubkey,
-            [uint256(uint160(msg.sender)), messageSalt]
+            [uint256(uint160(msg.sender)), block.chainid]
         );
         require(callSuccess && result, "INVALID_SIGNATURE");
 
