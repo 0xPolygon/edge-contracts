@@ -11,9 +11,8 @@ import "../../libs/ValidatorStorage.sol";
 abstract contract CVSStorage is ICVSStorage {
     using ValidatorStorageLib for ValidatorTree;
 
-    uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100; // might want to change later!
+    uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
-    // more granular commission?
     uint256 public constant MAX_COMMISSION = 100;
 
     uint256 public epochSize;

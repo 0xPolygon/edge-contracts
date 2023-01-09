@@ -36,6 +36,13 @@ interface ICVSDelegation {
     function claimDelegatorReward(address validator, bool restake) external;
 
     /**
+     * @notice Gets the total amount delegated to a validator.
+     * @param validator Address of validator
+     * @return Amount delegated (in MATIC wei)
+     */
+    function totalDelegationOf(address validator) external view returns (uint256);
+
+    /**
      * @notice Gets amount delegated by delegator to validator.
      * @param validator Address of validator
      * @param delegator Address of delegator

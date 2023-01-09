@@ -29,7 +29,6 @@ interface ICheckpointManager {
     /**
      * @notice Function to submit a single checkpoint for an epoch to CheckpointManager
      * @dev Contract internally verifies provided signature against stored validator set
-     * @param chainId The chain ID of the checkpoint being signed
      * @param checkpointMetadata The checkpoint metadata to verify with the signature
      * @param checkpoint The checkpoint to store
      * @param signature The aggregated signature submitted by the proposer
@@ -37,7 +36,6 @@ interface ICheckpointManager {
      * @param bitmap The bitmap of the old valdiator set that signed the message
      */
     function submit(
-        uint256 chainId,
         CheckpointMetadata calldata checkpointMetadata,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,

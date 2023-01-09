@@ -31,7 +31,6 @@ contract ChildValidatorSet is
     using SafeMathInt for int256;
     using ArraysUpgradeable for uint256[];
 
-    // more granular commission?
     uint256 public constant DOUBLE_SIGNING_SLASHING_PERCENT = 10;
     // epochNumber -> roundNumber -> validator address -> bool
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public doubleSignerSlashes;
@@ -63,6 +62,10 @@ contract ChildValidatorSet is
         _transferOwnership(governance);
         __ReentrancyGuard_init();
 
+        require(
+            validatorAddresses.length == validatorPubkeys.length && validatorAddresses.length == validatorStakes.length,
+            "UNMATCHED_LENGTH_PARAMETERS"
+        );
         // slither-disable-next-line events-maths
         epochReward = init.epochReward;
         minStake = init.minStake;
@@ -72,7 +75,6 @@ contract ChildValidatorSet is
             Validator memory validator = Validator({
                 blsKey: validatorPubkeys[i],
                 stake: validatorStakes[i],
-                totalStake: validatorStakes[i],
                 commission: 0,
                 withdrawableRewards: 0,
                 active: true
@@ -231,7 +233,6 @@ contract ChildValidatorSet is
                 _validators.remove(validatorAddr);
             }
             validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
-            validator.totalStake = (int256(validator.totalStake) + item.stake + item.delegation).toUint256Safe();
             _validators.insert(validatorAddr, validator);
             _queue.resetIndex(validatorAddr);
         }
@@ -248,10 +249,12 @@ contract ChildValidatorSet is
         }
         doubleSignerSlashes[epoch][pbftRound][key] = true;
         Validator storage validator = _validators.get(key);
-        uint256 valTotalStake = validator.totalStake;
-        uint256 valStake = validator.stake;
-        validator.totalStake -= (valTotalStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
-        validator.stake -= (valStake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
+        _validators.delegationPools[key].underlyingSupply -=
+            (_validators.delegationPools[key].underlyingSupply * DOUBLE_SIGNING_SLASHING_PERCENT) /
+            100;
+        uint256 slashedAmount = (validator.stake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
+        validator.stake -= slashedAmount;
+        _validators.totalStake -= slashedAmount;
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
 

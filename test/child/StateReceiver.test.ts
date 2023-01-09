@@ -184,6 +184,20 @@ describe("StateReceiver", () => {
     expect(stateReceiver.execute(proof, stateSyncs[0])).to.be.revertedWith("STATE_SYNC_IS_PROCESSED");
   });
 
+  it("State sync batch execute fail: Length of parameters are unmatched", async () => {
+    let sum = await stateReceivingContract.counter();
+
+    let proofs = [];
+
+    for (let i = 1; i < hashes.length; i++) {
+      proofs.push(tree.getHexProof(hashes[i]));
+    }
+
+    expect(stateReceiver.batchExecute(proofs, stateSyncs)).to.be.revertedWith(
+      "StateReceiver: UNMATCHED_LENGTH_PARAMETERS"
+    ); //stateSyncs has 1 more array
+  });
+
   it("State sync batch execute", async () => {
     let sum = await stateReceivingContract.counter();
 
