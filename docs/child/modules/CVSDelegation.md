@@ -355,6 +355,28 @@ Calculates how much is yet to become withdrawable for account.
 |---|---|---|
 | _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
 
+### totalDelegationOf
+
+```solidity
+function totalDelegationOf(address validator) external view returns (uint256)
+```
+
+Gets the total amount delegated to a validator.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator | address | Address of validator |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | Amount delegated (in MATIC wei) |
+
 ### undelegate
 
 ```solidity

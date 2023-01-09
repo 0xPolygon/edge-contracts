@@ -387,7 +387,7 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         assertEq(childValidatorSet.whitelist(validatorAddresses[0]), false);
 
         Validator memory validator = childValidatorSet.getValidator(validatorAddresses[0]);
-        Validator memory validatorExpected = Validator(validatorPubkeys[0], minStake * 2, minStake * 2, 0, 0, true);
+        Validator memory validatorExpected = Validator(validatorPubkeys[0], minStake * 2, 0, 0, true);
 
         address blsAddr = address(childValidatorSet.bls());
         assertEq(validator, validatorExpected, "validator check");
@@ -659,7 +659,6 @@ contract ChildValidatorSetTest_Register is Whitelisted {
         Validator memory validator = childValidatorSet.getValidator(alice);
         assertEq(keccak256(abi.encode(validator.blsKey)), keccak256(abi.encode(pubkey)));
         assertEq(validator.stake, 0);
-        assertEq(validator.totalStake, 0);
         assertEq(validator.commission, 0);
         assertEq(validator.withdrawableRewards, 0);
         assertEq(validator.active, true);
@@ -1515,21 +1514,21 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
                                 (validatorsInfoBeforeCommitSlash[i].stake * DOUBLE_SIGNING_SLASHING_PERCENT) /
                                 100
                         );
-                        assertEq(
-                            validatorsInfoAfterCommitSlash[i].totalStake,
-                            validatorsInfoBeforeCommitSlash[i].totalStake -
-                                (validatorsInfoBeforeCommitSlash[i].totalStake * DOUBLE_SIGNING_SLASHING_PERCENT) /
-                                100
-                        );
+                        // assertEq(
+                        //     validatorsInfoAfterCommitSlash[i].totalStake,
+                        //     validatorsInfoBeforeCommitSlash[i].totalStake -
+                        //         (validatorsInfoBeforeCommitSlash[i].totalStake * DOUBLE_SIGNING_SLASHING_PERCENT) /
+                        //         100
+                        // );
                         break;
                     }
                 }
                 if (count <= 1) {
                     assertEq(validatorsInfoAfterCommitSlash[i].stake, validatorsInfoBeforeCommitSlash[i].stake);
-                    assertEq(
-                        validatorsInfoAfterCommitSlash[i].totalStake,
-                        validatorsInfoBeforeCommitSlash[i].totalStake
-                    );
+                    // assertEq(
+                    //     validatorsInfoAfterCommitSlash[i].totalStake,
+                    //     validatorsInfoBeforeCommitSlash[i].totalStake
+                    // );
                 }
             }
         }
@@ -1576,7 +1575,7 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         for (i = 0; i < validators.length; i++) {
             assertEq(validatorsInfoAfterCommitSlash[i].stake, validatorsInfoBeforeCommitSlash[i].stake);
-            assertEq(validatorsInfoAfterCommitSlash[i].totalStake, validatorsInfoBeforeCommitSlash[i].totalStake);
+            // assertEq(validatorsInfoAfterCommitSlash[i].totalStake, validatorsInfoBeforeCommitSlash[i].totalStake);
         }
     }
 }
