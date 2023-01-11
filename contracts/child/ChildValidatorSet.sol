@@ -168,7 +168,7 @@ contract ChildValidatorSet is
 
                 // slash validators that have signed multiple blocks
                 if (count > 1) {
-                    _slashDoubleSigner(validatorSet[i], inputs[i].epochId, pbftRound);
+                    _slashDoubleSigner(validatorSet[i], inputs[j].epochId, pbftRound);
                     slashingSet[i] = true;
                     break;
                 }
