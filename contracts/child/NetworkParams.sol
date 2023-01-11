@@ -16,7 +16,7 @@ contract NetworkParams is Ownable {
     uint256 public maxValidatorSetSize;
 
     /**
-     * @notice constructor for NetworkParams, sets the initial set of values for the network
+     * @notice initializer for NetworkParams, sets the initial set of values for the network
      * @dev disallows setting of zero values for sanity check purposes
      * @param newOwner address of the contract controller to be set at deployment
      * @param newBlockGasLimit initial block gas limit

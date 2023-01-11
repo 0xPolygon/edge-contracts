@@ -13,6 +13,14 @@ contract ForkParams is Ownable {
     mapping(bytes32 => uint256) public featureToBlockNumber; // keccak256("FEATURE_NAME") -> blockNumber
 
     /**
+     * @notice constructor function to set the owner
+     * @param newOwner address to transfer the ownership to
+     */
+    constructor(address newOwner) {
+        _transferOwnership(newOwner);
+    }
+
+    /**
      * @notice function to add a new feature at a block number
      * @dev block number must be set in the future and feature must already not be scheduled
      * @param blockNumber block number to schedule the feature
@@ -32,9 +40,10 @@ contract ForkParams is Ownable {
      * @param feature feature name to schedule
      */
     function updateFeatureBlock(uint256 newBlockNumber, string calldata feature) external onlyOwner {
-        require(newBlockNumber >= block.number, "ForkParams: INVALID_BLOCK");
         bytes32 featureHash = keccak256(abi.encode(feature));
-        require(featureToBlockNumber[featureHash] != 0, "ForkParams: FEATURE_MUST_EXIST");
+        uint256 featureBlock = featureToBlockNumber[featureHash];
+        require(featureBlock != 0, "ForkParams: NONEXISTENT_FEATURE");
+        require(newBlockNumber >= block.number && block.number < featureBlock, "ForkParams: INVALID_BLOCK");
         featureToBlockNumber[featureHash] = newBlockNumber;
     }
 
@@ -44,9 +53,9 @@ contract ForkParams is Ownable {
      * @param feature feature name to check for activation
      */
     function isFeatureActivated(string calldata feature) external view returns (bool) {
-        uint256 featureBlockNumber = featureToBlockNumber[keccak256(abi.encode(feature))];
-        require(featureBlockNumber != 0, "ForkParams: FEATURE_NOT_AVAILABLE");
-        if (block.number >= featureBlockNumber) {
+        uint256 featureBlock = featureToBlockNumber[keccak256(abi.encode(feature))];
+        require(featureBlock != 0, "ForkParams: NONEXISTENT_FEATURE");
+        if (block.number >= featureBlock) {
             return true;
         }
         return false;
