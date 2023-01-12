@@ -83,13 +83,6 @@ describe("ForkParams", () => {
   });
 
   it("reschedule feature fail, feature activated", async () => {
-    console.log(await forkParams.isFeatureActivated("FEATURE"));
-    console.log(
-      await forkParams.featureToBlockNumber(
-        ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(["string"], ["FEATURE"]))
-      )
-    );
-    console.log(await ethers.provider.getBlockNumber());
     await expect(forkParams.updateFeatureBlock(futureBlockNumber, "FEATURE")).to.be.revertedWith(
       "ForkParams: INVALID_BLOCK"
     );
