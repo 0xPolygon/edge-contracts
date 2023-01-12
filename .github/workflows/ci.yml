@@ -70,7 +70,8 @@ jobs:
         with:
           node-version: "18.x"
           cache: "npm"
-      - uses: crytic/slither-action@v0.1.1
+      - run: rm foundry.toml # force hardhat https://github.com/foundry-rs/foundry/issues/3827
+      - uses: crytic/slither-action@v0.2.0
   coverage:
     runs-on: ubuntu-latest
     steps:
