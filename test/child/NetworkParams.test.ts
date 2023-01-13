@@ -6,7 +6,7 @@ import { NetworkParams } from "../../typechain";
 import { impersonateAccount, mine, stopImpersonatingAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("ForkParams", () => {
+describe("NetworkParams", () => {
   let networkParams: NetworkParams,
     accounts: SignerWithAddress[],
     blockGasLimit: number,
