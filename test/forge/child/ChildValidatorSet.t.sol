@@ -35,14 +35,6 @@ abstract contract Uninitialized is Test, System {
     uint256 constant MAX_COMMISSION = 100;
     uint256 blockNumber;
     uint256 pbftRound;
-    uint256 epochId;
-    bytes32 blockHash1;
-    bytes32 blockHash2;
-    bytes32 blockHash3;
-
-    bytes signature1;
-    bytes signature2;
-    bytes signature3;
 
     bytes public constant alwaysTrueBytecode = hex"600160005260206000F3";
     bytes public constant alwaysFalseBytecode = hex"60206000F3";
