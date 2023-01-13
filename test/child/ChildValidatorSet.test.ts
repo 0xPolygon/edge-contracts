@@ -845,23 +845,23 @@ describe("ChildValidatorSet", () => {
           signature: "",
         },
       ];
-      const signature = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint", "bytes32", "uint", "uint", "bytes32", "bytes32", "bytes32"],
-          [
-            chainId,
-            blockNumber,
-            doubleSignerSlashingInput[0].blockHash,
-            pbftRound,
-            doubleSignerSlashingInput[0].epochId,
-            doubleSignerSlashingInput[0].eventRoot,
-            doubleSignerSlashingInput[0].currentValidatorSetHash,
-            doubleSignerSlashingInput[0].nextValidatorSetHash,
-          ]
-        )
-      );
-      doubleSignerSlashingInput[0].signature = signature;
-      doubleSignerSlashingInput[1].signature = signature;
+      for (let i = 0; i < doubleSignerSlashingInput.length; i++) {
+        doubleSignerSlashingInput[i].signature = ethers.utils.keccak256(
+          ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint", "bytes32", "uint", "uint", "bytes32", "bytes32", "bytes32"],
+            [
+              chainId,
+              blockNumber,
+              doubleSignerSlashingInput[i].blockHash,
+              pbftRound,
+              doubleSignerSlashingInput[i].epochId,
+              doubleSignerSlashingInput[i].eventRoot,
+              doubleSignerSlashingInput[i].currentValidatorSetHash,
+              doubleSignerSlashingInput[i].nextValidatorSetHash,
+            ]
+          )
+        );
+      }
 
       await expect(
         systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(

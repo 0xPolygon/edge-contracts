@@ -1004,26 +1004,38 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
+
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x",
-                signature: signature1
+                signature: ""
             })
+        );
+
+        inputs[0].signature = abi.encode(
+            block.chainid,
+            blockNumber,
+            inputs[0].blockHash,
+            pbftRound,
+            inputs[0].epochId,
+            inputs[0].eventRoot,
+            inputs[0].currentValidatorSetHash,
+            inputs[0].nextValidatorSetHash
         );
 
         vm.expectRevert("INVALID_LENGTH");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1042,34 +1054,51 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x",
-                signature: signature1
+                signature: ""
             })
         );
+
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
 
         vm.expectRevert("BLOCKHASH_NOT_UNIQUE");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1087,38 +1116,53 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        blockHash2 = keccak256(abi.encodePacked(block.number + 1));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: "0x",
-                signature: signature2
+                signature: ""
             })
         );
 
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
+        // inputs[1].signature = inputs[0].signature;
         vm.etch(0x0000000000000000000000000000000000002030, alwaysFalseBytecode);
 
         vm.expectRevert("SIGNATURE_VERIFICATION_FAILED");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1136,38 +1180,53 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        blockHash2 = keccak256(abi.encodePacked(block.number + 1));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature2
+                signature: ""
             })
         );
+
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
 
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
         vm.expectRevert("UNEXPECTED_EPOCH_ID");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            0, //For unexpected id
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1184,38 +1243,52 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        blockHash2 = keccak256(abi.encodePacked(block.number + 1));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature2
+                signature: ""
             })
         );
 
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
         vm.expectRevert("NO_BLOCKS_COMMITTED");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1235,38 +1308,53 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        blockHash2 = keccak256(abi.encodePacked(block.number + 1));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature2
+                signature: ""
             })
         );
+
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
 
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
         vm.expectRevert("INVALID_LENGTH");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1284,36 +1372,51 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        blockHash2 = keccak256(abi.encodePacked(block.number + 1));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature2
+                signature: ""
             })
         );
+
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
 
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1331,38 +1434,53 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.number));
-        blockHash2 = keccak256(abi.encodePacked(block.number + 1));
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: "0x000000000000000000000000",
-                signature: signature2
+                signature: ""
             })
         );
+
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
 
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
         vm.expectRevert("INVALID_START_BLOCK");
 
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
     }
@@ -1425,14 +1543,6 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         blockNumber = 0;
         pbftRound = 0;
-        epochId = 0;
-        blockHash1 = keccak256(abi.encodePacked(block.timestamp));
-        blockHash2 = keccak256(abi.encodePacked(block.timestamp + 1));
-        blockHash3 = keccak256(abi.encodePacked(block.timestamp + 2));
-
-        signature1 = abi.encode(blockNumber, pbftRound, epochId, blockHash1);
-        signature2 = abi.encode(blockNumber, pbftRound, epochId, blockHash2);
-        signature3 = abi.encode(blockNumber, pbftRound, epochId, blockHash3);
 
         bytes memory fuzzyBitmap = new bytes(18);
         fuzzyBitmap[0] = "0";
@@ -1444,26 +1554,50 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash1,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number)),
                 bitmap: "0xff",
-                signature: signature1
+                signature: ""
             })
         );
         inputs.push(
             IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash2,
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 1)),
                 bitmap: fuzzyBitmap,
-                signature: signature2
+                signature: ""
+            })
+        );
+        inputs.push(
+            IChildValidatorSetBase.DoubleSignerSlashingInput({
+                epochId: 0,
+                eventRoot: keccak256(abi.encodePacked(block.number)),
+                currentValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                nextValidatorSetHash: keccak256(abi.encodePacked(block.number)),
+                blockHash: keccak256(abi.encodePacked(block.number + 2)),
+                bitmap: "0xffffffffffffffff",
+                signature: ""
             })
         );
 
-        inputs.push(
-            IChildValidatorSetBase.DoubleSignerSlashingInput({
-                blockHash: blockHash3,
-                bitmap: "0xffffffffffffffff",
-                signature: signature3
-            })
-        );
+        for (uint256 i = 0; i < inputs.length; i++) {
+            inputs[i].signature = abi.encode(
+                block.chainid,
+                blockNumber,
+                inputs[i].blockHash,
+                pbftRound,
+                inputs[i].epochId,
+                inputs[i].eventRoot,
+                inputs[i].currentValidatorSetHash,
+                inputs[i].nextValidatorSetHash
+            );
+        }
 
         address[] memory validators = childValidatorSet.getCurrentValidatorSet();
         Validator[] memory validatorsInfoBeforeCommitSlash = new Validator[](validators.length);
@@ -1472,15 +1606,15 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
         }
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, false);
         emit NewEpoch(uptime.epochId, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
+
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
 
@@ -1558,12 +1692,11 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
         vm.expectEmit(true, true, true, true);
         emit NewEpoch(uptime.epochId, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
         childValidatorSet.commitEpochWithDoubleSignerSlashing(
-            id,
-            epoch,
-            uptime,
+            uptime.epochId,
             blockNumber,
             pbftRound,
-            epochId,
+            epoch,
+            uptime,
             inputs
         );
 
