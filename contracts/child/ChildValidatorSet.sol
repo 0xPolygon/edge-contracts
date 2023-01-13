@@ -124,11 +124,10 @@ contract ChildValidatorSet is
      */
     function commitEpochWithDoubleSignerSlashing(
         uint256 curEpochId,
-        Epoch calldata epoch,
-        Uptime calldata uptime,
         uint256 blockNumber,
         uint256 pbftRound,
-        uint256 epochId,
+        Epoch calldata epoch,
+        Uptime calldata uptime,
         DoubleSignerSlashingInput[] calldata inputs
     ) external {
         uint256 length = inputs.length;
@@ -137,12 +136,26 @@ contract ChildValidatorSet is
         require(_assertUniqueBlockhash(inputs), "BLOCKHASH_NOT_UNIQUE");
 
         // check aggregations are signed appropriately
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; ) {
             _checkPubkeyAggregation(
-                keccak256(abi.encode(blockNumber, pbftRound, epochId, inputs[i].blockHash)),
-                inputs[i].signature,
-                inputs[i].bitmap
+                keccak256(
+                    abi.encode(
+                        block.chainid,
+                        blockNumber,
+                        inputs[i].blockHash,
+                        pbftRound,
+                        inputs[i].epochId,
+                        inputs[i].eventRoot,
+                        inputs[i].currentValidatorSetHash,
+                        inputs[i].nextValidatorSetHash
+                    )
+                ),
+                inputs[i].bitmap,
+                inputs[i].signature
             );
+            unchecked {
+                ++i;
+            }
         }
 
         // get full validator set
@@ -152,7 +165,7 @@ contract ChildValidatorSet is
         address[] memory validatorSet = sortedValidators(validatorSetLength);
         bool[] memory slashingSet = new bool[](validatorSetLength);
 
-        for (uint256 i = 0; i < validatorSetLength; i++) {
+        for (uint256 i = 0; i < validatorSetLength; ) {
             uint256 count = 0;
             for (uint256 j = 0; j < length; j++) {
                 // check if bitmap index has validator
@@ -162,10 +175,13 @@ contract ChildValidatorSet is
 
                 // slash validators that have signed multiple blocks
                 if (count > 1) {
-                    _slashDoubleSigner(validatorSet[i], epochId, pbftRound);
+                    _slashDoubleSigner(validatorSet[i], inputs[j].epochId, pbftRound);
                     slashingSet[i] = true;
                     break;
                 }
+            }
+            unchecked {
+                ++i;
             }
         }
         _endEpochOnSlashingEvent(curEpochId, epoch, uptime, slashingSet);
