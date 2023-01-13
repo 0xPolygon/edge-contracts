@@ -6,8 +6,6 @@ import { ForkParams } from "../../typechain";
 import { impersonateAccount, mine, stopImpersonatingAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-use(solidity);
-
 describe("ForkParams", () => {
   let forkParams: ForkParams, accounts: SignerWithAddress[], futureBlockNumber: number;
   before(async () => {
