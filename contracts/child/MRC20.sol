@@ -33,11 +33,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * All three of these values are immutable: they can only be set once during
      * initialization.
      */
-    function initialize(
-        address predicate_,
-        string memory name_,
-        string memory symbol_
-    ) external onlySystemCall {
+    function initialize(address predicate_, string memory name_, string memory symbol_) external onlySystemCall {
         // slither-disable-next-line missing-zero-check
         predicate = predicate_;
         _name = name_;
@@ -49,11 +45,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * @param sender Address of L1 message sender
      * @param data Data received via state sync
      */
-    function onStateReceive(
-        uint256, /* id */
-        address sender,
-        bytes calldata data
-    ) external {
+    function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
         // slither-disable-next-line too-many-digits
         require(msg.sender == 0x0000000000000000000000000000000000001001, "ONLY_STATERECEIVER");
         require(sender == predicate, "INVALID_SENDER");
@@ -118,11 +110,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
@@ -239,11 +227,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * - `to` cannot be the zero address.
      * - `from` must have a balance of at least `amount`.
      */
-    function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
+    function _transfer(address from, address to, uint256 amount) internal {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
@@ -315,11 +299,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal {
+    function _approve(address owner, address spender, uint256 amount) internal {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -335,11 +315,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      *
      * Might emit an {Approval} event.
      */
-    function _spendAllowance(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal {
+    function _spendAllowance(address owner, address spender, uint256 amount) internal {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");

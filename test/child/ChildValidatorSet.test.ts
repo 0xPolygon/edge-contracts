@@ -1,16 +1,14 @@
-import { expect } from "chai";
-import * as hre from "hardhat";
-import { ethers, upgrades } from "hardhat";
-import { Signer, BigNumber } from "ethers";
-import * as mcl from "../../ts/mcl";
-import { expandMsg } from "../../ts/hashToField";
-import { alwaysTrueBytecode, alwaysFalseBytecode } from "../constants";
-import { BLS, ChildValidatorSet } from "../../typechain";
-import { customError } from "../util";
 import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
-import { assert } from "console";
+import { expect } from "chai";
+import { BigNumber, BigNumberish } from "ethers";
+import * as hre from "hardhat";
+import { ethers } from "hardhat";
+import * as mcl from "../../ts/mcl";
+import { BLS, ChildValidatorSet } from "../../typechain";
+import { alwaysFalseBytecode, alwaysTrueBytecode } from "../constants";
 
-const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHILD_VALIDATOR_SET"]));
+const CHAIN_ID = 31337;
 
 const MAX_COMMISSION = 100;
 const DOUBLE_SIGNING_SLASHING_PERCENT = 10;
@@ -32,7 +30,14 @@ describe("ChildValidatorSet", () => {
     doubleSignerSlashingInput: any,
     childValidatorSetBalance: BigNumber,
     chainId: number,
+    validatorInit: {
+      addr: string;
+      pubkey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish];
+      signature: [BigNumberish, BigNumberish];
+      stake: BigNumberish;
+    },
     accounts: any[]; // we use any so we can access address directly from object
+
   before(async () => {
     await mcl.init();
     accounts = await ethers.getSigners();
@@ -73,21 +78,28 @@ describe("ChildValidatorSet", () => {
     });
     const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
     systemChildValidatorSet = childValidatorSet.connect(systemSigner);
+    const keyPair = mcl.newKeyPair();
+    const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[0].address, keyPair.secret).signature;
+    validatorInit = {
+      addr: accounts[0].address,
+      pubkey: mcl.g2ToHex(keyPair.pubkey),
+      signature: mcl.g1ToHex(signature),
+      stake: minStake * 2,
+    };
   });
   it("Initialize without system call", async () => {
     await expect(
       childValidatorSet.initialize(
         { epochReward, minStake, minDelegation, epochSize: 64 },
-        [accounts[0].address],
-        [[0, 0, 0, 0]],
-        [minStake * 2],
+        [validatorInit],
         bls.address,
-        [0, 0],
         governance
       )
-    ).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
+    )
+      .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
+      .withArgs("SYSTEMCALL");
   });
-  it("Initialize with unmatched length of parameters", async () => {
+  it("Initialize with invalid signature", async () => {
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
     validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));
     const epochValidatorSet = [];
@@ -95,26 +107,22 @@ describe("ChildValidatorSet", () => {
     for (let i = 0; i < validatorSetSize; i++) {
       epochValidatorSet.push(accounts[i].address);
     }
-
-    const messagePoint = mcl.g1ToHex(
-      mcl.hashToPoint(ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")), DOMAIN)
-    );
 
     expect(await childValidatorSet.totalActiveStake()).to.equal(0);
 
     await expect(
       systemChildValidatorSet.initialize(
         { epochReward, minStake, minDelegation, epochSize: 64 },
-        [accounts[0].address],
-        [[0, 0, 0, 0]],
-        [minStake * 2, minStake * 2],
+        [{ ...validatorInit, addr: accounts[1].address }],
         bls.address,
-        messagePoint,
         governance
       )
-    ).to.be.revertedWith("UNMATCHED_LENGTH_PARAMETERS");
+    )
+      .to.be.revertedWithCustomError(childValidatorSet, "InvalidSignature")
+      .withArgs(accounts[1].address);
   });
   it("Initialize and validate initialization", async () => {
+    // TODO: use random set size and stake in tests
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
     validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));
     const epochValidatorSet = [];
@@ -123,19 +131,12 @@ describe("ChildValidatorSet", () => {
       epochValidatorSet.push(accounts[i].address);
     }
 
-    const messagePoint = mcl.g1ToHex(
-      mcl.hashToPoint(ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator")), DOMAIN)
-    );
-
     expect(await childValidatorSet.totalActiveStake()).to.equal(0);
 
     await systemChildValidatorSet.initialize(
       { epochReward, minStake, minDelegation, epochSize: 64 },
-      [accounts[0].address],
-      [[0, 0, 0, 0]],
-      [minStake * 2],
+      [validatorInit],
       bls.address,
-      messagePoint,
       governance
     );
 
@@ -150,24 +151,20 @@ describe("ChildValidatorSet", () => {
 
     expect(await childValidatorSet.whitelist(accounts[0].address)).to.equal(false);
     const validator = await childValidatorSet.getValidator(accounts[0].address);
-    expect(validator.blsKey.toString()).to.equal("0,0,0,0");
+    expect(validator.blsKey.map((x) => x.toHexString())).to.deep.equal(validatorInit.pubkey);
     expect(validator.stake).to.equal(minStake * 2);
     expect(await childValidatorSet.totalDelegationOf(accounts[0].address)).to.equal(0);
     expect(validator.commission).to.equal(0);
     expect(await childValidatorSet.bls()).to.equal(bls.address);
-    expect(await childValidatorSet.message(0)).to.equal(messagePoint[0]);
-    expect(await childValidatorSet.message(1)).to.equal(messagePoint[1]);
     expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
   });
+
   it("Attempt reinitialization", async () => {
     await expect(
       systemChildValidatorSet.initialize(
         { epochReward, minStake, minDelegation, epochSize: 64 },
-        [accounts[0].address],
-        [[0, 0, 0, 0]],
-        [minStake * 2],
+        [validatorInit],
         bls.address,
-        [0, 0],
         governance
       )
     ).to.be.revertedWith("Initializable: contract is already initialized");
@@ -186,7 +183,9 @@ describe("ChildValidatorSet", () => {
       totalBlocks: 0,
     };
 
-    await expect(childValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith('Unauthorized("SYSTEMCALL")');
+    await expect(childValidatorSet.commitEpoch(id, epoch, uptime))
+      .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
+      .withArgs("SYSTEMCALL");
   });
   it("Commit epoch with unexpected id", async () => {
     id = 0;
@@ -385,74 +384,58 @@ describe("ChildValidatorSet", () => {
 
   describe("register", async () => {
     it("only whitelisted should be able to register", async () => {
-      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
-      const { pubkey, secret } = mcl.newKeyPair();
-
-      const signatures: mcl.Signature[] = [];
-
-      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
-      signatures.push(signature);
-
-      const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
-
-      await expect(
-        childValidatorSet.connect(accounts[1]).register(aggMessagePoint, mcl.g2ToHex(pubkey))
-      ).to.be.revertedWith(customError("Unauthorized", "WHITELIST"));
+      await expect(childValidatorSet.connect(accounts[1]).register([0, 0], [0, 0, 0, 0]))
+        .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
+        .withArgs("WHITELIST");
     });
-    it("invalid signature", async () => {
-      const { pubkey, secret } = mcl.newKeyPair();
-      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(""));
-      const signatures: mcl.Signature[] = [];
+    it("invalid signature / should not be able to replay signature", async () => {
+      const keyPair = mcl.newKeyPair();
+      const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[0].address, keyPair.secret).signature;
 
-      const { signature, messagePoint } = mcl.sign(message, secret, ethers.utils.arrayify(DOMAIN));
-      signatures.push(signature);
-
-      const aggMessagePoint: mcl.MessagePoint = mcl.g1ToHex(mcl.aggregateRaw(signatures));
-
-      await expect(
-        childValidatorSet.connect(accounts[2]).register(aggMessagePoint, mcl.g2ToHex(pubkey))
-      ).to.be.revertedWith("INVALID_SIGNATURE");
+      await expect(childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey)))
+        .to.be.revertedWithCustomError(childValidatorSet, "InvalidSignature")
+        .withArgs(accounts[2].address);
     });
-    it("Register", async () => {
-      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
-      const { pubkey, secret } = mcl.newKeyPair();
-      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
-      const parsedPubkey = mcl.g2ToHex(pubkey);
-      const tx = await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), parsedPubkey);
-      const receipt = await tx.wait();
-      const event = receipt.events?.find((log) => log.event === "NewValidator");
-      expect(event?.args?.validator).to.equal(accounts[2].address);
-      const parsedEventBlsKey = event?.args?.blsKey.map((elem: BigNumber) => ethers.utils.hexValue(elem.toHexString()));
-      const strippedParsedPubkey = parsedPubkey.map((elem) => ethers.utils.hexValue(elem));
-      expect(parsedEventBlsKey).to.deep.equal(strippedParsedPubkey);
+    it("register", async () => {
+      const keyPair = mcl.newKeyPair();
+      const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[2].address, keyPair.secret).signature;
+
+      const tx = await childValidatorSet
+        .connect(accounts[2])
+        .register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
+
+      await expect(tx)
+        .to.emit(childValidatorSet, "NewValidator")
+        .withArgs(
+          accounts[2].address,
+          mcl.g2ToHex(keyPair.pubkey).map((x) => BigNumber.from(x))
+        );
+
       expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.false;
       const validator = await childValidatorSet.getValidator(accounts[2].address);
       expect(validator.stake).to.equal(0);
       expect(await childValidatorSet.totalDelegationOf(accounts[2].address)).to.equal(0);
       expect(validator.commission).to.equal(0);
       expect(validator.active).to.equal(true);
-      const parsedValidatorBlsKey = validator.blsKey.map((elem: BigNumber) =>
-        ethers.utils.hexValue(elem.toHexString())
-      );
-      expect(parsedValidatorBlsKey).to.deep.equal(strippedParsedPubkey);
+      expect(validator.blsKey.map((x) => x.toHexString())).to.deep.equal(mcl.g2ToHex(keyPair.pubkey));
     });
   });
 
   describe("stake", async () => {
     it("only whitelisted validators should be able to stake", async () => {
-      await expect(childValidatorSet.connect(accounts[1]).stake({ value: minStake })).to.be.revertedWith(
-        customError("Unauthorized", "VALIDATOR")
-      );
+      await expect(childValidatorSet.connect(accounts[1]).stake({ value: minStake }))
+        .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
+        .withArgs("VALIDATOR");
     });
 
     it("should revert if min amount not reached", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake - 1 })).to.be.revertedWith(
-        customError("StakeRequirement", "stake", "STAKE_TOO_LOW")
-      );
+      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake - 1 }))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("stake", "STAKE_TOO_LOW");
     });
 
     it("should be able to stake", async () => {
-      const tx = await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 })).to.not.be.reverted;
+      const tx = childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 });
 
       await expect(tx)
         .to.emit(childValidatorSet, "Staked")
@@ -489,9 +472,9 @@ describe("ChildValidatorSet", () => {
 
   describe("unstake", async () => {
     it("non validators should not be able to unstake due to insufficient balance", async () => {
-      await expect(childValidatorSet.connect(accounts[1]).unstake(1)).to.be.revertedWith(
-        customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
-      );
+      await expect(childValidatorSet.connect(accounts[1]).unstake(1))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("unstake", "INSUFFICIENT_BALANCE");
     });
 
     it("should not be able to exploit int overflow", async () => {
@@ -499,15 +482,15 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should not be able to unstake more than staked", async () => {
-      await expect(childValidatorSet.unstake(minStake * 2 + 1)).to.be.revertedWith(
-        customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
-      );
+      await expect(childValidatorSet.unstake(minStake * 2 + 1))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("unstake", "INSUFFICIENT_BALANCE");
     });
 
     it("should not be able to unstake so that less than minstake is left", async () => {
-      await expect(childValidatorSet.unstake(minStake + 1)).to.be.revertedWith(
-        customError("StakeRequirement", "unstake", "STAKE_TOO_LOW")
-      );
+      await expect(childValidatorSet.unstake(minStake + 1))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("unstake", "STAKE_TOO_LOW");
     });
 
     it("should be able to partially unstake", async () => {
@@ -516,16 +499,16 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should take pending unstakes into account", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake + 1)).to.be.revertedWith(
-        customError("StakeRequirement", "unstake", "INSUFFICIENT_BALANCE")
-      );
-      await expect(childValidatorSet.connect(accounts[2]).unstake(1)).to.be.revertedWith(
-        customError("StakeRequirement", "unstake", "STAKE_TOO_LOW")
-      );
+      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake + 1))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("unstake", "INSUFFICIENT_BALANCE");
+      await expect(childValidatorSet.connect(accounts[2]).unstake(1))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("unstake", "STAKE_TOO_LOW");
     });
 
     it("should be able to completely unstake", async () => {
-      const tx = await expect(childValidatorSet.connect(accounts[2]).unstake(minStake)).to.not.be.reverted;
+      const tx = childValidatorSet.connect(accounts[2]).unstake(minStake);
       await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
     });
 
@@ -586,17 +569,17 @@ describe("ChildValidatorSet", () => {
     it("should only be able to delegate to validators", async () => {
       const restake = false;
 
-      await expect(
-        childValidatorSet.delegate(accounts[1].address, restake, { value: minDelegation })
-      ).to.be.revertedWith(customError("Unauthorized", "INVALID_VALIDATOR"));
+      await expect(childValidatorSet.delegate(accounts[1].address, restake, { value: minDelegation }))
+        .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
+        .withArgs("INVALID_VALIDATOR");
     });
 
     it("Delegate less amount than minDelegation", async () => {
       const restake = false;
 
-      await expect(childValidatorSet.delegate(accounts[0].address, restake, { value: 100 })).to.be.revertedWith(
-        "DELEGATION_TOO_LOW"
-      );
+      await expect(childValidatorSet.delegate(accounts[0].address, restake, { value: 100 }))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("delegate", "DELEGATION_TOO_LOW");
     });
 
     it("Delegate for the first time", async () => {
@@ -605,11 +588,10 @@ describe("ChildValidatorSet", () => {
 
       //Register accounts[2] as validator
       await childValidatorSet.addToWhitelist([accounts[2].address]);
-      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
-      const { pubkey, secret } = mcl.newKeyPair();
-      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
-      const parsedPubkey = mcl.g2ToHex(pubkey);
-      await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), parsedPubkey);
+      const keyPair = mcl.newKeyPair();
+      const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[2].address, keyPair.secret).signature;
+
+      await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
       await childValidatorSet.connect(accounts[2]).stake({ value: minStake });
       const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[2].address, restake, {
         value: delegateAmount,
@@ -1323,18 +1305,16 @@ describe("ChildValidatorSet", () => {
     });
 
     it("success with fuzzy bitmap for fuzzy length of validators", async () => {
-      const message = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("polygon-v3-validator"));
-      const { pubkey, secret } = mcl.newKeyPair();
-      const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
-      const parsedPubkey = mcl.g2ToHex(pubkey);
-
       const newValidatorsCount = Math.floor(Math.random() * 4 + 6); // Randomly pick 6-10
       for (let i = 0; i < newValidatorsCount; i++) {
         const signer = new ethers.Wallet(ethers.Wallet.createRandom(), ethers.provider);
         await setBalance(signer.address, ethers.utils.parseEther("1000000"));
         await expect(childValidatorSet.addToWhitelist([signer.address])).to.not.be.reverted;
 
-        await childValidatorSet.connect(signer).register(mcl.g1ToHex(signature), parsedPubkey);
+        const keyPair = mcl.newKeyPair();
+        const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, signer.address, keyPair.secret).signature;
+
+        await childValidatorSet.connect(signer).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
         await childValidatorSet.connect(signer).stake({ value: minStake * 2 });
         const validator = await childValidatorSet.getValidator(signer.address);
 
@@ -1562,16 +1542,16 @@ describe("ChildValidatorSet", () => {
   describe("undelegate", async () => {
     it("undelegate insufficient amount", async () => {
       const delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
-      await expect(
-        childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.add(1))
-      ).to.be.revertedWith(customError("StakeRequirement", "undelegate", "INSUFFICIENT_BALANCE"));
+      await expect(childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.add(1)))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("undelegate", "INSUFFICIENT_BALANCE");
     });
 
     it("undelegate low amount", async () => {
       const delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
-      await expect(
-        childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.sub(1))
-      ).to.be.revertedWith(customError("StakeRequirement", "undelegate", "DELEGATION_TOO_LOW"));
+      await expect(childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.sub(1)))
+        .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
+        .withArgs("undelegate", "DELEGATION_TOO_LOW");
     });
 
     it("should not be able to exploit int overflow", async () => {
@@ -1595,9 +1575,9 @@ describe("ChildValidatorSet", () => {
 
   describe("Set Commision", async () => {
     it("only validator should set", async () => {
-      await expect(childValidatorSet.connect(accounts[1]).setCommission(MAX_COMMISSION - 1)).to.be.revertedWith(
-        'Unauthorized("VALIDATOR")'
-      );
+      await expect(childValidatorSet.connect(accounts[1]).setCommission(MAX_COMMISSION - 1))
+        .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
+        .withArgs("VALIDATOR");
     });
 
     it("only less than max commision is valid", async () => {

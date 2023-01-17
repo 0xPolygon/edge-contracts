@@ -33,11 +33,7 @@ library RewardPoolLib {
      * @param account the address to be credited
      * @param amount the amount to credit the account by
      */
-    function deposit(
-        RewardPool storage pool,
-        address account,
-        uint256 amount
-    ) internal {
+    function deposit(RewardPool storage pool, address account, uint256 amount) internal {
         uint256 share = pool.supply == 0 ? amount : (amount * pool.supply) / pool.underlyingSupply;
         pool.balances[account] += share;
         pool.supply += share;
@@ -52,11 +48,7 @@ library RewardPoolLib {
      * @param account the address to decrement the balance of
      * @param amount the amount to decrement the balance by
      */
-    function withdraw(
-        RewardPool storage pool,
-        address account,
-        uint256 amount
-    ) internal {
+    function withdraw(RewardPool storage pool, address account, uint256 amount) internal {
         uint256 share = (amount * pool.supply) / pool.underlyingSupply;
         pool.balances[account] -= share;
         pool.supply -= share;

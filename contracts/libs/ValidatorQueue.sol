@@ -20,12 +20,7 @@ library ValidatorQueueLib {
      * @param stake delta to the amount staked by validator (negative for unstaking)
      * @param delegation delta to the amount delegated to validator (negative for undelegating)
      */
-    function insert(
-        ValidatorQueue storage self,
-        address validator,
-        int256 stake,
-        int256 delegation
-    ) internal {
+    function insert(ValidatorQueue storage self, address validator, int256 stake, int256 delegation) internal {
         uint256 index = self.indices[validator];
         if (index == 0) {
             // insert into queue

@@ -24,7 +24,7 @@ library Merkle {
         uint256 proofHeight = proof.length;
         // if the proof is of size n, the tree height will be n+1
         // in a tree of height n+1, max possible leaves are 2^n
-        require(index < 2**proofHeight, "INVALID_LEAF_INDEX");
+        require(index < 2 ** proofHeight, "INVALID_LEAF_INDEX");
 
         bytes32 computedHash = leaf;
 

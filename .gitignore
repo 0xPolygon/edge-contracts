@@ -128,3 +128,4 @@ lcov.info
 /broadcast/*/31337/
 
 .DS_Store
+.vscode/

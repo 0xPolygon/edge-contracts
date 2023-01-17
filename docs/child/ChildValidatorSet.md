@@ -27,6 +27,23 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### DOMAIN
+
+```solidity
+function DOMAIN() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### DOUBLE_SIGNING_SLASHING_PERCENT
 
 ```solidity
@@ -561,7 +578,7 @@ Gets validator&#39;s unclaimed rewards.
 ### initialize
 
 ```solidity
-function initialize(IChildValidatorSetBase.InitStruct init, address[] validatorAddresses, uint256[4][] validatorPubkeys, uint256[] validatorStakes, contract IBLS newBls, uint256[2] newMessage, address governance) external nonpayable
+function initialize(IChildValidatorSetBase.InitStruct init, IChildValidatorSetBase.ValidatorInit[] validators, contract IBLS newBls, address governance) external nonpayable
 ```
 
 
@@ -573,34 +590,9 @@ function initialize(IChildValidatorSetBase.InitStruct init, address[] validatorA
 | Name | Type | Description |
 |---|---|---|
 | init | IChildValidatorSetBase.InitStruct | undefined |
-| validatorAddresses | address[] | undefined |
-| validatorPubkeys | uint256[4][] | undefined |
-| validatorStakes | uint256[] | undefined |
+| validators | IChildValidatorSetBase.ValidatorInit[] | undefined |
 | newBls | contract IBLS | undefined |
-| newMessage | uint256[2] | undefined |
 | governance | address | undefined |
-
-### message
-
-```solidity
-function message(uint256) external view returns (uint256)
-```
-
-Message to sign for registration
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### minDelegation
 
@@ -1313,6 +1305,22 @@ error Exists(address validator)
 | Name | Type | Description |
 |---|---|---|
 | validator | address | undefined |
+
+### InvalidSignature
+
+```solidity
+error InvalidSignature(address signer)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined |
 
 ### NoTokensDelegated
 

@@ -22,13 +22,8 @@ abstract contract Uninitialized is Test, System {
     address public admin;
     address public alice;
     address public bob;
-    address[] validatorAddresses;
-    uint256[4][] validatorPubkeys;
-    uint256[] validatorStakes;
-    uint256[2] messagePoint;
+    IChildValidatorSetBase.ValidatorInit[] validators;
     address governance;
-    uint256[2] signature;
-    uint256[4] pubkey;
     Epoch epoch;
     Uptime uptime;
     uint256 public id;
@@ -53,12 +48,35 @@ abstract contract Uninitialized is Test, System {
         governance = admin;
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
+    }
 
-        validatorAddresses.push(admin);
-        validatorPubkeys.push([0, 0, 0, 0]);
-        validatorStakes.push(minStake * 2);
-        messagePoint[0] = 0;
-        messagePoint[1] = 0;
+    function getSignatureAndPubKey(address addr) public returns (uint256[2] memory, uint256[4] memory) {
+        string[] memory cmd = new string[](4);
+        cmd[0] = "npx";
+        cmd[1] = "ts-node";
+        cmd[2] = "test/forge/child/generateMsg.ts";
+        cmd[3] = toHexString(addr);
+        bytes memory out = vm.ffi(cmd);
+
+        (uint256[2] memory signature, uint256[4] memory pubkey) = abi.decode(out, (uint256[2], uint256[4]));
+
+        return (signature, pubkey);
+    }
+
+    function toHexString(address addr) public pure returns (string memory) {
+        bytes memory buffer = abi.encodePacked(addr);
+
+        // Fixed buffer size for hexadecimal convertion
+        bytes memory converted = new bytes(buffer.length * 2);
+
+        bytes memory _base = "0123456789abcdef";
+
+        for (uint256 i = 0; i < buffer.length; i++) {
+            converted[i * 2] = _base[uint8(buffer[i]) / _base.length];
+            converted[i * 2 + 1] = _base[uint8(buffer[i]) % _base.length];
+        }
+
+        return string(abi.encodePacked("0x", converted));
     }
 }
 
@@ -68,14 +86,6 @@ abstract contract Initialized is Uninitialized {
 
         vm.prank(SYSTEM);
 
-        string[] memory cmd = new string[](3);
-        cmd[0] = "npx";
-        cmd[1] = "ts-node";
-        cmd[2] = "test/forge/child/generateMsg.ts";
-        bytes memory out = vm.ffi(cmd);
-
-        (messagePoint, signature, pubkey) = abi.decode(out, (uint256[2], uint256[2], uint256[4]));
-
         IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
             epochReward,
             minStake,
@@ -83,15 +93,18 @@ abstract contract Initialized is Uninitialized {
             64
         );
 
-        childValidatorSet.initialize(
-            init,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(admin);
+
+        validators.push(
+            IChildValidatorSetBase.ValidatorInit({
+                addr: admin,
+                pubkey: pubkey,
+                signature: signature,
+                stake: minStake * 2
+            })
         );
+
+        childValidatorSet.initialize(init, validators, bls, governance);
     }
 }
 
@@ -113,6 +126,7 @@ abstract contract Registered is Whitelisted {
         super.setUp();
 
         vm.prank(alice);
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(alice);
         childValidatorSet.register(signature, pubkey);
     }
 }
@@ -199,6 +213,7 @@ abstract contract Withdrawn is QueueProcessedAfterUnstake {
 
         //Register Alice again
         vm.prank(alice);
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(alice);
         childValidatorSet.register(signature, pubkey);
 
         //Stake Again
@@ -288,7 +303,7 @@ abstract contract Claimed is ThirdDelegated {
     }
 }
 
-abstract contract Undelegated is Claimed {
+abstract contract UndelegatedState is Claimed {
     function setUp() public virtual override {
         super.setUp();
 
@@ -313,38 +328,7 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
             64
         );
 
-        childValidatorSet.initialize(
-            init,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
-        );
-    }
-
-    function testCannotInitialize_UnmatchedLengthParams() public {
-        vm.startPrank(SYSTEM);
-
-        IChildValidatorSetBase.InitStruct memory init = IChildValidatorSetBase.InitStruct(
-            epochReward,
-            minStake,
-            minDelegation,
-            64
-        );
-        vm.expectRevert("UNMATCHED_LENGTH_PARAMETERS");
-
-        validatorStakes.push(minStake * 2); //For mismtach the length of the parameters
-        childValidatorSet.initialize(
-            init,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
-        );
+        childValidatorSet.initialize(init, validators, bls, governance);
     }
 
     function testInitialize() public {
@@ -359,15 +343,18 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
             64
         );
 
-        childValidatorSet.initialize(
-            init,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(admin);
+
+        validators.push(
+            IChildValidatorSetBase.ValidatorInit({
+                addr: admin,
+                pubkey: pubkey,
+                signature: signature,
+                stake: minStake * 2
+            })
         );
+
+        childValidatorSet.initialize(init, validators, bls, governance);
 
         assertEq(childValidatorSet.epochReward(), epochReward);
         assertEq(childValidatorSet.minStake(), minStake);
@@ -376,16 +363,16 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         assertEq(childValidatorSet.owner(), governance);
 
         assertEq(childValidatorSet.currentEpochId(), 1);
-        assertEq(childValidatorSet.whitelist(validatorAddresses[0]), false);
+        address validatorAddr = validators[0].addr;
+        assert(validatorAddr != address(0));
+        assertEq(childValidatorSet.whitelist(validatorAddr), false);
 
-        Validator memory validator = childValidatorSet.getValidator(validatorAddresses[0]);
-        Validator memory validatorExpected = Validator(validatorPubkeys[0], minStake * 2, 0, 0, true);
+        Validator memory validator = childValidatorSet.getValidator(validatorAddr);
+        Validator memory validatorExpected = Validator(validators[0].pubkey, minStake * 2, 0, 0, true);
 
         address blsAddr = address(childValidatorSet.bls());
         assertEq(validator, validatorExpected, "validator check");
         assertEq(blsAddr, address(bls));
-        assertEq(childValidatorSet.message(0), messagePoint[0]);
-        assertEq(childValidatorSet.message(1), messagePoint[1]);
         assertEq(childValidatorSet.totalActiveStake(), minStake * 2);
     }
 }
@@ -402,15 +389,7 @@ contract ChildValidatorSetTest_CommitEpoch_Whitelist is Initialized {
             64
         );
 
-        childValidatorSet.initialize(
-            init,
-            validatorAddresses,
-            validatorPubkeys,
-            validatorStakes,
-            bls,
-            messagePoint,
-            governance
-        );
+        childValidatorSet.initialize(init, validators, bls, governance);
     }
 
     function testCannotCommitEpoch_Unauthorized() public {
@@ -631,18 +610,20 @@ contract ChildValidatorSetTest_Register is Whitelisted {
 
     function testCannotRegister_NotWhitelisted() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "WHITELIST"));
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(bob);
         childValidatorSet.register(signature, pubkey);
     }
 
     function testCannotRegister_InvalidSignature() public {
-        pubkey[0] = pubkey[0] + 1;
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(alice);
         vm.startPrank(admin);
-        vm.expectRevert("INVALID_SIGNATURE");
+        vm.expectRevert(abi.encodeWithSelector(InvalidSignature.selector, admin));
         childValidatorSet.register(signature, pubkey);
     }
 
     function testRegister() public {
         vm.startPrank(alice);
+        (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(alice);
         vm.expectEmit(true, false, false, true);
         emit NewValidator(alice, pubkey);
         childValidatorSet.register(signature, pubkey);
@@ -718,7 +699,7 @@ contract ChildValidatorSetTest_UnstakePartially is QueueProcessed {
 
     function testCannotUnstake_IntOverflow() public {
         vm.expectRevert(stdError.assertionError);
-        childValidatorSet.unstake(2**256 - 1);
+        childValidatorSet.unstake(2 ** 256 - 1);
     }
 
     function testCannotUnstake_UnstakeMoreThanStake() public {
@@ -1504,6 +1485,7 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
                 vm.stopPrank();
                 vm.startPrank(addr);
+                (uint256[2] memory signature, uint256[4] memory pubkey) = getSignatureAndPubKey(addr);
                 childValidatorSet.register(signature, pubkey);
                 childValidatorSet.stake{value: minStake * 2}();
 
@@ -1578,7 +1560,7 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
             })
         );
 
-        for (uint256 i = 0; i < inputs.length; i++) {
+        for (i = 0; i < inputs.length; i++) {
             inputs[i].signature = abi.encode(
                 block.chainid,
                 blockNumber,
@@ -1735,7 +1717,7 @@ contract ChildValidatorSetTest_Undelegate is Claimed {
     }
 }
 
-contract ChildValidatorSetTest_SetCommission is Undelegated {
+contract ChildValidatorSetTest_SetCommission is UndelegatedState {
     function testCannotSetCommission_Unauthorized() public {
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "VALIDATOR"));
