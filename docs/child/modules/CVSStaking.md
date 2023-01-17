@@ -824,7 +824,7 @@ error Exists(address validator)
 ### InvalidSignature
 
 ```solidity
-error InvalidSignature(address validator)
+error InvalidSignature(address signer)
 ```
 
 
@@ -835,7 +835,7 @@ error InvalidSignature(address validator)
 
 | Name | Type | Description |
 |---|---|---|
-| validator | address | undefined |
+| signer | address | undefined |
 
 ### StakeRequirement
 

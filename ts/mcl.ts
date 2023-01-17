@@ -117,7 +117,7 @@ export function newKeyPair(): keyPair {
 }
 
 export function signValidatorMessage(domain: Domain, chainId: number, address: string, secret: SecretKey) {
-  const message = ethers.utils.solidityPack(["address", "uint256"], [address, chainId]);
+  const message = ethers.utils.solidityPack(["address", "uint256"], [address.toLowerCase(), chainId]);
   const messagePoint = hashToPoint(message, domain);
   const signature: any = mcl.mul(messagePoint, secret);
   signature.normalize();

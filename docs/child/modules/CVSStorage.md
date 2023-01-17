@@ -273,22 +273,3 @@ function whitelist(address) external view returns (bool)
 
 
 
-## Errors
-
-### InvalidSignature
-
-```solidity
-error InvalidSignature(address validator)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
-
-

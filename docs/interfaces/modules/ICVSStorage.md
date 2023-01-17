@@ -35,22 +35,3 @@ Gets validator by address.
 
 
 
-## Errors
-
-### InvalidSignature
-
-```solidity
-error InvalidSignature(address validator)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
-
-

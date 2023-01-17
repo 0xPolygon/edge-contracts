@@ -5,6 +5,7 @@ import "../../interfaces/modules/ICVSStorage.sol";
 import "../../interfaces/IBLS.sol";
 import "../../interfaces/IValidatorQueue.sol";
 import "../../interfaces/IWithdrawalQueue.sol";
+import "../../interfaces/Errors.sol";
 
 import "../../libs/ValidatorStorage.sol";
 
