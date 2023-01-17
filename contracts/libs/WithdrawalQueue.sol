@@ -1,29 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-/**
- * @notice data type for withdrawals
- * @param amount the amount to withdraw
- * @param epoch the epoch of the withdrawal
- */
-struct Withdrawal {
-    uint256 amount;
-    uint256 epoch;
-}
-
-/**
- * @notice data type for managing the withdrawal queue
- * @param head earliest unprocessed index
- * (which is also the most recently filled witrhdrawal)
- * @param tail index of most recent withdrawal
- * (which is also the total number of submitted withdrawals)
- * @param withdrawals Withdrawal structs by index
- */
-struct WithdrawalQueue {
-    uint256 head;
-    uint256 tail;
-    mapping(uint256 => Withdrawal) withdrawals;
-}
+import "../interfaces/IWithdrawalQueue.sol";
 
 /**
  * @title Withdrawal Queue Lib
@@ -40,11 +18,7 @@ library WithdrawalQueueLib {
      * @param amount the amount to withdraw
      * @param epoch the epoch to withdraw
      */
-    function append(
-        WithdrawalQueue storage self,
-        uint256 amount,
-        uint256 epoch
-    ) internal {
+    function append(WithdrawalQueue storage self, uint256 amount, uint256 epoch) internal {
         assert(amount != 0);
         uint256 head = self.head;
         uint256 tail = self.tail;
@@ -88,11 +62,10 @@ library WithdrawalQueueLib {
      * @return amount the amount withdrawable through the specified epoch
      * @return newHead the head of the queue once these withdrawals have been processed
      */
-    function withdrawable(WithdrawalQueue storage self, uint256 currentEpoch)
-        internal
-        view
-        returns (uint256 amount, uint256 newHead)
-    {
+    function withdrawable(
+        WithdrawalQueue storage self,
+        uint256 currentEpoch
+    ) internal view returns (uint256 amount, uint256 newHead) {
         for (newHead = self.head; newHead < self.tail; newHead++) {
             Withdrawal memory withdrawal = self.withdrawals[newHead];
             if (withdrawal.epoch > currentEpoch) return (amount, newHead);
@@ -108,7 +81,9 @@ library WithdrawalQueueLib {
      * @return amount the amount withdrawable from beyond the specified epoch
      */
     function pending(WithdrawalQueue storage self, uint256 currentEpoch) internal view returns (uint256 amount) {
-        for (uint256 i = self.tail - 1; i >= self.head; i--) {
+        uint256 tail = self.tail;
+        if (tail == 0) return 0;
+        for (uint256 i = tail - 1; i >= self.head; i--) {
             Withdrawal memory withdrawal = self.withdrawals[i];
             if (withdrawal.epoch <= currentEpoch) break;
             amount += withdrawal.amount;

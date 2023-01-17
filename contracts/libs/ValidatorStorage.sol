@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "../interfaces/IValidatorStorage.sol";
 import "../interfaces/IValidator.sol";
-import "./RewardPool.sol";
-
-error AmountZero();
-error NotFound(address validator);
-error Exists(address validator);
+import "../interfaces/IRewardPool.sol";
 
 /**
  * @title Validator Storage Lib
@@ -40,11 +37,10 @@ library ValidatorStorageLib {
      * @param validator the address of the validator whose pool is being queried
      * @return RewardPool struct for the validator
      */
-    function getDelegationPool(ValidatorTree storage self, address validator)
-        internal
-        view
-        returns (RewardPool storage)
-    {
+    function getDelegationPool(
+        ValidatorTree storage self,
+        address validator
+    ) internal view returns (RewardPool storage) {
         return self.delegationPools[validator];
     }
 
@@ -56,6 +52,16 @@ library ValidatorStorageLib {
      */
     function stakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
         balance = self.nodes[account].validator.stake;
+    }
+
+    /**
+     * @notice returns the stake + delegation of a specific validator
+     * @param self the ValidatorTree struct
+     * @param account the address of the validator to query the total stake of
+     * @return balance the stake + delegations of the validator
+     */
+    function totalStakeOf(ValidatorTree storage self, address account) internal view returns (uint256 balance) {
+        balance = self.nodes[account].validator.stake + self.delegationPools[account].supply;
     }
 
     /**
@@ -160,17 +166,10 @@ library ValidatorStorageLib {
      * @return _red if the node is red or not
      */
     // slither-disable-next-line dead-code
-    function getNode(ValidatorTree storage self, address key)
-        internal
-        view
-        returns (
-            address _returnKey,
-            address _parent,
-            address _left,
-            address _right,
-            bool _red
-        )
-    {
+    function getNode(
+        ValidatorTree storage self,
+        address key
+    ) internal view returns (address _returnKey, address _parent, address _left, address _right, bool _red) {
         if (!exists(self, key)) revert NotFound(key);
         return (key, self.nodes[key].parent, self.nodes[key].left, self.nodes[key].right, self.nodes[key].red);
     }
@@ -181,23 +180,19 @@ library ValidatorStorageLib {
      * @param key the address to add
      * @param validator the Validator struct of the address
      */
-    function insert(
-        ValidatorTree storage self,
-        address key,
-        Validator memory validator
-    ) internal {
+    function insert(ValidatorTree storage self, address key, Validator memory validator) internal {
         assert(key != EMPTY);
-        assert(validator.totalStake >= validator.stake);
         if (exists(self, key)) revert Exists(key);
+        self.nodes[key].validator = validator;
         if (validator.stake == 0) {
-            self.nodes[key].validator = validator;
             return;
         }
         address cursor = EMPTY;
         address probe = self.root;
+        uint256 totalStake = totalStakeOf(self, key);
         while (probe != EMPTY) {
             cursor = probe;
-            if (validator.totalStake < self.nodes[probe].validator.totalStake) {
+            if (totalStake < totalStakeOf(self, probe)) {
                 probe = self.nodes[probe].left;
             } else {
                 probe = self.nodes[probe].right;
@@ -206,7 +201,7 @@ library ValidatorStorageLib {
         self.nodes[key] = Node({parent: cursor, left: EMPTY, right: EMPTY, red: true, validator: validator});
         if (cursor == EMPTY) {
             self.root = key;
-        } else if (validator.totalStake < self.nodes[cursor].validator.totalStake) {
+        } else if (totalStake < totalStakeOf(self, cursor)) {
             self.nodes[cursor].left = key;
         } else {
             self.nodes[cursor].right = key;
@@ -404,11 +399,7 @@ library ValidatorStorageLib {
      * @param a the address to have the parent changed
      * @param b the parent will be changed to the parent of this addr
      */
-    function replaceParent(
-        ValidatorTree storage self,
-        address a,
-        address b
-    ) private {
+    function replaceParent(ValidatorTree storage self, address a, address b) private {
         address bParent = self.nodes[b].parent;
         self.nodes[a].parent = bParent;
         if (bParent == EMPTY) {

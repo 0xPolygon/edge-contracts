@@ -2,13 +2,14 @@
 // solium-disable security/no-assign-params
 
 pragma solidity 0.8.17;
+import "../interfaces/IBN256G2.sol";
 
 /**
  * @title Elliptic curve operations on twist points on bn256 (G2)
  * @dev Adaptation of https://github.com/musalbas/solidity-BN256G2 to 0.6.0 and then 0.8.17
  */
 // slither-disable-next-line missing-inheritance
-contract BN256G2 {
+contract BN256G2 is IBN256G2 {
     uint256 internal constant FIELD_MODULUS = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
     uint256 internal constant TWISTBX = 0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5;
     uint256 internal constant TWISTBY = 0x9713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2;
@@ -48,16 +49,7 @@ contract BN256G2 {
         uint256 pt2xy,
         uint256 pt2yx,
         uint256 pt2yy
-    )
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) external view returns (uint256, uint256, uint256, uint256) {
         if (pt1xx == 0 && pt1xy == 0 && pt1yx == 0 && pt1yy == 0) {
             if (!(pt2xx == 0 && pt2xy == 0 && pt2yx == 0 && pt2yy == 0)) {
                 require(_isOnCurve(pt2xx, pt2xy, pt2yx, pt2yy), "point not in curve");
@@ -92,16 +84,7 @@ contract BN256G2 {
         uint256 pt1xy,
         uint256 pt1yx,
         uint256 pt1yy
-    )
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) external view returns (uint256, uint256, uint256, uint256) {
         uint256 pt1zx = 1;
         if (pt1xx == 0 && pt1xy == 0 && pt1yx == 0 && pt1yy == 0) {
             pt1xx = 1;
@@ -130,11 +113,7 @@ contract BN256G2 {
      * @param n modulus
      * @return The result of the operation
      */
-    function submod(
-        uint256 a,
-        uint256 b,
-        uint256 n
-    ) internal pure returns (uint256) {
+    function submod(uint256 a, uint256 b, uint256 n) internal pure returns (uint256) {
         return addmod(a, n - b, n);
     }
 
@@ -146,12 +125,7 @@ contract BN256G2 {
      * @param yy Second FQ2 operands second coordinate
      * @return [xx*yx-xy*yy, xx*yy+xy*yx]
      */
-    function _fq2mul(
-        uint256 xx,
-        uint256 xy,
-        uint256 yx,
-        uint256 yy
-    ) internal pure returns (uint256, uint256) {
+    function _fq2mul(uint256 xx, uint256 xy, uint256 yx, uint256 yy) internal pure returns (uint256, uint256) {
         return (
             submod(mulmod(xx, yx, FIELD_MODULUS), mulmod(xy, yy, FIELD_MODULUS), FIELD_MODULUS),
             addmod(mulmod(xx, yy, FIELD_MODULUS), mulmod(xy, yx, FIELD_MODULUS), FIELD_MODULUS)
@@ -165,11 +139,7 @@ contract BN256G2 {
      * @param k scalar to multiply with
      * @return [xx*k, xy*k]
      */
-    function _fq2muc(
-        uint256 xx,
-        uint256 xy,
-        uint256 k
-    ) internal pure returns (uint256, uint256) {
+    function _fq2muc(uint256 xx, uint256 xy, uint256 k) internal pure returns (uint256, uint256) {
         return (mulmod(xx, k, FIELD_MODULUS), mulmod(xy, k, FIELD_MODULUS));
     }
 
@@ -198,12 +168,7 @@ contract BN256G2 {
      * @param yy Second FQ2 operands second coordinate
      * @return [xx-yx, xy-yy]
      */
-    function _fq2sub(
-        uint256 xx,
-        uint256 xy,
-        uint256 yx,
-        uint256 yy
-    ) internal pure returns (uint256, uint256) {
+    function _fq2sub(uint256 xx, uint256 xy, uint256 yx, uint256 yy) internal pure returns (uint256, uint256) {
         return (submod(xx, yx, FIELD_MODULUS), submod(xy, yy, FIELD_MODULUS));
     }
 
@@ -247,12 +212,7 @@ contract BN256G2 {
      * @param yy Second FQ2 operands second coordinate
      * @return True if the FQ2 is on G2
      */
-    function _isOnCurve(
-        uint256 xx,
-        uint256 xy,
-        uint256 yx,
-        uint256 yy
-    ) internal pure returns (bool) {
+    function _isOnCurve(uint256 xx, uint256 xy, uint256 yx, uint256 yy) internal pure returns (bool) {
         uint256 yyx;
         uint256 yyy;
         uint256 xxxx;
@@ -316,16 +276,7 @@ contract BN256G2 {
         uint256 pt1yy,
         uint256 pt1zx,
         uint256 pt1zy
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (uint256, uint256, uint256, uint256) {
         uint256 invzx;
         uint256 invzy;
         uint256[4] memory pt2;
@@ -444,18 +395,7 @@ contract BN256G2 {
         uint256 pt1yy,
         uint256 pt1zx,
         uint256 pt1zy
-    )
-        internal
-        pure
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal pure returns (uint256, uint256, uint256, uint256, uint256, uint256) {
         uint256[6] memory pt2;
         (pt2[0], pt2[1]) = _fq2muc(pt1xx, pt1xy, 3); // 3 * x
         (pt2[0], pt2[1]) = _fq2mul(pt2[0], pt2[1], pt1xx, pt1xy); // W = 3 * x * x

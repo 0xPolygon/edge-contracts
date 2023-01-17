@@ -1,5 +1,13 @@
 # MockValidatorStorage
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### ACTIVE_VALIDATORS
@@ -8,11 +16,16 @@
 function ACTIVE_VALIDATORS() external view returns (uint256)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### activeValidators
 
@@ -20,11 +33,16 @@ function ACTIVE_VALIDATORS() external view returns (uint256)
 function activeValidators() external view returns (address[])
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
 
 ### allValidators
 
@@ -32,11 +50,16 @@ function activeValidators() external view returns (address[])
 function allValidators() external view returns (address[])
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| \_0  | address[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
 
 ### balanceOf
 
@@ -44,17 +67,21 @@ function allValidators() external view returns (address[])
 function balanceOf(address account) external view returns (uint256 balance)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
 
 #### Returns
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| balance | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| balance | uint256 | undefined |
 
 ### insert
 
@@ -62,12 +89,16 @@ function balanceOf(address account) external view returns (uint256 balance)
 function insert(address account, uint256 amount) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
-| amount  | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| amount | uint256 | undefined |
 
 ### max
 
@@ -75,12 +106,17 @@ function insert(address account, uint256 amount) external nonpayable
 function max() external view returns (address account, uint256 balance)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
-| balance | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| balance | uint256 | undefined |
 
 ### min
 
@@ -88,12 +124,17 @@ function max() external view returns (address account, uint256 balance)
 function min() external view returns (address account, uint256 balance)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
-| balance | uint256 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| balance | uint256 | undefined |
 
 ### remove
 
@@ -101,11 +142,18 @@ function min() external view returns (address account, uint256 balance)
 function remove(address account) external nonpayable
 ```
 
+
+
+
+
 #### Parameters
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| account | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+
+
 
 ## Errors
 
@@ -115,17 +163,26 @@ function remove(address account) external nonpayable
 error AmountZero()
 ```
 
+
+
+
+
+
 ### Exists
 
 ```solidity
 error Exists(address validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 ### NotFound
 
@@ -133,8 +190,14 @@ error Exists(address validator)
 error NotFound(address validator)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name      | Type    | Description |
-| --------- | ------- | ----------- |
-| validator | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+
+

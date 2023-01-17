@@ -1,11 +1,9 @@
 import { expect } from "chai";
+import { BigNumber } from "ethers";
 import * as hre from "hardhat";
 import { ethers } from "hardhat";
-import { Signer, BigNumber } from "ethers";
-import { FakeContract, smock } from "@defi-wonderland/smock";
-import { MRC20, MaticTransfer } from "../../typechain";
-import { alwaysTrueBytecode, alwaysFalseBytecode, alwaysRevertBytecode } from "../constants";
-import { customError } from "../util";
+import { MaticTransfer, MRC20 } from "../../typechain";
+import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
 describe("MRC20", () => {
   let mrc20: MRC20,
@@ -72,9 +70,9 @@ describe("MRC20", () => {
   it("fail initialization without system call", async () => {
     name = "MATIC Token";
     symbol = "MATIC";
-    await expect(mrc20.initialize(accounts[1].address, name, symbol)).to.be.revertedWith(
-      customError("Unauthorized", "SYSTEMCALL")
-    );
+    await expect(mrc20.initialize(accounts[1].address, name, symbol))
+      .to.be.revertedWithCustomError(mrc20, "Unauthorized")
+      .withArgs("SYSTEMCALL");
   });
 
   it("validate initialization", async () => {

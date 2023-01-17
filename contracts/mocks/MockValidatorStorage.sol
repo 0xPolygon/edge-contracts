@@ -13,14 +13,13 @@ contract MockValidatorStorage {
     uint256 public constant ACTIVE_VALIDATORS = 5;
 
     function balanceOf(address account) public view returns (uint256 balance) {
-        balance = validators.nodes[account].validator.totalStake;
+        balance = validators.totalStakeOf(account);
     }
 
     function insert(address account, uint256 amount) external {
         Validator memory data = Validator({
             blsKey: blsKey,
             stake: amount,
-            totalStake: amount,
             commission: 0,
             withdrawableRewards: 0,
             active: true

@@ -4,7 +4,11 @@ test = 'test/forge'
 libs = ['node_modules', 'lib']
 out = 'out'
 cache_path  = 'forge-cache'
+remappings = [
+  "@utils=test/forge/utils/"
+]
 verbosity = 2
+ffi = true
 # comment out if you notice any weird behavior
 # sparse_mode = true
 

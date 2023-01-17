@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {QueuedValidator, ValidatorQueue, ValidatorQueueLib} from "contracts/libs/ValidatorQueue.sol";
 import "contracts/interfaces/IValidator.sol";
 
-import "../utils/TestPlus.sol";
-
-abstract contract EmptyState is TestPlus {
+abstract contract EmptyState is Test {
     int256 constant STAKE = 2 ether;
     int256 constant DELEGATED = 0.5 ether;
 
@@ -99,11 +99,7 @@ contract ValidatorQueueTest_NonEmptyState is NonEmptyState {
 contract ValidatorQueueLibUser {
     ValidatorQueue queue;
 
-    function insert(
-        address validator,
-        int256 stake,
-        int256 delegation
-    ) external {
+    function insert(address validator, int256 stake, int256 delegation) external {
         ValidatorQueueLib.insert(queue, validator, stake, delegation);
     }
 

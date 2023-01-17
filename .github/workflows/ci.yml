@@ -2,20 +2,21 @@ name: Solidity CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
-      - run: npm install
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
       - run: npx hardhat compile --show-stack-traces
       - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --parallel
   forge_tests:
@@ -29,52 +30,58 @@ jobs:
         with:
           version: nightly
       - name: Install Node modules
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
-      - run: npm install
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
       - name: Run tests
         run: FOUNDRY_PROFILE=intense forge test -vvv --no-match-contract=ValidatorStorage; forge test -vvv --match-contract=ValidatorStorage
   gas_report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
-      - run: npm install
-      - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test:gas
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
-      - run: npm install
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
       - run: npx solhint "contracts/**/*.sol"
       - run: npx eslint .
       - run: npx prettier -c .
   slither:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
-      - uses: crytic/slither-action@v0.1.1
+          node-version: "18.x"
+          cache: "npm"
+      - run: rm foundry.toml # force hardhat https://github.com/foundry-rs/foundry/issues/3827
+      - uses: crytic/slither-action@v0.2.0
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
-      - run: npm install
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
       - run: npx hardhat compile
       - name: solidity-coverage
         run: npx hardhat coverage
@@ -82,3 +89,21 @@ jobs:
         uses: coverallsapp/github-action@1.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+  forge_coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Install Node modules
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - name: Print coverage
+        run: forge coverage

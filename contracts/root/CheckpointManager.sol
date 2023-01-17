@@ -2,204 +2,221 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
+import "../common/Merkle.sol";
+import "../interfaces/ICheckpointManager.sol";
 import "../interfaces/IBLS.sol";
+import "../interfaces/IBN256G2.sol";
+import "../interfaces/ICheckpointManager.sol";
 
-interface IRootValidatorSet {
-    struct Validator {
-        address _address;
-        uint256[4] blsKey;
-    }
+contract CheckpointManager is ICheckpointManager, Initializable {
+    using ArraysUpgradeable for uint256[];
+    using Merkle for bytes32;
 
-    function addValidators(Validator[] calldata newValidators) external;
-
-    function getValidatorBlsKey(uint256 id) external view returns (uint256[4] memory);
-
-    function activeValidatorSetSize() external returns (uint256);
-}
-
-interface IBN256G2 {
-    function ecTwistAdd(
-        uint256 pt1xx,
-        uint256 pt1xy,
-        uint256 pt1yx,
-        uint256 pt1yy,
-        uint256 pt2xx,
-        uint256 pt2xy,
-        uint256 pt2yx,
-        uint256 pt2yy
-    )
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        );
-}
-
-/**
-    @title CheckpointManager
-    @author Polygon Technology
-    @notice Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
-    @dev The contract is used to submit checkpoints and verify that they have been signed as expected.
- */
-contract CheckpointManager is Initializable {
-    struct Checkpoint {
-        uint256 startBlock;
-        uint256 endBlock;
-        bytes32 eventRoot;
-    }
-
-    uint256 public currentCheckpointId;
+    uint256 public chainId;
+    uint256 public currentEpoch;
+    uint256 public currentValidatorSetLength;
+    uint256 public currentCheckpointBlockNumber;
+    uint256 public totalVotingPower;
     bytes32 public domain;
     IBLS public bls;
     IBN256G2 public bn256G2;
-    IRootValidatorSet public rootValidatorSet;
 
-    mapping(uint256 => Checkpoint) public checkpoints;
+    mapping(uint256 => Checkpoint) public checkpoints; // epochId -> root
+    mapping(uint256 => Validator) public currentValidatorSet;
+    uint256[] public checkpointBlockNumbers;
+    bytes32 public currentValidatorSetHash;
 
     /**
      * @notice Initialization function for CheckpointManager
      * @dev Contract can only be initialized once
      * @param newBls Address of the BLS library contract
      * @param newBn256G2 Address of the BLS library contract
-     * @param newRootValidatorSet Array of validator addresses to seed the contract with
      * @param newDomain Domain to use when hashing messages to a point
+     * @param chainId_ Chain ID of the child chain
      */
     function initialize(
         IBLS newBls,
         IBN256G2 newBn256G2,
-        IRootValidatorSet newRootValidatorSet,
-        bytes32 newDomain
+        bytes32 newDomain,
+        uint256 chainId_,
+        Validator[] calldata newValidatorSet
     ) external initializer {
+        chainId = chainId_;
         bls = newBls;
         bn256G2 = newBn256G2;
-        rootValidatorSet = newRootValidatorSet;
         domain = newDomain;
+        currentValidatorSetLength = newValidatorSet.length;
+        _setNewValidatorSet(newValidatorSet);
     }
 
     /**
-     * @notice Function to submit a single checkpoint to CheckpointManager
-     * @dev Contract internally verifies provided signature against stored validator set
-     * @param id ID of the checkpoint
-     * @param checkpoint The checkpoint to store
-     * @param signature The aggregated signature submitted by proposer
-     * @param validatorIds Array of the IDs of validators who have signed the checkpoint
+     * @inheritdoc ICheckpointManager
      */
     function submit(
-        uint256 id,
+        CheckpointMetadata calldata checkpointMetadata,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,
-        uint256[] calldata validatorIds,
-        IRootValidatorSet.Validator[] calldata newValidators
+        Validator[] calldata newValidatorSet,
+        bytes calldata bitmap
     ) external {
-        bytes memory hash = abi.encode(keccak256(abi.encode(id, checkpoint, newValidators)));
-
-        uint256[2] memory message = bls.hashToPoint(domain, hash);
-
-        // slither-disable-next-line reentrancy-benign
-        require(_verifySignature(message, signature, validatorIds), "SIGNATURE_VERIFICATION_FAILED");
-
-        _verifyCheckpoint(currentCheckpointId, id, checkpoint);
-
-        checkpoints[++currentCheckpointId] = checkpoint;
-
-        if (newValidators.length != 0) {
-            rootValidatorSet.addValidators(newValidators);
-        }
-    }
-
-    /**
-     * @notice Function to submit a batch of checkpoints to CheckpointManager
-     * @dev Contract internally verifies provided signature against stored validator set
-     * @param ids IDs of the checkpoint batch
-     * @param checkpointBatch The checkpoint batch to store
-     * @param signature The aggregated signature submitted by the proposer
-     * @param validatorIds Array of the IDs of validators who have signed the checkpoint
-     */
-    function submitBatch(
-        uint256[] calldata ids,
-        Checkpoint[] calldata checkpointBatch,
-        uint256[2] calldata signature,
-        uint256[] calldata validatorIds,
-        IRootValidatorSet.Validator[] calldata newValidators
-    ) external {
-        bytes memory hash = abi.encode(keccak256(abi.encode(ids, checkpointBatch, newValidators)));
-
-        // slither-disable-next-line reentrancy-benign
-        require(
-            _verifySignature(bls.hashToPoint(domain, hash), signature, validatorIds),
-            "SIGNATURE_VERIFICATION_FAILED"
+        require(currentValidatorSetHash == checkpointMetadata.currentValidatorSetHash, "INVALID_VALIDATOR_SET_HASH");
+        bytes memory hash = abi.encode(
+            keccak256(
+                abi.encode(
+                    chainId,
+                    checkpoint.blockNumber,
+                    checkpointMetadata.blockHash,
+                    checkpointMetadata.blockRound,
+                    checkpoint.epoch,
+                    checkpoint.eventRoot,
+                    checkpointMetadata.currentValidatorSetHash,
+                    keccak256(abi.encode(newValidatorSet))
+                )
+            )
         );
 
-        uint256 length = ids.length;
+        _verifySignature(bls.hashToPoint(domain, hash), signature, bitmap);
 
-        require(length == checkpointBatch.length, "LENGTH_MISMATCH");
+        uint256 prevEpoch = currentEpoch;
 
-        uint256 prevId = currentCheckpointId;
+        _verifyCheckpoint(prevEpoch, checkpoint);
 
-        for (uint256 i = 0; i < length; ++i) {
-            _verifyCheckpoint(prevId++, ids[i], checkpointBatch[i]);
-            checkpoints[ids[i]] = checkpointBatch[i];
+        checkpoints[checkpoint.epoch] = checkpoint;
+
+        if (checkpoint.epoch > prevEpoch) {
+            // if new epoch, push new end block
+            checkpointBlockNumbers.push(checkpoint.blockNumber);
+            ++currentEpoch;
+        } else {
+            // update last end block if updating event root for epoch
+            checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
         }
 
-        currentCheckpointId = prevId;
+        currentCheckpointBlockNumber = checkpoint.blockNumber;
 
-        if (newValidators.length != 0) {
-            rootValidatorSet.addValidators(newValidators);
-        }
+        _setNewValidatorSet(newValidatorSet);
     }
 
     /**
-     * @notice Internal function that performs checks on the checkpoint
-     * @param prevId Current checkpoint ID
-     * @param id ID of the checkpoint
-     * @param checkpoint The checkpoint to store
+     * @inheritdoc ICheckpointManager
      */
-    function _verifyCheckpoint(
-        uint256 prevId,
-        uint256 id,
-        Checkpoint calldata checkpoint
-    ) internal view {
-        require(id == prevId + 1, "ID_NOT_SEQUENTIAL");
-        Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(oldCheckpoint.endBlock + 1 == checkpoint.startBlock, "INVALID_START_BLOCK");
-        require(checkpoint.endBlock > checkpoint.startBlock, "EMPTY_CHECKPOINT");
+    function getEventMembershipByBlockNumber(
+        uint256 blockNumber,
+        bytes32 leaf,
+        uint256 leafIndex,
+        bytes32[] calldata proof
+    ) external view returns (bool) {
+        bytes32 eventRoot = getEventRootByBlock(blockNumber);
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
+        return leaf.checkMembership(leafIndex, eventRoot, proof);
+    }
+
+    /**
+     * @inheritdoc ICheckpointManager
+     */
+    function getEventMembershipByEpoch(
+        uint256 epoch,
+        bytes32 leaf,
+        uint256 leafIndex,
+        bytes32[] calldata proof
+    ) external view returns (bool) {
+        bytes32 eventRoot = checkpoints[epoch].eventRoot;
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_EPOCH");
+        return leaf.checkMembership(leafIndex, eventRoot, proof);
+    }
+
+    /**
+     * @inheritdoc ICheckpointManager
+     */
+    function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
+        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber) + 1].eventRoot;
+    }
+
+    function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
+        uint256 length = newValidatorSet.length;
+        currentValidatorSetLength = length;
+        currentValidatorSetHash = keccak256(abi.encode(newValidatorSet));
+        uint256 totalPower = 0;
+        for (uint256 i = 0; i < length; ++i) {
+            uint256 votingPower = newValidatorSet[i].votingPower;
+            require(votingPower > 0, "VOTING_POWER_ZERO");
+            totalPower += votingPower;
+            currentValidatorSet[i] = newValidatorSet[i];
+        }
+        totalVotingPower = totalPower;
     }
 
     /**
      * @notice Internal function that asserts that the signature is valid and that the required threshold is met
      * @param message The message that was signed by validators (i.e. checkpoint hash)
      * @param signature The aggregated signature submitted by the proposer
-     * @param validatorIds Array of the IDs of validators who have signed the checkpoint
      */
     function _verifySignature(
         uint256[2] memory message,
         uint256[2] calldata signature,
-        uint256[] calldata validatorIds
-    ) internal returns (bool) {
-        uint256 length = validatorIds.length;
-        // we assume here that length will always be more than 2 since validator set at genesis is larger than 6
-        require(length > ((2 * rootValidatorSet.activeValidatorSetSize()) / 3), "NOT_ENOUGH_SIGNATURES");
-        uint256[4] memory aggPubkey = rootValidatorSet.getValidatorBlsKey(validatorIds[0]);
-        for (uint256 i = 1; i < length; ++i) {
-            uint256[4] memory blsKey = rootValidatorSet.getValidatorBlsKey(validatorIds[i]);
-            // slither-disable-next-line calls-loop
-            (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
-                aggPubkey[0],
-                aggPubkey[1],
-                aggPubkey[2],
-                aggPubkey[3],
-                blsKey[0],
-                blsKey[1],
-                blsKey[2],
-                blsKey[3]
-            );
+        bytes calldata bitmap
+    ) private view {
+        uint256 length = currentValidatorSetLength;
+        // slither-disable-next-line uninitialized-local
+        uint256[4] memory aggPubkey;
+        uint256 aggVotingPower = 0;
+        for (uint256 i = 0; i < length; ) {
+            if (_getValueFromBitmap(bitmap, i)) {
+                if (aggVotingPower == 0) {
+                    aggPubkey = currentValidatorSet[i].blsKey;
+                } else {
+                    uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
+                    // slither-disable-next-line calls-loop
+                    (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
+                        aggPubkey[0],
+                        aggPubkey[1],
+                        aggPubkey[2],
+                        aggPubkey[3],
+                        blsKey[0],
+                        blsKey[1],
+                        blsKey[2],
+                        blsKey[3]
+                    );
+                }
+                aggVotingPower += currentValidatorSet[i].votingPower;
+            }
+            unchecked {
+                ++i;
+            }
         }
+
+        require(aggVotingPower != 0, "BITMAP_IS_EMPTY");
+        require(aggVotingPower > ((2 * totalVotingPower) / 3), "INSUFFICIENT_VOTING_POWER");
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
-        return callSuccess && result;
+        require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
+    }
+
+    /**
+     * @notice Internal function that performs checks on the checkpoint
+     * @param prevId Current checkpoint ID
+     * @param checkpoint The checkpoint to store
+     */
+    function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
+        Checkpoint memory oldCheckpoint = checkpoints[prevId];
+        require(
+            checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1),
+            "INVALID_EPOCH"
+        );
+        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "EMPTY_CHECKPOINT");
+    }
+
+    function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {
+        uint256 byteNumber = index / 8;
+        uint8 bitNumber = uint8(index % 8);
+
+        if (byteNumber >= bitmap.length) {
+            return false;
+        }
+
+        // Get the value of the bit at the given 'index' in a byte.
+        return uint8(bitmap[byteNumber]) & (1 << bitNumber) > 0;
     }
 }

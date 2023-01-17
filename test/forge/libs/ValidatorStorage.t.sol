@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@utils/Test.sol";
+
 import {ValidatorStorageLib, AmountZero, Exists, NotFound} from "contracts/libs/ValidatorStorage.sol";
 import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/IValidator.sol";
 
-import "../utils/TestPlus.sol";
-
-abstract contract EmptyState is TestPlus {
+abstract contract EmptyState is Test {
     address account;
     Validator validator;
 
@@ -23,13 +23,6 @@ contract ValidatorStorageTest_EmptyState is EmptyState {
     function testCannotInsert_ZeroAddress() public {
         vm.expectRevert(stdError.assertionError);
         validatorStorageLibUser.insert(address(0), validator);
-    }
-
-    function testCannotInsert_InvalidTotalStake() public {
-        validator.stake = validator.totalStake + 1;
-
-        vm.expectRevert(stdError.assertionError);
-        validatorStorageLibUser.insert(account, validator);
     }
 
     function testCannotInsert_Exists() public {
@@ -317,7 +310,6 @@ contract ValidatorStorageTest_NonEmptyState is NonEmptyState {
 
 function _createValidator(uint256 amount) pure returns (Validator memory validator) {
     validator.stake = amount;
-    validator.totalStake = amount;
 }
 
 /*//////////////////////////////////////////////////////////////////////////
@@ -378,17 +370,7 @@ contract ValidatorStorageLibUser {
         return r;
     }
 
-    function getNode(address key)
-        external
-        view
-        returns (
-            address,
-            address,
-            address,
-            address,
-            bool
-        )
-    {
+    function getNode(address key) external view returns (address, address, address, address, bool) {
         (address a, address b, address c, address d, bool e) = ValidatorStorageLib.getNode(tree, key);
         return (a, b, c, d, e);
     }

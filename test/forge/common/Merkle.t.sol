@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import {Merkle} from "contracts/common/Merkle.sol";
-
-import "../utils/TestPlus.sol";
+import "@utils/Test.sol";
 import {MurkyBase} from "murky/common/MurkyBase.sol";
 
-contract MerkleTest is TestPlus, MurkyBase {
+import {Merkle} from "contracts/common/Merkle.sol";
+
+contract MerkleTest is Test, MurkyBase {
     MerkleUser merkleUser;
 
     function setUp() public {
@@ -19,7 +19,7 @@ contract MerkleTest is TestPlus, MurkyBase {
     }
 
     function testCannotCheckMemership_InvalidIndex(uint256 index, uint8 proofSize) public {
-        index = bound(index, 2**proofSize, type(uint256).max);
+        index = bound(index, 2 ** proofSize, type(uint256).max);
         bytes32[] memory proof = new bytes32[](proofSize);
 
         vm.expectRevert("INVALID_LEAF_INDEX");

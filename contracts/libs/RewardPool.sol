@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "../interfaces/IRewardPool.sol";
 import "../interfaces/IValidator.sol";
-import "./SafeMathInt.sol";
 
-error NoTokensDelegated(address validator);
+import "./SafeMathInt.sol";
 
 /**
  * @title Reward Pool Lib
@@ -33,14 +33,13 @@ library RewardPoolLib {
      * @param account the address to be credited
      * @param amount the amount to credit the account by
      */
-    function deposit(
-        RewardPool storage pool,
-        address account,
-        uint256 amount
-    ) internal {
-        pool.balances[account] += amount;
-        pool.supply += amount;
-        pool.magnifiedRewardCorrections[account] -= (pool.magnifiedRewardPerShare * amount).toInt256Safe();
+    function deposit(RewardPool storage pool, address account, uint256 amount) internal {
+        uint256 share = pool.supply == 0 ? amount : (amount * pool.supply) / pool.underlyingSupply;
+        pool.balances[account] += share;
+        pool.supply += share;
+        pool.underlyingSupply += amount;
+        // slither-disable-next-line divide-before-multiply
+        pool.magnifiedRewardCorrections[account] -= (pool.magnifiedRewardPerShare * share).toInt256Safe();
     }
 
     /**
@@ -49,14 +48,13 @@ library RewardPoolLib {
      * @param account the address to decrement the balance of
      * @param amount the amount to decrement the balance by
      */
-    function withdraw(
-        RewardPool storage pool,
-        address account,
-        uint256 amount
-    ) internal {
-        pool.balances[account] -= amount;
-        pool.supply -= amount;
-        pool.magnifiedRewardCorrections[account] += (pool.magnifiedRewardPerShare * amount).toInt256Safe();
+    function withdraw(RewardPool storage pool, address account, uint256 amount) internal {
+        uint256 share = (amount * pool.supply) / pool.underlyingSupply;
+        pool.balances[account] -= share;
+        pool.supply -= share;
+        // slither-disable-next-line divide-before-multiply
+        pool.magnifiedRewardCorrections[account] += (pool.magnifiedRewardPerShare * share).toInt256Safe();
+        pool.underlyingSupply -= amount;
     }
 
     /**
@@ -77,7 +75,8 @@ library RewardPoolLib {
      * @return uint256 the balance of the account
      */
     function balanceOf(RewardPool storage pool, address account) internal view returns (uint256) {
-        return pool.balances[account];
+        if (pool.supply == 0) return 0;
+        return (pool.balances[account] * pool.underlyingSupply) / pool.supply;
     }
 
     /**

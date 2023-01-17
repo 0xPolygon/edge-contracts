@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import {System} from "./System.sol";
 import {Merkle} from "../common/Merkle.sol";
 
@@ -10,6 +11,7 @@ import {Merkle} from "../common/Merkle.sol";
  * @notice executes and relays the state data on the child chain
  */
 contract StateReceiver is System {
+    using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
 
     struct StateSync {
@@ -17,64 +19,48 @@ contract StateReceiver is System {
         address sender;
         address receiver;
         bytes data;
-        bool skip;
     }
 
-    struct StateSyncBundle {
+    struct StateSyncCommitment {
         uint256 startId;
         uint256 endId;
-        uint256 leaves;
         bytes32 root;
     }
-    // Index of the next event which needs to be processed
-    uint256 public counter;
+
     /// @custom:security write-protection="onlySystemCall()"
-    uint256 public bundleCounter = 1;
-    uint256 public lastExecutedBundleCounter = 1;
+    uint256 public commitmentCounter;
     /// @custom:security write-protection="onlySystemCall()"
     uint256 public lastCommittedId;
-    uint256 public currentLeafIndex;
-    // Maximum gas provided for each message call
-    // slither-disable-next-line too-many-digits
-    uint256 private constant MAX_GAS = 300000;
 
-    mapping(uint256 => StateSyncBundle) public bundles;
+    mapping(uint256 => bool) public processedStateSyncs;
+    mapping(uint256 => StateSyncCommitment) public commitments;
+    uint256[] public commitmentIds;
 
-    // 0=success, 1=failure, 2=skip
-    enum ResultStatus {
-        SUCCESS,
-        FAILURE,
-        SKIP
-    }
-
-    event StateSyncResult(uint256 indexed counter, ResultStatus indexed status, bytes32 message);
+    event StateSyncResult(uint256 indexed counter, bool indexed status, bytes message);
+    event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root);
 
     /**
      * @notice commits merkle root of multiple StateSync objects
-     * @param bundle StateSync struct with root to be committed
-     * @param signature bundle signed (by BLS)
+     * @param commitment commitment of state sync objects
+     * @param signature commitment signed by validators
      * @param bitmap bitmap of which validators signed the message
      */
     function commit(
-        StateSyncBundle calldata bundle,
+        StateSyncCommitment calldata commitment,
         bytes calldata signature,
         bytes calldata bitmap
     ) external onlySystemCall {
-        uint256 currentBundleCounter = bundleCounter++;
-        require(bundle.startId == lastCommittedId + 1, "INVALID_START_ID");
-        require(bundle.endId >= bundle.startId, "INVALID_END_ID");
-        // create sig data for verification
-        // counter, sender, receiver, data and result (skip) should be
-        // part of the dataHash. Otherwise data can be manipulated for same sigs
-        //
-        // dataHash = hash(counter, sender, receiver, data, result)
-        bytes32 dataHash = keccak256(abi.encode(bundle));
+        require(commitment.startId == lastCommittedId + 1, "INVALID_START_ID");
+        require(commitment.endId >= commitment.startId, "INVALID_END_ID");
 
-        _checkPubkeyAggregation(dataHash, signature, bitmap);
+        _checkPubkeyAggregation(keccak256(abi.encode(commitment)), signature, bitmap);
 
-        bundles[currentBundleCounter] = bundle;
+        commitments[commitmentCounter++] = commitment;
 
-        lastCommittedId = bundle.endId;
+        commitmentIds.push(commitment.endId);
+        lastCommittedId = commitment.endId;
+
+        emit NewCommitment(commitment.startId, commitment.endId, commitment.root);
     }
 
     /**
@@ -82,71 +68,100 @@ contract StateReceiver is System {
      * @dev function does not have to be called from client
      * and can be called arbitrarily so long as proper data/proofs are supplied
      * @param proof array of merkle proofs
-     * @param objs array of StateSync objects being proven (the keccak of which is the leaf)
+     * @param obj state sync objects being executed
      */
-    function execute(bytes32[] calldata proof, StateSync[] calldata objs) external {
-        require(lastExecutedBundleCounter < bundleCounter, "NOTHING_TO_EXECUTE");
+    function execute(bytes32[] calldata proof, StateSync calldata obj) external {
+        StateSyncCommitment memory commitment = getCommitmentByStateSyncId(obj.id);
 
-        bytes32 dataHash = keccak256(abi.encode(objs));
+        require(
+            keccak256(abi.encode(obj)).checkMembership(obj.id - commitment.startId, commitment.root, proof),
+            "INVALID_PROOF"
+        );
 
-        StateSyncBundle memory bundle = bundles[lastExecutedBundleCounter];
+        _executeStateSync(obj);
+    }
 
-        uint256 leafIndex = currentLeafIndex;
+    /**
+     * @notice submits leaf of tree of root data for execution
+     * @dev function does not have to be called from client
+     * and can be called arbitrarily so long as proper data/proofs are supplied
+     * @param proofs array of merkle proofs
+     * @param objs array of state sync objects being executed
+     */
+    function batchExecute(bytes32[][] calldata proofs, StateSync[] calldata objs) external {
+        uint256 length = proofs.length;
 
-        require(dataHash.checkMembership(leafIndex++, bundle.root, proof), "INVALID_PROOF");
+        require(proofs.length == objs.length, "StateReceiver: UNMATCHED_LENGTH_PARAMETERS");
+        for (uint256 i = 0; i < length; ) {
+            StateSyncCommitment memory commitment = getCommitmentByStateSyncId(objs[i].id);
 
-        if (leafIndex == bundle.leaves) {
-            currentLeafIndex = 0;
-            delete bundles[lastExecutedBundleCounter++];
-        } else {
-            currentLeafIndex++;
-        }
+            bool isMember = keccak256(abi.encode(objs[i])).checkMembership(
+                objs[i].id - commitment.startId,
+                commitment.root,
+                proofs[i]
+            );
 
-        uint256 currentId = counter;
-        uint256 length = objs.length;
-        counter += objs.length;
+            if (!isMember) {
+                unchecked {
+                    ++i;
+                }
+                continue; // skip execution for bad proofs
+            }
 
-        // execute state sync
-        for (uint256 i = 0; i < length; ++i) {
-            _executeStateSync(currentId++, objs[i]);
+            _executeStateSync(objs[i]);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
     /**
-     * @notice internal function to execute StateSync objects received by StateReceiver
-     * @param prevId id of last executed StateSync object
+     * @notice get submitted root for a state sync id
+     * @param id state sync to get the root for
+     */
+    function getRootByStateSyncId(uint256 id) external view returns (bytes32) {
+        bytes32 root = commitments[commitmentIds.findUpperBound(id)].root;
+
+        require(root != bytes32(0), "StateReceiver: NO_ROOT_FOR_ID");
+
+        return root;
+    }
+
+    /**
+     * @notice get commitment for a state sync id
+     * @param id state sync to get the root for
+     */
+    function getCommitmentByStateSyncId(uint256 id) public view returns (StateSyncCommitment memory) {
+        uint256 idx = commitmentIds.findUpperBound(id);
+
+        require(idx != commitmentIds.length, "StateReceiver: NO_COMMITMENT_FOR_ID");
+
+        return commitments[idx];
+    }
+
+    /**
+     * @notice internal function to execute a state sync object
      * @param obj StateSync object to be executed
      */
-    function _executeStateSync(uint256 prevId, StateSync calldata obj) internal {
-        require(prevId + 1 == obj.id, "ID_NOT_SEQUENTIAL");
-
+    function _executeStateSync(StateSync calldata obj) private {
+        require(!processedStateSyncs[obj.id], "StateReceiver: STATE_SYNC_IS_PROCESSED");
         // Skip transaction if client has added flag, or receiver has no code
-        if (obj.skip || obj.receiver.code.length == 0) {
-            emit StateSyncResult(obj.id, ResultStatus.SKIP, "");
+        if (obj.receiver.code.length == 0) {
+            emit StateSyncResult(obj.id, false, "");
             return;
         }
 
-        // Execute `onStateReceive` method on target using max gas limit
-        bytes memory paramData = abi.encodeWithSignature(
-            "onStateReceive(uint256,address,bytes)",
-            obj.id,
-            obj.sender,
-            obj.data
-        );
+        processedStateSyncs[obj.id] = true;
 
         // slither-disable-next-line calls-loop,low-level-calls
-        (bool success, bytes memory returnData) = obj.receiver.call{gas: MAX_GAS}(paramData); // solhint-disable-line avoid-low-level-calls
-
-        bytes32 message = bytes32(returnData);
+        (bool success, bytes memory returnData) = obj.receiver.call(
+            abi.encodeWithSignature("onStateReceive(uint256,address,bytes)", obj.id, obj.sender, obj.data)
+        );
 
         // emit a ResultEvent indicating whether invocation of state sync was successful or not
-        if (success) {
-            // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.SUCCESS, message);
-        } else {
-            // slither-disable-next-line reentrancy-events
-            emit StateSyncResult(obj.id, ResultStatus.FAILURE, message);
-        }
+        // slither-disable-next-line reentrancy-events
+        emit StateSyncResult(obj.id, success, returnData);
     }
 
     /**
@@ -155,14 +170,10 @@ contract StateReceiver is System {
      * @param signature the signed message
      * @param bitmap bitmap of which validators have signed
      */
-    function _checkPubkeyAggregation(
-        bytes32 message,
-        bytes calldata signature,
-        bytes calldata bitmap
-    ) internal view {
+    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature, bytes calldata bitmap) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
+        // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
             gas: VALIDATOR_PKCHECK_PRECOMPILE_GAS
         }(abi.encode(message, signature, bitmap));
