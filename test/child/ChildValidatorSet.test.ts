@@ -7,7 +7,7 @@ import * as mcl from "../../ts/mcl";
 import { BLS, ChildValidatorSet } from "../../typechain";
 import { alwaysFalseBytecode, alwaysTrueBytecode } from "../constants";
 
-const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["ChildValidatorSet"]));
+const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHILD_VALIDATOR_SET"]));
 const CHAIN_ID = 31337;
 
 const MAX_COMMISSION = 100;

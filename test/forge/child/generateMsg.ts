@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import * as mcl from "../../../ts/mcl";
 const input = process.argv[2];
 
-const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["ChildValidatorSet"]));
+const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHILD_VALIDATOR_SET"]));
 const CHAIN_ID = 31337;
 let blockHashs: any[] = [];
 let signatures: any[] = [];

@@ -12,7 +12,7 @@ import "../../libs/ValidatorStorage.sol";
 abstract contract CVSStorage is ICVSStorage {
     using ValidatorStorageLib for ValidatorTree;
 
-    bytes32 public constant DOMAIN = keccak256("ChildValidatorSet");
+    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHILD_VALIDATOR_SET");
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
     uint256 public constant MAX_COMMISSION = 100;
@@ -46,7 +46,11 @@ abstract contract CVSStorage is ICVSStorage {
         return _validators.get(validator);
     }
 
-    function verifySignature(address signer, uint256[2] calldata signature, uint256[4] calldata pubkey) internal view {
+    function verifyValidatorRegistration(
+        address signer,
+        uint256[2] calldata signature,
+        uint256[4] calldata pubkey
+    ) internal view {
         // slither-disable-next-line calls-loop
         (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message(signer));
         if (!callSuccess || !result) revert InvalidSignature(signer);

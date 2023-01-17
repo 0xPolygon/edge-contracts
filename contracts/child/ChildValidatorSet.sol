@@ -77,7 +77,7 @@ contract ChildValidatorSet is
             });
             _validators.insert(validators[i].addr, validator);
 
-            verifySignature(validators[i].addr, validators[i].signature, validators[i].pubkey);
+            verifyValidatorRegistration(validators[i].addr, validators[i].signature, validators[i].pubkey);
         }
     }
 
