@@ -47,12 +47,14 @@ abstract contract CVSStorage is ICVSStorage {
     }
 
     function verifySignature(address signer, uint256[2] calldata signature, uint256[4] calldata pubkey) internal view {
+        // slither-disable-next-line calls-loop
         (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message(signer));
         if (!callSuccess || !result) revert InvalidSignature(signer);
     }
 
     /// @notice Message to sign for registration
     function message(address signer) internal view returns (uint256[2] memory) {
+        // slither-disable-next-line calls-loop
         return bls.hashToPoint(DOMAIN, abi.encodePacked(signer, block.chainid));
     }
 }
