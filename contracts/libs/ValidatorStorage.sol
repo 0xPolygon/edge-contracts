@@ -37,11 +37,10 @@ library ValidatorStorageLib {
      * @param validator the address of the validator whose pool is being queried
      * @return RewardPool struct for the validator
      */
-    function getDelegationPool(ValidatorTree storage self, address validator)
-        internal
-        view
-        returns (RewardPool storage)
-    {
+    function getDelegationPool(
+        ValidatorTree storage self,
+        address validator
+    ) internal view returns (RewardPool storage) {
         return self.delegationPools[validator];
     }
 
@@ -167,17 +166,10 @@ library ValidatorStorageLib {
      * @return _red if the node is red or not
      */
     // slither-disable-next-line dead-code
-    function getNode(ValidatorTree storage self, address key)
-        internal
-        view
-        returns (
-            address _returnKey,
-            address _parent,
-            address _left,
-            address _right,
-            bool _red
-        )
-    {
+    function getNode(
+        ValidatorTree storage self,
+        address key
+    ) internal view returns (address _returnKey, address _parent, address _left, address _right, bool _red) {
         if (!exists(self, key)) revert NotFound(key);
         return (key, self.nodes[key].parent, self.nodes[key].left, self.nodes[key].right, self.nodes[key].red);
     }
@@ -188,11 +180,7 @@ library ValidatorStorageLib {
      * @param key the address to add
      * @param validator the Validator struct of the address
      */
-    function insert(
-        ValidatorTree storage self,
-        address key,
-        Validator memory validator
-    ) internal {
+    function insert(ValidatorTree storage self, address key, Validator memory validator) internal {
         assert(key != EMPTY);
         if (exists(self, key)) revert Exists(key);
         self.nodes[key].validator = validator;
@@ -411,11 +399,7 @@ library ValidatorStorageLib {
      * @param a the address to have the parent changed
      * @param b the parent will be changed to the parent of this addr
      */
-    function replaceParent(
-        ValidatorTree storage self,
-        address a,
-        address b
-    ) private {
+    function replaceParent(ValidatorTree storage self, address a, address b) private {
         address bParent = self.nodes[b].parent;
         self.nodes[a].parent = bParent;
         if (bParent == EMPTY) {

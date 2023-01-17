@@ -28,11 +28,7 @@ abstract contract Assertions is StdAssertions {
         _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "Validator");
     }
 
-    function assertEq(
-        Validator memory a,
-        Validator memory b,
-        string memory err
-    ) internal virtual {
+    function assertEq(Validator memory a, Validator memory b, string memory err) internal virtual {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log_named_string("Error", err);
             assertEq(a, b);
@@ -55,18 +51,14 @@ abstract contract Assertions is StdAssertions {
         _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "Withdrawal");
     }
 
-    function assertEq(StateReceiver.StateSyncCommitment memory a, StateReceiver.StateSyncCommitment memory b)
-        internal
-        virtual
-    {
+    function assertEq(
+        StateReceiver.StateSyncCommitment memory a,
+        StateReceiver.StateSyncCommitment memory b
+    ) internal virtual {
         _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "StateSyncCommitment");
     }
 
-    function _compareHash(
-        bytes32 a,
-        bytes32 b,
-        string memory typeName
-    ) private {
+    function _compareHash(bytes32 a, bytes32 b, string memory typeName) private {
         if (a != b) {
             emit log(string.concat("Error: a == b not satisfied [", typeName, "]"));
             fail();

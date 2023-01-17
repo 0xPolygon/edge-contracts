@@ -27,12 +27,7 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
     function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
         if (!whitelist[msg.sender]) revert Unauthorized("WHITELIST");
 
-        (bool result, bool callSuccess) = bls.verifySingle(
-            signature,
-            pubkey,
-            [uint256(uint160(msg.sender)), block.chainid]
-        );
-        require(callSuccess && result, "INVALID_SIGNATURE");
+        verifySignature(msg.sender, signature, pubkey);
 
         _validators.insert(
             msg.sender,

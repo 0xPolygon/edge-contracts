@@ -27,6 +27,23 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### DOMAIN
+
+```solidity
+function DOMAIN() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### MAX_COMMISSION
 
 ```solidity
@@ -276,28 +293,6 @@ Gets validator by address.
 | Name | Type | Description |
 |---|---|---|
 | _0 | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
-
-### message
-
-```solidity
-function message(uint256) external view returns (uint256)
-```
-
-Message to sign for registration
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### minDelegation
 
@@ -584,6 +579,22 @@ event WithdrawalRegistered(address indexed account, uint256 amount)
 
 
 ## Errors
+
+### InvalidSignature
+
+```solidity
+error InvalidSignature(address validator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
 
 ### StakeRequirement
 

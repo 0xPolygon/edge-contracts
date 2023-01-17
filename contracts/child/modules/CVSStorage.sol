@@ -11,6 +11,7 @@ import "../../libs/ValidatorStorage.sol";
 abstract contract CVSStorage is ICVSStorage {
     using ValidatorStorageLib for ValidatorTree;
 
+    bytes32 public constant DOMAIN = keccak256("ChildValidatorSet");
     uint256 public constant ACTIVE_VALIDATOR_SET_SIZE = 100;
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
     uint256 public constant MAX_COMMISSION = 100;
@@ -44,8 +45,13 @@ abstract contract CVSStorage is ICVSStorage {
         return _validators.get(validator);
     }
 
+    function verifySignature(address signer, uint256[2] calldata signature, uint256[4] calldata pubkey) internal view {
+        (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, message(signer));
+        if (!callSuccess || !result) revert InvalidSignature(signer);
+    }
+
     /// @notice Message to sign for registration
-    function message(address signer) external view returns (uint256[2] memory) {
-        return [uint256(uint160(signer)), block.chainid];
+    function message(address signer) internal view returns (uint256[2] memory) {
+        return bls.hashToPoint(DOMAIN, abi.encodePacked(signer, block.chainid));
     }
 }

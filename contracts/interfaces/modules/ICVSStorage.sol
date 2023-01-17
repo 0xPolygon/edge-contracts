@@ -21,6 +21,8 @@ struct Epoch {
 }
 
 interface ICVSStorage {
+    error InvalidSignature(address validator);
+
     /**
      * @notice Gets validator by address.
      * @return Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status)

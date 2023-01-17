@@ -718,7 +718,7 @@ contract ChildValidatorSetTest_UnstakePartially is QueueProcessed {
 
     function testCannotUnstake_IntOverflow() public {
         vm.expectRevert(stdError.assertionError);
-        childValidatorSet.unstake(2**256 - 1);
+        childValidatorSet.unstake(2 ** 256 - 1);
     }
 
     function testCannotUnstake_UnstakeMoreThanStake() public {

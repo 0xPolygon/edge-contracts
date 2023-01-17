@@ -27,6 +27,23 @@ function ACTIVE_VALIDATOR_SET_SIZE() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### DOMAIN
+
+```solidity
+function DOMAIN() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### MAX_COMMISSION
 
 ```solidity
@@ -256,28 +273,6 @@ Gets validator&#39;s unclaimed rewards.
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | Validator&#39;s unclaimed rewards (in MATIC wei) |
-
-### message
-
-```solidity
-function message(uint256) external view returns (uint256)
-```
-
-Message to sign for registration
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### minDelegation
 
@@ -814,6 +809,22 @@ error AmountZero()
 
 ```solidity
 error Exists(address validator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator | address | undefined |
+
+### InvalidSignature
+
+```solidity
+error InvalidSignature(address validator)
 ```
 
 

@@ -41,19 +41,16 @@ contract ChildValidatorSet is
      * @param init: newEpochReward reward for a proposed epoch
      *              newMinStake minimum stake to become a validator
      *              newMinDelegation minimum amount to delegate to a validator
-     * @param validatorAddresses addresses of initial validators
-     * @param validatorPubkeys uint256[4] BLS public keys of initial validators
-     * @param validatorsSignature uint256[2] signature of initial validators
-     * @param validatorStakes amount staked per initial validator
+     * @param validators: addr addresses of initial validators
+     *                    pubkey uint256[4] BLS public keys of initial validators
+     *                    signature uint256[2] signature of initial validators
+     *                    stake amount staked per initial validator
      * @param newBls address pf BLS contract/precompile
      * @param governance Governance address to set as owner of the
      */
     function initialize(
         InitStruct calldata init,
-        address[] calldata validatorAddresses,
-        uint256[4][] calldata validatorPubkeys,
-        uint256[2] calldata validatorsSignature,
-        uint256[] calldata validatorStakes,
+        ValidatorInit[] calldata validators,
         IBLS newBls,
         address governance
     ) external initializer onlySystemCall {
@@ -62,44 +59,32 @@ contract ChildValidatorSet is
         _transferOwnership(governance);
         __ReentrancyGuard_init();
 
-        require(
-            validatorAddresses.length == validatorPubkeys.length && validatorAddresses.length == validatorStakes.length,
-            "UNMATCHED_LENGTH_PARAMETERS"
-        );
         // slither-disable-next-line events-maths
         epochReward = init.epochReward;
         minStake = init.minStake;
         minDelegation = init.minDelegation;
 
-        uint256[2][] memory validatorMessages = new uint256[2][](validatorPubkeys.length);
         // set BLS contract
         bls = newBls;
         // add initial validators
-        for (uint256 i = 0; i < validatorAddresses.length; i++) {
+        for (uint256 i = 0; i < validators.length; i++) {
             Validator memory validator = Validator({
-                blsKey: validatorPubkeys[i],
-                stake: validatorStakes[i],
+                blsKey: validators[i].pubkey,
+                stake: validators[i].stake,
                 commission: 0,
                 withdrawableRewards: 0,
                 active: true
             });
-            _validators.insert(validatorAddresses[i], validator);
+            _validators.insert(validators[i].addr, validator);
 
-            validatorMessages[i] = [uint256(uint160(validatorAddresses[i])), block.chainid];
+            verifySignature(validators[i].addr, validators[i].signature, validators[i].pubkey);
         }
-        // verify signatures of initial validators
-        (bool result, bool callSuccess) = bls.verifyMultiple(validatorsSignature, validatorPubkeys, validatorMessages);
-        require(callSuccess && result, "INVALID_SIGNATURE");
     }
 
     /**
      * @inheritdoc IChildValidatorSetBase
      */
-    function commitEpoch(
-        uint256 id,
-        Epoch calldata epoch,
-        Uptime calldata uptime
-    ) external onlySystemCall {
+    function commitEpoch(uint256 id, Epoch calldata epoch, Uptime calldata uptime) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
@@ -262,11 +247,7 @@ contract ChildValidatorSet is
         _queue.reset();
     }
 
-    function _slashDoubleSigner(
-        address key,
-        uint256 epoch,
-        uint256 pbftRound
-    ) private {
+    function _slashDoubleSigner(address key, uint256 epoch, uint256 pbftRound) private {
         if (doubleSignerSlashes[epoch][pbftRound][key]) {
             return;
         }
@@ -332,11 +313,10 @@ contract ChildValidatorSet is
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
-    function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)
-        private
-        view
-        returns (uint256, uint256)
-    {
+    function _calculateValidatorAndDelegatorShares(
+        address validatorAddr,
+        uint256 totalReward
+    ) private view returns (uint256, uint256) {
         Validator memory validator = getValidator(validatorAddr);
         uint256 stakedAmount = validator.stake;
         uint256 delegations = _validators.getDelegationPool(validatorAddr).supply;
@@ -358,11 +338,7 @@ contract ChildValidatorSet is
      * @param signature the signed message
      * @param bitmap bitmap of which validators have signed
      */
-    function _checkPubkeyAggregation(
-        bytes32 hash,
-        bytes calldata signature,
-        bytes calldata bitmap
-    ) private view {
+    function _checkPubkeyAggregation(bytes32 hash, bytes calldata signature, bytes calldata bitmap) private view {
         // verify signatures` for provided sig data and sigs bytes
         // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{
