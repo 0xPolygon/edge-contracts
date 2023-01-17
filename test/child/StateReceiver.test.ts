@@ -5,7 +5,6 @@ import { Signer, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { StateReceiver, StateReceivingContract } from "../../typechain";
 import { alwaysTrueBytecode, alwaysFalseBytecode, alwaysRevertBytecode } from "../constants";
-import { customError } from "../util";
 import { MerkleTree } from "merkletreejs";
 
 describe("StateReceiver", () => {
@@ -60,9 +59,9 @@ describe("StateReceiver", () => {
       root: ethers.constants.HashZero,
     };
 
-    await expect(
-      stateReceiver.commit(commitment, ethers.constants.HashZero, ethers.constants.HashZero)
-    ).to.be.revertedWith(customError("Unauthorized", "SYSTEMCALL"));
+    await expect(stateReceiver.commit(commitment, ethers.constants.HashZero, ethers.constants.HashZero))
+      .to.be.revertedWithCustomError(stateReceiver, "Unauthorized")
+      .withArgs("SYSTEMCALL");
   });
 
   it("State sync commit fail: invalid signature", async () => {
