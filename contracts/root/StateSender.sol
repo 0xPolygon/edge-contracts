@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-contract StateSender {
+import "../interfaces/IStateSender.sol";
+
+contract StateSender is IStateSender {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
 
