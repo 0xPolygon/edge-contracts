@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "../interfaces/IStateSender.sol";
+
 /**
     @title L2StateSender
     @author Polygon Technology (@QEDK)
     @notice Arbitrary message passing contract from L2 -> L1
     @dev There is no transaction execution on L1, only a commitment of the emitted events are stored
  */
-contract L2StateSender {
+contract L2StateSender is IStateSender {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
 
