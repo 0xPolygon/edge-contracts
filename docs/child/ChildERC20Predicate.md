@@ -117,6 +117,24 @@ function l2StateSender() external view returns (contract IStateSender)
 |---|---|---|
 | _0 | contract IStateSender | undefined |
 
+### onStateReceive
+
+```solidity
+function onStateReceive(uint256, address sender, bytes data) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+| sender | address | undefined |
+| data | bytes | undefined |
+
 ### rootERC20Predicate
 
 ```solidity

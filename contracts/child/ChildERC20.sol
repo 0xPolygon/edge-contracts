@@ -4,6 +4,7 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/Context.sol";
+import "../libs/EIP712MetaTransaction.sol";
 import "../interfaces/IChildERC20.sol";
 
 /**
@@ -12,7 +13,7 @@ import "../interfaces/IChildERC20.sol";
     @notice Child token template for ChildERC20 predicate deployments
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
-contract ChildERC20 is Context, IChildERC20 {
+contract ChildERC20 is Context, EIP712MetaTransaction, IChildERC20 {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -39,6 +40,7 @@ contract ChildERC20 is Context, IChildERC20 {
         _symbol = symbol_;
         _decimals = decimals_;
         _predicate = msg.sender;
+        _initializeEIP712(name_, "1");
     }
 
     /**
