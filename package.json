@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
-    "@openzeppelin/hardhat-upgrades": "^1.22.0",
+    "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.18",
