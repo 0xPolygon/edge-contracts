@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "./EIP712.sol";
 
 contract EIP712MetaTransaction is EIP712 {
     bytes32 private constant META_TRANSACTION_TYPEHASH =
@@ -19,18 +19,6 @@ contract EIP712MetaTransaction is EIP712 {
         uint256 nonce;
         address from;
         bytes functionSignature;
-    }
-
-    constructor(string memory name, string memory version) EIP712(name, version) {}
-
-    function convertBytesToBytes4(bytes memory inBytes) internal returns (bytes4 outBytes4) {
-        if (inBytes.length == 0) {
-            return 0x0;
-        }
-
-        assembly {
-            outBytes4 := mload(add(inBytes, 32))
-        }
     }
 
     function executeMetaTransaction(
@@ -64,13 +52,6 @@ contract EIP712MetaTransaction is EIP712 {
         return returnData;
     }
 
-    function hashMetaTransaction(MetaTransaction memory metaTx) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(META_TRANSACTION_TYPEHASH, metaTx.nonce, metaTx.from, keccak256(metaTx.functionSignature))
-            );
-    }
-
     function getNonce(address user) external view returns (uint256 nonce) {
         nonce = nonces[user];
     }
@@ -81,13 +62,13 @@ contract EIP712MetaTransaction is EIP712 {
         bytes32 sigR,
         bytes32 sigS,
         uint8 sigV
-    ) internal view returns (bool) {
+    ) private view returns (bool) {
         address signer = ecrecover(_hashTypedDataV4(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
         require(signer != address(0), "Invalid signature");
         return signer == user;
     }
 
-    function msgSender() internal view returns (address sender) {
+    function msgSender() private view returns (address sender) {
         if (msg.sender == address(this)) {
             bytes memory array = msg.data;
             uint256 index = msg.data.length;
@@ -99,5 +80,22 @@ contract EIP712MetaTransaction is EIP712 {
             sender = msg.sender;
         }
         return sender;
+    }
+
+    function hashMetaTransaction(MetaTransaction memory metaTx) private pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(META_TRANSACTION_TYPEHASH, metaTx.nonce, metaTx.from, keccak256(metaTx.functionSignature))
+            );
+    }
+
+    function convertBytesToBytes4(bytes memory inBytes) private pure returns (bytes4 outBytes4) {
+        if (inBytes.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            outBytes4 := mload(add(inBytes, 32))
+        }
     }
 }
