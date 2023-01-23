@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/EIP712.sol)
+// Adapted from OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/EIP712.sol)
 
 pragma solidity 0.8.17;
 
@@ -24,7 +24,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
  *
  * _Available since v3.4._
  */
-abstract contract EIP712 {
+abstract contract EIP712Upgradeable {
     /* solhint-disable var-name-mixedcase */
     // Cache the domain separator as an immutable value, but also store the chain id that it corresponds to, in order to
     // invalidate the cached domain separator if the chain id changes.
