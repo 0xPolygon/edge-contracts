@@ -135,8 +135,8 @@ contract ChildValidatorSet is
                         inputs[i].nextValidatorSetHash
                     )
                 ),
-                inputs[i].bitmap,
-                inputs[i].signature
+                inputs[i].signature,
+                inputs[i].bitmap
             );
             unchecked {
                 ++i;
