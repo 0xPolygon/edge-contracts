@@ -141,6 +141,54 @@ function decreaseAllowance(address spender, uint256 subtractedValue) external no
 |---|---|---|
 | _0 | bool | undefined |
 
+### executeMetaTransaction
+
+```solidity
+function executeMetaTransaction(address userAddress, bytes functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) external payable returns (bytes)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| userAddress | address | undefined |
+| functionSignature | bytes | undefined |
+| sigR | bytes32 | undefined |
+| sigS | bytes32 | undefined |
+| sigV | uint8 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
+### getNonce
+
+```solidity
+function getNonce(address user) external view returns (uint256 nonce)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| user | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| nonce | uint256 | undefined |
+
 ### increaseAllowance
 
 ```solidity
@@ -359,6 +407,24 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
+
+### MetaTransactionExecuted
+
+```solidity
+event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| userAddress  | address | undefined |
+| relayerAddress  | address payable | undefined |
+| functionSignature  | bytes | undefined |
 
 ### Transfer
 

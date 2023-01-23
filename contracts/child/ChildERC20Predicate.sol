@@ -55,6 +55,25 @@ contract ChildERC20Predicate is Initializable {
         childTokenToRootToken[address(childToken)] = rootToken;
     }
 
+    function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
+        require(msg.sender == stateReceiver, "ChildERC20Predicate: ONLY_STATE_RECEIVER");
+        require(sender == rootERC20Predicate, "ChildERC20Predicate: ONLY_ROOT_PREDICATE");
+        (
+            bytes32 signature,
+            address rootToken,
+            address childToken,
+            address depositor,
+            address receiver,
+            uint256 amount
+        ) = abi.decode(data, (bytes32, address, address, address, address, uint256));
+
+        if (signature == WITHDRAW_SIG) {
+            _deposit(rootToken, IChildERC20(childToken), depositor, receiver, amount);
+        } else {
+            revert("ChildERC20Predicate: INVALID_SIGNATURE");
+        }
+    }
+
     function withdraw(IChildERC20 childToken, uint256 amount) external {
         _withdraw(childToken, msg.sender, amount);
     }
@@ -67,6 +86,7 @@ contract ChildERC20Predicate is Initializable {
         require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
 
         address rootToken = childToken.rootToken();
+
         require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
         assert(rootToken != address(0));
         assert(childToken.predicate() == address(this));
@@ -77,5 +97,25 @@ contract ChildERC20Predicate is Initializable {
         );
 
         emit L2ERC20Withdraw(ERC20BridgeEvent(rootToken, address(childToken), msg.sender, receiver), amount);
+    }
+
+    function _deposit(
+        address depositToken,
+        IChildERC20 childToken,
+        address depositor,
+        address receiver,
+        uint256 amount
+    ) private {
+        require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
+
+        address rootToken = childToken.rootToken();
+
+        require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(rootToken == depositToken, "ChildERC20Predicate: WRONG_DEPOSIT_TOKEN");
+        assert(rootToken != address(0));
+        assert(childToken.predicate() == address(this));
+        require(childToken.mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
+
+        emit L2ERC20Deposit(ERC20BridgeEvent(depositToken, address(childToken), depositor, receiver), amount);
     }
 }
