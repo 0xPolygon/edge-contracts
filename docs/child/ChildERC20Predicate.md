@@ -61,6 +61,28 @@ function childTokenTemplate() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### childTokenToRootToken
+
+```solidity
+function childTokenToRootToken(address) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### deployChildToken
 
 ```solidity

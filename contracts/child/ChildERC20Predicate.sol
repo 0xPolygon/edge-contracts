@@ -25,7 +25,7 @@ contract ChildERC20Predicate is Initializable {
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
 
-    mapping(address => address) childTokenToRootToken;
+    mapping(address => address) public childTokenToRootToken;
 
     event L2ERC20Deposit(ERC20BridgeEvent indexed deposit, uint256 amount);
     event L2ERC20Withdraw(ERC20BridgeEvent indexed withdrawal, uint256 amount);
@@ -88,7 +88,9 @@ contract ChildERC20Predicate is Initializable {
         address rootToken = childToken.rootToken();
 
         require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
+        // a mapped token should never have root token unset
         assert(rootToken != address(0));
+        // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
         require(childToken.burn(msg.sender, amount), "ChildERC20Predicate: BURN_FAILED");
         l2StateSender.syncState(
@@ -110,9 +112,12 @@ contract ChildERC20Predicate is Initializable {
 
         address rootToken = childToken.rootToken();
 
-        require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
+        // deposited root token for child token is incorrect
         require(rootToken == depositToken, "ChildERC20Predicate: WRONG_DEPOSIT_TOKEN");
+        require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
+        // a mapped token should never have root token unset
         assert(rootToken != address(0));
+        // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
         require(childToken.mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
 

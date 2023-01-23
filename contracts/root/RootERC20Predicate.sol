@@ -45,8 +45,8 @@ contract RootERC20Predicate is Initializable {
     }
 
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == exitHelper, "ONLY_EXIT_HELPER");
-        require(sender == childERC20Predicate, "ONLY_CHILD_PREDICATE");
+        require(msg.sender == exitHelper, "RootERC20Predicate: ONLY_EXIT_HELPER");
+        require(sender == childERC20Predicate, "RootERC20Predicate: ONLY_CHILD_PREDICATE");
 
         (
             bytes32 signature,
@@ -60,7 +60,7 @@ contract RootERC20Predicate is Initializable {
         if (signature == WITHDRAW_SIG) {
             _withdraw(IERC20(rootToken), childToken, withdrawer, receiver, amount);
         } else {
-            revert("INVALID_SIGNATURE");
+            revert("RootERC20Predicate: INVALID_SIGNATURE");
         }
     }
 
