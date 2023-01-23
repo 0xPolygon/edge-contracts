@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./EIP712.sol";
+import "./EIP712Upgradeable.sol";
 
-contract EIP712MetaTransaction is EIP712 {
+contract EIP712MetaTransaction is EIP712Upgradeable {
     bytes32 private constant META_TRANSACTION_TYPEHASH =
         keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
 
