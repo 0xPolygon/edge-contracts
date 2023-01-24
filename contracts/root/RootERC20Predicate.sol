@@ -23,15 +23,18 @@ contract RootERC20Predicate is Initializable {
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
 
     event ERC20Deposit(ERC20BridgeEvent indexed deposit, uint256 amount);
-
     event ERC20Withdraw(ERC20BridgeEvent indexed withdrawal, uint256 amount);
 
     function initialize(
-        IStateSender newStateSender,
+        address newStateSender,
         address newExitHelper,
         address newChildERC20Predicate
     ) external initializer {
-        stateSender = newStateSender;
+        require(
+            newStateSender != address(0) && newExitHelper != address(0) && newChildERC20Predicate != address(0),
+            "RootERC20Predicate: BAD_INITIALIZATION"
+        );
+        stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         childERC20Predicate = newChildERC20Predicate;
     }
@@ -71,7 +74,7 @@ contract RootERC20Predicate is Initializable {
             childERC20Predicate,
             abi.encode(DEPOSIT_SIG, rootToken, childToken, msg.sender, receiver, amount)
         );
-
+        // slither-disable-next-line reentrancy-events
         emit ERC20Deposit(ERC20BridgeEvent(address(rootToken), childToken, msg.sender, receiver), amount);
     }
 
@@ -83,7 +86,7 @@ contract RootERC20Predicate is Initializable {
         uint256 amount
     ) private {
         rootToken.safeTransfer(receiver, amount);
-
+        // slither-disable-next-line reentrancy-events
         emit ERC20Withdraw(ERC20BridgeEvent(address(rootToken), childToken, withdrawer, receiver), amount);
     }
 }
