@@ -1,12 +1,12 @@
-# MRC20
+# NativeERC20
 
 *Polygon Technology*
 
-> MRC20
+> NativeERC20
 
-MATIC native token contract on Polygon V3 PoS chain
+Native token contract on Polygon V3 / supernet chains
 
-*The contract exposes ERC20-like functions that are compatible with the MATIC native token*
+*The contract exposes ERC20-like functions that are compatible with the native token, it is *only* intended to be used when the token exists on the root chain, otherwise the contract will require appropriate modifications.*
 
 ## Methods
 
@@ -180,10 +180,33 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### burn
+
+```solidity
+function burn(address account, uint256 amount) external nonpayable returns (bool)
+```
+
+Burns an amount of tokens from a particular address
+
+*Can only be called by the predicate address*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | Account of the user to burn the tokens from |
+| amount | uint256 | Amount of tokens to burn from the account |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | bool Returns true if function call is succesful |
+
 ### decimals
 
 ```solidity
-function decimals() external pure returns (uint8)
+function decimals() external view returns (uint8)
 ```
 
 
@@ -246,7 +269,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address predicate_, string name_, string symbol_) external nonpayable
+function initialize(address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
 ```
 
 
@@ -257,9 +280,33 @@ function initialize(address predicate_, string name_, string symbol_) external n
 
 | Name | Type | Description |
 |---|---|---|
-| predicate_ | address | undefined |
+| rootToken_ | address | undefined |
 | name_ | string | undefined |
 | symbol_ | string | undefined |
+| decimals_ | uint8 | undefined |
+
+### mint
+
+```solidity
+function mint(address account, uint256 amount) external nonpayable returns (bool)
+```
+
+Mints an amount of tokens to a particular address
+
+*Can only be called by the predicate address*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | Account of the user to mint the tokens to |
+| amount | uint256 | Amount of tokens to mint to the account |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | bool Returns true if function call is succesful |
 
 ### name
 
@@ -278,31 +325,13 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
-### onStateReceive
-
-```solidity
-function onStateReceive(uint256, address sender, bytes data) external nonpayable
-```
-
-Used to deposit tokens from L1 to V3 PoS chain
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-| sender | address | Address of L1 message sender |
-| data | bytes | Data received via state sync |
-
 ### predicate
 
 ```solidity
 function predicate() external view returns (address)
 ```
 
-
+Returns predicate address controlling the child token
 
 
 
@@ -311,7 +340,24 @@ function predicate() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| _0 | address | address Returns the address of the predicate |
+
+### rootToken
+
+```solidity
+function rootToken() external view returns (address)
+```
+
+Returns predicate address controlling the child token
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | address Returns the address of the predicate |
 
 ### symbol
 
@@ -438,6 +484,22 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
 
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
 ### Transfer
 
 ```solidity
@@ -456,24 +518,5 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
 
-
-
-## Errors
-
-### Unauthorized
-
-```solidity
-error Unauthorized(string only)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| only | string | undefined |
 
 

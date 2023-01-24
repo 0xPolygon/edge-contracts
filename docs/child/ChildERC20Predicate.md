@@ -27,6 +27,125 @@ function DEPOSIT_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### NATIVE_TOKEN_CHILD_ADDRESS
+
+```solidity
+function NATIVE_TOKEN_CHILD_ADDRESS() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### NATIVE_TOKEN_CONTRACT
+
+```solidity
+function NATIVE_TOKEN_CONTRACT() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### NATIVE_TRANSFER_PRECOMPILE
+
+```solidity
+function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### NATIVE_TRANSFER_PRECOMPILE_GAS
+
+```solidity
+function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### SYSTEM
+
+```solidity
+function SYSTEM() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### VALIDATOR_PKCHECK_PRECOMPILE
+
+```solidity
+function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### VALIDATOR_PKCHECK_PRECOMPILE_GAS
+
+```solidity
+function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### WITHDRAW_SIG
 
 ```solidity
@@ -106,7 +225,7 @@ function deployChildToken(address rootToken, bytes32 salt, string name, string s
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress, string newNativeTokenName, string newNativeTokenSymbol, uint8 newNativeTokenDecimals) external nonpayable
 ```
 
 
@@ -121,6 +240,10 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 | newStateReceiver | address | undefined |
 | newRootERC20Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
+| newNativeTokenRootAddress | address | undefined |
+| newNativeTokenName | string | undefined |
+| newNativeTokenSymbol | string | undefined |
+| newNativeTokenDecimals | uint8 | undefined |
 
 ### l2StateSender
 
@@ -138,6 +261,23 @@ function l2StateSender() external view returns (contract IStateSender)
 | Name | Type | Description |
 |---|---|---|
 | _0 | contract IStateSender | undefined |
+
+### nativeTokenRootAddress
+
+```solidity
+function nativeTokenRootAddress() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### onStateReceive
 
@@ -280,5 +420,24 @@ event L2ERC20Withdraw(ChildERC20Predicate.ERC20BridgeEvent indexed withdrawal, u
 | withdrawal `indexed` | ChildERC20Predicate.ERC20BridgeEvent | undefined |
 | amount  | uint256 | undefined |
 
+
+
+## Errors
+
+### Unauthorized
+
+```solidity
+error Unauthorized(string only)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| only | string | undefined |
 
 
