@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+// Adapted from OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/utils/Context.sol";
 import "../libs/EIP712MetaTransaction.sol";
 import "../interfaces/IChildERC20.sol";
 
@@ -13,7 +12,7 @@ import "../interfaces/IChildERC20.sol";
     @notice Child token template for ChildERC20 predicate deployments
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
-contract ChildERC20 is Context, EIP712MetaTransaction, IChildERC20 {
+contract ChildERC20 is EIP712MetaTransaction, IChildERC20 {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -35,6 +34,10 @@ contract ChildERC20 is Context, EIP712MetaTransaction, IChildERC20 {
      * @inheritdoc IChildERC20
      */
     function initialize(address rootToken_, string calldata name_, string calldata symbol_, uint8 decimals_) external {
+        require(
+            rootToken_ != address(0) && bytes(name_).length != 0 && bytes(symbol_).length != 0,
+            "ChildERC20: BAD_INITIALIZATION"
+        );
         _rootToken = rootToken_;
         _name = name_;
         _symbol = symbol_;
@@ -287,5 +290,6 @@ contract ChildERC20 is Context, EIP712MetaTransaction, IChildERC20 {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
+    // slither-disable-next-line unused-state,naming-convention
     uint256[46] private __gap;
 }

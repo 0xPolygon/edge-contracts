@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC20.sol";
+import "../interfaces/IStateReceiver.sol";
 
-contract ChildERC20Predicate is Initializable {
+contract ChildERC20Predicate is IStateReceiver, Initializable {
     using SafeERC20 for IERC20;
 
     struct ERC20BridgeEvent {
@@ -31,12 +32,19 @@ contract ChildERC20Predicate is Initializable {
     event L2ERC20Withdraw(ERC20BridgeEvent indexed withdrawal, uint256 amount);
 
     function initialize(
-        IStateSender newL2StateSender,
+        address newL2StateSender,
         address newStateReceiver,
         address newRootERC20Predicate,
         address newChildTokenTemplate
     ) external initializer {
-        l2StateSender = newL2StateSender;
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newRootERC20Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "ChildERC20Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
         stateReceiver = newStateReceiver;
         rootERC20Predicate = newRootERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
@@ -51,7 +59,7 @@ contract ChildERC20Predicate is Initializable {
     ) external {
         IChildERC20 childToken = IChildERC20(Clones.cloneDeterministic(childTokenTemplate, salt));
         childToken.initialize(rootToken, name, symbol, decimals);
-
+        // slither-disable-next-line reentrancy-benign
         childTokenToRootToken[address(childToken)] = rootToken;
     }
 
@@ -97,7 +105,7 @@ contract ChildERC20Predicate is Initializable {
             rootERC20Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, childToken, msg.sender, receiver, amount)
         );
-
+        // slither-disable-next-line reentrancy-events
         emit L2ERC20Withdraw(ERC20BridgeEvent(rootToken, address(childToken), msg.sender, receiver), amount);
     }
 
@@ -120,7 +128,7 @@ contract ChildERC20Predicate is Initializable {
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
         require(childToken.mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
-
+        // slither-disable-next-line reentrancy-events
         emit L2ERC20Deposit(ERC20BridgeEvent(depositToken, address(childToken), depositor, receiver), amount);
     }
 }

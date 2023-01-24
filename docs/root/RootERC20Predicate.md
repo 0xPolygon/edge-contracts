@@ -118,7 +118,7 @@ function exitHelper() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(contract IStateSender newStateSender, address newExitHelper, address newChildERC20Predicate) external nonpayable
+function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate) external nonpayable
 ```
 
 
@@ -129,7 +129,7 @@ function initialize(contract IStateSender newStateSender, address newExitHelper,
 
 | Name | Type | Description |
 |---|---|---|
-| newStateSender | contract IStateSender | undefined |
+| newStateSender | address | undefined |
 | newExitHelper | address | undefined |
 | newChildERC20Predicate | address | undefined |
 

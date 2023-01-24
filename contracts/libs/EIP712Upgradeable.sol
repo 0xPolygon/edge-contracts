@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// slither-disable-start naming-convention
 // Adapted from OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/EIP712.sol)
 
 pragma solidity 0.8.17;
@@ -102,3 +103,4 @@ abstract contract EIP712Upgradeable {
         return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
     }
 }
+// slither-disable-end naming-convention

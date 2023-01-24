@@ -7,7 +7,7 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
     bytes32 private constant META_TRANSACTION_TYPEHASH =
         keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
 
-    event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
+    event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature);
     mapping(address => uint256) private nonces;
 
     /*
@@ -27,8 +27,8 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
         bytes32 sigR,
         bytes32 sigS,
         uint8 sigV
-    ) external payable returns (bytes memory) {
-        bytes4 destinationFunctionSig = convertBytesToBytes4(functionSignature);
+    ) external returns (bytes memory) {
+        bytes4 destinationFunctionSig = _convertBytesToBytes4(functionSignature);
 
         require(destinationFunctionSig != msg.sig, "functionSignature can not be of executeMetaTransaction method");
 
@@ -38,17 +38,18 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
             functionSignature: functionSignature
         });
 
-        require(verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
+        require(_verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
 
         unchecked {
             ++nonces[userAddress];
         }
         // Append userAddress at the end to extract it from calling context
-        (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
+        // slither-disable-next-line low-level-calls
+        (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress)); // solhint-disable avoid-low-level-calls
 
         require(success, "Function call not successful");
-
-        emit MetaTransactionExecuted(userAddress, payable(msg.sender), functionSignature);
+        // slither-disable-next-line reentrancy-events
+        emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
         return returnData;
     }
 
@@ -56,23 +57,13 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
         nonce = nonces[user];
     }
 
-    function verify(
-        address user,
-        MetaTransaction memory metaTx,
-        bytes32 sigR,
-        bytes32 sigS,
-        uint8 sigV
-    ) private view returns (bool) {
-        address signer = ecrecover(_hashTypedDataV4(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
-        require(signer != address(0), "Invalid signature");
-        return signer == user;
-    }
-
-    function msgSender() private view returns (address sender) {
+    function _msgSender() internal view returns (address sender) {
         if (msg.sender == address(this)) {
             bytes memory array = msg.data;
             uint256 index = msg.data.length;
+            // slither-disable-next-line assembly
             assembly {
+                // solhint-disable no-inline-assembly
                 // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
                 sender := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
             }
@@ -82,19 +73,32 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
         return sender;
     }
 
-    function hashMetaTransaction(MetaTransaction memory metaTx) private pure returns (bytes32) {
+    function _verify(
+        address user,
+        MetaTransaction memory metaTx,
+        bytes32 sigR,
+        bytes32 sigS,
+        uint8 sigV
+    ) private view returns (bool) {
+        address signer = ecrecover(_hashTypedDataV4(_hashMetaTransaction(metaTx)), sigV, sigR, sigS);
+        require(signer != address(0), "Invalid signature");
+        return signer == user;
+    }
+
+    function _hashMetaTransaction(MetaTransaction memory metaTx) private pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(META_TRANSACTION_TYPEHASH, metaTx.nonce, metaTx.from, keccak256(metaTx.functionSignature))
             );
     }
 
-    function convertBytesToBytes4(bytes memory inBytes) private pure returns (bytes4 outBytes4) {
+    function _convertBytesToBytes4(bytes memory inBytes) private pure returns (bytes4 outBytes4) {
         if (inBytes.length == 0) {
             return 0x0;
         }
-
+        // slither-disable-next-line assembly
         assembly {
+            // solhint-disable no-inline-assembly
             outBytes4 := mload(add(inBytes, 32))
         }
     }
