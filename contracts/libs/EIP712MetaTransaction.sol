@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import "./EIP712Upgradeable.sol";
 
+// solhint-disable reason-string
 contract EIP712MetaTransaction is EIP712Upgradeable {
     bytes32 private constant META_TRANSACTION_TYPEHASH =
         keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
