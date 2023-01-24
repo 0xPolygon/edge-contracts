@@ -3,6 +3,7 @@
 
 pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../libs/EIP712MetaTransaction.sol";
 import "../interfaces/IChildERC20.sol";
 
@@ -12,7 +13,8 @@ import "../interfaces/IChildERC20.sol";
     @notice Child token template for ChildERC20 predicate deployments
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
-contract ChildERC20 is EIP712MetaTransaction, IChildERC20 {
+// solhint-disable reason-string
+contract ChildERC20 is EIP712MetaTransaction, Initializable, IChildERC20 {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -33,7 +35,12 @@ contract ChildERC20 is EIP712MetaTransaction, IChildERC20 {
     /**
      * @inheritdoc IChildERC20
      */
-    function initialize(address rootToken_, string calldata name_, string calldata symbol_, uint8 decimals_) external {
+    function initialize(
+        address rootToken_,
+        string calldata name_,
+        string calldata symbol_,
+        uint8 decimals_
+    ) external initializer {
         require(
             rootToken_ != address(0) && bytes(name_).length != 0 && bytes(symbol_).length != 0,
             "ChildERC20: BAD_INITIALIZATION"

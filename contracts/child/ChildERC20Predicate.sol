@@ -8,8 +8,10 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC20.sol";
 import "../interfaces/IStateReceiver.sol";
+import "./System.sol";
 
-contract ChildERC20Predicate is IStateReceiver, Initializable {
+// solhint-disable reason-string
+contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     using SafeERC20 for IERC20;
 
     struct ERC20BridgeEvent {
@@ -19,10 +21,17 @@ contract ChildERC20Predicate is IStateReceiver, Initializable {
         address receiver;
     }
 
+    /// @custom:security write-protection="onlySystemCall()"
     IStateSender public l2StateSender;
+    /// @custom:security write-protection="onlySystemCall()"
     address public stateReceiver;
+    /// @custom:security write-protection="onlySystemCall()"
     address public rootERC20Predicate;
+    /// @custom:security write-protection="onlySystemCall()"
     address public childTokenTemplate;
+    /// @custom:security write-protection="onlySystemCall()"
+    address public nativeTokenRootAddress;
+    address public constant NATIVE_TOKEN_CHILD_ADDRESS = 0x0000000000000000000000000000000000001010;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
 
@@ -35,8 +44,12 @@ contract ChildERC20Predicate is IStateReceiver, Initializable {
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC20Predicate,
-        address newChildTokenTemplate
-    ) external initializer {
+        address newChildTokenTemplate,
+        address newNativeTokenRootAddress,
+        string calldata newNativeTokenName,
+        string calldata newNativeTokenSymbol,
+        uint8 newNativeTokenDecimals
+    ) external onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&
@@ -48,6 +61,12 @@ contract ChildERC20Predicate is IStateReceiver, Initializable {
         stateReceiver = newStateReceiver;
         rootERC20Predicate = newRootERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
+        IChildERC20(NATIVE_TOKEN_CHILD_ADDRESS).initialize(
+            newNativeTokenRootAddress,
+            newNativeTokenName,
+            newNativeTokenSymbol,
+            newNativeTokenDecimals
+        ); // native token root address must be initialized as zero address where no root token exists
     }
 
     function deployChildToken(

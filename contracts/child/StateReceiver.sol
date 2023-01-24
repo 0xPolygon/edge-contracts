@@ -10,6 +10,7 @@ import {Merkle} from "../common/Merkle.sol";
  * @author Polygon Technology (JD Kanani @jdkanani, @QEDK)
  * @notice executes and relays the state data on the child chain
  */
+// solhint-disable reason-string
 contract StateReceiver is System {
     using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
