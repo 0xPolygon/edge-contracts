@@ -5,7 +5,7 @@ import { MerkleTree } from "merkletreejs";
 import * as mcl from "../../ts/mcl";
 import { BLS, BN256G2, CheckpointManager, ExitHelper } from "../../typechain";
 
-const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHECKPOINT_MANAGER"]));
 
 describe("ExitHelper", () => {
   let bls: BLS,
@@ -60,10 +60,9 @@ describe("ExitHelper", () => {
       });
     }
 
-    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet);
+    await checkpointManager.initialize(bls.address, bn256G2.address, chainId, validatorSet);
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
-    expect(await checkpointManager.domain()).to.equal(DOMAIN);
     expect(await checkpointManager.currentValidatorSetLength()).to.equal(validatorSetSize);
 
     for (let i = 0; i < validatorSetSize; i++) {

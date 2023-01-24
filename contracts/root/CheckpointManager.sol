@@ -7,7 +7,6 @@ import "../common/Merkle.sol";
 import "../interfaces/ICheckpointManager.sol";
 import "../interfaces/IBLS.sol";
 import "../interfaces/IBN256G2.sol";
-import "../interfaces/ICheckpointManager.sol";
 
 contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];
@@ -18,7 +17,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     uint256 public currentValidatorSetLength;
     uint256 public currentCheckpointBlockNumber;
     uint256 public totalVotingPower;
-    bytes32 public domain;
+    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
     IBLS public bls;
     IBN256G2 public bn256G2;
 
@@ -32,20 +31,17 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      * @dev Contract can only be initialized once
      * @param newBls Address of the BLS library contract
      * @param newBn256G2 Address of the BLS library contract
-     * @param newDomain Domain to use when hashing messages to a point
      * @param chainId_ Chain ID of the child chain
      */
     function initialize(
         IBLS newBls,
         IBN256G2 newBn256G2,
-        bytes32 newDomain,
         uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
         chainId = chainId_;
         bls = newBls;
         bn256G2 = newBn256G2;
-        domain = newDomain;
         currentValidatorSetLength = newValidatorSet.length;
         _setNewValidatorSet(newValidatorSet);
     }
@@ -76,7 +72,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
             )
         );
 
-        _verifySignature(bls.hashToPoint(domain, hash), signature, bitmap);
+        _verifySignature(bls.hashToPoint(DOMAIN, hash), signature, bitmap);
 
         uint256 prevEpoch = currentEpoch;
 
