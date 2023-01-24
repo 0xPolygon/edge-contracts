@@ -106,7 +106,7 @@ function deployChildToken(address rootToken, bytes32 salt, string name, string s
 ### initialize
 
 ```solidity
-function initialize(contract IStateSender newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 
@@ -117,7 +117,7 @@ function initialize(contract IStateSender newL2StateSender, address newStateRece
 
 | Name | Type | Description |
 |---|---|---|
-| newL2StateSender | contract IStateSender | undefined |
+| newL2StateSender | address | undefined |
 | newStateReceiver | address | undefined |
 | newRootERC20Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |

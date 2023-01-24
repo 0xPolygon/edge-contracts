@@ -13,7 +13,7 @@
 ### executeMetaTransaction
 
 ```solidity
-function executeMetaTransaction(address userAddress, bytes functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) external payable returns (bytes)
+function executeMetaTransaction(address userAddress, bytes functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) external nonpayable returns (bytes)
 ```
 
 
@@ -65,7 +65,7 @@ function getNonce(address user) external view returns (uint256 nonce)
 ### MetaTransactionExecuted
 
 ```solidity
-event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature)
+event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature)
 ```
 
 
@@ -77,7 +77,7 @@ event MetaTransactionExecuted(address userAddress, address payable relayerAddres
 | Name | Type | Description |
 |---|---|---|
 | userAddress  | address | undefined |
-| relayerAddress  | address payable | undefined |
+| relayerAddress  | address | undefined |
 | functionSignature  | bytes | undefined |
 
 
