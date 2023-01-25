@@ -159,6 +159,9 @@ contract StateReceiver is System {
             abi.encodeWithSignature("onStateReceive(uint256,address,bytes)", obj.id, obj.sender, obj.data)
         );
 
+        // if state sync fails, revert flag
+        if (!success) processedStateSyncs[obj.id] = false;
+
         // emit a ResultEvent indicating whether invocation of state sync was successful or not
         // slither-disable-next-line reentrancy-events
         emit StateSyncResult(obj.id, success, returnData);
