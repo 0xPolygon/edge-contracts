@@ -1,11 +1,10 @@
 import { expect } from "chai";
+import { BigNumber } from "ethers";
 import * as hre from "hardhat";
 import { ethers } from "hardhat";
-import { Signer, BigNumber } from "ethers";
-import { FakeContract, smock } from "@defi-wonderland/smock";
-import { StateReceiver, StateReceivingContract } from "../../typechain";
-import { alwaysTrueBytecode, alwaysFalseBytecode, alwaysRevertBytecode } from "../constants";
 import { MerkleTree } from "merkletreejs";
+import { StateReceiver, StateReceivingContract } from "../../typechain-types";
+import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
 describe("StateReceiver", () => {
   let stateReceiver: StateReceiver,
@@ -19,12 +18,12 @@ describe("StateReceiver", () => {
     hashes: any[];
   before(async () => {
     const StateReceiver = await ethers.getContractFactory("StateReceiver");
-    stateReceiver = await StateReceiver.deploy();
+    stateReceiver = (await StateReceiver.deploy()) as StateReceiver;
 
     await stateReceiver.deployed();
 
     const StateReceivingContract = await ethers.getContractFactory("StateReceivingContract");
-    stateReceivingContract = await StateReceivingContract.deploy();
+    stateReceivingContract = (await StateReceivingContract.deploy()) as StateReceivingContract;
 
     await stateReceivingContract.deployed();
 

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import * as hre from "hardhat";
 import { ethers } from "hardhat";
-import { MaticTransfer, MRC20 } from "../../typechain";
+import { MaticTransfer, MRC20 } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
 describe("MRC20", () => {
@@ -19,7 +19,7 @@ describe("MRC20", () => {
   before(async () => {
     accounts = await ethers.getSigners();
     const mrc20Factory = await ethers.getContractFactory("MRC20");
-    mrc20 = await mrc20Factory.deploy();
+    mrc20 = (await mrc20Factory.deploy()) as MRC20;
 
     await mrc20.deployed();
 
@@ -62,7 +62,7 @@ describe("MRC20", () => {
     ]);
 
     const maticTransferFactory = await ethers.getContractFactory("MaticTransfer");
-    maticTransfer = await maticTransferFactory.deploy();
+    maticTransfer = (await maticTransferFactory.deploy()) as MaticTransfer;
 
     await maticTransfer.deployed();
   });

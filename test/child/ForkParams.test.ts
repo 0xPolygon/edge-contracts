@@ -1,17 +1,16 @@
-import { expect, use } from "chai";
-import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
-import { ForkParams } from "../../typechain";
 import { impersonateAccount, mine, stopImpersonatingAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
+import { BigNumber } from "ethers";
+import { ethers } from "hardhat";
+import { ForkParams } from "../../typechain-types";
 
 describe("ForkParams", () => {
   let forkParams: ForkParams, accounts: SignerWithAddress[], futureBlockNumber: number;
   before(async () => {
     accounts = await ethers.getSigners();
     const forkParamsFactory = await ethers.getContractFactory("ForkParams");
-    forkParams = await forkParamsFactory.deploy(accounts[0].address);
+    forkParams = (await forkParamsFactory.deploy(accounts[0].address)) as ForkParams;
 
     await forkParams.deployed();
   });

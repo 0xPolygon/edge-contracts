@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BytesLike, utils } from "ethers";
-import { StateSender } from "../../typechain";
+import { StateSender } from "../../typechain-types";
 
 describe("StateSender", () => {
   let stateSender: StateSender, accounts: any[]; // we use any so we can access address directly from object
@@ -10,7 +9,7 @@ describe("StateSender", () => {
     accounts = await ethers.getSigners();
     const StateSenderFactory = await ethers.getContractFactory("StateSender");
 
-    stateSender = await StateSenderFactory.deploy();
+    stateSender = (await StateSenderFactory.deploy()) as StateSender;
     await stateSender.deployed();
   });
 

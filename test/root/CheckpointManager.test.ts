@@ -1,10 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumberish, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
-import { expandMsg } from "../../ts/hashToField";
-import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
-import { BLS, BN256G2, CheckpointManager } from "../../typechain";
+import { BLS, BN256G2, CheckpointManager } from "../../typechain-types";
 
 const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 
@@ -23,15 +20,15 @@ describe("CheckpointManager", () => {
     accounts = await ethers.getSigners();
 
     const BLS = await ethers.getContractFactory("BLS");
-    bls = await BLS.deploy();
+    bls = (await BLS.deploy()) as BLS;
     await bls.deployed();
 
     const BN256G2 = await ethers.getContractFactory("BN256G2");
-    bn256G2 = await BN256G2.deploy();
+    bn256G2 = (await BN256G2.deploy()) as BN256G2;
     await bn256G2.deployed();
 
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
-    checkpointManager = await CheckpointManager.deploy();
+    checkpointManager = (await CheckpointManager.deploy()) as CheckpointManager;
     await checkpointManager.deployed();
   });
 

@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
-import { MockValidatorStorage } from "../../typechain";
+import { MockValidatorStorage } from "../../typechain-types";
 
 describe("ValidatorStorage", async () => {
   let accounts: SignerWithAddress[];
@@ -10,7 +10,7 @@ describe("ValidatorStorage", async () => {
 
   before(async () => {
     accounts = await ethers.getSigners();
-    vs = await (await ethers.getContractFactory("MockValidatorStorage")).deploy();
+    vs = await (await ethers.getContractFactory("MockValidatorStorage")).deploy() as MockValidatorStorage;
   });
 
   it("should be able to insert values", async () => {
