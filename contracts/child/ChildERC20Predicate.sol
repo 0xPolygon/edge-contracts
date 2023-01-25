@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC20.sol";
 import "../interfaces/IStateReceiver.sol";
+import "../interfaces/IChildERC20Predicate.sol";
 import "./System.sol";
 
 // solhint-disable reason-string
-contract ChildERC20Predicate is Initializable, System, IStateReceiver {
+contract ChildERC20Predicate is Initializable, System, IChildERC20Predicate {
     using SafeERC20 for IERC20;
 
     struct ERC20BridgeEvent {
@@ -29,8 +30,6 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     address public rootERC20Predicate;
     /// @custom:security write-protection="onlySystemCall()"
     address public childTokenTemplate;
-    /// @custom:security write-protection="onlySystemCall()"
-    address public nativeTokenRootAddress;
     address public constant NATIVE_TOKEN_CHILD_ADDRESS = 0x0000000000000000000000000000000000001010;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");

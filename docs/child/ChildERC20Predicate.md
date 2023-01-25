@@ -262,23 +262,6 @@ function l2StateSender() external view returns (contract IStateSender)
 |---|---|---|
 | _0 | contract IStateSender | undefined |
 
-### nativeTokenRootAddress
-
-```solidity
-function nativeTokenRootAddress() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### onStateReceive
 
 ```solidity

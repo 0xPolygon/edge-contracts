@@ -18,6 +18,7 @@ contract EIP1559Burn is Initializable {
     function initialize(IChildERC20Predicate newChildERC20Predicate, address newBurnDestination) external initializer {
         require(address(newChildERC20Predicate) != address(0), "EIP1559Burn: BAD_INITIALIZATION");
         childERC20Predicate = newChildERC20Predicate;
+        // slither-disable-next-line missing-zero-check
         burnDestination = newBurnDestination;
     }
 
@@ -28,7 +29,7 @@ contract EIP1559Burn is Initializable {
 
         NATIVE_TOKEN.safeApprove(address(childERC20Predicate), balance);
         childERC20Predicate.withdrawTo(NATIVE_TOKEN, burnDestination, balance);
-
+        // slither-disable-next-line reentrancy-events
         emit NativeTokenBurnt(msg.sender, balance);
     }
 }
