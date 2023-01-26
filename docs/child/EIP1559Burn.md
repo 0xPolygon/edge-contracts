@@ -1,10 +1,10 @@
 # EIP1559Burn
 
+*Polygon Technology (@QEDK)*
 
+> EIP1559Burn
 
-
-
-
+Burns the native token on root chain as an ERC20
 
 
 
@@ -50,16 +50,16 @@ function childERC20Predicate() external view returns (contract IChildERC20Predic
 function initialize(contract IChildERC20Predicate newChildERC20Predicate, address newBurnDestination) external nonpayable
 ```
 
+Initilization function for EIP1559 burn contract
 
-
-
+*Can only be called once*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| newChildERC20Predicate | contract IChildERC20Predicate | undefined |
-| newBurnDestination | address | undefined |
+| newChildERC20Predicate | contract IChildERC20Predicate | Address of the ERC20 predicate on child chain |
+| newBurnDestination | address | Address on the root chain to burn the tokens and send to |
 
 ### withdraw
 
@@ -67,9 +67,9 @@ function initialize(contract IChildERC20Predicate newChildERC20Predicate, addres
 function withdraw() external nonpayable
 ```
 
+Function to burn native tokens on child chain and send them to burn destination on root
 
-
-
+*Takes the entire current native token balance and burns it*
 
 
 

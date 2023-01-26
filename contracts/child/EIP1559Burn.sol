@@ -6,6 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IChildERC20.sol";
 import "../interfaces/IChildERC20Predicate.sol";
 
+/**
+    @title EIP1559Burn
+    @author Polygon Technology (@QEDK)
+    @notice Burns the native token on root chain as an ERC20
+ */
 contract EIP1559Burn is Initializable {
     using SafeERC20 for IChildERC20;
 
@@ -15,6 +20,15 @@ contract EIP1559Burn is Initializable {
 
     event NativeTokenBurnt(address indexed burner, uint256 amount);
 
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
+
+    /**
+     * @notice Initilization function for EIP1559 burn contract
+     * @param newChildERC20Predicate Address of the ERC20 predicate on child chain
+     * @param newBurnDestination Address on the root chain to burn the tokens and send to
+     * @dev Can only be called once
+     */
     function initialize(IChildERC20Predicate newChildERC20Predicate, address newBurnDestination) external initializer {
         require(address(newChildERC20Predicate) != address(0), "EIP1559Burn: BAD_INITIALIZATION");
         childERC20Predicate = newChildERC20Predicate;
@@ -22,6 +36,10 @@ contract EIP1559Burn is Initializable {
         burnDestination = newBurnDestination;
     }
 
+    /**
+     * @notice Function to burn native tokens on child chain and send them to burn destination on root
+     * @dev Takes the entire current native token balance and burns it
+     */
     function withdraw() external {
         require(address(childERC20Predicate) != address(0), "EIP1559Burn: UNINITIALIZED");
 

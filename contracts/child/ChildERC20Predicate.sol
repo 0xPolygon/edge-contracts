@@ -114,7 +114,7 @@ contract ChildERC20Predicate is Initializable, System, IChildERC20Predicate {
         address rootToken = childToken.rootToken();
 
         require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
-        // a mapped token should never have root token unset
+        // a mapped (and withdrawable) token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
