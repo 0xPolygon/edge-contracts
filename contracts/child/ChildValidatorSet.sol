@@ -253,8 +253,8 @@ contract ChildValidatorSet is
         }
         doubleSignerSlashes[epoch][pbftRound][key] = true;
         Validator storage validator = _validators.get(key);
-        _validators.delegationPools[key].underlyingSupply -=
-            (_validators.delegationPools[key].underlyingSupply * DOUBLE_SIGNING_SLASHING_PERCENT) /
+        _validators.delegationPools[key].supply -=
+            (_validators.delegationPools[key].supply * DOUBLE_SIGNING_SLASHING_PERCENT) /
             100;
         uint256 slashedAmount = (validator.stake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
         validator.stake -= slashedAmount;
