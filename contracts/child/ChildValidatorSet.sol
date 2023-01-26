@@ -211,7 +211,7 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock + 1)) / epochSize;
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock) * 100) / (epochSize * 100);
 
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
