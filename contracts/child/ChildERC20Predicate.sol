@@ -10,6 +10,11 @@ import "../interfaces/IChildERC20.sol";
 import "../interfaces/IStateReceiver.sol";
 import "./System.sol";
 
+/**
+    @title ChildERC20Predicate
+    @author Polygon Technology (@QEDK)
+    @notice Enables ERC20 token deposits and withdrawals across an arbitrary root chain and child chain
+ */
 // solhint-disable reason-string
 contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     using SafeERC20 for IERC20;
@@ -40,6 +45,17 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     event L2ERC20Deposit(ERC20BridgeEvent indexed deposit, uint256 amount);
     event L2ERC20Withdraw(ERC20BridgeEvent indexed withdrawal, uint256 amount);
 
+    /**
+     * @notice Initilization function for ChildERC20Predicate
+     * @param newL2StateSender Address of L2StateSender to send exit information to
+     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
+     * @param newNativeTokenRootAddress Address of native token on root chain
+     * @param newNativeTokenName Name of native token ERC20
+     * @param newNativeTokenSymbol Symbol of native token ERC20
+     * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
+     */
     function initialize(
         address newL2StateSender,
         address newStateReceiver,
@@ -69,6 +85,15 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         ); // native token root address must be initialized as zero address where no root token exists
     }
 
+    /**
+     * @notice Function to be used for mapping a root token to a child token
+     * @param rootToken Address of the root token being mapped
+     * @param salt Salt to use for CREATE2 deploymentAdd
+     * @param name Name of the child token
+     * @param symbol Symbol of the child token
+     * @param decimals Decimals of the child token (should match root token)
+     * @dev Allows for arbitrary N-to-M mappings for any root token to a child token
+     */
     function deployChildToken(
         address rootToken,
         bytes32 salt,
@@ -82,6 +107,12 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         childTokenToRootToken[address(childToken)] = rootToken;
     }
 
+    /**
+     * @notice Function to be used for token deposits
+     * @param sender Address of the sender on the root chain
+     * @param data Data sent by the sender
+     * @dev Can be extended to include other signatures for more functionality
+     */
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
         require(msg.sender == stateReceiver, "ChildERC20Predicate: ONLY_STATE_RECEIVER");
         require(sender == rootERC20Predicate, "ChildERC20Predicate: ONLY_ROOT_PREDICATE");
@@ -101,10 +132,21 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         }
     }
 
+    /**
+     * @notice Function to withdraw tokens from the withdrawer to themselves on the root chain
+     * @param childToken Address of the child token being withdrawn
+     * @param amount Amount to withdraw
+     */
     function withdraw(IChildERC20 childToken, uint256 amount) external {
         _withdraw(childToken, msg.sender, amount);
     }
 
+    /**
+     * @notice Function to withdraw tokens from the withdrawer to another address on the root chain
+     * @param childToken Address of the child token being withdrawn
+     * @param receiver Address of the receiver on the root chain
+     * @param amount Amount to withdraw
+     */
     function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external {
         _withdraw(childToken, receiver, amount);
     }

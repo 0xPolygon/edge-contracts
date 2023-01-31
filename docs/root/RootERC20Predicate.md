@@ -67,7 +67,7 @@ function childERC20Predicate() external view returns (address)
 function deposit(contract IERC20 rootToken, address childToken, uint256 amount) external nonpayable
 ```
 
-
+Function to deposit tokens from the depositor to themselves on the child chain
 
 
 
@@ -75,9 +75,9 @@ function deposit(contract IERC20 rootToken, address childToken, uint256 amount) 
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC20 | undefined |
-| childToken | address | undefined |
-| amount | uint256 | undefined |
+| rootToken | contract IERC20 | Address of the root token being deposited |
+| childToken | address | Address of the child token |
+| amount | uint256 | Amount to deposit |
 
 ### depositTo
 
@@ -85,7 +85,7 @@ function deposit(contract IERC20 rootToken, address childToken, uint256 amount) 
 function depositTo(contract IERC20 rootToken, address childToken, address receiver, uint256 amount) external nonpayable
 ```
 
-
+Function to deposit tokens from the depositor to another address on the child chain
 
 
 
@@ -93,10 +93,10 @@ function depositTo(contract IERC20 rootToken, address childToken, address receiv
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC20 | undefined |
-| childToken | address | undefined |
+| rootToken | contract IERC20 | Address of the root token being deposited |
+| childToken | address | Address of the child token |
 | receiver | address | undefined |
-| amount | uint256 | undefined |
+| amount | uint256 | Amount to deposit |
 
 ### exitHelper
 
@@ -121,17 +121,17 @@ function exitHelper() external view returns (address)
 function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate) external nonpayable
 ```
 
+Initilization function for RootERC20Predicate
 
-
-
+*Can only be called once.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| newStateSender | address | undefined |
-| newExitHelper | address | undefined |
-| newChildERC20Predicate | address | undefined |
+| newStateSender | address | Address of StateSender to send deposit information to |
+| newExitHelper | address | Address of ExitHelper to receive withdrawal information from |
+| newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
 
 ### onL2StateReceive
 
@@ -139,17 +139,17 @@ function initialize(address newStateSender, address newExitHelper, address newCh
 function onL2StateReceive(uint256, address sender, bytes data) external nonpayable
 ```
 
+Function to be used for token withdrawals
 
-
-
+*Can be extended to include other signatures for more functionality*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-| sender | address | undefined |
-| data | bytes | undefined |
+| sender | address | Address of the sender on the child chain |
+| data | bytes | Data sent by the sender |
 
 ### stateSender
 

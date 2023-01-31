@@ -26,6 +26,13 @@ contract RootERC20Predicate is Initializable {
     event ERC20Deposit(ERC20BridgeEvent indexed deposit, uint256 amount);
     event ERC20Withdraw(ERC20BridgeEvent indexed withdrawal, uint256 amount);
 
+    /**
+     * @notice Initilization function for RootERC20Predicate
+     * @param newStateSender Address of StateSender to send deposit information to
+     * @param newExitHelper Address of ExitHelper to receive withdrawal information from
+     * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with
+     * @dev Can only be called once.
+     */
     function initialize(
         address newStateSender,
         address newExitHelper,
@@ -40,14 +47,12 @@ contract RootERC20Predicate is Initializable {
         childERC20Predicate = newChildERC20Predicate;
     }
 
-    function deposit(IERC20 rootToken, address childToken, uint256 amount) external {
-        _deposit(rootToken, childToken, msg.sender, amount);
-    }
-
-    function depositTo(IERC20 rootToken, address childToken, address receiver, uint256 amount) external {
-        _deposit(rootToken, childToken, receiver, amount);
-    }
-
+    /**
+     * @notice Function to be used for token withdrawals
+     * @param sender Address of the sender on the child chain
+     * @param data Data sent by the sender
+     * @dev Can be extended to include other signatures for more functionality
+     */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
         require(msg.sender == exitHelper, "RootERC20Predicate: ONLY_EXIT_HELPER");
         require(sender == childERC20Predicate, "RootERC20Predicate: ONLY_CHILD_PREDICATE");
@@ -66,6 +71,26 @@ contract RootERC20Predicate is Initializable {
         } else {
             revert("RootERC20Predicate: INVALID_SIGNATURE");
         }
+    }
+
+    /**
+     * @notice Function to deposit tokens from the depositor to themselves on the child chain
+     * @param rootToken Address of the root token being deposited
+     * @param childToken Address of the child token
+     * @param amount Amount to deposit
+     */
+    function deposit(IERC20 rootToken, address childToken, uint256 amount) external {
+        _deposit(rootToken, childToken, msg.sender, amount);
+    }
+
+    /**
+     * @notice Function to deposit tokens from the depositor to another address on the child chain
+     * @param rootToken Address of the root token being deposited
+     * @param childToken Address of the child token
+     * @param amount Amount to deposit
+     */
+    function depositTo(IERC20 rootToken, address childToken, address receiver, uint256 amount) external {
+        _deposit(rootToken, childToken, receiver, amount);
     }
 
     function _deposit(IERC20 rootToken, address childToken, address receiver, uint256 amount) private {
