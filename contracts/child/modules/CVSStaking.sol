@@ -127,6 +127,13 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
         return _validators.totalStake;
     }
 
+    /**
+     * @inheritdoc ICVSStaking
+     */
+    function totalStakeOf(address validator) external view returns (uint256) {
+        return _validators.totalStakeOf(validator);
+    }
+
     function _distributeValidatorReward(address validator, uint256 reward) internal {
         Validator storage _validator = _validators.get(validator);
         _validator.withdrawableRewards += reward;
