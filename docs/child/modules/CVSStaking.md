@@ -474,6 +474,28 @@ Calculates total stake in the network (self-stake + delegation).
 |---|---|---|
 | _0 | uint256 | Total stake (in MATIC wei) |
 
+### totalStakeOf
+
+```solidity
+function totalStakeOf(address validator) external view returns (uint256)
+```
+
+Gets validator&#39;s total stake (self-stake + delegation).
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator | address | Address of validator |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | Validator&#39;s total stake (in MATIC wei) |
+
 ### transferOwnership
 
 ```solidity
