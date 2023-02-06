@@ -195,11 +195,11 @@ contract ChildValidatorSet is
         if (length == 0) return 0;
 
         address tmpValidator = _validators.last();
-        activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
+        activeStake += _validators.get(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
 
         for (uint256 i = 1; i < length; i++) {
             tmpValidator = _validators.prev(tmpValidator);
-            activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
+            activeStake += _validators.get(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
         }
     }
 
@@ -317,7 +317,7 @@ contract ChildValidatorSet is
         address validatorAddr,
         uint256 totalReward
     ) private view returns (uint256, uint256) {
-        Validator memory validator = getValidator(validatorAddr);
+        Validator memory validator = _validators.get(validatorAddr);
         uint256 stakedAmount = validator.stake;
         uint256 delegations = _validators.getDelegationPool(validatorAddr).supply;
 
