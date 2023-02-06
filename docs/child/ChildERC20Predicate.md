@@ -205,7 +205,7 @@ function childTokenToRootToken(address) external view returns (address)
 ### deployChildToken
 
 ```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol, uint8 decimals) external nonpayable
+function deployChildToken(address rootToken, bytes32 salt, string name, string symbol, uint8 decimals) external nonpayable returns (address)
 ```
 
 Function to be used for mapping a root token to a child token
@@ -221,6 +221,12 @@ Function to be used for mapping a root token to a child token
 | name | string | Name of the child token |
 | symbol | string | Symbol of the child token |
 | decimals | uint8 | Decimals of the child token (should match root token) |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### initialize
 
@@ -261,23 +267,6 @@ function l2StateSender() external view returns (contract IStateSender)
 | Name | Type | Description |
 |---|---|---|
 | _0 | contract IStateSender | undefined |
-
-### nativeTokenRootAddress
-
-```solidity
-function nativeTokenRootAddress() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### onStateReceive
 
@@ -389,7 +378,7 @@ event Initialized(uint8 version)
 ### L2ERC20Deposit
 
 ```solidity
-event L2ERC20Deposit(ChildERC20Predicate.ERC20BridgeEvent indexed deposit, uint256 amount)
+event L2ERC20Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 amount)
 ```
 
 
@@ -400,13 +389,16 @@ event L2ERC20Deposit(ChildERC20Predicate.ERC20BridgeEvent indexed deposit, uint2
 
 | Name | Type | Description |
 |---|---|---|
-| deposit `indexed` | ChildERC20Predicate.ERC20BridgeEvent | undefined |
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| sender  | address | undefined |
+| receiver `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
 ### L2ERC20Withdraw
 
 ```solidity
-event L2ERC20Withdraw(ChildERC20Predicate.ERC20BridgeEvent indexed withdrawal, uint256 amount)
+event L2ERC20Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 amount)
 ```
 
 
@@ -417,8 +409,28 @@ event L2ERC20Withdraw(ChildERC20Predicate.ERC20BridgeEvent indexed withdrawal, u
 
 | Name | Type | Description |
 |---|---|---|
-| withdrawal `indexed` | ChildERC20Predicate.ERC20BridgeEvent | undefined |
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| sender  | address | undefined |
+| receiver `indexed` | address | undefined |
 | amount  | uint256 | undefined |
+
+### L2TokenMapped
+
+```solidity
+event L2TokenMapped(address indexed rootToken, address indexed childToken)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
 
 
 
