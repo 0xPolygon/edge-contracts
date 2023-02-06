@@ -83,10 +83,13 @@ contract ExitHelper is IExitHelper, Initializable {
 
         processedExits[id] = true;
 
-        // slither-disable-next-line calls-loop,low-level-calls,reentrancy-events
+        // slither-disable-next-line calls-loop,low-level-calls,reentrancy-events,reentrancy-no-eth
         (bool success, bytes memory returnData) = receiver.call(
             abi.encodeWithSignature("onL2StateReceive(uint256,address,bytes)", id, sender, data)
         );
+
+        // if state sync fails, revert flag
+        if (!success) processedExits[id] = false;
 
         emit ExitProcessed(id, success, returnData);
     }
