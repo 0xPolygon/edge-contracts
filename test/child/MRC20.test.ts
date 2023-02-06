@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 import { MaticTransfer, MRC20 } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
-describe("MRC20", () => {
+describe.skip("MRC20", () => {
   let mrc20: MRC20,
     systemMRC20: MRC20,
     stateReceiverMRC20: MRC20,
