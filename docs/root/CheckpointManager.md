@@ -10,6 +10,23 @@
 
 ## Methods
 
+### DOMAIN
+
+```solidity
+function DOMAIN() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### bls
 
 ```solidity
@@ -198,23 +215,6 @@ function currentValidatorSetLength() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### domain
-
-```solidity
-function domain() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### getEventMembershipByBlockNumber
 
 ```solidity
@@ -290,7 +290,7 @@ Function to get the event root for a block number
 ### initialize
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 newDomain, uint256 chainId_, ICheckpointManager.Validator[] newValidatorSet) external nonpayable
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, uint256 chainId_, ICheckpointManager.Validator[] newValidatorSet) external nonpayable
 ```
 
 
@@ -303,7 +303,6 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, bytes32 
 |---|---|---|
 | newBls | contract IBLS | undefined |
 | newBn256G2 | contract IBN256G2 | undefined |
-| newDomain | bytes32 | undefined |
 | chainId_ | uint256 | undefined |
 | newValidatorSet | ICheckpointManager.Validator[] | undefined |
 
