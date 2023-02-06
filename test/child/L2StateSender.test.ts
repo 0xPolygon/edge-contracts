@@ -1,15 +1,14 @@
 import { expect } from "chai";
 import * as hre from "hardhat";
-import { ethers, upgrades } from "hardhat";
-import { Signer, BigNumber } from "ethers";
-import { L2StateSender } from "../../typechain";
+import { ethers } from "hardhat";
+import { L2StateSender } from "../../typechain-types";
 
 describe("L2StateSender", () => {
   let l2StateSender: L2StateSender, accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
     accounts = await ethers.getSigners();
     const l2StateSenderFactory = await ethers.getContractFactory("L2StateSender");
-    l2StateSender = await l2StateSenderFactory.deploy();
+    l2StateSender = (await l2StateSenderFactory.deploy()) as L2StateSender;
 
     await l2StateSender.deployed();
   });

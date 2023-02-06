@@ -135,8 +135,8 @@ contract ChildValidatorSet is
                         inputs[i].nextValidatorSetHash
                     )
                 ),
-                inputs[i].bitmap,
-                inputs[i].signature
+                inputs[i].signature,
+                inputs[i].bitmap
             );
             unchecked {
                 ++i;
@@ -211,7 +211,7 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock + 1)) / epochSize;
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock) * 100) / (epochSize * 100);
 
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
@@ -253,8 +253,8 @@ contract ChildValidatorSet is
         }
         doubleSignerSlashes[epoch][pbftRound][key] = true;
         Validator storage validator = _validators.get(key);
-        _validators.delegationPools[key].underlyingSupply -=
-            (_validators.delegationPools[key].underlyingSupply * DOUBLE_SIGNING_SLASHING_PERCENT) /
+        _validators.delegationPools[key].supply -=
+            (_validators.delegationPools[key].supply * DOUBLE_SIGNING_SLASHING_PERCENT) /
             100;
         uint256 slashedAmount = (validator.stake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
         validator.stake -= slashedAmount;

@@ -21,7 +21,7 @@ abstract contract Uninitialized is Test {
     address public admin;
     address public alice;
     address public bob;
-    bytes32 public domain;
+    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
     bytes32[] public hashes;
     bytes32[] public proof;
     bytes[] public bitmaps;
@@ -37,13 +37,11 @@ abstract contract Uninitialized is Test {
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
 
-        domain = keccak256(abi.encodePacked(block.timestamp));
-
         string[] memory cmd = new string[](4);
         cmd[0] = "npx";
         cmd[1] = "ts-node";
         cmd[2] = "test/forge/root/generateMsg.ts";
-        cmd[3] = vm.toString(abi.encode(domain));
+        cmd[3] = vm.toString(abi.encode(DOMAIN));
         bytes memory out = vm.ffi(cmd);
 
         ICheckpointManager.Validator[] memory validatorSetTmp;
@@ -63,7 +61,7 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        checkpointManager.initialize(bls, bn256G2, domain, submitCounter, validatorSet);
+        checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
     }
 }
 
@@ -89,11 +87,10 @@ abstract contract FirstSubmitted is Initialized {
 
 contract CheckpointManager_Initialize is Uninitialized {
     function testInitialize() public {
-        checkpointManager.initialize(bls, bn256G2, domain, submitCounter, validatorSet);
+        checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
 
         assertEq(keccak256(abi.encode(checkpointManager.bls())), keccak256(abi.encode(address(bls))));
         assertEq(keccak256(abi.encode(checkpointManager.bn256G2())), keccak256(abi.encode(address(bn256G2))));
-        assertEq(checkpointManager.domain(), domain);
         assertEq(checkpointManager.currentValidatorSetLength(), validatorSetSize);
         for (uint256 i = 0; i < validatorSetSize; i++) {
             (address _address, uint256 votingPower) = checkpointManager.currentValidatorSet(i);

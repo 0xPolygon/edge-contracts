@@ -1,12 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumberish, BigNumber } from "ethers";
 import * as mcl from "../../ts/mcl";
-import { expandMsg } from "../../ts/hashToField";
-import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
-import { BLS, BN256G2, CheckpointManager } from "../../typechain";
+import { BLS, BN256G2, CheckpointManager } from "../../typechain-types";
 
-const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHECKPOINT_MANAGER"]));
 
 describe("CheckpointManager", () => {
   let bls: BLS,
@@ -23,15 +20,15 @@ describe("CheckpointManager", () => {
     accounts = await ethers.getSigners();
 
     const BLS = await ethers.getContractFactory("BLS");
-    bls = await BLS.deploy();
+    bls = (await BLS.deploy()) as BLS;
     await bls.deployed();
 
     const BN256G2 = await ethers.getContractFactory("BN256G2");
-    bn256G2 = await BN256G2.deploy();
+    bn256G2 = (await BN256G2.deploy()) as BN256G2;
     await bn256G2.deployed();
 
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
-    checkpointManager = await CheckpointManager.deploy();
+    checkpointManager = (await CheckpointManager.deploy()) as CheckpointManager;
     await checkpointManager.deployed();
   });
 
@@ -50,9 +47,9 @@ describe("CheckpointManager", () => {
       });
     }
 
-    await expect(
-      checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet)
-    ).to.be.revertedWith("VOTING_POWER_ZERO");
+    await expect(checkpointManager.initialize(bls.address, bn256G2.address, chainId, validatorSet)).to.be.revertedWith(
+      "VOTING_POWER_ZERO"
+    );
   });
 
   it("Initialize and validate initialization", async () => {
@@ -70,10 +67,9 @@ describe("CheckpointManager", () => {
       });
     }
 
-    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet);
+    await checkpointManager.initialize(bls.address, bn256G2.address, chainId, validatorSet);
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
-    expect(await checkpointManager.domain()).to.equal(DOMAIN);
     expect(await checkpointManager.currentValidatorSetLength()).to.equal(validatorSetSize);
 
     for (let i = 0; i < validatorSetSize; i++) {

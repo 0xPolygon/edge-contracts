@@ -148,7 +148,7 @@ Lastly, there are fields for an Etherscan and Polygonscan for verifying any depl
 npx hardhat compile --show-stack-traces
 ```
 
-`hardhat-ts` automatically generates typings for you after compilation, to use in tests and scripts. You can import them like: `import { ... } from "../typechain";`
+`hardhat-ts` automatically generates typings for you after compilation, to use in tests and scripts. You can import them like: `import { ... } from "../typechain-types";`
 
 Similarly, the `hardhat-dodoc` package autogenerates smart contract documentation in `docs/` every time Hardhat compiles the contract. If you wish to disable this, uncomment the `runOnCompile: false` line in the `dodoc` object in `hardhat.config.ts`.
 

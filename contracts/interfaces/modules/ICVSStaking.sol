@@ -55,6 +55,13 @@ interface ICVSStaking {
     function totalStake() external view returns (uint256);
 
     /**
+     * @notice Gets validator's total stake (self-stake + delegation).
+     * @param validator Address of validator
+     * @return Validator's total stake (in MATIC wei)
+     */
+    function totalStakeOf(address validator) external view returns (uint256);
+
+    /**
      * @notice Gets validator's unclaimed rewards.
      * @param validator Address of validator
      * @return Validator's unclaimed rewards (in MATIC wei)

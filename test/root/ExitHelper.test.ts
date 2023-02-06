@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
 import { MerkleTree } from "merkletreejs";
 import * as mcl from "../../ts/mcl";
-import { BLS, BN256G2, CheckpointManager, ExitHelper } from "../../typechain";
+import { BLS, BN256G2, CheckpointManager, ExitHelper } from "../../typechain-types";
 
-const DOMAIN = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHECKPOINT_MANAGER"]));
 
 describe("ExitHelper", () => {
   let bls: BLS,
@@ -26,22 +25,20 @@ describe("ExitHelper", () => {
     await mcl.init();
     accounts = await ethers.getSigners();
 
-    governance = accounts[0].address;
-
     const BLS = await ethers.getContractFactory("BLS");
-    bls = await BLS.deploy();
+    bls = (await BLS.deploy()) as BLS;
     await bls.deployed();
 
     const BN256G2 = await ethers.getContractFactory("BN256G2");
-    bn256G2 = await BN256G2.deploy();
+    bn256G2 = (await BN256G2.deploy()) as BN256G2;
     await bn256G2.deployed();
 
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
-    checkpointManager = await CheckpointManager.deploy();
+    checkpointManager = (await CheckpointManager.deploy()) as CheckpointManager;
     await checkpointManager.deployed();
 
     const ExitHelper = await ethers.getContractFactory("ExitHelper");
-    exitHelper = await ExitHelper.deploy();
+    exitHelper = (await ExitHelper.deploy()) as ExitHelper;
     await exitHelper.deployed();
   });
 
@@ -60,10 +57,9 @@ describe("ExitHelper", () => {
       });
     }
 
-    await checkpointManager.initialize(bls.address, bn256G2.address, DOMAIN, chainId, validatorSet);
+    await checkpointManager.initialize(bls.address, bn256G2.address, chainId, validatorSet);
     expect(await checkpointManager.bls()).to.equal(bls.address);
     expect(await checkpointManager.bn256G2()).to.equal(bn256G2.address);
-    expect(await checkpointManager.domain()).to.equal(DOMAIN);
     expect(await checkpointManager.currentValidatorSetLength()).to.equal(validatorSetSize);
 
     for (let i = 0; i < validatorSetSize; i++) {

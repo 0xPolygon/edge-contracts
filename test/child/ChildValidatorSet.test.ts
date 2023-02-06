@@ -4,7 +4,7 @@ import { BigNumber, BigNumberish } from "ethers";
 import * as hre from "hardhat";
 import { ethers } from "hardhat";
 import * as mcl from "../../ts/mcl";
-import { BLS, ChildValidatorSet } from "../../typechain";
+import { BLS, ChildValidatorSet } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysTrueBytecode } from "../constants";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.solidityKeccak256(["string"], ["DOMAIN_CHILD_VALIDATOR_SET"]));
