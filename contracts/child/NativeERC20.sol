@@ -45,6 +45,7 @@ contract NativeERC20 is Context, Initializable, System, IChildERC20 {
         string calldata symbol_,
         uint8 decimals_
     ) external initializer {
+        // slither-disable-next-line missing-zero-check
         _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
         _symbol = symbol_;
