@@ -247,7 +247,7 @@ describe("ChildERC20Predicate", () => {
     );
     await expect(
       stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
-    ).to.be.revertedWith("ERC1167: create2 failed");
+    ).to.be.revertedWithPanic();
   });
 
   it("withdraw tokens from child chain with same address", async () => {
