@@ -124,7 +124,7 @@ contract RootERC20Predicate is Initializable {
             childERC20Predicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
         );
-
+        // slither-disable-next-line reentrancy-events
         emit TokenMapped(address(rootToken), childToken);
     }
 

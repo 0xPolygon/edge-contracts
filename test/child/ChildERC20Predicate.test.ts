@@ -258,7 +258,7 @@ describe("ChildERC20Predicate", () => {
       ethers.utils.parseUnits(String(randomAmount))
     );
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt.events?.find((log) => log.event === "L2ERC20Withdraw");
+    const depositEvent = depositReceipt.events?.find((log: any) => log.event === "L2ERC20Withdraw");
     expect(depositEvent?.args?.rootToken).to.equal(nativeERC20RootToken);
     expect(depositEvent?.args?.childToken).to.equal(nativeERC20.address);
     expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
@@ -275,7 +275,7 @@ describe("ChildERC20Predicate", () => {
       ethers.utils.parseUnits(String(randomAmount))
     );
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt.events?.find((log) => log.event === "L2ERC20Withdraw");
+    const depositEvent = depositReceipt.events?.find((log: any) => log.event === "L2ERC20Withdraw");
     expect(depositEvent?.args?.rootToken).to.equal(nativeERC20RootToken);
     expect(depositEvent?.args?.childToken).to.equal(nativeERC20.address);
     expect(depositEvent?.args?.sender).to.equal(accounts[0].address);

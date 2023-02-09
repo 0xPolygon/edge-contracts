@@ -82,13 +82,15 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         stateReceiver = newStateReceiver;
         rootERC20Predicate = newRootERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
+        rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CHILD_ADDRESS;
         IChildERC20(NATIVE_TOKEN_CHILD_ADDRESS).initialize(
             newNativeTokenRootAddress,
             newNativeTokenName,
             newNativeTokenSymbol,
             newNativeTokenDecimals
         ); // native token root address must be initialized as zero address where no root token exists
-        rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CHILD_ADDRESS;
+        // slither-disable-next-line reentrancy-events
+        emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CHILD_ADDRESS);
     }
 
     /**
@@ -181,15 +183,14 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
             (bytes32, address, string, string, uint8)
         );
         assert(rootToken != address(0)); // invariant since root predicate performs the same check
+        assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
         IChildERC20 childToken = IChildERC20(
             Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))
         );
-        childToken.initialize(rootToken, name, symbol, decimals);
-        // slither-disable-next-line reentrancy-benign
-        assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
-
         rootTokenToChildToken[rootToken] = address(childToken);
+        childToken.initialize(rootToken, name, symbol, decimals);
 
+        // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));
     }
 }

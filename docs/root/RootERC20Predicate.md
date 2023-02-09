@@ -174,15 +174,15 @@ Initilization function for RootERC20Predicate
 function mapToken(contract IERC20Metadata rootToken) external nonpayable
 ```
 
+Function to be used for token mapping
 
-
-
+*Called internally on deposit if token is not mapped already*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC20Metadata | undefined |
+| rootToken | contract IERC20Metadata | Address of the root token to map |
 
 ### onL2StateReceive
 
