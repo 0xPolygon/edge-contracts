@@ -83,27 +83,6 @@ contract RootERC20Predicate is Initializable {
         }
     }
 
-    // this function intentionally does not support non-conformant tokens, should deploy a customized predicate for all other intents and purposes
-    function mapToken(IERC20Metadata rootToken) public {
-        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_ROOT_TOKEN");
-        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
-
-        address childToken = Clones.predictDeterministicAddress(
-            childTokenTemplate,
-            keccak256(abi.encodePacked(rootToken)),
-            childERC20Predicate
-        );
-
-        rootTokenToChildToken[address(rootToken)] = childToken;
-
-        stateSender.syncState(
-            childERC20Predicate,
-            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
-        );
-
-        emit TokenMapped(address(rootToken), childToken);
-    }
-
     /**
      * @notice Function to deposit tokens from the depositor to themselves on the child chain
      * @param rootToken Address of the root token being deposited
@@ -122,6 +101,31 @@ contract RootERC20Predicate is Initializable {
      */
     function depositTo(IERC20Metadata rootToken, address childToken, address receiver, uint256 amount) external {
         _deposit(rootToken, childToken, receiver, amount);
+    }
+
+    /**
+     * @notice Function to be used for token mapping
+     * @param rootToken Address of the root token to map
+     * @dev Called internally on deposit if token is not mapped already
+     */
+    function mapToken(IERC20Metadata rootToken) public {
+        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_ROOT_TOKEN");
+        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+
+        address childToken = Clones.predictDeterministicAddress(
+            childTokenTemplate,
+            keccak256(abi.encodePacked(rootToken)),
+            childERC20Predicate
+        );
+
+        rootTokenToChildToken[address(rootToken)] = childToken;
+
+        stateSender.syncState(
+            childERC20Predicate,
+            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
+        );
+
+        emit TokenMapped(address(rootToken), childToken);
     }
 
     function _deposit(IERC20Metadata rootToken, address childToken, address receiver, uint256 amount) private {
