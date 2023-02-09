@@ -29,6 +29,7 @@ describe("ChildERC20Predicate", () => {
     nativeERC20: NativeERC20,
     nativeERC20RootToken: string,
     totalSupply: number = 0,
+    rootToken: string,
     accounts: SignerWithAddress[];
   before(async () => {
     accounts = await ethers.getSigners();
@@ -39,7 +40,7 @@ describe("ChildERC20Predicate", () => {
     await l2StateSender.deployed();
 
     const StateReceiver = await ethers.getContractFactory("StateReceiver");
-    stateReceiver = (await StateReceiver.deploy()) as unknown as StateReceiver;
+    stateReceiver = (await StateReceiver.deploy()) as StateReceiver;
 
     await stateReceiver.deployed();
 
@@ -198,31 +199,55 @@ describe("ChildERC20Predicate", () => {
     expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
   });
 
-  it("fail deploy new child token: invalid root token", async () => {
-    await expect(
-      childERC20Predicate.deployChildToken(
-        "0x0000000000000000000000000000000000000000",
-        ethers.utils.randomBytes(32),
-        "TEST1",
-        "TEST1",
-        18
-      )
-    ).to.be.revertedWith("ChildERC20Predicate: INVALID_ROOT_TOKEN");
+  it("map token success", async () => {
+    rootToken = ethers.Wallet.createRandom().address;
+    const clonesContract = await (await ethers.getContractFactory("MockClones")).deploy();
+    const childTokenAddr = await clonesContract.predictDeterministicAddress(
+      childERC20.address,
+      ethers.utils.solidityKeccak256(["address"], [rootToken]),
+      childERC20Predicate.address
+    );
+    const childToken = childERC20.attach(childTokenAddr);
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "string", "string", "uint8"],
+      [ethers.utils.solidityKeccak256(["string"], ["MAP_TOKEN"]), rootToken, "TEST1", "TEST1", 18]
+    );
+    const mapTx = await stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData);
+    const mapReceipt = await mapTx.wait();
+    const mapEvent = mapReceipt?.events?.find((log) => log.event === "L2TokenMapped");
+    expect(mapEvent?.args?.rootToken).to.equal(rootToken);
+    expect(mapEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(await childToken.predicate()).to.equal(childERC20Predicate.address);
+    expect(await childToken.rootToken()).to.equal(rootToken);
+    expect(await childToken.name()).to.equal("TEST1");
+    expect(await childToken.symbol()).to.equal("TEST1");
+    expect(await childToken.decimals()).to.equal(18);
   });
 
-  it("deploy new child token", async () => {
-    const rootToken = ethers.Wallet.createRandom().address;
-    const mapTx = await childERC20Predicate.deployChildToken(
-      rootToken,
-      ethers.utils.randomBytes(32),
-      "TEST1",
-      "TEST1",
-      18
+  it("map token fail: invalid root token", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "string", "string", "uint8"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["MAP_TOKEN"]),
+        "0x0000000000000000000000000000000000000000",
+        "TEST1",
+        "TEST1",
+        18,
+      ]
     );
-    const mapReceipt = await mapTx.wait();
-    const mapEvent = mapReceipt.events?.find((log) => log.event === "L2TokenMapped");
-    expect(await childERC20Predicate.childTokenToRootToken(mapEvent?.args?.childToken)).to.equal(rootToken);
-    expect(mapEvent?.args?.rootToken).to.equal(rootToken);
+    await expect(
+      stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
+    ).to.be.revertedWithPanic();
+  });
+
+  it("map token fail: already mapped", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "string", "string", "uint8"],
+      [ethers.utils.solidityKeccak256(["string"], ["MAP_TOKEN"]), rootToken, "TEST1", "TEST1", 18]
+    );
+    await expect(
+      stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
+    ).to.be.revertedWith("ERC1167: create2 failed");
   });
 
   it("withdraw tokens from child chain with same address", async () => {
@@ -377,47 +402,6 @@ describe("ChildERC20Predicate", () => {
     await expect(stateReceiverChildERC20Predicate.withdraw(childToken.address, 1)).to.be.revertedWith(
       "ChildERC20Predicate: UNMAPPED_TOKEN"
     );
-  });
-
-  it("fail deposit tokens of unknown child token: assert non-zero root token", async () => {
-    const childToken = await (await smock.mock<ChildERC20__factory>("ChildERC20")).deploy();
-    await childToken.initialize(ethers.Wallet.createRandom().address, "TEST", "TEST", 18);
-    childToken.setVariable("_rootToken", "0x0000000000000000000000000000000000000000");
-    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
-      [
-        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
-        "0x0000000000000000000000000000000000000000",
-        childToken.address,
-        accounts[0].address,
-        accounts[0].address,
-        0,
-      ]
-    );
-    await expect(
-      stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
-    ).to.be.revertedWithPanic();
-  });
-
-  it("fail deposit tokens of unknown child token: assert incorrect predicate", async () => {
-    const childToken = await (await smock.mock<ChildERC20__factory>("ChildERC20")).deploy();
-    await childToken.initialize(ethers.Wallet.createRandom().address, "TEST", "TEST", 18);
-    childToken.setVariable("_rootToken", "0x0000000000000000000000000000000000000000");
-    childToken.setVariable("_predicate", ethers.Wallet.createRandom().address);
-    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
-      [
-        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
-        "0x0000000000000000000000000000000000000000",
-        childToken.address,
-        accounts[0].address,
-        accounts[0].address,
-        0,
-      ]
-    );
-    await expect(
-      stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
-    ).to.be.revertedWithPanic();
   });
 
   // since we fake NativeERC20 here, keep this function last:

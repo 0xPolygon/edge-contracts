@@ -27,6 +27,23 @@ function DEPOSIT_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### MAP_TOKEN_SIG
+
+```solidity
+function MAP_TOKEN_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### NATIVE_TOKEN_CHILD_ADDRESS
 
 ```solidity
@@ -180,54 +197,6 @@ function childTokenTemplate() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### childTokenToRootToken
-
-```solidity
-function childTokenToRootToken(address) external view returns (address)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### deployChildToken
-
-```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol, uint8 decimals) external nonpayable returns (address)
-```
-
-Function to be used for mapping a root token to a child token
-
-*Allows for arbitrary N-to-M mappings for any root token to a child token*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken | address | Address of the root token being mapped |
-| salt | bytes32 | Salt to use for CREATE2 deploymentAdd |
-| name | string | Name of the child token |
-| symbol | string | Symbol of the child token |
-| decimals | uint8 | Decimals of the child token (should match root token) |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### initialize
 
 ```solidity
@@ -296,6 +265,28 @@ function rootERC20Predicate() external view returns (address)
 
 
 
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### rootTokenToChildToken
+
+```solidity
+function rootTokenToChildToken(address) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 #### Returns
 
