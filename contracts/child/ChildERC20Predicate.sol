@@ -30,8 +30,9 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     address public constant NATIVE_TOKEN_CHILD_ADDRESS = 0x0000000000000000000000000000000000001010;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
-    mapping(address => address) public childTokenToRootToken;
+    mapping(address => address) public rootTokenToChildToken;
 
     event L2ERC20Deposit(
         address indexed rootToken,
@@ -87,34 +88,7 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
             newNativeTokenSymbol,
             newNativeTokenDecimals
         ); // native token root address must be initialized as zero address where no root token exists
-        childTokenToRootToken[NATIVE_TOKEN_CHILD_ADDRESS] = newNativeTokenRootAddress;
-    }
-
-    /**
-     * @notice Function to be used for mapping a root token to a child token
-     * @param rootToken Address of the root token being mapped
-     * @param salt Salt to use for CREATE2 deploymentAdd
-     * @param name Name of the child token
-     * @param symbol Symbol of the child token
-     * @param decimals Decimals of the child token (should match root token)
-     * @dev Allows for arbitrary N-to-M mappings for any root token to a child token
-     */
-    function deployChildToken(
-        address rootToken,
-        bytes32 salt,
-        string calldata name,
-        string calldata symbol,
-        uint8 decimals
-    ) external returns (address) {
-        require(rootToken != address(0), "ChildERC20Predicate: INVALID_ROOT_TOKEN");
-        IChildERC20 childToken = IChildERC20(Clones.cloneDeterministic(childTokenTemplate, salt));
-        childToken.initialize(rootToken, name, symbol, decimals);
-        // slither-disable-next-line reentrancy-benign
-        childTokenToRootToken[address(childToken)] = rootToken;
-
-        emit L2TokenMapped(rootToken, address(childToken));
-
-        return address(childToken);
+        rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CHILD_ADDRESS;
     }
 
     /**
@@ -126,17 +100,11 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
         require(msg.sender == stateReceiver, "ChildERC20Predicate: ONLY_STATE_RECEIVER");
         require(sender == rootERC20Predicate, "ChildERC20Predicate: ONLY_ROOT_PREDICATE");
-        (
-            bytes32 signature,
-            address rootToken,
-            address childToken,
-            address depositor,
-            address receiver,
-            uint256 amount
-        ) = abi.decode(data, (bytes32, address, address, address, address, uint256));
 
-        if (signature == DEPOSIT_SIG) {
-            _deposit(rootToken, IChildERC20(childToken), depositor, receiver, amount);
+        if (bytes32(data[:32]) == DEPOSIT_SIG) {
+            _deposit(data[32:]);
+        } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
+            _mapToken(data);
         } else {
             revert("ChildERC20Predicate: INVALID_SIGNATURE");
         }
@@ -166,7 +134,7 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
 
         address rootToken = childToken.rootToken();
 
-        require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC20Predicate: UNMAPPED_TOKEN");
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
@@ -181,26 +149,47 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         emit L2ERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
     }
 
-    function _deposit(
-        address depositToken,
-        IChildERC20 childToken,
-        address depositor,
-        address receiver,
-        uint256 amount
-    ) private {
+    function _deposit(bytes calldata data) private {
+        (address depositToken, address childToken, address depositor, address receiver, uint256 amount) = abi.decode(
+            data,
+            (address, address, address, address, uint256)
+        );
+
         require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
 
-        address rootToken = childToken.rootToken();
+        address rootToken = IChildERC20(childToken).rootToken();
 
         // deposited root token for child token is incorrect
         require(rootToken == depositToken, "ChildERC20Predicate: WRONG_DEPOSIT_TOKEN");
-        require(childTokenToRootToken[address(childToken)] == rootToken, "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC20Predicate: UNMAPPED_TOKEN");
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
-        assert(childToken.predicate() == address(this));
-        require(childToken.mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
+        assert(IChildERC20(childToken).predicate() == address(this));
+        require(IChildERC20(childToken).mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
-        emit L2ERC20Deposit(depositToken, address(childToken), depositor, receiver, amount);
+        emit L2ERC20Deposit(depositToken, childToken, depositor, receiver, amount);
+    }
+
+    /**
+     * @notice Function to be used for mapping a root token to a child token
+     * @dev Allows for 1-to-1 mappings for any root token to a child token
+     */
+    function _mapToken(bytes calldata data) private {
+        (, address rootToken, string memory name, string memory symbol, uint8 decimals) = abi.decode(
+            data,
+            (bytes32, address, string, string, uint8)
+        );
+        assert(rootToken != address(0)); // invariant since root predicate performs the same check
+        IChildERC20 childToken = IChildERC20(
+            Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))
+        );
+        childToken.initialize(rootToken, name, symbol, decimals);
+        // slither-disable-next-line reentrancy-benign
+        assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
+
+        rootTokenToChildToken[rootToken] = address(childToken);
+
+        emit L2TokenMapped(rootToken, address(childToken));
     }
 }

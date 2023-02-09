@@ -27,6 +27,23 @@ function DEPOSIT_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### MAP_TOKEN_SIG
+
+```solidity
+function MAP_TOKEN_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### WITHDRAW_SIG
 
 ```solidity
@@ -61,10 +78,27 @@ function childERC20Predicate() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### childTokenTemplate
+
+```solidity
+function childTokenTemplate() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### deposit
 
 ```solidity
-function deposit(contract IERC20 rootToken, address childToken, uint256 amount) external nonpayable
+function deposit(contract IERC20Metadata rootToken, address childToken, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to themselves on the child chain
@@ -75,14 +109,14 @@ Function to deposit tokens from the depositor to themselves on the child chain
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC20 | Address of the root token being deposited |
+| rootToken | contract IERC20Metadata | Address of the root token being deposited |
 | childToken | address | Address of the child token |
 | amount | uint256 | Amount to deposit |
 
 ### depositTo
 
 ```solidity
-function depositTo(contract IERC20 rootToken, address childToken, address receiver, uint256 amount) external nonpayable
+function depositTo(contract IERC20Metadata rootToken, address childToken, address receiver, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to another address on the child chain
@@ -93,7 +127,7 @@ Function to deposit tokens from the depositor to another address on the child ch
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC20 | Address of the root token being deposited |
+| rootToken | contract IERC20Metadata | Address of the root token being deposited |
 | childToken | address | Address of the child token |
 | receiver | address | undefined |
 | amount | uint256 | Amount to deposit |
@@ -118,7 +152,7 @@ function exitHelper() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate) external nonpayable
+function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 Initilization function for RootERC20Predicate
@@ -132,6 +166,23 @@ Initilization function for RootERC20Predicate
 | newStateSender | address | Address of StateSender to send deposit information to |
 | newExitHelper | address | Address of ExitHelper to receive withdrawal information from |
 | newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
+| newChildTokenTemplate | address | undefined |
+
+### mapToken
+
+```solidity
+function mapToken(contract IERC20Metadata rootToken) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken | contract IERC20Metadata | undefined |
 
 ### onL2StateReceive
 
@@ -150,6 +201,28 @@ Function to be used for token withdrawals
 | _0 | uint256 | undefined |
 | sender | address | Address of the sender on the child chain |
 | data | bytes | Data sent by the sender |
+
+### rootTokenToChildToken
+
+```solidity
+function rootTokenToChildToken(address) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### stateSender
 
@@ -221,6 +294,23 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### TokenMapped
+
+```solidity
+event TokenMapped(address indexed rootToken, address indexed childToken)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
 
 
 
