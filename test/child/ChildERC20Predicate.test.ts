@@ -2,11 +2,15 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import {
   ChildERC20Predicate,
+  ChildERC20Predicate__factory,
   L2StateSender,
+  L2StateSender__factory,
   StateReceiver,
+  StateReceiver__factory,
   ChildERC20,
-  NativeERC20,
   ChildERC20__factory,
+  NativeERC20,
+  NativeERC20__factory,
 } from "../../typechain-types";
 import {
   setCode,
@@ -34,29 +38,29 @@ describe("ChildERC20Predicate", () => {
   before(async () => {
     accounts = await ethers.getSigners();
 
-    const L2StateSender = await ethers.getContractFactory("L2StateSender");
-    l2StateSender = (await L2StateSender.deploy()) as L2StateSender;
+    const L2StateSender: L2StateSender__factory = await ethers.getContractFactory("L2StateSender");
+    l2StateSender = await L2StateSender.deploy();
 
     await l2StateSender.deployed();
 
-    const StateReceiver = await ethers.getContractFactory("StateReceiver");
-    stateReceiver = (await StateReceiver.deploy()) as StateReceiver;
+    const StateReceiver: StateReceiver__factory = await ethers.getContractFactory("StateReceiver");
+    stateReceiver = await StateReceiver.deploy();
 
     await stateReceiver.deployed();
 
     rootERC20Predicate = ethers.Wallet.createRandom().address;
 
-    const ChildERC20 = await ethers.getContractFactory("ChildERC20");
-    childERC20 = (await ChildERC20.deploy()) as ChildERC20;
+    const ChildERC20: ChildERC20__factory = await ethers.getContractFactory("ChildERC20");
+    childERC20 = await ChildERC20.deploy();
 
     await childERC20.deployed();
 
-    const ChildERC20Predicate = await ethers.getContractFactory("ChildERC20Predicate");
-    childERC20Predicate = (await ChildERC20Predicate.deploy()) as ChildERC20Predicate;
+    const ChildERC20Predicate: ChildERC20Predicate__factory = await ethers.getContractFactory("ChildERC20Predicate");
+    childERC20Predicate = await ChildERC20Predicate.deploy();
 
     await childERC20Predicate.deployed();
 
-    const NativeERC20 = await ethers.getContractFactory("NativeERC20");
+    const NativeERC20: NativeERC20__factory = await ethers.getContractFactory("NativeERC20");
 
     const tempNativeERC20 = await NativeERC20.deploy();
 
@@ -154,11 +158,10 @@ describe("ChildERC20Predicate", () => {
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
+      ["bytes32", "address", "address", "address", "uint256"],
       [
         ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
         nativeERC20RootToken,
-        nativeERC20.address,
         accounts[0].address,
         accounts[0].address,
         ethers.utils.parseUnits(String(randomAmount)),
@@ -179,11 +182,10 @@ describe("ChildERC20Predicate", () => {
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
+      ["bytes32", "address", "address", "address", "uint256"],
       [
         ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
         nativeERC20RootToken,
-        nativeERC20.address,
         accounts[0].address,
         accounts[1].address,
         ethers.utils.parseUnits(String(randomAmount)),
@@ -336,11 +338,10 @@ describe("ChildERC20Predicate", () => {
 
   it("fail deposit tokens of unknown child token: not a contract", async () => {
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
+      ["bytes32", "address", "address", "address", "uint256"],
       [
         ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
         "0x0000000000000000000000000000000000000000",
-        ethers.Wallet.createRandom().address,
         accounts[0].address,
         accounts[0].address,
         0,
@@ -348,7 +349,7 @@ describe("ChildERC20Predicate", () => {
     );
     await expect(
       stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
-    ).to.be.revertedWith("ChildERC20Predicate: NOT_CONTRACT");
+    ).to.be.revertedWith("ChildERC20Predicate: UNMAPPED_TOKEN");
   });
 
   it("fail withdraw tokens of unknown child token: not a contract", async () => {
@@ -372,7 +373,7 @@ describe("ChildERC20Predicate", () => {
     );
     await expect(
       stateReceiverChildERC20Predicate.onStateReceive(0, rootERC20Predicate, stateSyncData)
-    ).to.be.revertedWith("ChildERC20Predicate: WRONG_DEPOSIT_TOKEN");
+    ).to.be.revertedWith("ChildERC20Predicate: UNMAPPED_TOKEN");
   });
 
   it("fail deposit tokens of unknown child token: unmapped token", async () => {

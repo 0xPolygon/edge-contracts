@@ -27,8 +27,20 @@ contract RootERC20Predicate is Initializable {
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
-    event ERC20Deposit(ERC20BridgeEvent indexed deposit, uint256 amount);
-    event ERC20Withdraw(ERC20BridgeEvent indexed withdrawal, uint256 amount);
+    event ERC20Deposit(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
+    event ERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address withdrawer,
+        address indexed receiver,
+        uint256 amount
+    );
     event TokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
@@ -67,17 +79,8 @@ contract RootERC20Predicate is Initializable {
         require(msg.sender == exitHelper, "RootERC20Predicate: ONLY_EXIT_HELPER");
         require(sender == childERC20Predicate, "RootERC20Predicate: ONLY_CHILD_PREDICATE");
 
-        (
-            bytes32 signature,
-            address rootToken,
-            address childToken,
-            address withdrawer,
-            address receiver,
-            uint256 amount
-        ) = abi.decode(data, (bytes32, address, address, address, address, uint256));
-
-        if (signature == WITHDRAW_SIG) {
-            _withdraw(IERC20Metadata(rootToken), childToken, withdrawer, receiver, amount);
+        if (bytes32(data[:32]) == WITHDRAW_SIG) {
+            _withdraw(data[32:]);
         } else {
             revert("RootERC20Predicate: INVALID_SIGNATURE");
         }
@@ -86,21 +89,19 @@ contract RootERC20Predicate is Initializable {
     /**
      * @notice Function to deposit tokens from the depositor to themselves on the child chain
      * @param rootToken Address of the root token being deposited
-     * @param childToken Address of the child token
      * @param amount Amount to deposit
      */
-    function deposit(IERC20Metadata rootToken, address childToken, uint256 amount) external {
-        _deposit(rootToken, childToken, msg.sender, amount);
+    function deposit(IERC20Metadata rootToken, uint256 amount) external {
+        _deposit(rootToken, msg.sender, amount);
     }
 
     /**
      * @notice Function to deposit tokens from the depositor to another address on the child chain
      * @param rootToken Address of the root token being deposited
-     * @param childToken Address of the child token
      * @param amount Amount to deposit
      */
-    function depositTo(IERC20Metadata rootToken, address childToken, address receiver, uint256 amount) external {
-        _deposit(rootToken, childToken, receiver, amount);
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
+        _deposit(rootToken, receiver, amount);
     }
 
     /**
@@ -109,7 +110,7 @@ contract RootERC20Predicate is Initializable {
      * @dev Called internally on deposit if token is not mapped already
      */
     function mapToken(IERC20Metadata rootToken) public {
-        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_ROOT_TOKEN");
+        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childToken = Clones.predictDeterministicAddress(
@@ -128,32 +129,32 @@ contract RootERC20Predicate is Initializable {
         emit TokenMapped(address(rootToken), childToken);
     }
 
-    function _deposit(IERC20Metadata rootToken, address childToken, address receiver, uint256 amount) private {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         if (rootTokenToChildToken[address(rootToken)] == address(0)) {
             mapToken(rootToken);
         }
 
-        assert(rootTokenToChildToken[address(rootToken)] != address(0)); // invariant because we map the token if mapping does not exist
+        address childToken = rootTokenToChildToken[address(rootToken)];
+
+        assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
 
         rootToken.safeTransferFrom(msg.sender, address(this), amount);
 
-        stateSender.syncState(
-            childERC20Predicate,
-            abi.encode(DEPOSIT_SIG, rootToken, childToken, msg.sender, receiver, amount)
-        );
+        stateSender.syncState(childERC20Predicate, abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount));
         // slither-disable-next-line reentrancy-events
-        emit ERC20Deposit(ERC20BridgeEvent(address(rootToken), childToken, msg.sender, receiver), amount);
+        emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
     }
 
-    function _withdraw(
-        IERC20Metadata rootToken,
-        address childToken,
-        address withdrawer,
-        address receiver,
-        uint256 amount
-    ) private {
-        rootToken.safeTransfer(receiver, amount);
+    function _withdraw(bytes calldata data) private {
+        (address rootToken, address withdrawer, address receiver, uint256 amount) = abi.decode(
+            data,
+            (address, address, address, uint256)
+        );
+        address childToken = rootTokenToChildToken[rootToken];
+        assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
+
+        IERC20Metadata(rootToken).safeTransfer(receiver, amount);
         // slither-disable-next-line reentrancy-events
-        emit ERC20Withdraw(ERC20BridgeEvent(address(rootToken), childToken, withdrawer, receiver), amount);
+        emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
 }
