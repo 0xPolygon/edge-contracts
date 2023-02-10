@@ -14,7 +14,7 @@ import "../interfaces/IChildERC20.sol";
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
 // solhint-disable reason-string
-contract ChildERC20 is EIP712MetaTransaction, IChildERC20, ERC20Upgradeable {
+contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
     address private _predicate;
     address private _rootToken;
     uint8 private _decimals;
