@@ -1,4 +1,4 @@
-# IChildERC20
+# IERC20Upgradeable
 
 
 
@@ -6,7 +6,7 @@
 
 
 
-*Interface of IChildERC20*
+*Interface of the ERC20 standard as defined in the EIP.*
 
 ## Methods
 
@@ -77,156 +77,6 @@ function balanceOf(address account) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-
-### burn
-
-```solidity
-function burn(address account, uint256 amount) external nonpayable returns (bool)
-```
-
-Burns an amount of tokens from a particular address
-
-*Can only be called by the predicate address*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | Account of the user to burn the tokens from |
-| amount | uint256 | Amount of tokens to burn from the account |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
-
-### decimals
-
-```solidity
-function decimals() external view returns (uint8)
-```
-
-
-
-*Returns the decimals places of the token.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined |
-
-### initialize
-
-```solidity
-function initialize(address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
-```
-
-
-
-*Sets the values for {rootToken}, {name}, {symbol} and {decimals}. All these values are immutable: they can only be set once during initialization.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken_ | address | undefined |
-| name_ | string | undefined |
-| symbol_ | string | undefined |
-| decimals_ | uint8 | undefined |
-
-### mint
-
-```solidity
-function mint(address account, uint256 amount) external nonpayable returns (bool)
-```
-
-Mints an amount of tokens to a particular address
-
-*Can only be called by the predicate address*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | Account of the user to mint the tokens to |
-| amount | uint256 | Amount of tokens to mint to the account |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
-
-### name
-
-```solidity
-function name() external view returns (string)
-```
-
-
-
-*Returns the name of the token.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined |
-
-### predicate
-
-```solidity
-function predicate() external view returns (address)
-```
-
-Returns predicate address controlling the child token
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address Returns the address of the predicate |
-
-### rootToken
-
-```solidity
-function rootToken() external view returns (address)
-```
-
-Returns predicate address controlling the child token
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address Returns the address of the predicate |
-
-### symbol
-
-```solidity
-function symbol() external view returns (string)
-```
-
-
-
-*Returns the symbol of the token.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined |
 
 ### totalSupply
 
@@ -304,7 +154,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 
 
 
-
+*Emitted when the allowance of a `spender` for an `owner` is set by a call to {approve}. `value` is the new allowance.*
 
 #### Parameters
 
@@ -322,7 +172,7 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 
 
 
-
+*Emitted when `value` tokens are moved from one account (`from`) to another (`to`). Note that `value` may be zero.*
 
 #### Parameters
 
