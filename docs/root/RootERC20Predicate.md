@@ -98,7 +98,7 @@ function childTokenTemplate() external view returns (address)
 ### deposit
 
 ```solidity
-function deposit(contract IERC20Metadata rootToken, address childToken, uint256 amount) external nonpayable
+function deposit(contract IERC20Metadata rootToken, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to themselves on the child chain
@@ -110,13 +110,12 @@ Function to deposit tokens from the depositor to themselves on the child chain
 | Name | Type | Description |
 |---|---|---|
 | rootToken | contract IERC20Metadata | Address of the root token being deposited |
-| childToken | address | Address of the child token |
 | amount | uint256 | Amount to deposit |
 
 ### depositTo
 
 ```solidity
-function depositTo(contract IERC20Metadata rootToken, address childToken, address receiver, uint256 amount) external nonpayable
+function depositTo(contract IERC20Metadata rootToken, address receiver, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to another address on the child chain
@@ -128,7 +127,6 @@ Function to deposit tokens from the depositor to another address on the child ch
 | Name | Type | Description |
 |---|---|---|
 | rootToken | contract IERC20Metadata | Address of the root token being deposited |
-| childToken | address | Address of the child token |
 | receiver | address | undefined |
 | amount | uint256 | Amount to deposit |
 
@@ -248,7 +246,7 @@ function stateSender() external view returns (contract IStateSender)
 ### ERC20Deposit
 
 ```solidity
-event ERC20Deposit(RootERC20Predicate.ERC20BridgeEvent indexed deposit, uint256 amount)
+event ERC20Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 amount)
 ```
 
 
@@ -259,13 +257,16 @@ event ERC20Deposit(RootERC20Predicate.ERC20BridgeEvent indexed deposit, uint256 
 
 | Name | Type | Description |
 |---|---|---|
-| deposit `indexed` | RootERC20Predicate.ERC20BridgeEvent | undefined |
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| depositor  | address | undefined |
+| receiver `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
 ### ERC20Withdraw
 
 ```solidity
-event ERC20Withdraw(RootERC20Predicate.ERC20BridgeEvent indexed withdrawal, uint256 amount)
+event ERC20Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 amount)
 ```
 
 
@@ -276,7 +277,10 @@ event ERC20Withdraw(RootERC20Predicate.ERC20BridgeEvent indexed withdrawal, uint
 
 | Name | Type | Description |
 |---|---|---|
-| withdrawal `indexed` | RootERC20Predicate.ERC20BridgeEvent | undefined |
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| withdrawer  | address | undefined |
+| receiver `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
 ### Initialized

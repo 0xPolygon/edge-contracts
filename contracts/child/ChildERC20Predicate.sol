@@ -143,34 +143,33 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         assert(childToken.predicate() == address(this));
 
         require(childToken.burn(msg.sender, amount), "ChildERC20Predicate: BURN_FAILED");
-        l2StateSender.syncState(
-            rootERC20Predicate,
-            abi.encode(WITHDRAW_SIG, rootToken, childToken, msg.sender, receiver, amount)
-        );
+        l2StateSender.syncState(rootERC20Predicate, abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount));
         // slither-disable-next-line reentrancy-events
         emit L2ERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
     }
 
     function _deposit(bytes calldata data) private {
-        (address depositToken, address childToken, address depositor, address receiver, uint256 amount) = abi.decode(
+        (address depositToken, address depositor, address receiver, uint256 amount) = abi.decode(
             data,
-            (address, address, address, address, uint256)
+            (address, address, address, uint256)
         );
 
-        require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
+        IChildERC20 childToken = IChildERC20(rootTokenToChildToken[depositToken]);
+
+        require(address(childToken) != address(0), "ChildERC20Predicate: UNMAPPED_TOKEN");
+        assert(address(childToken).code.length != 0);
 
         address rootToken = IChildERC20(childToken).rootToken();
 
-        // deposited root token for child token is incorrect
-        require(rootToken == depositToken, "ChildERC20Predicate: WRONG_DEPOSIT_TOKEN");
-        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC20Predicate: UNMAPPED_TOKEN");
+        // a mapped child token should match deposited token
+        assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC20(childToken).predicate() == address(this));
         require(IChildERC20(childToken).mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
-        emit L2ERC20Deposit(depositToken, childToken, depositor, receiver, amount);
+        emit L2ERC20Deposit(depositToken, address(childToken), depositor, receiver, amount);
     }
 
     /**
