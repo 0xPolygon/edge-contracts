@@ -93,6 +93,12 @@ describe("NativeERC20", () => {
     expect(await nativeERC20.rootToken()).to.equal(ethers.constants.AddressZero);
   });
 
+  it("reinitialization fail", async () => {
+    await expect(nativeERC20.initialize(ethers.constants.AddressZero, "", "", 0)).to.be.revertedWith(
+      "Initializable: contract is already initialized"
+    );
+  });
+
   it("mint tokens fail: only predicate", async () => {
     await expect(nativeERC20.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith(
       "NativeERC20: Only predicate can call"
