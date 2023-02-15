@@ -440,6 +440,5 @@ describe("ChildERC20Predicate", () => {
     await expect(stateReceiverChildERC20Predicate.withdraw(nativeERC20.address, 1)).to.be.revertedWith(
       "ChildERC20Predicate: BURN_FAILED"
     );
-    fakeNativeERC20.mint.returns();
   });
 });
