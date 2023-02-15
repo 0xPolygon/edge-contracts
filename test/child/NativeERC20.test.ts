@@ -84,6 +84,8 @@ describe("MRC20", () => {
     expect(await nativeERC20.symbol()).to.equal("TEST");
     expect(await nativeERC20.decimals()).to.equal(18);
     expect(await nativeERC20.totalSupply()).to.equal(0);
+    expect(await nativeERC20.predicate()).to.equal(childERC20Predicate.address);
+    expect(await nativeERC20.rootToken()).to.equal(ethers.constants.AddressZero);
   });
 
   it("mint tokens fail: only predicate", async () => {
