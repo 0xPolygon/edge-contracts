@@ -68,15 +68,6 @@ contract NativeERC20 is Context, Initializable, System, IChildERC20 {
     }
 
     /**
-     * @notice Used to withdraw tokens from V3 PoS chain to L1
-     * @param amount Amount of tokens to withdraw
-     */
-    function withdraw(uint256 amount) external returns (bool) {
-        _burn(_msgSender(), amount);
-        return true;
-    }
-
-    /**
      * @dev See {IERC20-approve}.
      *
      * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on

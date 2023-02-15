@@ -12,7 +12,7 @@ import {
 } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
-describe("MRC20", () => {
+describe("NativeERC20", () => {
   let nativeERC20: NativeERC20,
     predicateNativeERC20: NativeERC20,
     zeroAddressNativeERC20: NativeERC20,
@@ -42,6 +42,11 @@ describe("MRC20", () => {
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"],
+    });
+
+    await hre.network.provider.request({
+      method: "hardhat_setBalance",
+      params: ["0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE", "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
     });
 
     await hre.network.provider.send("hardhat_setCode", [
@@ -98,6 +103,10 @@ describe("MRC20", () => {
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [childERC20Predicate.address],
+    });
+    await hre.network.provider.request({
+      method: "hardhat_setBalance",
+      params: [childERC20Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
     });
     predicateNativeERC20 = nativeERC20.connect(await ethers.getSigner(childERC20Predicate.address));
     await expect(predicateNativeERC20.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith(
@@ -158,6 +167,10 @@ describe("MRC20", () => {
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [ethers.constants.AddressZero],
+    });
+    await hre.network.provider.request({
+      method: "hardhat_setBalance",
+      params: [ethers.constants.AddressZero, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
     });
     zeroAddressNativeERC20 = nativeERC20.connect(await ethers.getSigner(ethers.constants.AddressZero));
     await expect(zeroAddressNativeERC20.transfer(ethers.constants.AddressZero, 1)).to.be.revertedWith(
