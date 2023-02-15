@@ -22,6 +22,8 @@ describe("NativeERC20", () => {
     totalSupply: number,
     accounts: any[]; // we use any so we can access address directly from object
   before(async () => {
+    // force reset network to clear old storage
+    await hre.network.provider.send("hardhat_reset");
     accounts = await ethers.getSigners();
 
     const ChildERC20Predicate: ChildERC20Predicate__factory = await ethers.getContractFactory("ChildERC20Predicate");
@@ -33,11 +35,6 @@ describe("NativeERC20", () => {
     nativeERC20 = await NativeERC20.deploy();
 
     await nativeERC20.deployed();
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: ["0x0000000000000000000000000000000000001001"],
-    });
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
