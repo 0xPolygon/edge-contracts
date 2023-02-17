@@ -367,7 +367,15 @@ contract ChildValidatorSetTest_Initialize is Uninitialized {
         assert(validatorAddr != address(0));
         assertEq(childValidatorSet.whitelist(validatorAddr), false);
 
-        Validator memory validator = childValidatorSet.getValidator(validatorAddr);
+        (
+            uint256[4] memory blsKey,
+            uint256 stake,
+            ,
+            uint256 commission,
+            uint256 withdrawableRewards,
+            bool active
+        ) = childValidatorSet.getValidator(validatorAddr);
+        Validator memory validator = Validator(blsKey, stake, commission, withdrawableRewards, active);
         Validator memory validatorExpected = Validator(validators[0].pubkey, minStake * 2, 0, 0, true);
 
         address blsAddr = address(childValidatorSet.bls());
@@ -629,12 +637,19 @@ contract ChildValidatorSetTest_Register is Whitelisted {
         childValidatorSet.register(signature, pubkey);
 
         assertEq(childValidatorSet.whitelist(alice), false);
-        Validator memory validator = childValidatorSet.getValidator(alice);
-        assertEq(keccak256(abi.encode(validator.blsKey)), keccak256(abi.encode(pubkey)));
-        assertEq(validator.stake, 0);
-        assertEq(validator.commission, 0);
-        assertEq(validator.withdrawableRewards, 0);
-        assertEq(validator.active, true);
+        (
+            uint256[4] memory blsKey,
+            uint256 stake,
+            ,
+            uint256 commission,
+            uint256 withdrawableRewards,
+            bool active
+        ) = childValidatorSet.getValidator(alice);
+        assertEq(keccak256(abi.encode(blsKey)), keccak256(abi.encode(pubkey)));
+        assertEq(stake, 0);
+        assertEq(commission, 0);
+        assertEq(withdrawableRewards, 0);
+        assertEq(active, true);
     }
 }
 
@@ -665,8 +680,8 @@ contract ChildValidatorSetTest_Stake is Registered {
 
 contract ChildValidatorSetTest_ProcessQueue is Staked {
     function testQueueProcess() public {
-        Validator memory validator = childValidatorSet.getValidator(alice);
-        assertEq(validator.stake, 0);
+        (, uint256 stake, , , , ) = childValidatorSet.getValidator(alice);
+        assertEq(stake, 0);
 
         id = 1;
         epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: keccak256(abi.encodePacked(block.number))});
@@ -681,8 +696,8 @@ contract ChildValidatorSetTest_ProcessQueue is Staked {
         vm.startPrank(SYSTEM);
         childValidatorSet.commitEpoch(id, epoch, uptime);
 
-        validator = childValidatorSet.getValidator(alice);
-        assertEq(validator.stake, minStake * 2);
+        (, stake, , , , ) = childValidatorSet.getValidator(alice);
+        assertEq(stake, minStake * 2);
 
         //Get 2 sortedValidators
         address[] memory validatorAddresses = childValidatorSet.sortedValidators(3);
@@ -745,8 +760,8 @@ contract ChildValidatorSetTest_ProcessQueueAfterStake is UnstakedCompletely {
     }
 
     function testProcessQueue() public {
-        Validator memory validator = childValidatorSet.getValidator(alice);
-        assertEq(validator.stake, minStake * 2);
+        (, uint256 stake, , , , ) = childValidatorSet.getValidator(alice);
+        assertEq(stake, minStake * 2);
 
         id = 2;
         epoch = Epoch({startBlock: 65, endBlock: 128, epochRoot: keccak256(abi.encodePacked(block.number))});
@@ -761,8 +776,8 @@ contract ChildValidatorSetTest_ProcessQueueAfterStake is UnstakedCompletely {
         vm.prank(SYSTEM);
         childValidatorSet.commitEpoch(id, epoch, uptime);
 
-        validator = childValidatorSet.getValidator(alice);
-        assertEq(validator.stake, 0);
+        (, stake, , , , ) = childValidatorSet.getValidator(alice);
+        assertEq(stake, 0);
         assertEq(childValidatorSet.pendingWithdrawals(alice), 0);
         assertEq(childValidatorSet.withdrawable(alice), minStake * 2);
     }
@@ -1489,9 +1504,9 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
                 childValidatorSet.register(signature, pubkey);
                 childValidatorSet.stake{value: minStake * 2}();
 
-                Validator memory validator = childValidatorSet.getValidator(addr);
+                (, , , , , bool active) = childValidatorSet.getValidator(addr);
 
-                assertEq(validator.active, true);
+                assertEq(active, true);
 
                 epoch = Epoch({
                     startBlock: 257 + i * 64,
@@ -1573,10 +1588,18 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
             );
         }
 
-        address[] memory validators = childValidatorSet.getCurrentValidatorSet();
-        Validator[] memory validatorsInfoBeforeCommitSlash = new Validator[](validators.length);
-        for (i = 0; i < validators.length; i++) {
-            validatorsInfoBeforeCommitSlash[i] = childValidatorSet.getValidator(validators[i]);
+        address[] memory _validators = childValidatorSet.getCurrentValidatorSet();
+        Validator[] memory validatorsInfoBeforeCommitSlash = new Validator[](_validators.length);
+        for (i = 0; i < _validators.length; i++) {
+            (
+                uint256[4] memory blsKey,
+                uint256 stake,
+                ,
+                uint256 commission,
+                uint256 withdrawableRewards,
+                bool active
+            ) = childValidatorSet.getValidator(_validators[i]);
+            validatorsInfoBeforeCommitSlash[i] = Validator(blsKey, stake, commission, withdrawableRewards, active);
         }
         vm.etch(0x0000000000000000000000000000000000002030, alwaysTrueBytecode);
 
@@ -1592,16 +1615,24 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
             inputs
         );
 
-        Validator[] memory validatorsInfoAfterCommitSlash = new Validator[](validators.length);
-        for (i = 0; i < validators.length; i++) {
-            validatorsInfoAfterCommitSlash[i] = childValidatorSet.getValidator(validators[i]);
+        Validator[] memory validatorsInfoAfterCommitSlash = new Validator[](_validators.length);
+        for (i = 0; i < _validators.length; i++) {
+            (
+                uint256[4] memory blsKey,
+                uint256 stake,
+                ,
+                uint256 commission,
+                uint256 withdrawableRewards,
+                bool active
+            ) = childValidatorSet.getValidator(_validators[i]);
+            validatorsInfoAfterCommitSlash[i] = Validator(blsKey, stake, commission, withdrawableRewards, active);
         }
 
         assertEq(validatorsInfoBeforeCommitSlash.length, validatorsInfoAfterCommitSlash.length);
 
         {
             uint256 j;
-            for (i = 0; i < validators.length; i++) {
+            for (i = 0; i < _validators.length; i++) {
                 uint256 count = 0;
                 for (j = 0; j < inputs.length; j++) {
                     uint256 byteNumber = i / 8;
@@ -1658,9 +1689,17 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
 
         uptime.epochId = childValidatorSet.currentEpochId();
 
-        validators = childValidatorSet.getCurrentValidatorSet();
-        for (i = 0; i < validators.length; i++) {
-            validatorsInfoBeforeCommitSlash[i] = childValidatorSet.getValidator(validators[i]);
+        _validators = childValidatorSet.getCurrentValidatorSet();
+        for (i = 0; i < _validators.length; i++) {
+            (
+                uint256[4] memory blsKey,
+                uint256 stake,
+                ,
+                uint256 commission,
+                uint256 withdrawableRewards,
+                bool active
+            ) = childValidatorSet.getValidator(_validators[i]);
+            validatorsInfoBeforeCommitSlash[i] = Validator(blsKey, stake, commission, withdrawableRewards, active);
         }
 
         vm.expectEmit(true, true, true, true);
@@ -1674,8 +1713,16 @@ contract ChildValidatorSetTest_CommitEpochWithDoubleSignerSlashing is Claimed {
             inputs
         );
 
-        for (i = 0; i < validators.length; i++) {
-            validatorsInfoAfterCommitSlash[i] = childValidatorSet.getValidator(validators[i]);
+        for (i = 0; i < _validators.length; i++) {
+            (
+                uint256[4] memory blsKey,
+                uint256 stake,
+                ,
+                uint256 commission,
+                uint256 withdrawableRewards,
+                bool active
+            ) = childValidatorSet.getValidator(_validators[i]);
+            validatorsInfoAfterCommitSlash[i] = Validator(blsKey, stake, commission, withdrawableRewards, active);
         }
 
         assertEq(validatorsInfoBeforeCommitSlash.length, validatorsInfoAfterCommitSlash.length);
@@ -1734,8 +1781,8 @@ contract ChildValidatorSetTest_SetCommission is UndelegatedState {
         vm.prank(alice);
         childValidatorSet.setCommission(MAX_COMMISSION - 1);
 
-        Validator memory validator = childValidatorSet.getValidator(alice);
-        assertEq(validator.commission, MAX_COMMISSION - 1);
+        (, , , uint256 commission, , ) = childValidatorSet.getValidator(alice);
+        assertEq(commission, MAX_COMMISSION - 1);
     }
 
     function testGetTotalStake() public {

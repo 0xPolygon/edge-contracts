@@ -17,7 +17,7 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
     using SafeMathUint for uint256;
 
     modifier onlyValidator() {
-        if (!getValidator(msg.sender).active) revert Unauthorized("VALIDATOR");
+        if (!_validators.get(msg.sender).active) revert Unauthorized("VALIDATOR");
         _;
     }
 
@@ -117,7 +117,7 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
      * @inheritdoc ICVSStaking
      */
     function getValidatorReward(address validator) external view returns (uint256) {
-        return getValidator(validator).withdrawableRewards;
+        return _validators.get(validator).withdrawableRewards;
     }
 
     /**
@@ -125,6 +125,13 @@ abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWi
      */
     function totalStake() external view returns (uint256) {
         return _validators.totalStake;
+    }
+
+    /**
+     * @inheritdoc ICVSStaking
+     */
+    function totalStakeOf(address validator) external view returns (uint256) {
+        return _validators.totalStakeOf(validator);
     }
 
     function _distributeValidatorReward(address validator, uint256 reward) internal {
