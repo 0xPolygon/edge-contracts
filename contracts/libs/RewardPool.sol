@@ -23,8 +23,8 @@ library RewardPoolLib {
      */
     function distributeReward(RewardPool storage pool, uint256 amount) internal {
         if (amount == 0) return;
-        if (pool.supply == 0) revert NoTokensDelegated(pool.validator);
-        pool.magnifiedRewardPerShare += (amount * magnitude()) / pool.supply;
+        if (pool.virtualSupply == 0) revert NoTokensDelegated(pool.validator);
+        pool.magnifiedRewardPerShare += (amount * magnitude()) / pool.virtualSupply;
     }
 
     /**
@@ -34,10 +34,12 @@ library RewardPoolLib {
      * @param amount the amount to credit the account by
      */
     function deposit(RewardPool storage pool, address account, uint256 amount) internal {
-        uint256 share = pool.supply == 0 ? amount : (amount * pool.supply) / pool.underlyingSupply;
+        uint256 share = (pool.virtualSupply == 0 || pool.supply == 0)
+            ? amount
+            : (amount * pool.virtualSupply) / pool.supply;
         pool.balances[account] += share;
-        pool.supply += share;
-        pool.underlyingSupply += amount;
+        pool.virtualSupply += share;
+        pool.supply += amount;
         // slither-disable-next-line divide-before-multiply
         pool.magnifiedRewardCorrections[account] -= (pool.magnifiedRewardPerShare * share).toInt256Safe();
     }
@@ -49,12 +51,12 @@ library RewardPoolLib {
      * @param amount the amount to decrement the balance by
      */
     function withdraw(RewardPool storage pool, address account, uint256 amount) internal {
-        uint256 share = (amount * pool.supply) / pool.underlyingSupply;
+        uint256 share = (amount * pool.virtualSupply) / pool.supply;
         pool.balances[account] -= share;
-        pool.supply -= share;
+        pool.virtualSupply -= share;
         // slither-disable-next-line divide-before-multiply
         pool.magnifiedRewardCorrections[account] += (pool.magnifiedRewardPerShare * share).toInt256Safe();
-        pool.underlyingSupply -= amount;
+        pool.supply -= amount;
     }
 
     /**
@@ -75,8 +77,8 @@ library RewardPoolLib {
      * @return uint256 the balance of the account
      */
     function balanceOf(RewardPool storage pool, address account) internal view returns (uint256) {
-        if (pool.supply == 0) return 0;
-        return (pool.balances[account] * pool.underlyingSupply) / pool.supply;
+        if (pool.virtualSupply == 0) return 0;
+        return (pool.balances[account] * pool.supply) / pool.virtualSupply;
     }
 
     /**

@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import { randHex, randFs, to32Hex } from "../../ts/utils";
-import * as mcl from "../../ts/mcl";
+import { hexlify, randomBytes } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
 import { expandMsg, hashToField } from "../../ts/hashToField";
-import { BLS } from "../../typechain";
+import * as mcl from "../../ts/mcl";
+import { randFs, randHex, to32Hex } from "../../ts/utils";
+import { BLS } from "../../typechain-types";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
@@ -20,7 +20,7 @@ describe("BLS", async () => {
   before(async function () {
     await mcl.init();
     const BLS = await ethers.getContractFactory("BLS");
-    bls = await BLS.deploy();
+    bls = (await BLS.deploy()) as BLS;
   });
   it("map to point", async function () {
     for (let i = 0; i < 100; i++) {

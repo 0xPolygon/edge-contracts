@@ -1,10 +1,9 @@
-import { expect, use } from "chai";
-import { solidity } from "ethereum-waffle";
-import { ethers, network } from "hardhat";
-import { BigNumber } from "ethers";
-import { NetworkParams } from "../../typechain";
-import { impersonateAccount, mine, stopImpersonatingAccount } from "@nomicfoundation/hardhat-network-helpers";
+import { impersonateAccount, stopImpersonatingAccount, setBalance } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
+import { BigNumber } from "ethers";
+import { ethers } from "hardhat";
+import { NetworkParams } from "../../typechain-types";
 
 describe("NetworkParams", () => {
   let networkParams: NetworkParams,
@@ -30,13 +29,13 @@ describe("NetworkParams", () => {
     checkpointBlockInterval = 2 ** Math.floor(Math.random() * 5 + 10);
     minStake = ethers.utils.parseUnits(String(Math.floor(Math.random() * 20 + 1)));
     maxValidatorSetSize = Math.floor(Math.random() * 20 + 5);
-    networkParams = await networkParamsFactory.deploy(
+    networkParams = (await networkParamsFactory.deploy(
       accounts[0].address,
       blockGasLimit,
       checkpointBlockInterval,
       minStake,
       maxValidatorSetSize
-    );
+    )) as NetworkParams;
 
     await networkParams.deployed();
 
@@ -48,6 +47,7 @@ describe("NetworkParams", () => {
 
   it("set new block gas limit fail: only owner", async () => {
     await impersonateAccount(accounts[1].address);
+    await setBalance(accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
     const newNetworkParams = networkParams.connect(accounts[1]);
 
     await expect(newNetworkParams.setNewBlockGasLimit(1)).to.be.revertedWith("Ownable: caller is not the owner");

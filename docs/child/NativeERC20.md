@@ -440,28 +440,6 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### withdraw
-
-```solidity
-function withdraw(uint256 amount) external nonpayable returns (bool)
-```
-
-Used to withdraw tokens from V3 PoS chain to L1
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | Amount of tokens to withdraw |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 
 
 ## Events

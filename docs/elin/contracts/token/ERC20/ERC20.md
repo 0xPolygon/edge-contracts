@@ -1,12 +1,12 @@
-# ChildERC20
+# ERC20
 
-*Polygon Technology (@QEDK)*
 
-> ChildERC20
 
-Child token template for ChildERC20 predicate deployments
 
-*All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.*
+
+
+
+*Implementation of the {IERC20} interface. This implementation is agnostic to the way tokens are created. This means that a supply mechanism has to be added in a derived contract using {_mint}. For a generic mechanism see {ERC20PresetMinterPauser}. TIP: For a detailed writeup see our guide https://forum.openzeppelin.com/t/how-to-implement-erc20-supply-mechanisms/226[How to implement supply mechanisms]. We have followed general OpenZeppelin Contracts guidelines: functions revert instead returning `false` on failure. This behavior is nonetheless conventional and does not conflict with the expectations of ERC20 applications. Additionally, an {Approval} event is emitted on calls to {transferFrom}. This allows applications to reconstruct the allowance for all accounts just by listening to said events. Other implementations of the EIP may not emit these events, as it isn&#39;t required by the specification. Finally, the non-standard {decreaseAllowance} and {increaseAllowance} functions have been added to mitigate the well-known issues around setting allowances. See {IERC20-approve}.*
 
 ## Methods
 
@@ -78,45 +78,22 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### burn
-
-```solidity
-function burn(address account, uint256 amount) external nonpayable returns (bool)
-```
-
-Burns an amount of tokens from a particular address
-
-*Can only be called by the predicate address*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | Account of the user to burn the tokens from |
-| amount | uint256 | Amount of tokens to burn from the account |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
-
 ### decimals
 
 ```solidity
 function decimals() external view returns (uint8)
 ```
 
-Returns the decimals places of the token
 
 
+*Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the value {ERC20} uses, unless this function is overridden; NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint8 | uint8 Returns the decimals places of the token. |
+| _0 | uint8 | undefined |
 
 ### decreaseAllowance
 
@@ -141,54 +118,6 @@ function decreaseAllowance(address spender, uint256 subtractedValue) external no
 |---|---|---|
 | _0 | bool | undefined |
 
-### executeMetaTransaction
-
-```solidity
-function executeMetaTransaction(address userAddress, bytes functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) external nonpayable returns (bytes)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| userAddress | address | undefined |
-| functionSignature | bytes | undefined |
-| sigR | bytes32 | undefined |
-| sigS | bytes32 | undefined |
-| sigV | uint8 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
-### getNonce
-
-```solidity
-function getNonce(address user) external view returns (uint256 nonce)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| user | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| nonce | uint256 | undefined |
-
 ### increaseAllowance
 
 ```solidity
@@ -212,48 +141,6 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### initialize
-
-```solidity
-function initialize(address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
-```
-
-
-
-*Sets the values for {rootToken}, {name}, {symbol} and {decimals}. All these values are immutable: they can only be set once during initialization.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken_ | address | undefined |
-| name_ | string | undefined |
-| symbol_ | string | undefined |
-| decimals_ | uint8 | undefined |
-
-### mint
-
-```solidity
-function mint(address account, uint256 amount) external nonpayable returns (bool)
-```
-
-Mints an amount of tokens to a particular address
-
-*Can only be called by the predicate address*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | Account of the user to mint the tokens to |
-| amount | uint256 | Amount of tokens to mint to the account |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
-
 ### name
 
 ```solidity
@@ -270,40 +157,6 @@ function name() external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### predicate
-
-```solidity
-function predicate() external view returns (address)
-```
-
-Returns predicate address controlling the child token
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address Returns the address of the predicate |
-
-### rootToken
-
-```solidity
-function rootToken() external view returns (address)
-```
-
-Returns predicate address controlling the child token
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address Returns the address of the predicate |
 
 ### symbol
 
@@ -407,40 +260,6 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
-
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
-
-### MetaTransactionExecuted
-
-```solidity
-event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| userAddress  | address | undefined |
-| relayerAddress  | address | undefined |
-| functionSignature  | bytes | undefined |
 
 ### Transfer
 

@@ -1,11 +1,8 @@
 import { assert } from "chai";
-import { randHex, randFs, to32Hex } from "../../ts/utils";
-import * as mcl from "../../ts/mcl";
-import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import { randomBytes, hexlify, arrayify } from "ethers/lib/utils";
-import { expandMsg, hashToField } from "../../ts/hashToField";
-import { BN256G2 } from "../../typechain";
+import { ethers } from "hardhat";
+import * as mcl from "../../ts/mcl";
+import { BN256G2 } from "../../typechain-types";
 
 const DOMAIN = ethers.utils.arrayify(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
 
@@ -14,7 +11,7 @@ describe("BN256G2", async () => {
   before(async function () {
     await mcl.init();
     const bn256G2Factory = await ethers.getContractFactory("BN256G2");
-    bn256G2 = await bn256G2Factory.deploy();
+    bn256G2 = (await bn256G2Factory.deploy()) as BN256G2;
     await bn256G2.deployTransaction.wait();
   });
   it("Addition on G2 (1 point)", async function () {
