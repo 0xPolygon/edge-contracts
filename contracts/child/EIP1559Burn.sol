@@ -17,8 +17,8 @@ contract EIP1559Burn is Initializable {
 
     event NativeTokenBurnt(address indexed burner, uint256 amount);
 
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
+    // slither-disable-next-line locked-ether
+    receive() external payable {} // solhint-disable-line no-empty-blocks
 
     /**
      * @notice Initilization function for EIP1559 burn contract
