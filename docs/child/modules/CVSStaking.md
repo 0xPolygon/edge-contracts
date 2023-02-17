@@ -233,7 +233,7 @@ function epochs(uint256) external view returns (uint256 startBlock, uint256 endB
 ### getValidator
 
 ```solidity
-function getValidator(address validator) external view returns (struct Validator)
+function getValidator(address validator) external view returns (uint256[4] blsKey, uint256 stake, uint256 totalStake, uint256 commission, uint256 withdrawableRewards, bool active)
 ```
 
 Gets validator by address.
@@ -250,7 +250,12 @@ Gets validator by address.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
+| blsKey | uint256[4] | BLS public key |
+| stake | uint256 | self-stake |
+| totalStake | uint256 | self-stake + delegation |
+| commission | uint256 | commission |
+| withdrawableRewards | uint256 | withdrawable rewards |
+| active | bool | activity status |
 
 ### getValidatorReward
 
@@ -473,6 +478,28 @@ Calculates total stake in the network (self-stake + delegation).
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | Total stake (in MATIC wei) |
+
+### totalStakeOf
+
+```solidity
+function totalStakeOf(address validator) external view returns (uint256)
+```
+
+Gets validator&#39;s total stake (self-stake + delegation).
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator | address | Address of validator |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | Validator&#39;s total stake (in MATIC wei) |
 
 ### transferOwnership
 

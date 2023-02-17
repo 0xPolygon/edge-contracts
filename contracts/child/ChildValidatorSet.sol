@@ -195,11 +195,11 @@ contract ChildValidatorSet is
         if (length == 0) return 0;
 
         address tmpValidator = _validators.last();
-        activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
+        activeStake += _validators.get(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
 
         for (uint256 i = 1; i < length; i++) {
             tmpValidator = _validators.prev(tmpValidator);
-            activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
+            activeStake += _validators.get(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
         }
     }
 
@@ -211,7 +211,7 @@ contract ChildValidatorSet is
         require(length <= ACTIVE_VALIDATOR_SET_SIZE && length <= _validators.count, "INVALID_LENGTH");
 
         uint256 activeStake = totalActiveStake();
-        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock + 1)) / epochSize;
+        uint256 reward = (epochReward * (epoch.endBlock - epoch.startBlock) * 100) / (epochSize * 100);
 
         for (uint256 i = 0; i < length; ++i) {
             UptimeData memory uptimeData = uptime.uptimeData[i];
@@ -317,7 +317,7 @@ contract ChildValidatorSet is
         address validatorAddr,
         uint256 totalReward
     ) private view returns (uint256, uint256) {
-        Validator memory validator = getValidator(validatorAddr);
+        Validator memory validator = _validators.get(validatorAddr);
         uint256 stakedAmount = validator.stake;
         uint256 delegations = _validators.getDelegationPool(validatorAddr).supply;
 
