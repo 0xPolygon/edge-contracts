@@ -35,6 +35,8 @@ describe("EIP1559Burn", () => {
     totalSupply: number,
     accounts: SignerWithAddress[];
   before(async () => {
+    // force reset network to clear old storage
+    await hre.network.provider.send("hardhat_reset");
     accounts = await ethers.getSigners();
 
     const L2StateSender: L2StateSender__factory = await ethers.getContractFactory("L2StateSender");
