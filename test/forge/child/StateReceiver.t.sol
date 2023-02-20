@@ -8,7 +8,6 @@ import {StateReceiver} from "contracts/child/StateReceiver.sol";
 import {System} from "contracts/child/StateReceiver.sol";
 import {StateReceivingContract} from "contracts/mocks/StateReceivingContract.sol";
 import "contracts/interfaces/Errors.sol";
-import "forge-std/console2.sol";
 
 abstract contract EmptyState is Test, System, StateReceiver {
     StateReceiver stateReceiver;
@@ -201,7 +200,6 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
 
     function testBatchExecute_Success() public {
         stateReceiver.batchExecute(proofs, stateSyncs);
-        console.log(stateReceivingContract.counter());
         assertEq(stateReceivingContract.counter(), 1337 * 6);
     }
 
