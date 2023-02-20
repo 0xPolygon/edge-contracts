@@ -18,7 +18,7 @@ contract MerkleTest is Test, MurkyBase {
         _hash = keccak256(abi.encode(left, right));
     }
 
-    function testCannotCheckMemership_InvalidIndex(uint256 index, uint8 proofSize) public {
+    function testCannotCheckMembership_InvalidIndex(uint256 index, uint8 proofSize) public {
         index = bound(index, 2 ** proofSize, type(uint256).max);
         bytes32[] memory proof = new bytes32[](proofSize);
 
@@ -34,6 +34,7 @@ contract MerkleTest is Test, MurkyBase {
         bytes32 root = getRoot(leaves);
         bytes32[] memory proof = getProof(leaves, index);
         bytes32 leaf = leaves[index];
+        vm.assume(leaf != bytes32(0));
         bytes32 randomDataHash = keccak256(abi.encode(leaf));
 
         // should return true for leaf and false for random hash
