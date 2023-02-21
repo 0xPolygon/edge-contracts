@@ -102,7 +102,7 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
         super.setUp();
         // create bundle of size bundleSize with batches of size batchSize;
         // syncs will be successful, with data uint256(1337)
-        uint256 bundleSize = 5;
+        uint256 bundleSize = 8;
         uint256 counter = stateReceiver.lastCommittedId();
         StateSync memory _state;
         for (uint256 i; i < bundleSize - 3; ++i) {
@@ -154,13 +154,13 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
 
 contract StateReceiverTest_NonEmptyState is NonEmptyState {
     function testCannotExecute_InvalidProof() public {
-        vm.expectRevert("INVALID_PROOF");
+        vm.expectRevert("INVALID_PROOF_LENGTH");
         stateReceiver.execute(proof, stateSyncs[0]);
     }
 
     function testCannotExecuteStateSync_IdNotSequential() public {
         StateSync memory state;
-        state.id = 6;
+        state.id = 9;
 
         vm.expectRevert("StateReceiver: NO_COMMITMENT_FOR_ID");
         stateReceiver.execute(proof, state);
@@ -185,11 +185,11 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
     }
 
     function testExecuteStateSync_Failure() public {
-        vm.expectCall(receiver, stateSyncs[4].data);
+        vm.expectCall(receiver, stateSyncs[7].data);
         // StateReceivingContract will revert on empty data
         vm.expectEmit(true, true, false, true);
-        emit StateSyncResult(stateSyncs[4].id, false, "");
-        stateReceiver.execute(proofs[4], stateSyncs[4]);
+        emit StateSyncResult(stateSyncs[7].id, false, "");
+        stateReceiver.execute(proofs[7], stateSyncs[7]);
     }
 
     function testBatchExecute_Failure() public {
@@ -200,8 +200,7 @@ contract StateReceiverTest_NonEmptyState is NonEmptyState {
 
     function testBatchExecute_Success() public {
         stateReceiver.batchExecute(proofs, stateSyncs);
-
-        assertEq(stateReceivingContract.counter(), 1337 * 3);
+        assertEq(stateReceivingContract.counter(), 1337 * 6);
     }
 
     function testCannotReplayCommitment() public {
