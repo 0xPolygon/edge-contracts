@@ -46,12 +46,13 @@ library Merkle {
     }
 
     /**
-     * @notice checks membership of a leaf in a merkle tree
+     * @notice checks membership of a leaf in a merkle tree with expected height
      * @param leaf keccak256 hash to check the membership of
      * @param index position of the hash in the tree
+     * @param numLeaves number of leaves in the merkle tree (used to calculate the proof length)
      * @param rootHash root hash of the merkle tree
      * @param proof an array of hashes needed to prove the membership of the lead
-     * @return a boolean value indicating if the leaf is in the tree or not
+     * @return bool a boolean value indicating if the leaf is in the tree or not
      */
     function checkMembershipWithHeight(
         bytes32 leaf,
