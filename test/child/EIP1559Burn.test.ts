@@ -129,11 +129,9 @@ describe("EIP1559Burn", () => {
       stateReceiver.address,
       rootERC20Predicate,
       childERC20.address,
-      nativeERC20RootToken,
-      "TEST",
-      "TEST",
-      18
+      nativeERC20RootToken
     );
+    await nativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18);
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(

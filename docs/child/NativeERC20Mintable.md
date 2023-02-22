@@ -1,10 +1,10 @@
-# NativeERC20
+# NativeERC20Mintable
 
 *Polygon Technology*
 
-> NativeERC20
+> NativeERC20Mintable
 
-Native token contract on Polygon V3 / supernet chains
+Native (mintable) token contract on Polygon V3 / supernet chains
 
 *The contract exposes ERC20-like functions that are compatible with the native token*
 
@@ -269,7 +269,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address predicate_, address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
+function initialize(address predicate_, address minter_, address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
 ```
 
 
@@ -281,6 +281,7 @@ function initialize(address predicate_, address rootToken_, string name_, string
 | Name | Type | Description |
 |---|---|---|
 | predicate_ | address | undefined |
+| minter_ | address | undefined |
 | rootToken_ | address | undefined |
 | name_ | string | undefined |
 | symbol_ | string | undefined |

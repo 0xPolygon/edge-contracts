@@ -96,10 +96,7 @@ describe("ChildERC20Predicate", () => {
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
-        "",
-        "",
-        0
+        "0x0000000000000000000000000000000000000000"
       )
     )
       .to.be.revertedWithCustomError(childERC20Predicate, "Unauthorized")
@@ -113,10 +110,7 @@ describe("ChildERC20Predicate", () => {
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
-        "",
-        "",
-        0
+        "0x0000000000000000000000000000000000000000"
       )
     ).to.be.revertedWith("ChildERC20Predicate: BAD_INITIALIZATION");
   });
@@ -127,12 +121,9 @@ describe("ChildERC20Predicate", () => {
       stateReceiver.address,
       rootERC20Predicate,
       childERC20.address,
-      nativeERC20RootToken,
-      "TEST",
-      "TEST",
-      18
+      nativeERC20RootToken
     );
-
+    await nativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18);
     expect(await childERC20Predicate.l2StateSender()).to.equal(l2StateSender.address);
     expect(await childERC20Predicate.stateReceiver()).to.equal(stateReceiver.address);
     expect(await childERC20Predicate.rootERC20Predicate()).to.equal(rootERC20Predicate);
@@ -146,10 +137,7 @@ describe("ChildERC20Predicate", () => {
         stateReceiver.address,
         rootERC20Predicate,
         childERC20.address,
-        nativeERC20RootToken,
-        "TEST",
-        "TEST",
-        18
+        nativeERC20RootToken
       )
     ).to.be.revertedWith("Initializable: contract is already initialized");
   });

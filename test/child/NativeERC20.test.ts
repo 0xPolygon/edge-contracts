@@ -78,12 +78,11 @@ describe("NativeERC20", () => {
         ethers.Wallet.createRandom().address,
         ethers.Wallet.createRandom().address,
         ethers.Wallet.createRandom().address,
-        ethers.constants.AddressZero,
-        "TEST",
-        "TEST",
-        18
+        ethers.constants.AddressZero
       )
     ).to.not.be.reverted;
+    await expect(nativeERC20.initialize(childERC20Predicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18))
+      .to.not.be.reverted;
     expect(await nativeERC20.name()).to.equal("TEST");
     expect(await nativeERC20.symbol()).to.equal("TEST");
     expect(await nativeERC20.decimals()).to.equal(18);
@@ -93,9 +92,9 @@ describe("NativeERC20", () => {
   });
 
   it("reinitialization fail", async () => {
-    await expect(nativeERC20.initialize(ethers.constants.AddressZero, "", "", 0)).to.be.revertedWith(
-      "Initializable: contract is already initialized"
-    );
+    await expect(
+      nativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "", "", 0)
+    ).to.be.revertedWith("Initializable: contract is already initialized");
   });
 
   it("mint tokens fail: only predicate", async () => {
