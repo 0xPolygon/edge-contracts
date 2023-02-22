@@ -200,7 +200,7 @@ function childTokenTemplate() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress, string newNativeTokenName, string newNativeTokenSymbol, uint8 newNativeTokenDecimals) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
 ```
 
 Initilization function for ChildERC20Predicate
@@ -216,9 +216,6 @@ Initilization function for ChildERC20Predicate
 | newRootERC20Predicate | address | Address of root ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
 | newNativeTokenRootAddress | address | Address of native token on root chain |
-| newNativeTokenName | string | Name of native token ERC20 |
-| newNativeTokenSymbol | string | Symbol of native token ERC20 |
-| newNativeTokenDecimals | uint8 | undefined |
 
 ### l2StateSender
 

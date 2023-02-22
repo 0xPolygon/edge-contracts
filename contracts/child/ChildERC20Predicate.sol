@@ -57,8 +57,6 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
      * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @param newNativeTokenRootAddress Address of native token on root chain
-     * @param newNativeTokenName Name of native token ERC20
-     * @param newNativeTokenSymbol Symbol of native token ERC20
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
      */
     function initialize(
@@ -66,10 +64,7 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         address newStateReceiver,
         address newRootERC20Predicate,
         address newChildTokenTemplate,
-        address newNativeTokenRootAddress,
-        string calldata newNativeTokenName,
-        string calldata newNativeTokenSymbol,
-        uint8 newNativeTokenDecimals
+        address newNativeTokenRootAddress
     ) external onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
@@ -83,12 +78,6 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         rootERC20Predicate = newRootERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
         rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CHILD_ADDRESS;
-        IChildERC20(NATIVE_TOKEN_CHILD_ADDRESS).initialize(
-            newNativeTokenRootAddress,
-            newNativeTokenName,
-            newNativeTokenSymbol,
-            newNativeTokenDecimals
-        ); // native token root address must be initialized as zero address where no root token exists
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CHILD_ADDRESS);
     }

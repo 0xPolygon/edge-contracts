@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../interfaces/IStateReceiver.sol";
-import "../interfaces/INativeERC20.sol";
 import "./System.sol";
 
 /**
-    @title NativeERC20
+    @title NativeERC20Mintable
     @author Polygon Technology
-    @notice Native token contract on Polygon V3 / supernet chains
+    @notice Native (mintable) token contract on Polygon V3 / supernet chains
     @dev The contract exposes ERC20-like functions that are compatible with the native token
  */
 // solhint-disable reason-string
-contract NativeERC20 is Context, Initializable, System, INativeERC20 {
+contract NativeERC20Mintable is Context, Initializable, System, IERC20Metadata {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
     address private _predicate;
     address private _rootToken;
+    address private _minter;
     string private _name;
     string private _symbol;
     uint8 private _decimals;
 
-    modifier onlyPredicate() {
-        require(msg.sender == _predicate, "NativeERC20: Only predicate can call");
+    modifier onlyPredicateOrMinter() {
+        require(msg.sender == _predicate || msg.sender == _minter, "NativeERC20: Only predicate or minter can call");
 
         _;
     }
@@ -40,13 +41,16 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      */
     function initialize(
         address predicate_,
+        address minter_,
         address rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_
     ) external initializer {
+        require(minter_ != address(0), "NativeERC20: Invalid minter address");
         // slither-disable-next-line missing-zero-check
         _predicate = predicate_;
+        _minter = minter_;
         // slither-disable-next-line missing-zero-check
         _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
@@ -151,18 +155,26 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Mints an amount of tokens to a particular address
+     * @dev Can only be called by the predicate address
+     * @param account Account of the user to mint the tokens to
+     * @param amount Amount of tokens to mint to the account
+     * @return bool Returns true if function call is succesful
      */
-    function mint(address account, uint256 amount) external onlyPredicate returns (bool) {
+    function mint(address account, uint256 amount) external onlyPredicateOrMinter returns (bool) {
         _mint(account, amount);
 
         return true;
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Burns an amount of tokens from a particular address
+     * @dev Can only be called by the predicate address
+     * @param account Account of the user to burn the tokens from
+     * @param amount Amount of tokens to burn from the account
+     * @return bool Returns true if function call is succesful
      */
-    function burn(address account, uint256 amount) external onlyPredicate returns (bool) {
+    function burn(address account, uint256 amount) external onlyPredicateOrMinter returns (bool) {
         _burn(account, amount);
 
         return true;
@@ -222,16 +234,18 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Returns predicate address controlling the child token
+     * @return address Returns the address of the predicate
      */
-    function predicate() public view virtual override returns (address) {
+    function predicate() public view virtual returns (address) {
         return _predicate;
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Returns predicate address controlling the child token
+     * @return address Returns the address of the predicate
      */
-    function rootToken() public view virtual override returns (address) {
+    function rootToken() public view virtual returns (address) {
         return _rootToken;
     }
 
