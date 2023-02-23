@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
 /**
  * @title Merkle
  * @author Polygon Technology (similar to ENS, but written from scratch)
  * @notice library for checking membership in a merkle tree
  */
 library Merkle {
+    using Math for uint256;
+
     /**
      * @notice checks membership of a leaf in a merkle tree
      * @param leaf keccak256 hash to check the membership of
      * @param index position of the hash in the tree
      * @param rootHash root hash of the merkle tree
-     * @param proof an array of hashes needed to prove the membership of the lead
+     * @param proof an array of hashes needed to prove the membership of the leaf
      * @return a boolean value indicating if the leaf is in the tree or not
      */
     function checkMembership(
@@ -51,7 +55,7 @@ library Merkle {
      * @param index position of the hash in the tree
      * @param numLeaves number of leaves in the merkle tree (used to calculate the proof length)
      * @param rootHash root hash of the merkle tree
-     * @param proof an array of hashes needed to prove the membership of the lead
+     * @param proof an array of hashes needed to prove the membership of the leaf
      * @return bool a boolean value indicating if the leaf is in the tree or not
      */
     function checkMembershipWithHeight(
@@ -62,7 +66,7 @@ library Merkle {
         bytes32[] calldata proof
     ) internal pure returns (bool) {
         uint256 proofHeight = proof.length;
-        require(2 ** proofHeight == numLeaves, "INVALID_PROOF_LENGTH");
+        require(proofHeight == numLeaves.log2(Math.Rounding.Up), "INVALID_PROOF_LENGTH");
         // if the proof is of size n, the tree height will be n+1
         // in a tree of height n+1, max possible leaves are 2^n
         require(index < numLeaves, "INVALID_LEAF_INDEX");
