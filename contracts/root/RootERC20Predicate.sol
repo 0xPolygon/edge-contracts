@@ -54,7 +54,8 @@ contract RootERC20Predicate is Initializable {
         address newStateSender,
         address newExitHelper,
         address newChildERC20Predicate,
-        address newChildTokenTemplate
+        address newChildTokenTemplate,
+        address nativeTokenRootAddress
     ) external initializer {
         require(
             newStateSender != address(0) &&
@@ -67,6 +68,10 @@ contract RootERC20Predicate is Initializable {
         exitHelper = newExitHelper;
         childERC20Predicate = newChildERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
+        if (nativeTokenRootAddress != address(0)) {
+            rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
+            emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
+        }
     }
 
     /**
