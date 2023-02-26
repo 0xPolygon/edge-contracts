@@ -70,6 +70,19 @@ describe("NativeERC20Mintable", () => {
   });
 
   it("initialize and validate initialization", async () => {
+    await expect(
+      nativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18
+      )
+    ).to.be.revertedWith("NativeERC20: Invalid owner address");
+  });
+
+  it("initialize and validate initialization", async () => {
     const systemChildERC20Predicate: ChildERC20Predicate = childERC20Predicate.connect(
       await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
