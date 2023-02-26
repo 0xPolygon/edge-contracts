@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import {
   RootERC20Predicate,
   RootERC20Predicate__factory,
@@ -11,12 +11,10 @@ import {
   ChildERC20__factory,
   MockERC20,
 } from "../../typechain-types";
-import { setCode, setBalance, impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
+import { setBalance, impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { smock } from "@defi-wonderland/smock";
-import { alwaysTrueBytecode } from "../constants";
 
-describe("ChildERC20Predicate", () => {
+describe("RootERC20Predicate", () => {
   let rootERC20Predicate: RootERC20Predicate,
     exitHelperRootERC20Predicate: RootERC20Predicate,
     stateSender: StateSender,
@@ -62,28 +60,35 @@ describe("ChildERC20Predicate", () => {
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000"
       )
     ).to.be.revertedWith("RootERC20Predicate: BAD_INITIALIZATION");
   });
 
   it("initialize and validate initialization", async () => {
+    const nativeTokenRootAddress = ethers.Wallet.createRandom().address;
     await rootERC20Predicate.initialize(
       stateSender.address,
       exitHelper.address,
       childERC20Predicate,
-      childTokenTemplate.address
+      childTokenTemplate.address,
+      nativeTokenRootAddress
     );
 
     expect(await rootERC20Predicate.stateSender()).to.equal(stateSender.address);
     expect(await rootERC20Predicate.exitHelper()).to.equal(exitHelper.address);
     expect(await rootERC20Predicate.childERC20Predicate()).to.equal(childERC20Predicate);
     expect(await rootERC20Predicate.childTokenTemplate()).to.equal(childTokenTemplate.address);
+    expect(await rootERC20Predicate.rootTokenToChildToken(nativeTokenRootAddress)).to.equal(
+      "0x0000000000000000000000000000000000001010"
+    );
   });
 
   it("fail reinitialization", async () => {
     await expect(
       rootERC20Predicate.initialize(
+        "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
