@@ -378,6 +378,10 @@ describe("NativeERC20", () => {
   it("burn success from minter", async () => {
     const burnAmount = Math.floor(Math.random() * totalSupply + 1);
     const expectedTotalSupply = (await nativeERC20.totalSupply()).sub(burnAmount);
+    await hre.network.provider.request({
+      method: "hardhat_setBalance",
+      params: [accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
+    });
     await expect(minterNativeERC20.burn(accounts[0].address, burnAmount)).to.not.be.reverted;
     const balance = ethers.utils.hexStripZeros(
       BigNumber.from(await nativeERC20.balanceOf(accounts[0].address))
