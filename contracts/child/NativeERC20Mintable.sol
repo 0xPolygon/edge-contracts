@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "../interfaces/IStateReceiver.sol";
 import "./System.sol";
 
@@ -14,19 +15,18 @@ import "./System.sol";
     @dev The contract exposes ERC20-like functions that are compatible with the native token
  */
 // solhint-disable reason-string
-contract NativeERC20Mintable is Context, Initializable, System, IERC20Metadata {
+contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IERC20Metadata {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
     address private _predicate;
     address private _rootToken;
-    address private _minter;
     string private _name;
     string private _symbol;
     uint8 private _decimals;
 
     modifier onlyPredicateOrMinter() {
-        require(msg.sender == _predicate || msg.sender == _minter, "NativeERC20: Only predicate or minter can call");
+        require(msg.sender == _predicate || msg.sender == owner(), "NativeERC20: Only predicate or owner can call");
 
         _;
     }
@@ -41,21 +41,21 @@ contract NativeERC20Mintable is Context, Initializable, System, IERC20Metadata {
      */
     function initialize(
         address predicate_,
-        address minter_,
+        address owner_,
         address rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_
     ) external initializer {
-        require(minter_ != address(0), "NativeERC20: Invalid minter address");
+        require(owner_ != address(0), "NativeERC20: Invalid owner address");
         // slither-disable-next-line missing-zero-check
         _predicate = predicate_;
-        _minter = minter_;
         // slither-disable-next-line missing-zero-check
         _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
+        _transferOwnership(owner_);
     }
 
     /**
