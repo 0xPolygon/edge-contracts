@@ -12,7 +12,7 @@ import {
 } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
-describe("NativeERC20", () => {
+describe("NativeERC20Mintable", () => {
   let nativeERC20: NativeERC20Mintable,
     predicateNativeERC20: NativeERC20Mintable,
     minterNativeERC20: NativeERC20Mintable,
