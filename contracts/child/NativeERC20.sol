@@ -45,12 +45,13 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
         string calldata symbol_,
         uint8 decimals_
     ) external initializer onlySystemCall {
-        // slither-disable-next-line missing-zero-check
+        // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
         _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
         _symbol = symbol_;
+        // slither-disable-next-line events-maths
         _decimals = decimals_;
     }
 
