@@ -27,7 +27,6 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
     address public rootERC20Predicate;
     /// @custom:security write-protection="onlySystemCall()"
     address public childTokenTemplate;
-    address public constant NATIVE_TOKEN_CHILD_ADDRESS = 0x0000000000000000000000000000000000001010;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
@@ -77,9 +76,11 @@ contract ChildERC20Predicate is Initializable, System, IStateReceiver {
         stateReceiver = newStateReceiver;
         rootERC20Predicate = newRootERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
-        rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CHILD_ADDRESS;
-        // slither-disable-next-line reentrancy-events
-        emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CHILD_ADDRESS);
+        if (newNativeTokenRootAddress != address(0)) {
+            rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
+            // slither-disable-next-line reentrancy-events
+            emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CONTRACT);
+        }
     }
 
     /**
