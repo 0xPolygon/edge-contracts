@@ -69,20 +69,12 @@ describe("NativeERC20", () => {
   });
 
   it("initialize and validate initialization", async () => {
-    const systemChildERC20Predicate: ChildERC20Predicate = childERC20Predicate.connect(
+    const systemNativeERC20: NativeERC20 = nativeERC20.connect(
       await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
     await expect(
-      systemChildERC20Predicate.initialize(
-        ethers.Wallet.createRandom().address,
-        ethers.Wallet.createRandom().address,
-        ethers.Wallet.createRandom().address,
-        ethers.Wallet.createRandom().address,
-        ethers.constants.AddressZero
-      )
+      systemNativeERC20.initialize(childERC20Predicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18)
     ).to.not.be.reverted;
-    await expect(nativeERC20.initialize(childERC20Predicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18))
-      .to.not.be.reverted;
     expect(await nativeERC20.name()).to.equal("TEST");
     expect(await nativeERC20.symbol()).to.equal("TEST");
     expect(await nativeERC20.decimals()).to.equal(18);

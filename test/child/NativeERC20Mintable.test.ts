@@ -14,6 +14,7 @@ import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from ".
 
 describe("NativeERC20Mintable", () => {
   let nativeERC20: NativeERC20Mintable,
+    systemNativeERC20: NativeERC20Mintable,
     predicateNativeERC20: NativeERC20Mintable,
     minterNativeERC20: NativeERC20Mintable,
     zeroAddressNativeERC20: NativeERC20Mintable,
@@ -54,6 +55,8 @@ describe("NativeERC20Mintable", () => {
 
     nativeERC20 = nativeERC20.attach("0x0000000000000000000000000000000000001010");
 
+    systemNativeERC20 = nativeERC20.connect(await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"));
+
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002020",
       alwaysTrueBytecode, // native transfer pre-compile
@@ -69,9 +72,39 @@ describe("NativeERC20Mintable", () => {
     totalSupply = 0;
   });
 
-  it("initialize and validate initialization", async () => {
+  it("fail initialization: systemcall", async () => {
     await expect(
       nativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18
+      )
+    )
+      .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
+      .withArgs("SYSTEMCALL");
+  });
+
+  it("fail initialization: systemcall", async () => {
+    await expect(
+      nativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18
+      )
+    )
+      .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
+      .withArgs("SYSTEMCALL");
+  });
+
+  it("fail initialization: invalid owner", async () => {
+    await expect(
+      systemNativeERC20.initialize(
         ethers.constants.AddressZero,
         ethers.constants.AddressZero,
         ethers.constants.AddressZero,
@@ -83,20 +116,8 @@ describe("NativeERC20Mintable", () => {
   });
 
   it("initialize and validate initialization", async () => {
-    const systemChildERC20Predicate: ChildERC20Predicate = childERC20Predicate.connect(
-      await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
-    );
     await expect(
-      systemChildERC20Predicate.initialize(
-        ethers.Wallet.createRandom().address,
-        ethers.Wallet.createRandom().address,
-        ethers.Wallet.createRandom().address,
-        ethers.Wallet.createRandom().address,
-        ethers.constants.AddressZero
-      )
-    ).to.not.be.reverted;
-    await expect(
-      nativeERC20.initialize(
+      systemNativeERC20.initialize(
         childERC20Predicate.address,
         accounts[1].address,
         ethers.constants.AddressZero,

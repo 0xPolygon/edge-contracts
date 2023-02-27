@@ -1,6 +1,5 @@
 import { setCode, impersonateAccount, setBalance } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { BigNumber, BigNumberish } from "ethers";
 import * as hre from "hardhat";
 import { ethers, network } from "hardhat";
 import {
@@ -86,6 +85,14 @@ describe("EIP1559Burn", () => {
       await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
 
+    await systemChildERC20Predicate.initialize(
+      l2StateSender.address,
+      stateReceiver.address,
+      rootERC20Predicate,
+      childERC20.address,
+      nativeERC20RootToken
+    );
+
     impersonateAccount(stateReceiver.address);
     setBalance(stateReceiver.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
@@ -124,14 +131,11 @@ describe("EIP1559Burn", () => {
   });
 
   it("mint tokens and transfer", async () => {
-    await systemChildERC20Predicate.initialize(
-      l2StateSender.address,
-      stateReceiver.address,
-      rootERC20Predicate,
-      childERC20.address,
-      nativeERC20RootToken
+    const systemNativeERC20: NativeERC20 = nativeERC20.connect(
+      await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
-    await nativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18);
+    await expect(systemNativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18)).to
+      .not.be.reverted;
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(

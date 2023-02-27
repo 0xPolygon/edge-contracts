@@ -46,7 +46,7 @@ contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IE
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_
-    ) external initializer {
+    ) external initializer onlySystemCall {
         require(owner_ != address(0), "NativeERC20: Invalid owner address");
         // slither-disable-next-line missing-zero-check
         _predicate = predicate_;
