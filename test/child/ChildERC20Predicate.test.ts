@@ -128,6 +128,9 @@ describe("ChildERC20Predicate", () => {
     expect(await childERC20Predicate.stateReceiver()).to.equal(stateReceiver.address);
     expect(await childERC20Predicate.rootERC20Predicate()).to.equal(rootERC20Predicate);
     expect(await childERC20Predicate.childTokenTemplate()).to.equal(childERC20.address);
+    expect(await childERC20Predicate.rootTokenToChildToken(nativeERC20RootToken)).to.equal(
+      "0x0000000000000000000000000000000000001010"
+    );
   });
 
   it("fail reinitialization", async () => {

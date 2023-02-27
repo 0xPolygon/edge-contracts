@@ -44,23 +44,6 @@ function MAP_TOKEN_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### NATIVE_TOKEN_CHILD_ADDRESS
-
-```solidity
-function NATIVE_TOKEN_CHILD_ADDRESS() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### NATIVE_TOKEN_CONTRACT
 
 ```solidity
