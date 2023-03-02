@@ -99,7 +99,11 @@ contract ValidatorQueueTest_NonEmptyState is NonEmptyState {
 contract ValidatorQueueLibUser {
     ValidatorQueue queue;
 
-    function insert(address validator, int256 stake, int256 delegation) external {
+    function insert(
+        address validator,
+        int256 stake,
+        int256 delegation
+    ) external {
         ValidatorQueueLib.insert(queue, validator, stake, delegation);
     }
 

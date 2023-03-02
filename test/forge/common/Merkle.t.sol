@@ -19,7 +19,7 @@ contract MerkleTest is Test, MurkyBase {
     }
 
     function testCannotCheckMembership_InvalidIndex(uint256 index, uint8 proofSize) public {
-        index = bound(index, 2 ** proofSize, type(uint256).max);
+        index = bound(index, 2**proofSize, type(uint256).max);
         bytes32[] memory proof = new bytes32[](proofSize);
 
         vm.expectRevert("INVALID_LEAF_INDEX");

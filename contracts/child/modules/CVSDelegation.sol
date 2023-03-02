@@ -91,7 +91,11 @@ abstract contract CVSDelegation is ICVSDelegation, CVSStorage, CVSWithdrawal {
         return _validators.getDelegationPool(validator).claimableRewards(delegator);
     }
 
-    function _delegate(address delegator, address validator, uint256 amount) private {
+    function _delegate(
+        address delegator,
+        address validator,
+        uint256 amount
+    ) private {
         if (!_validators.get(validator).active) revert Unauthorized("INVALID_VALIDATOR");
         _queue.insert(validator, 0, amount.toInt256Safe());
         _validators.getDelegationPool(validator).deposit(delegator, amount);

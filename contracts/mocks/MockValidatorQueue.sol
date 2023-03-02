@@ -8,11 +8,19 @@ contract MockValidatorQueue {
 
     ValidatorQueue queue;
 
-    function stake(address validator, uint256 stake_, uint256 delegation) external {
+    function stake(
+        address validator,
+        uint256 stake_,
+        uint256 delegation
+    ) external {
         queue.insert(validator, int256(stake_), int256(delegation));
     }
 
-    function unstake(address validator, uint256 stake_, uint256 delegation) external {
+    function unstake(
+        address validator,
+        uint256 stake_,
+        uint256 delegation
+    ) external {
         queue.insert(validator, int256(stake_) * -1, int256(delegation) * -1);
     }
 

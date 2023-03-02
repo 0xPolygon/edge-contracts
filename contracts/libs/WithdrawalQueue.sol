@@ -18,7 +18,11 @@ library WithdrawalQueueLib {
      * @param amount the amount to withdraw
      * @param epoch the epoch to withdraw
      */
-    function append(WithdrawalQueue storage self, uint256 amount, uint256 epoch) internal {
+    function append(
+        WithdrawalQueue storage self,
+        uint256 amount,
+        uint256 epoch
+    ) internal {
         assert(amount != 0);
         uint256 head = self.head;
         uint256 tail = self.tail;
@@ -62,10 +66,11 @@ library WithdrawalQueueLib {
      * @return amount the amount withdrawable through the specified epoch
      * @return newHead the head of the queue once these withdrawals have been processed
      */
-    function withdrawable(
-        WithdrawalQueue storage self,
-        uint256 currentEpoch
-    ) internal view returns (uint256 amount, uint256 newHead) {
+    function withdrawable(WithdrawalQueue storage self, uint256 currentEpoch)
+        internal
+        view
+        returns (uint256 amount, uint256 newHead)
+    {
         for (newHead = self.head; newHead < self.tail; newHead++) {
             Withdrawal memory withdrawal = self.withdrawals[newHead];
             if (withdrawal.epoch > currentEpoch) return (amount, newHead);

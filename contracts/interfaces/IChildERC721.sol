@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC721/ERC721.sol)
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
 
 /**
- * @dev Interface of IChildERC20
+ * @dev Interface of IChildERC721
  */
-interface IChildERC20 is IERC20MetadataUpgradeable {
+interface IChildERC721 is IERC721MetadataUpgradeable {
     /**
-     * @dev Sets the values for {rootToken}, {name}, {symbol} and {decimals}.
+     * @dev Sets the values for {rootToken}, {name}, and {symbol}.
      *
      * All these values are immutable: they can only be set once during
      * initialization.
@@ -18,8 +18,7 @@ interface IChildERC20 is IERC20MetadataUpgradeable {
     function initialize(
         address rootToken_,
         string calldata name_,
-        string calldata symbol_,
-        uint8 decimals_
+        string calldata symbol_
     ) external;
 
     /**
@@ -35,20 +34,20 @@ interface IChildERC20 is IERC20MetadataUpgradeable {
     function rootToken() external view returns (address);
 
     /**
-     * @notice Mints an amount of tokens to a particular address
+     * @notice Mints an NFT token to a particular address
      * @dev Can only be called by the predicate address
      * @param account Account of the user to mint the tokens to
-     * @param amount Amount of tokens to mint to the account
+     * @param tokenId Index of NFT to mint to the account
      * @return bool Returns true if function call is succesful
      */
-    function mint(address account, uint256 amount) external returns (bool);
+    function mint(address account, uint256 tokenId) external returns (bool);
 
     /**
-     * @notice Burns an amount of tokens from a particular address
+     * @notice Burns an NFT tokens from a particular address
      * @dev Can only be called by the predicate address
      * @param account Account of the user to burn the tokens from
-     * @param amount Amount of tokens to burn from the account
+     * @param tokenId Index of NFT to burn from the account
      * @return bool Returns true if function call is succesful
      */
-    function burn(address account, uint256 amount) external returns (bool);
+    function burn(address account, uint256 tokenId) external returns (bool);
 }

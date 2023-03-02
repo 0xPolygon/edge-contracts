@@ -11,5 +11,13 @@ interface IBN256G2 {
         uint256 pt2xy,
         uint256 pt2yx,
         uint256 pt2yy
-    ) external view returns (uint256, uint256, uint256, uint256);
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 }

@@ -180,7 +180,11 @@ contract StateReceiver is System {
      * @param signature the signed message
      * @param bitmap bitmap of which validators have signed
      */
-    function _checkPubkeyAggregation(bytes32 message, bytes calldata signature, bytes calldata bitmap) internal view {
+    function _checkPubkeyAggregation(
+        bytes32 message,
+        bytes calldata signature,
+        bytes calldata bitmap
+    ) internal view {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls,calls-loop

@@ -370,7 +370,17 @@ contract ValidatorStorageLibUser {
         return r;
     }
 
-    function getNode(address key) external view returns (address, address, address, address, bool) {
+    function getNode(address key)
+        external
+        view
+        returns (
+            address,
+            address,
+            address,
+            address,
+            bool
+        )
+    {
         (address a, address b, address c, address d, bool e) = ValidatorStorageLib.getNode(tree, key);
         return (a, b, c, d, e);
     }
