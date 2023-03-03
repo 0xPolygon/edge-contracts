@@ -15,12 +15,7 @@ interface IChildERC20 is IERC20MetadataUpgradeable {
      * All these values are immutable: they can only be set once during
      * initialization.
      */
-    function initialize(
-        address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
-        uint8 decimals_
-    ) external;
+    function initialize(address rootToken_, string calldata name_, string calldata symbol_, uint8 decimals_) external;
 
     /**
      * @notice Returns predicate address controlling the child token

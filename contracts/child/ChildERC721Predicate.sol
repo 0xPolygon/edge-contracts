@@ -4,9 +4,9 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "../interfaces/IChildERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC721.sol";
-import "../interfaces/IStateReceiver.sol";
 import "./System.sol";
 
 /**
@@ -15,7 +15,7 @@ import "./System.sol";
     @notice Enables ERC721 token deposits and withdrawals across an arbitrary root chain and child chain
  */
 // solhint-disable reason-string
-contract ChildERC721Predicate is Initializable, System, IStateReceiver {
+contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     /// @custom:security write-protection="onlySystemCall()"
     IStateSender public l2StateSender;
     /// @custom:security write-protection="onlySystemCall()"
@@ -86,11 +86,7 @@ contract ChildERC721Predicate is Initializable, System, IStateReceiver {
      * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
-    function onStateReceive(
-        uint256, /* id */
-        address sender,
-        bytes calldata data
-    ) external {
+    function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
         require(msg.sender == stateReceiver, "ChildERC721Predicate: ONLY_STATE_RECEIVER");
         require(sender == rootERC721Predicate, "ChildERC721Predicate: ONLY_ROOT_PREDICATE");
 
@@ -101,6 +97,17 @@ contract ChildERC721Predicate is Initializable, System, IStateReceiver {
         } else {
             revert("ChildERC721Predicate: INVALID_SIGNATURE");
         }
+    }
+
+    /**
+     * @notice Deploys a child EC721 token contract
+     * @param rootToken address of the ERC721 contract on the root chain
+     * @param salt Noise for address generation
+     * @param name The ERC721 token's name
+     * @param symbol The ERC721 token's symbol
+     */
+    function deployChildToken(address rootToken, bytes32 salt, string calldata name, string calldata symbol) external {
+        //TODO
     }
 
     /**
@@ -118,19 +125,11 @@ contract ChildERC721Predicate is Initializable, System, IStateReceiver {
      * @param receiver Address of the receiver on the root chain
      * @param tokenId index of the NFT to withdraw
      */
-    function withdrawTo(
-        IChildERC721 childToken,
-        address receiver,
-        uint256 tokenId
-    ) external {
+    function withdrawTo(IChildERC721 childToken, address receiver, uint256 tokenId) external {
         _withdraw(childToken, receiver, tokenId);
     }
 
-    function _withdraw(
-        IChildERC721 childToken,
-        address receiver,
-        uint256 tokenId
-    ) private {
+    function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private {
         require(address(childToken).code.length != 0, "ChildERC721Predicate: NOT_CONTRACT");
 
         address rootToken = childToken.rootToken();

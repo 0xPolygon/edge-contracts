@@ -10,10 +10,7 @@ interface IChildERC20Predicate is IStateReceiver {
         address newStateReceiver,
         address newRootERC20Predicate,
         address newChildTokenTemplate,
-        address newNativeTokenRootAddress,
-        string calldata newNativeTokenName,
-        string calldata newNativeTokenSymbol,
-        uint8 newNativeTokenDecimals
+        address newNativeTokenRootAddress
     ) external;
 
     function deployChildToken(
@@ -24,17 +21,9 @@ interface IChildERC20Predicate is IStateReceiver {
         uint8 decimals
     ) external;
 
-    function onStateReceive(
-        uint256, /* id */
-        address sender,
-        bytes calldata data
-    ) external;
+    function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external;
 
     function withdraw(IChildERC20 childToken, uint256 amount) external;
 
-    function withdrawTo(
-        IChildERC20 childToken,
-        address receiver,
-        uint256 amount
-    ) external;
+    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external;
 }

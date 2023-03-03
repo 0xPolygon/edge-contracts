@@ -84,11 +84,7 @@ contract ChildValidatorSet is
     /**
      * @inheritdoc IChildValidatorSetBase
      */
-    function commitEpoch(
-        uint256 id,
-        Epoch calldata epoch,
-        Uptime calldata uptime
-    ) external onlySystemCall {
+    function commitEpoch(uint256 id, Epoch calldata epoch, Uptime calldata uptime) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
@@ -251,11 +247,7 @@ contract ChildValidatorSet is
         _queue.reset();
     }
 
-    function _slashDoubleSigner(
-        address key,
-        uint256 epoch,
-        uint256 pbftRound
-    ) private {
+    function _slashDoubleSigner(address key, uint256 epoch, uint256 pbftRound) private {
         if (doubleSignerSlashes[epoch][pbftRound][key]) {
             return;
         }
@@ -321,11 +313,10 @@ contract ChildValidatorSet is
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
-    function _calculateValidatorAndDelegatorShares(address validatorAddr, uint256 totalReward)
-        private
-        view
-        returns (uint256, uint256)
-    {
+    function _calculateValidatorAndDelegatorShares(
+        address validatorAddr,
+        uint256 totalReward
+    ) private view returns (uint256, uint256) {
         Validator memory validator = _validators.get(validatorAddr);
         uint256 stakedAmount = validator.stake;
         uint256 delegations = _validators.getDelegationPool(validatorAddr).supply;
@@ -347,11 +338,7 @@ contract ChildValidatorSet is
      * @param signature the signed message
      * @param bitmap bitmap of which validators have signed
      */
-    function _checkPubkeyAggregation(
-        bytes32 hash,
-        bytes calldata signature,
-        bytes calldata bitmap
-    ) private view {
+    function _checkPubkeyAggregation(bytes32 hash, bytes calldata signature, bytes calldata bitmap) private view {
         // verify signatures` for provided sig data and sigs bytes
         // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_PKCHECK_PRECOMPILE.staticcall{

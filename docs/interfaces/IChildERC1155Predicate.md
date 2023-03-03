@@ -1,4 +1,4 @@
-# IChildERC20Predicate
+# IChildERC1155Predicate
 
 
 
@@ -13,7 +13,7 @@
 ### deployChildToken
 
 ```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol, uint8 decimals) external nonpayable
+function deployChildToken(address rootToken, bytes32 salt) external nonpayable
 ```
 
 
@@ -26,14 +26,11 @@ function deployChildToken(address rootToken, bytes32 salt, string name, string s
 |---|---|---|
 | rootToken | address | undefined |
 | salt | bytes32 | undefined |
-| name | string | undefined |
-| symbol | string | undefined |
-| decimals | uint8 | undefined |
 
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
 ```
 
 
@@ -46,7 +43,7 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 |---|---|---|
 | newL2StateSender | address | undefined |
 | newStateReceiver | address | undefined |
-| newRootERC20Predicate | address | undefined |
+| newRootERC721Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
 | newNativeTokenRootAddress | address | undefined |
 
@@ -71,7 +68,7 @@ function onStateReceive(uint256, address sender, bytes data) external nonpayable
 ### withdraw
 
 ```solidity
-function withdraw(contract IChildERC20 childToken, uint256 amount) external nonpayable
+function withdraw(contract IChildERC1155 childToken, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 
@@ -82,13 +79,14 @@ function withdraw(contract IChildERC20 childToken, uint256 amount) external nonp
 
 | Name | Type | Description |
 |---|---|---|
-| childToken | contract IChildERC20 | undefined |
+| childToken | contract IChildERC1155 | undefined |
+| tokenId | uint256 | undefined |
 | amount | uint256 | undefined |
 
 ### withdrawTo
 
 ```solidity
-function withdrawTo(contract IChildERC20 childToken, address receiver, uint256 amount) external nonpayable
+function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 
@@ -99,8 +97,9 @@ function withdrawTo(contract IChildERC20 childToken, address receiver, uint256 a
 
 | Name | Type | Description |
 |---|---|---|
-| childToken | contract IChildERC20 | undefined |
+| childToken | contract IChildERC1155 | undefined |
 | receiver | address | undefined |
+| tokenId | uint256 | undefined |
 | amount | uint256 | undefined |
 
 

@@ -42,7 +42,9 @@ abstract contract CVSStorage is ICVSStorage {
     /**
      * @inheritdoc ICVSStorage
      */
-    function getValidator(address validator)
+    function getValidator(
+        address validator
+    )
         external
         view
         returns (

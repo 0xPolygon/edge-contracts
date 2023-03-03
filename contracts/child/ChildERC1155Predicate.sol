@@ -2,29 +2,26 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/IChildERC20Predicate.sol";
+import "../interfaces/IChildERC1155Predicate.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/IChildERC20.sol";
+import "../interfaces/IChildERC1155.sol";
 import "./System.sol";
 
 /**
-    @title ChildERC20Predicate
-    @author Polygon Technology (@QEDK)
-    @notice Enables ERC20 token deposits and withdrawals across an arbitrary root chain and child chain
+    @title ChildERC1155Predicate
+    @author Polygon Technology (@QEDK, @wschwab)
+    @notice Enables ERC1155 token deposits and withdrawals across an arbitrary root chain and child chain
  */
 // solhint-disable reason-string
-contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
-    using SafeERC20 for IERC20;
-
+contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System {
     /// @custom:security write-protection="onlySystemCall()"
     IStateSender public l2StateSender;
     /// @custom:security write-protection="onlySystemCall()"
     address public stateReceiver;
     /// @custom:security write-protection="onlySystemCall()"
-    address public rootERC20Predicate;
+    address public rootERC1155Predicate;
     /// @custom:security write-protection="onlySystemCall()"
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -33,27 +30,29 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
 
     mapping(address => address) public rootTokenToChildToken;
 
-    event L2ERC20Deposit(
+    event L2ERC1155Deposit(
         address indexed rootToken,
         address indexed childToken,
         address sender,
         address indexed receiver,
+        uint256 tokenId,
         uint256 amount
     );
-    event L2ERC20Withdraw(
+    event L2ERC1155Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address sender,
         address indexed receiver,
+        uint256 tokenId,
         uint256 amount
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
-     * @notice Initilization function for ChildERC20Predicate
+     * @notice Initilization function for ChildERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
-     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
+     * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @param newNativeTokenRootAddress Address of native token on root chain
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
@@ -61,20 +60,20 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     function initialize(
         address newL2StateSender,
         address newStateReceiver,
-        address newRootERC20Predicate,
+        address newRootERC1155Predicate,
         address newChildTokenTemplate,
         address newNativeTokenRootAddress
     ) external onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&
-                newRootERC20Predicate != address(0) &&
+                newRootERC1155Predicate != address(0) &&
                 newChildTokenTemplate != address(0),
-            "ChildERC20Predicate: BAD_INITIALIZATION"
+            "ChildERC1155Predicate: BAD_INITIALIZATION"
         );
         l2StateSender = IStateSender(newL2StateSender);
         stateReceiver = newStateReceiver;
-        rootERC20Predicate = newRootERC20Predicate;
+        rootERC1155Predicate = newRootERC1155Predicate;
         childTokenTemplate = newChildTokenTemplate;
         if (newNativeTokenRootAddress != address(0)) {
             rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
@@ -90,94 +89,90 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
      * @dev Can be extended to include other signatures for more functionality
      */
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == stateReceiver, "ChildERC20Predicate: ONLY_STATE_RECEIVER");
-        require(sender == rootERC20Predicate, "ChildERC20Predicate: ONLY_ROOT_PREDICATE");
+        require(msg.sender == stateReceiver, "ChildERC1155Predicate: ONLY_STATE_RECEIVER");
+        require(sender == rootERC1155Predicate, "ChildERC1155Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _deposit(data[32:]);
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
-            revert("ChildERC20Predicate: INVALID_SIGNATURE");
+            revert("ChildERC1155Predicate: INVALID_SIGNATURE");
         }
     }
 
     /**
-     * @notice Deploys a child ERC20 token contract
-     * @param rootToken Address of root ERC721 on root chain
-     * @param salt Random noise for address generation
-     * @param name The ERC20 token's name
-     * @param symbol The ERC20 token's symbol
-     * @param decimals Decimal precision of the token (default: 1e18)
+     * @notice Deploys a child ERC1155 token contract
+     * @param rootToken Address of the ERC1155 token contract on root
+     * @param salt Noise for address generation
      */
-    function deployChildToken(
-        address rootToken,
-        bytes32 salt,
-        string calldata name,
-        string calldata symbol,
-        uint8 decimals
-    ) external {
+    function deployChildToken(address rootToken, bytes32 salt) external {
         //TODO
     }
 
     /**
      * @notice Function to withdraw tokens from the withdrawer to themselves on the root chain
      * @param childToken Address of the child token being withdrawn
-     * @param amount Amount to withdraw
+     * @param tokenId Index of the NFT to withdraw
+     * @param amount Amount of the NFT to withdraw
      */
-    function withdraw(IChildERC20 childToken, uint256 amount) external {
-        _withdraw(childToken, msg.sender, amount);
+    function withdraw(IChildERC1155 childToken, uint256 tokenId, uint256 amount) external {
+        _withdraw(childToken, msg.sender, tokenId, amount);
     }
 
     /**
      * @notice Function to withdraw tokens from the withdrawer to another address on the root chain
      * @param childToken Address of the child token being withdrawn
      * @param receiver Address of the receiver on the root chain
-     * @param amount Amount to withdraw
+     * @param tokenId Index of the NFT to withdraw
+     * @param amount Amount of NFT to withdraw
      */
-    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external {
-        _withdraw(childToken, receiver, amount);
+    function withdrawTo(IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external {
+        _withdraw(childToken, receiver, tokenId, amount);
     }
 
-    function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
-        require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
+    function _withdraw(IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) private {
+        require(address(childToken).code.length != 0, "ChildERC1155Predicate: NOT_CONTRACT");
 
         address rootToken = childToken.rootToken();
 
-        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC1155Predicate: UNMAPPED_TOKEN");
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burn(msg.sender, amount), "ChildERC20Predicate: BURN_FAILED");
-        l2StateSender.syncState(rootERC20Predicate, abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount));
+        require(childToken.burn(msg.sender, tokenId, amount), "ChildERC1155Predicate: BURN_FAILED");
+        l2StateSender.syncState(
+            rootERC1155Predicate,
+            abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId, amount)
+        );
         // slither-disable-next-line reentrancy-events
-        emit L2ERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
+        emit L2ERC1155Withdraw(rootToken, address(childToken), msg.sender, receiver, tokenId, amount);
     }
 
     function _deposit(bytes calldata data) private {
-        (address depositToken, address depositor, address receiver, uint256 amount) = abi.decode(
+        (address depositToken, address depositor, address receiver, uint256 tokenId, uint256 amount) = abi.decode(
             data,
-            (address, address, address, uint256)
+            (address, address, address, uint256, uint256)
         );
 
-        IChildERC20 childToken = IChildERC20(rootTokenToChildToken[depositToken]);
+        IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
 
-        require(address(childToken) != address(0), "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(address(childToken) != address(0), "ChildERC1155Predicate: UNMAPPED_TOKEN");
         assert(address(childToken).code.length != 0);
 
-        address rootToken = IChildERC20(childToken).rootToken();
+        address rootToken = IChildERC1155(childToken).rootToken();
 
         // a mapped child token should match deposited token
         assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
-        assert(IChildERC20(childToken).predicate() == address(this));
-        require(IChildERC20(childToken).mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
+        assert(IChildERC1155(childToken).predicate() == address(this));
+        require(IChildERC1155(childToken).mint(receiver, tokenId, amount), "ChildERC1155Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
-        emit L2ERC20Deposit(depositToken, address(childToken), depositor, receiver, amount);
+        emit L2ERC1155Deposit(depositToken, address(childToken), depositor, receiver, tokenId, amount);
     }
 
     /**
@@ -185,17 +180,14 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
      * @dev Allows for 1-to-1 mappings for any root token to a child token
      */
     function _mapToken(bytes calldata data) private {
-        (, address rootToken, string memory name, string memory symbol, uint8 decimals) = abi.decode(
-            data,
-            (bytes32, address, string, string, uint8)
-        );
+        (, address rootToken) = abi.decode(data, (bytes32, address));
         assert(rootToken != address(0)); // invariant since root predicate performs the same check
         assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
-        IChildERC20 childToken = IChildERC20(
+        IChildERC1155 childToken = IChildERC1155(
             Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))
         );
         rootTokenToChildToken[rootToken] = address(childToken);
-        childToken.initialize(rootToken, name, symbol, decimals);
+        childToken.initialize(rootToken);
 
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));

@@ -1,10 +1,10 @@
-# ChildERC20Predicate
+# ChildERC721Predicate
 
-*Polygon Technology (@QEDK)*
+*Polygon Technology (@QEDK, @wschwab)*
 
-> ChildERC20Predicate
+> ChildERC721Predicate
 
-Enables ERC20 token deposits and withdrawals across an arbitrary root chain and child chain
+Enables ERC721 token deposits and withdrawals across an arbitrary root chain and child chain
 
 
 
@@ -183,10 +183,10 @@ function childTokenTemplate() external view returns (address)
 ### deployChildToken
 
 ```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol, uint8 decimals) external nonpayable
+function deployChildToken(address rootToken, bytes32 salt, string name, string symbol) external nonpayable
 ```
 
-Deploys a child ERC20 token contract
+Deploys a child EC721 token contract
 
 
 
@@ -194,19 +194,18 @@ Deploys a child ERC20 token contract
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | address | Address of root ERC721 on root chain |
-| salt | bytes32 | Random noise for address generation |
-| name | string | The ERC20 token&#39;s name |
-| symbol | string | The ERC20 token&#39;s symbol |
-| decimals | uint8 | Decimal precision of the token (default: 1e18) |
+| rootToken | address | address of the ERC721 contract on the root chain |
+| salt | bytes32 | Noise for address generation |
+| name | string | The ERC721 token&#39;s name |
+| symbol | string | The ERC721 token&#39;s symbol |
 
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
 ```
 
-Initilization function for ChildERC20Predicate
+Initilization function for ChildERC721Predicate
 
 *Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.*
 
@@ -216,7 +215,7 @@ Initilization function for ChildERC20Predicate
 |---|---|---|
 | newL2StateSender | address | Address of L2StateSender to send exit information to |
 | newStateReceiver | address | Address of StateReceiver to receive deposit information from |
-| newRootERC20Predicate | address | Address of root ERC20 predicate to communicate with |
+| newRootERC721Predicate | address | Address of root ERC721 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
 | newNativeTokenRootAddress | address | Address of native token on root chain |
 
@@ -255,10 +254,10 @@ Function to be used for token deposits
 | sender | address | Address of the sender on the root chain |
 | data | bytes | Data sent by the sender |
 
-### rootERC20Predicate
+### rootERC721Predicate
 
 ```solidity
-function rootERC20Predicate() external view returns (address)
+function rootERC721Predicate() external view returns (address)
 ```
 
 
@@ -314,7 +313,7 @@ function stateReceiver() external view returns (address)
 ### withdraw
 
 ```solidity
-function withdraw(contract IChildERC20 childToken, uint256 amount) external nonpayable
+function withdraw(contract IChildERC721 childToken, uint256 tokenId) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to themselves on the root chain
@@ -325,13 +324,13 @@ Function to withdraw tokens from the withdrawer to themselves on the root chain
 
 | Name | Type | Description |
 |---|---|---|
-| childToken | contract IChildERC20 | Address of the child token being withdrawn |
-| amount | uint256 | Amount to withdraw |
+| childToken | contract IChildERC721 | Address of the child token being withdrawn |
+| tokenId | uint256 | index of the NFT to withdraw |
 
 ### withdrawTo
 
 ```solidity
-function withdrawTo(contract IChildERC20 childToken, address receiver, uint256 amount) external nonpayable
+function withdrawTo(contract IChildERC721 childToken, address receiver, uint256 tokenId) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to another address on the root chain
@@ -342,9 +341,9 @@ Function to withdraw tokens from the withdrawer to another address on the root c
 
 | Name | Type | Description |
 |---|---|---|
-| childToken | contract IChildERC20 | Address of the child token being withdrawn |
+| childToken | contract IChildERC721 | Address of the child token being withdrawn |
 | receiver | address | Address of the receiver on the root chain |
-| amount | uint256 | Amount to withdraw |
+| tokenId | uint256 | index of the NFT to withdraw |
 
 
 
@@ -366,10 +365,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### L2ERC20Deposit
+### L2ERC721Deposit
 
 ```solidity
-event L2ERC20Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 amount)
+event L2ERC721Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId)
 ```
 
 
@@ -384,12 +383,12 @@ event L2ERC20Deposit(address indexed rootToken, address indexed childToken, addr
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 
-### L2ERC20Withdraw
+### L2ERC721Withdraw
 
 ```solidity
-event L2ERC20Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 amount)
+event L2ERC721Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId)
 ```
 
 
@@ -404,7 +403,7 @@ event L2ERC20Withdraw(address indexed rootToken, address indexed childToken, add
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 
 ### L2TokenMapped
 

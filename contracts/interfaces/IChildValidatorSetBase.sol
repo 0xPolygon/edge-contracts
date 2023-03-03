@@ -44,11 +44,7 @@ interface IChildValidatorSetBase {
      * @param epoch Epoch data to be committed
      * @param uptime Uptime data for the epoch being committed
      */
-    function commitEpoch(
-        uint256 id,
-        Epoch calldata epoch,
-        Uptime calldata uptime
-    ) external;
+    function commitEpoch(uint256 id, Epoch calldata epoch, Uptime calldata uptime) external;
 
     /**
      * @notice Allows the v3 client to commit epoch and slash double signers.

@@ -80,11 +80,7 @@ contract RootERC20Predicate is Initializable {
      * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
-    function onL2StateReceive(
-        uint256, /* id */
-        address sender,
-        bytes calldata data
-    ) external {
+    function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
         require(msg.sender == exitHelper, "RootERC20Predicate: ONLY_EXIT_HELPER");
         require(sender == childERC20Predicate, "RootERC20Predicate: ONLY_CHILD_PREDICATE");
 
@@ -109,11 +105,7 @@ contract RootERC20Predicate is Initializable {
      * @param rootToken Address of the root token being deposited
      * @param amount Amount to deposit
      */
-    function depositTo(
-        IERC20Metadata rootToken,
-        address receiver,
-        uint256 amount
-    ) external {
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
         _deposit(rootToken, receiver, amount);
     }
 
@@ -142,11 +134,7 @@ contract RootERC20Predicate is Initializable {
         emit TokenMapped(address(rootToken), childToken);
     }
 
-    function _deposit(
-        IERC20Metadata rootToken,
-        address receiver,
-        uint256 amount
-    ) private {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         if (rootTokenToChildToken[address(rootToken)] == address(0)) {
             mapToken(rootToken);
         }

@@ -30,7 +30,9 @@ interface ICVSStorage {
      * @return withdrawableRewards withdrawable rewards
      * @return active activity status
      */
-    function getValidator(address validator)
+    function getValidator(
+        address validator
+    )
         external
         view
         returns (
