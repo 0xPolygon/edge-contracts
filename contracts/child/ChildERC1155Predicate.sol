@@ -35,7 +35,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address indexed childToken,
         address sender,
         address indexed receiver,
-        uint256 tokenId,
+        uint256 id,
         uint256 amount
     );
     event L2ERC1155Withdraw(
@@ -43,7 +43,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address indexed childToken,
         address sender,
         address indexed receiver,
-        uint256 tokenId,
+        uint256 id,
         uint256 amount
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
@@ -113,25 +113,25 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     /**
      * @notice Function to withdraw tokens from the withdrawer to themselves on the root chain
      * @param childToken Address of the child token being withdrawn
-     * @param tokenId Index of the NFT to withdraw
+     * @param id Index of the NFT to withdraw
      * @param amount Amount of the NFT to withdraw
      */
-    function withdraw(IChildERC1155 childToken, uint256 tokenId, uint256 amount) external {
-        _withdraw(childToken, msg.sender, tokenId, amount);
+    function withdraw(IChildERC1155 childToken, uint256 id, uint256 amount) external {
+        _withdraw(childToken, msg.sender, id, amount);
     }
 
     /**
      * @notice Function to withdraw tokens from the withdrawer to another address on the root chain
      * @param childToken Address of the child token being withdrawn
      * @param receiver Address of the receiver on the root chain
-     * @param tokenId Index of the NFT to withdraw
+     * @param id Index of the NFT to withdraw
      * @param amount Amount of NFT to withdraw
      */
-    function withdrawTo(IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external {
-        _withdraw(childToken, receiver, tokenId, amount);
+    function withdrawTo(IChildERC1155 childToken, address receiver, uint256 id, uint256 amount) external {
+        _withdraw(childToken, receiver, id, amount);
     }
 
-    function _withdraw(IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) private {
+    function _withdraw(IChildERC1155 childToken, address receiver, uint256 id, uint256 amount) private {
         require(address(childToken).code.length != 0, "ChildERC1155Predicate: NOT_CONTRACT");
 
         address rootToken = childToken.rootToken();
@@ -142,17 +142,17 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burn(msg.sender, tokenId, amount), "ChildERC1155Predicate: BURN_FAILED");
+        require(childToken.burn(msg.sender, id, amount), "ChildERC1155Predicate: BURN_FAILED");
         l2StateSender.syncState(
             rootERC1155Predicate,
-            abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId, amount)
+            abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, id, amount)
         );
         // slither-disable-next-line reentrancy-events
-        emit L2ERC1155Withdraw(rootToken, address(childToken), msg.sender, receiver, tokenId, amount);
+        emit L2ERC1155Withdraw(rootToken, address(childToken), msg.sender, receiver, id, amount);
     }
 
     function _deposit(bytes calldata data) private {
-        (address depositToken, address depositor, address receiver, uint256 tokenId, uint256 amount) = abi.decode(
+        (address depositToken, address depositor, address receiver, uint256 id, uint256 amount) = abi.decode(
             data,
             (address, address, address, uint256, uint256)
         );
@@ -170,9 +170,9 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC1155(childToken).predicate() == address(this));
-        require(IChildERC1155(childToken).mint(receiver, tokenId, amount), "ChildERC1155Predicate: MINT_FAILED");
+        require(IChildERC1155(childToken).mint(receiver, id, amount), "ChildERC1155Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
-        emit L2ERC1155Deposit(depositToken, address(childToken), depositor, receiver, tokenId, amount);
+        emit L2ERC1155Deposit(depositToken, address(childToken), depositor, receiver, id, amount);
     }
 
     /**

@@ -311,7 +311,7 @@ function stateReceiver() external view returns (address)
 ### withdraw
 
 ```solidity
-function withdraw(contract IChildERC1155 childToken, uint256 tokenId, uint256 amount) external nonpayable
+function withdraw(contract IChildERC1155 childToken, uint256 id, uint256 amount) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to themselves on the root chain
@@ -323,13 +323,13 @@ Function to withdraw tokens from the withdrawer to themselves on the root chain
 | Name | Type | Description |
 |---|---|---|
 | childToken | contract IChildERC1155 | Address of the child token being withdrawn |
-| tokenId | uint256 | Index of the NFT to withdraw |
+| id | uint256 | Index of the NFT to withdraw |
 | amount | uint256 | Amount of the NFT to withdraw |
 
 ### withdrawTo
 
 ```solidity
-function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external nonpayable
+function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256 id, uint256 amount) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to another address on the root chain
@@ -342,7 +342,7 @@ Function to withdraw tokens from the withdrawer to another address on the root c
 |---|---|---|
 | childToken | contract IChildERC1155 | Address of the child token being withdrawn |
 | receiver | address | Address of the receiver on the root chain |
-| tokenId | uint256 | Index of the NFT to withdraw |
+| id | uint256 | Index of the NFT to withdraw |
 | amount | uint256 | Amount of NFT to withdraw |
 
 
@@ -368,7 +368,7 @@ event Initialized(uint8 version)
 ### L2ERC1155Deposit
 
 ```solidity
-event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
+event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 id, uint256 amount)
 ```
 
 
@@ -383,13 +383,13 @@ event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, ad
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| tokenId  | uint256 | undefined |
+| id  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
 ### L2ERC1155Withdraw
 
 ```solidity
-event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
+event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 id, uint256 amount)
 ```
 
 
@@ -404,7 +404,7 @@ event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, a
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| tokenId  | uint256 | undefined |
+| id  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
 ### L2TokenMapped
