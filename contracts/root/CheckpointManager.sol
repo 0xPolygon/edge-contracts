@@ -129,6 +129,24 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber) + 1].eventRoot;
     }
 
+    /**
+     * @inheritdoc ICheckpointManager
+     */
+    function getCheckpointBlock(uint256 blockNumber) public view returns (uint256, bool) {
+        if (checkpointBlockNumbers.length == 0) {
+            return (0, false);
+        }
+        uint256 checkpointBlockIdx = checkpointBlockNumbers.findUpperBound(blockNumber);
+        if (checkpointBlockIdx > checkpointBlockNumbers.length - 1) {
+            return (0, false);
+        }
+        uint256 checkpointBlock = checkpointBlockNumbers[checkpointBlockIdx];
+        if (blockNumber > checkpointBlock) {
+            return (0, false);
+        }
+        return (checkpointBlock, true);
+    }
+
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
         uint256 length = newValidatorSet.length;
         currentValidatorSetLength = length;
