@@ -132,7 +132,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     /**
      * @inheritdoc ICheckpointManager
      */
-    function getCheckpointBlock(uint256 blockNumber) public view returns (uint256, bool) {
+    function findCheckpointBlock(uint256 blockNumber) public view returns (uint256, bool) {
         if (checkpointBlockNumbers.length == 0) {
             return (0, false);
         }

@@ -315,20 +315,20 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         checkpointManager.getEventMembershipByEpoch(epoch, leaf, leafIndex, proof);
     }
 
-    function testGetCheckpointBlock_BlockNumberIsCheckpointBlock() public {
+    function testFindCheckpointBlock_BlockNumberIsCheckpointBlock() public {
         uint256 expectedCheckpointBlock = 1;
         uint256 blockNumber = 1;
 
-        (uint256 foundCheckpointBlock, bool isFound) = checkpointManager.getCheckpointBlock(blockNumber);
+        (uint256 foundCheckpointBlock, bool isFound) = checkpointManager.findCheckpointBlock(blockNumber);
         assertEq(foundCheckpointBlock, expectedCheckpointBlock);
         assertEq(isFound, true);
     }
 
-    function testGetCheckpointBlock_NonExistingCheckpointBlock() public {
+    function testFindCheckpointBlock_NonExistingCheckpointBlock() public {
         uint256 expectedCheckpointBlock = 0;
         uint256 blockNumber = 5;
 
-        (uint256 foundCheckpointBlock, bool isFound) = checkpointManager.getCheckpointBlock(blockNumber);
+        (uint256 foundCheckpointBlock, bool isFound) = checkpointManager.findCheckpointBlock(blockNumber);
         assertEq(foundCheckpointBlock, expectedCheckpointBlock);
         assertEq(isFound, false);
     }

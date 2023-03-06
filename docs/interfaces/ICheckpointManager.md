@@ -10,10 +10,10 @@ Checkpoint manager contract used by validators to submit signed checkpoints as p
 
 ## Methods
 
-### getCheckpointBlock
+### findCheckpointBlock
 
 ```solidity
-function getCheckpointBlock(uint256 blockNumber) external view returns (uint256, bool)
+function findCheckpointBlock(uint256 blockNumber) external view returns (uint256, bool)
 ```
 
 Function to get the checkpoint block number for a block number. It finds block number which is greater or equal than provided one in checkpointBlockNumbers array.

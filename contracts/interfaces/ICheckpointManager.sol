@@ -84,5 +84,5 @@ interface ICheckpointManager {
      * @return The checkpoint block number
      * @return The indicator if checkpoint block number was sucessfully resolved
      */
-    function getCheckpointBlock(uint256 blockNumber) external view returns (uint256, bool);
+    function findCheckpointBlock(uint256 blockNumber) external view returns (uint256, bool);
 }
