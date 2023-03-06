@@ -140,11 +140,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         if (checkpointBlockIdx > checkpointBlockNumbers.length - 1) {
             return (0, false);
         }
-        uint256 checkpointBlock = checkpointBlockNumbers[checkpointBlockIdx];
-        if (blockNumber > checkpointBlock) {
-            return (0, false);
-        }
-        return (checkpointBlock, true);
+        return (checkpointBlockNumbers[checkpointBlockIdx], true);
     }
 
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
