@@ -1,12 +1,12 @@
-# IChildERC721
+# ChildERC721
 
+*Polygon Technology (@QEDK, @wschwab)*
 
+> ChildERC721
 
+Child token template for ChildERC721 predicate deployments
 
-
-
-
-*Interface of IChildERC721*
+*All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.*
 
 ## Methods
 
@@ -18,7 +18,7 @@ function approve(address to, uint256 tokenId) external nonpayable
 
 
 
-*Gives permission to `to` to transfer `tokenId` token to another account. The approval is cleared when the token is transferred. Only a single account can be approved at a time, so approving the zero address clears previous approvals. Requirements: - The caller must own the token or be an approved operator. - `tokenId` must exist. Emits an {Approval} event.*
+*See {IERC721-approve}.*
 
 #### Parameters
 
@@ -30,12 +30,12 @@ function approve(address to, uint256 tokenId) external nonpayable
 ### balanceOf
 
 ```solidity
-function balanceOf(address owner) external view returns (uint256 balance)
+function balanceOf(address owner) external view returns (uint256)
 ```
 
 
 
-*Returns the number of tokens in ``owner``&#39;s account.*
+*See {IERC721-balanceOf}.*
 
 #### Parameters
 
@@ -47,7 +47,7 @@ function balanceOf(address owner) external view returns (uint256 balance)
 
 | Name | Type | Description |
 |---|---|---|
-| balance | uint256 | undefined |
+| _0 | uint256 | undefined |
 
 ### batchBurn
 
@@ -116,15 +116,41 @@ Burns an NFT tokens from a particular address
 |---|---|---|
 | _0 | bool | bool Returns true if function call is succesful |
 
-### getApproved
+### executeMetaTransaction
 
 ```solidity
-function getApproved(uint256 tokenId) external view returns (address operator)
+function executeMetaTransaction(address userAddress, bytes functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) external nonpayable returns (bytes)
 ```
 
 
 
-*Returns the account approved for `tokenId` token. Requirements: - `tokenId` must exist.*
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| userAddress | address | undefined |
+| functionSignature | bytes | undefined |
+| sigR | bytes32 | undefined |
+| sigS | bytes32 | undefined |
+| sigV | uint8 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
+### getApproved
+
+```solidity
+function getApproved(uint256 tokenId) external view returns (address)
+```
+
+
+
+*See {IERC721-getApproved}.*
 
 #### Parameters
 
@@ -136,7 +162,29 @@ function getApproved(uint256 tokenId) external view returns (address operator)
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined |
+| _0 | address | undefined |
+
+### getNonce
+
+```solidity
+function getNonce(address user) external view returns (uint256 nonce)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| user | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| nonce | uint256 | undefined |
 
 ### initialize
 
@@ -164,7 +212,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 
 
-*Returns if the `operator` is allowed to manage all of the assets of `owner`. See {setApprovalForAll}*
+*See {IERC721-isApprovedForAll}.*
 
 #### Parameters
 
@@ -210,7 +258,7 @@ function name() external view returns (string)
 
 
 
-*Returns the token collection name.*
+*See {IERC721Metadata-name}.*
 
 
 #### Returns
@@ -222,12 +270,12 @@ function name() external view returns (string)
 ### ownerOf
 
 ```solidity
-function ownerOf(uint256 tokenId) external view returns (address owner)
+function ownerOf(uint256 tokenId) external view returns (address)
 ```
 
 
 
-*Returns the owner of the `tokenId` token. Requirements: - `tokenId` must exist.*
+*See {IERC721-ownerOf}.*
 
 #### Parameters
 
@@ -239,7 +287,7 @@ function ownerOf(uint256 tokenId) external view returns (address owner)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined |
+| _0 | address | undefined |
 
 ### predicate
 
@@ -283,7 +331,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 
 
 
-*Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients are aware of the ERC721 protocol to prevent tokens from being forever locked. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must exist and be owned by `from`. - If the caller is not `from`, it must have been allowed to move this token by either {approve} or {setApprovalForAll}. - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer. Emits a {Transfer} event.*
+*See {IERC721-safeTransferFrom}.*
 
 #### Parameters
 
@@ -301,7 +349,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)
 
 
 
-*Safely transfers `tokenId` token from `from` to `to`. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must exist and be owned by `from`. - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}. - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer. Emits a {Transfer} event.*
+*See {IERC721-safeTransferFrom}.*
 
 #### Parameters
 
@@ -315,19 +363,19 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)
 ### setApprovalForAll
 
 ```solidity
-function setApprovalForAll(address operator, bool _approved) external nonpayable
+function setApprovalForAll(address operator, bool approved) external nonpayable
 ```
 
 
 
-*Approve or remove `operator` as an operator for the caller. Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller. Requirements: - The `operator` cannot be the caller. Emits an {ApprovalForAll} event.*
+*See {IERC721-setApprovalForAll}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | operator | address | undefined |
-| _approved | bool | undefined |
+| approved | bool | undefined |
 
 ### supportsInterface
 
@@ -337,7 +385,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
+*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -359,7 +407,7 @@ function symbol() external view returns (string)
 
 
 
-*Returns the token collection symbol.*
+*See {IERC721Metadata-symbol}.*
 
 
 #### Returns
@@ -376,7 +424,7 @@ function tokenURI(uint256 tokenId) external view returns (string)
 
 
 
-*Returns the Uniform Resource Identifier (URI) for `tokenId` token.*
+*See {IERC721Metadata-tokenURI}.*
 
 #### Parameters
 
@@ -398,7 +446,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 
 
-*Transfers `tokenId` token from `from` to `to`. WARNING: Note that the caller is responsible to confirm that the recipient is capable of receiving ERC721 or else they may be permanently lost. Usage of {safeTransferFrom} prevents loss, though the caller must understand this adds an external call which potentially creates a reentrancy vulnerability. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must be owned by `from`. - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}. Emits a {Transfer} event.*
+*See {IERC721-transferFrom}.*
 
 #### Parameters
 
@@ -447,6 +495,40 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | owner `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
+### MetaTransactionExecuted
+
+```solidity
+event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| userAddress  | address | undefined |
+| relayerAddress  | address | undefined |
+| functionSignature  | bytes | undefined |
 
 ### Transfer
 

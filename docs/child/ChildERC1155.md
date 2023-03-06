@@ -1,12 +1,12 @@
-# IChildERC1155
+# ChildERC1155
 
+*Polygon Technology (@QEDK, @wschwab)*
 
+> ChildERC1155
 
+Child token template for ChildERC1155 predicate deployments
 
-
-
-
-*Interface of IChildERC1155*
+*All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.*
 
 ## Methods
 
@@ -18,7 +18,7 @@ function balanceOf(address account, uint256 id) external view returns (uint256)
 
 
 
-*Returns the amount of tokens of token type `id` owned by `account`. Requirements: - `account` cannot be the zero address.*
+*See {IERC1155-balanceOf}. Requirements: - `account` cannot be the zero address.*
 
 #### Parameters
 
@@ -41,7 +41,7 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 
 
 
-*xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}. Requirements: - `accounts` and `ids` must have the same length.*
+*See {IERC1155-balanceOfBatch}. Requirements: - `accounts` and `ids` must have the same length.*
 
 #### Parameters
 
@@ -104,6 +104,54 @@ Burns multiple NFTs from one address
 |---|---|---|
 | _0 | bool | bool Returns true if function call is successful |
 
+### executeMetaTransaction
+
+```solidity
+function executeMetaTransaction(address userAddress, bytes functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) external nonpayable returns (bytes)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| userAddress | address | undefined |
+| functionSignature | bytes | undefined |
+| sigR | bytes32 | undefined |
+| sigS | bytes32 | undefined |
+| sigV | uint8 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
+### getNonce
+
+```solidity
+function getNonce(address user) external view returns (uint256 nonce)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| user | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| nonce | uint256 | undefined |
+
 ### initialize
 
 ```solidity
@@ -130,7 +178,7 @@ function isApprovedForAll(address account, address operator) external view retur
 
 
 
-*Returns true if `operator` is approved to transfer ``account``&#39;s tokens. See {setApprovalForAll}.*
+*See {IERC1155-isApprovedForAll}.*
 
 #### Parameters
 
@@ -258,7 +306,7 @@ function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[
 
 
 
-*xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}. Emits a {TransferBatch} event. Requirements: - `ids` and `amounts` must have the same length. - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the acceptance magic value.*
+*See {IERC1155-safeBatchTransferFrom}.*
 
 #### Parameters
 
@@ -278,7 +326,7 @@ function safeTransferFrom(address from, address to, uint256 id, uint256 amount, 
 
 
 
-*Transfers `amount` tokens of token type `id` from `from` to `to`. Emits a {TransferSingle} event. Requirements: - `to` cannot be the zero address. - If the caller is not `from`, it must have been approved to spend ``from``&#39;s tokens via {setApprovalForAll}. - `from` must have a balance of tokens of type `id` of at least `amount`. - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the acceptance magic value.*
+*See {IERC1155-safeTransferFrom}.*
 
 #### Parameters
 
@@ -298,7 +346,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-*Grants or revokes permission to `operator` to transfer the caller&#39;s tokens, according to `approved`, Emits an {ApprovalForAll} event. Requirements: - `operator` cannot be the caller.*
+*See {IERC1155-setApprovalForAll}.*
 
 #### Parameters
 
@@ -315,7 +363,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
+*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -332,18 +380,18 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### uri
 
 ```solidity
-function uri(uint256 id) external view returns (string)
+function uri(uint256) external view returns (string)
 ```
 
 
 
-*Returns the URI for token type `id`. If the `\{id\}` substring is present in the URI, it must be replaced by clients with the actual token type ID.*
+*See {IERC1155MetadataURI-uri}. This implementation returns the same URI for *all* token types. It relies on the token type ID substitution mechanism https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP]. Clients calling this function must replace the `\{id\}` substring with the actual token type ID.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| id | uint256 | undefined |
+| _0 | uint256 | undefined |
 
 #### Returns
 
@@ -372,6 +420,40 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 | account `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
+### MetaTransactionExecuted
+
+```solidity
+event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| userAddress  | address | undefined |
+| relayerAddress  | address | undefined |
+| functionSignature  | bytes | undefined |
 
 ### TransferBatch
 

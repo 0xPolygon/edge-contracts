@@ -140,7 +140,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burn(msg.sender, tokenId), "ChildERC721Predicate: BURN_FAILED");
+        require(childToken.burn(tokenId), "ChildERC721Predicate: BURN_FAILED");
         l2StateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId)

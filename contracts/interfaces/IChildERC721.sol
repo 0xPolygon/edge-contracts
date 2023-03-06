@@ -24,7 +24,7 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
     function predicate() external view returns (address);
 
     /**
-     * @notice Returns predicate address controlling the child token
+     * @notice Returns address of the token on the root chain
      * @return address Returns the address of the predicate
      */
     function rootToken() external view returns (address);
@@ -39,11 +39,26 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
     function mint(address account, uint256 tokenId) external returns (bool);
 
     /**
+     * @notice Mints multiple NFTs in one transaction
+     * @dev address and tokenId arrays must match in length
+     * @param accounts Array of addresses to mint each NFT to
+     * @param tokenIds Array of NFT indexes to mint
+     * @return bool Returns true if function call is successful
+     */
+    function batchMint(address[] calldata accounts, uint256[] calldata tokenIds) external returns (bool);
+
+    /**
      * @notice Burns an NFT tokens from a particular address
      * @dev Can only be called by the predicate address
-     * @param account Account of the user to burn the tokens from
-     * @param tokenId Index of NFT to burn from the account
+     * @param tokenId Index of NFT to burn
      * @return bool Returns true if function call is succesful
      */
-    function burn(address account, uint256 tokenId) external returns (bool);
+    function burn(uint256 tokenId) external returns (bool);
+
+    /**
+     * @notice Burns multiple NFTs in one transaction
+     * @param tokenIds Array of NFT indexes to burn
+     * @return bool Returns true if function call is successful
+     */
+    function batchBurn(uint256[] calldata tokenIds) external returns (bool);
 }
