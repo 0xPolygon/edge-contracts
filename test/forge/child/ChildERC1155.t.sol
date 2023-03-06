@@ -3,23 +3,22 @@ pragma solidity 0.8.17;
 
 import "@utils/Test.sol";
 
-import {ChildERC721} from "contracts/child/ChildERC721.sol";
-import {ChildERC721Predicate} from "contracts/child/ChildERC721Predicate.sol";
+import {ChildERC1155} from "contracts/child/ChildERC1155";
+import {ChildERC1155Predicate} from "contracts/child/ChildERC1155Predicate";
 
-contract ChildERC721Test is Test {
-    ChildERC721 childERC721;
-    ChildERC721Predicate predicate;
+contract ChildERC1155Test is Test {
+    ChildERC1155 childERC1155;
+    ChildERC1155Predicate predicate;
     address rootTokenAddress;
 
     address alice;
     address bob;
 
-    string name = "TEST";
     string URI = "lorem";
 
     function setUp() public {
-        childERC721 = new ChildERC721();
-        predicate = new ChildERC721Predicate();
+        childERC1155 = new ChildERC1155();
+        predicate = new ChildERC1155Predicate();
 
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
@@ -36,6 +35,8 @@ contract ChildERC721Test is Test {
     function testMint() public {}
 
     function testMintBatch() public {}
+
+    function testMintBatch2() public {}
 
     function testBurn() public {}
 

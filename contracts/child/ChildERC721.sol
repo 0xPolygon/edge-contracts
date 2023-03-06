@@ -62,7 +62,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
     /**
      * @inheritdoc IChildERC721
      */
-    function batchMint(
+    function mintBatch(
         address[] calldata accounts,
         uint256[] calldata tokenIds
     ) external virtual onlyPredicate returns (bool) {
@@ -89,7 +89,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
     /**
      * @inheritdoc IChildERC721
      */
-    function batchBurn(uint256[] calldata tokenIds) external virtual onlyPredicate returns (bool) {
+    function burnBatch(uint256[] calldata tokenIds) external virtual onlyPredicate returns (bool) {
         uint256 length = tokenIds.length;
         for (uint256 i; i < length; ) {
             _burn(tokenIds[i]);
