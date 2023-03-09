@@ -19,6 +19,7 @@ struct QueuedValidator {
  * @param queue array of QueuedValidators
  */
 struct ValidatorQueue {
-    mapping(address => uint256) indices;
+    // queue must be first element in struct for the assembly reset
     QueuedValidator[] queue;
+    mapping(address => uint256) indices;
 }
