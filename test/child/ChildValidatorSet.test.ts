@@ -1533,8 +1533,13 @@ describe("ChildValidatorSet", () => {
       expect(validatorsInfoBeforeCommitSlash.length).to.equal(validatorsInfoAfterCommitSlash.length);
 
       for (let i = 0; i < validators.length; i++) {
-        expect(validatorsInfoAfterCommitSlash[i].stake).to.equal(validatorsInfoBeforeCommitSlash[i].stake);
-        // expect(validatorsInfoAfterCommitSlash[i].totalStake).to.equal(validatorsInfoBeforeCommitSlash[i].totalStake);
+        const stakeBefore = validatorsInfoBeforeCommitSlash[i].stake;
+        const stakeAfter = validatorsInfoAfterCommitSlash[i].stake;
+        if (stakeBefore.gt(stakeAfter)) {
+          expect(stakeBefore.mul(100 - DOUBLE_SIGNING_SLASHING_PERCENT).div(100)).to.equal(stakeAfter);
+        } else {
+          expect(stakeBefore).to.equal(stakeAfter);
+        }
       }
     });
   });

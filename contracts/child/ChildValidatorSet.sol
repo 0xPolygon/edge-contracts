@@ -259,6 +259,9 @@ contract ChildValidatorSet is
         uint256 slashedAmount = (validator.stake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
         validator.stake -= slashedAmount;
         _validators.totalStake -= slashedAmount;
+        // // remove and reinsert to maintain sort
+        _validators.remove(key);
+        _validators.insert(key, validator);
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
 
