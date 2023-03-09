@@ -42,8 +42,8 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     event L2ERC721DepositBatch(
         address indexed rootToken,
         address indexed childToken,
-        address sender,
-        address[] indexed receivers,
+        address indexed sender,
+        address[] receivers,
         uint256[] tokenIds
     );
     event L2ERC721Withdraw(
@@ -56,8 +56,8 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     event L2ERC721WithdrawBatch(
         address indexed rootToken,
         address indexed childToken,
-        address sender,
-        address[] indexed receivers,
+        address indexed sender,
+        address[] receivers,
         uint256[] tokenIds
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
@@ -75,8 +75,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC721Predicate,
-        address newChildTokenTemplate,
-        address newNativeTokenRootAddress
+        address newChildTokenTemplate
     ) external onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
@@ -89,11 +88,6 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         stateReceiver = newStateReceiver;
         rootERC721Predicate = newRootERC721Predicate;
         childTokenTemplate = newChildTokenTemplate;
-        if (newNativeTokenRootAddress != address(0)) {
-            rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
-            // slither-disable-next-line reentrancy-events
-            emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CONTRACT);
-        }
     }
 
     /**
@@ -219,9 +213,9 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     }
 
     function _depositBatch(bytes calldata data) private {
-        (address depositToken, address depositor, address[] memory receivers, uint256[] memory tokenIds) = abi.decode(
+        (, address depositToken, address depositor, address[] memory receivers, uint256[] memory tokenIds) = abi.decode(
             data,
-            (address, address, address[], uint256[])
+            (bytes32, address, address, address[], uint256[])
         );
 
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);

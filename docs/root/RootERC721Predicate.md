@@ -10,6 +10,23 @@
 
 ## Methods
 
+### DEPOSIT_BATCH_SIG
+
+```solidity
+function DEPOSIT_BATCH_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### DEPOSIT_SIG
 
 ```solidity
@@ -31,6 +48,23 @@ function DEPOSIT_SIG() external view returns (bytes32)
 
 ```solidity
 function MAP_TOKEN_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
+### WITHDRAW_BATCH_SIG
+
+```solidity
+function WITHDRAW_BATCH_SIG() external view returns (bytes32)
 ```
 
 
@@ -111,6 +145,24 @@ Function to deposit tokens from the depositor to themselves on the child chain
 |---|---|---|
 | rootToken | contract IERC721Metadata | Address of the root token being deposited |
 | tokenId | uint256 | Index of the NFT to deposit |
+
+### depositBatch
+
+```solidity
+function depositBatch(contract IERC721Metadata rootToken, address[] receivers, uint256[] tokenIds) external nonpayable
+```
+
+Function to deposit tokens from the depositor to other addresses on the child chain
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken | contract IERC721Metadata | Address of the root token being deposited |
+| receivers | address[] | Addresses of the receivers on the child chain |
+| tokenIds | uint256[] | Indeices of the NFTs to deposit |
 
 ### depositTo
 
@@ -289,6 +341,26 @@ event ERC721Deposit(address indexed rootToken, address indexed childToken, addre
 | receiver `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
 
+### ERC721DepositBatch
+
+```solidity
+event ERC721DepositBatch(address indexed rootToken, address indexed childToken, address indexed depositor, address[] receivers, uint256[] tokenIds)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| depositor `indexed` | address | undefined |
+| receivers  | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
+
 ### ERC721Withdraw
 
 ```solidity
@@ -308,6 +380,26 @@ event ERC721Withdraw(address indexed rootToken, address indexed childToken, addr
 | withdrawer  | address | undefined |
 | receiver `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
+
+### ERC721WithdrawBatch
+
+```solidity
+event ERC721WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed withdrawer, address[] receivers, uint256[] tokenIds)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| withdrawer `indexed` | address | undefined |
+| receivers  | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
 
 ### Initialized
 

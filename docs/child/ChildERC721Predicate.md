@@ -421,7 +421,7 @@ event L2ERC721Deposit(address indexed rootToken, address indexed childToken, add
 ### L2ERC721DepositBatch
 
 ```solidity
-event L2ERC721DepositBatch(address indexed rootToken, address indexed childToken, address sender, address[] indexed receivers, uint256[] tokenIds)
+event L2ERC721DepositBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds)
 ```
 
 
@@ -434,8 +434,8 @@ event L2ERC721DepositBatch(address indexed rootToken, address indexed childToken
 |---|---|---|
 | rootToken `indexed` | address | undefined |
 | childToken `indexed` | address | undefined |
-| sender  | address | undefined |
-| receivers `indexed` | address[] | undefined |
+| sender `indexed` | address | undefined |
+| receivers  | address[] | undefined |
 | tokenIds  | uint256[] | undefined |
 
 ### L2ERC721Withdraw
@@ -461,7 +461,7 @@ event L2ERC721Withdraw(address indexed rootToken, address indexed childToken, ad
 ### L2ERC721WithdrawBatch
 
 ```solidity
-event L2ERC721WithdrawBatch(address indexed rootToken, address indexed childToken, address sender, address[] indexed receivers, uint256[] tokenIds)
+event L2ERC721WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds)
 ```
 
 
@@ -474,8 +474,8 @@ event L2ERC721WithdrawBatch(address indexed rootToken, address indexed childToke
 |---|---|---|
 | rootToken `indexed` | address | undefined |
 | childToken `indexed` | address | undefined |
-| sender  | address | undefined |
-| receivers `indexed` | address[] | undefined |
+| sender `indexed` | address | undefined |
+| receivers  | address[] | undefined |
 | tokenIds  | uint256[] | undefined |
 
 ### L2TokenMapped

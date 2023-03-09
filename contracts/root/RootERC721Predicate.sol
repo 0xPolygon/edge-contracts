@@ -21,7 +21,9 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
     address public childERC721Predicate;
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    bytes32 public constant DEPOSIT_BATCH_SIG = keccak256("DEPOSIT_BATCH");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+    bytes32 public constant WITHDRAW_BATCH_SIG = keccak256("WITHDRAW_BATCH");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
@@ -32,12 +34,26 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
         address indexed receiver,
         uint256 tokenId
     );
+    event ERC721DepositBatch(
+        address indexed rootToken,
+        address indexed childToken,
+        address indexed depositor,
+        address[] receivers,
+        uint256[] tokenIds
+    );
     event ERC721Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address withdrawer,
         address indexed receiver,
         uint256 tokenId
+    );
+    event ERC721WithdrawBatch(
+        address indexed rootToken,
+        address indexed childToken,
+        address indexed withdrawer,
+        address[] receivers,
+        uint256[] tokenIds
     );
     event TokenMapped(address indexed rootToken, address indexed childToken);
 
@@ -52,8 +68,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
         address newStateSender,
         address newExitHelper,
         address newChildERC721Predicate,
-        address newChildTokenTemplate,
-        address nativeTokenRootAddress
+        address newChildTokenTemplate
     ) external initializer {
         require(
             newStateSender != address(0) &&
@@ -66,10 +81,6 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
         exitHelper = newExitHelper;
         childERC721Predicate = newChildERC721Predicate;
         childTokenTemplate = newChildTokenTemplate;
-        if (nativeTokenRootAddress != address(0)) {
-            rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
-            emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
-        }
     }
 
     /**
@@ -84,6 +95,8 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
+        } else if (bytes32(data[:32]) == WITHDRAW_BATCH_SIG) {
+            _withdrawBatch(data);
         } else {
             revert("RootERC721Predicate: INVALID_SIGNATURE");
         }
@@ -105,6 +118,20 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
      */
     function depositTo(IERC721Metadata rootToken, address receiver, uint256 tokenId) external {
         _deposit(rootToken, receiver, tokenId);
+    }
+
+    /**
+     * @notice Function to deposit tokens from the depositor to other addresses on the child chain
+     * @param rootToken Address of the root token being deposited
+     * @param receivers Addresses of the receivers on the child chain
+     * @param tokenIds Indeices of the NFTs to deposit
+     */
+    function depositBatch(
+        IERC721Metadata rootToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds
+    ) external {
+        _depositBatch(rootToken, receivers, tokenIds);
     }
 
     /**
@@ -148,6 +175,34 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
         emit ERC721Deposit(address(rootToken), childToken, msg.sender, receiver, tokenId);
     }
 
+    function _depositBatch(
+        IERC721Metadata rootToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds
+    ) private {
+        if (rootTokenToChildToken[address(rootToken)] == address(0)) {
+            mapToken(rootToken);
+        }
+
+        address childToken = rootTokenToChildToken[address(rootToken)];
+
+        assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
+
+        for (uint256 i = 0; i < tokenIds.length; ) {
+            rootToken.safeTransferFrom(msg.sender, address(this), tokenIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        stateSender.syncState(
+            childERC721Predicate,
+            abi.encode(DEPOSIT_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
+        );
+        // slither-disable-next-line reentrancy-events
+        emit ERC721DepositBatch(address(rootToken), childToken, msg.sender, receivers, tokenIds);
+    }
+
     function _withdraw(bytes calldata data) private {
         (address rootToken, address withdrawer, address receiver, uint256 tokenId) = abi.decode(
             data,
@@ -159,5 +214,22 @@ contract RootERC721Predicate is Initializable, ERC721Holder {
         IERC721Metadata(rootToken).safeTransferFrom(address(this), receiver, tokenId);
         // slither-disable-next-line reentrancy-events
         emit ERC721Withdraw(address(rootToken), childToken, withdrawer, receiver, tokenId);
+    }
+
+    function _withdrawBatch(bytes calldata data) private {
+        (, address rootToken, address withdrawer, address[] memory receivers, uint256[] memory tokenIds) = abi.decode(
+            data,
+            (bytes32, address, address, address[], uint256[])
+        );
+        address childToken = rootTokenToChildToken[rootToken];
+        assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
+        for (uint256 i = 0; i < tokenIds.length; ) {
+            IERC721Metadata(rootToken).safeTransferFrom(address(this), receivers[i], tokenIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        // slither-disable-next-line reentrancy-events
+        emit ERC721WithdrawBatch(address(rootToken), childToken, withdrawer, receivers, tokenIds);
     }
 }
