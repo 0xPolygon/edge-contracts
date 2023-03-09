@@ -125,22 +125,19 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     /**
      * @inheritdoc ICheckpointManager
      */
-    function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
-        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber) + 1].eventRoot;
+    function getCheckpointBlock(uint256 blockNumber) external view returns (bool, uint256) {
+        uint256 checkpointBlockIdx = checkpointBlockNumbers.findUpperBound(blockNumber);
+        if (checkpointBlockIdx == checkpointBlockNumbers.length) {
+            return (false, 0);
+        }
+        return (true, checkpointBlockNumbers[checkpointBlockIdx]);
     }
 
     /**
      * @inheritdoc ICheckpointManager
      */
-    function findCheckpointBlock(uint256 blockNumber) public view returns (uint256, bool) {
-        if (checkpointBlockNumbers.length == 0) {
-            return (0, false);
-        }
-        uint256 checkpointBlockIdx = checkpointBlockNumbers.findUpperBound(blockNumber);
-        if (checkpointBlockIdx > checkpointBlockNumbers.length - 1) {
-            return (0, false);
-        }
-        return (checkpointBlockNumbers[checkpointBlockIdx], true);
+    function getEventRootByBlock(uint256 blockNumber) public view returns (bytes32) {
+        return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber) + 1].eventRoot;
     }
 
     function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {

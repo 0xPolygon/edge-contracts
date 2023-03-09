@@ -72,17 +72,17 @@ interface ICheckpointManager {
     ) external view returns (bool);
 
     /**
+     * @notice Function to get the checkpoint block number for a block number.
+     * It finds block number which is greater or equal than provided one in checkpointBlockNumbers array.
+     * @param blockNumber The block number to get the checkpoint block number for
+     * @return bool If block number was checkpointed
+     * @return uint256 The checkpoint block number
+     */
+    function getCheckpointBlock(uint256 blockNumber) external view returns (bool, uint256);
+
+    /**
      * @notice Function to get the event root for a block number
      * @param blockNumber The block number to get the event root for
      */
     function getEventRootByBlock(uint256 blockNumber) external view returns (bytes32);
-
-    /**
-     * @notice Function to get the checkpoint block number for a block number.
-     * It finds block number which is greater or equal than provided one in checkpointBlockNumbers array.
-     * @param blockNumber The block number to get the checkpoint block number for
-     * @return The checkpoint block number
-     * @return The indicator if checkpoint block number was sucessfully resolved
-     */
-    function findCheckpointBlock(uint256 blockNumber) external view returns (uint256, bool);
 }

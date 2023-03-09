@@ -215,10 +215,10 @@ function currentValidatorSetLength() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### findCheckpointBlock
+### getCheckpointBlock
 
 ```solidity
-function findCheckpointBlock(uint256 blockNumber) external view returns (uint256, bool)
+function getCheckpointBlock(uint256 blockNumber) external view returns (bool, uint256)
 ```
 
 Function to get the checkpoint block number for a block number. It finds block number which is greater or equal than provided one in checkpointBlockNumbers array.
@@ -235,8 +235,8 @@ Function to get the checkpoint block number for a block number. It finds block n
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | The checkpoint block number |
-| _1 | bool | The indicator if checkpoint block number was sucessfully resolved |
+| _0 | bool | bool If block number was checkpointed |
+| _1 | uint256 | uint256 The checkpoint block number |
 
 ### getEventMembershipByBlockNumber
 
