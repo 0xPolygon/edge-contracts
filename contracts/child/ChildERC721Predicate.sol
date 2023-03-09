@@ -25,7 +25,9 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     /// @custom:security write-protection="onlySystemCall()"
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    bytes32 public constant DEPOSIT_BATCH_SIG = keccak256("DEPOSIT_BATCH");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+    bytes32 public constant WITHDRAW_BATCH_SIG = keccak256("WITHDRAW_BATCH");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
     mapping(address => address) public rootTokenToChildToken;
@@ -37,12 +39,26 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         address indexed receiver,
         uint256 tokenId
     );
+    event L2ERC721DepositBatch(
+        address indexed rootToken,
+        address indexed childToken,
+        address sender,
+        address[] indexed receivers,
+        uint256[] tokenIds
+    );
     event L2ERC721Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address sender,
         address indexed receiver,
         uint256 tokenId
+    );
+    event L2ERC721WithdrawBatch(
+        address indexed rootToken,
+        address indexed childToken,
+        address sender,
+        address[] indexed receivers,
+        uint256[] tokenIds
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
@@ -92,22 +108,13 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _deposit(data[32:]);
+        } else if (bytes32(data[:32]) == DEPOSIT_BATCH_SIG) {
+            _depositBatch(data);
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
             revert("ChildERC721Predicate: INVALID_SIGNATURE");
         }
-    }
-
-    /**
-     * @notice Deploys a child EC721 token contract
-     * @param rootToken address of the ERC721 contract on the root chain
-     * @param salt Noise for address generation
-     * @param name The ERC721 token's name
-     * @param symbol The ERC721 token's symbol
-     */
-    function deployChildToken(address rootToken, bytes32 salt, string calldata name, string calldata symbol) external {
-        //TODO
     }
 
     /**
@@ -129,6 +136,20 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         _withdraw(childToken, receiver, tokenId);
     }
 
+    /**
+     * @notice Function to batch withdraw tokens from the withdrawer to other addresses on the root chain
+     * @param childToken Address of the child token being withdrawn
+     * @param receivers Addresses of the receivers on the root chain
+     * @param tokenIds indices of the NFTs to withdraw
+     */
+    function withdrawBatch(
+        IChildERC721 childToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds
+    ) external {
+        _withdrawBatch(childToken, receivers, tokenIds);
+    }
+
     function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private {
         require(address(childToken).code.length != 0, "ChildERC721Predicate: NOT_CONTRACT");
 
@@ -147,6 +168,30 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         );
         // slither-disable-next-line reentrancy-events
         emit L2ERC721Withdraw(rootToken, address(childToken), msg.sender, receiver, tokenId);
+    }
+
+    function _withdrawBatch(
+        IChildERC721 childToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds
+    ) private {
+        require(address(childToken).code.length != 0, "ChildERC721Predicate: NOT_CONTRACT");
+
+        address rootToken = childToken.rootToken();
+
+        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
+        // a mapped token should never have root token unset
+        assert(rootToken != address(0));
+        // a mapped token should never have predicate unset
+        assert(childToken.predicate() == address(this));
+
+        require(childToken.burnBatch(tokenIds), "ChildERC721Predicate: BURN_FAILED");
+        l2StateSender.syncState(
+            rootERC721Predicate,
+            abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
+        );
+        // slither-disable-next-line reentrancy-events
+        emit L2ERC721WithdrawBatch(rootToken, address(childToken), msg.sender, receivers, tokenIds);
     }
 
     function _deposit(bytes calldata data) private {
@@ -171,6 +216,30 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         require(IChildERC721(childToken).mint(receiver, tokenId), "ChildERC721Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
         emit L2ERC721Deposit(depositToken, address(childToken), depositor, receiver, tokenId);
+    }
+
+    function _depositBatch(bytes calldata data) private {
+        (address depositToken, address depositor, address[] memory receivers, uint256[] memory tokenIds) = abi.decode(
+            data,
+            (address, address, address[], uint256[])
+        );
+
+        IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
+
+        require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
+        assert(address(childToken).code.length != 0);
+
+        address rootToken = IChildERC721(childToken).rootToken();
+
+        // a mapped child token should match deposited token
+        assert(rootToken == depositToken);
+        // a mapped token should never have root token unset
+        assert(rootToken != address(0));
+        // a mapped token should never have predicate unset
+        assert(IChildERC721(childToken).predicate() == address(this));
+        require(IChildERC721(childToken).mintBatch(receivers, tokenIds), "ChildERC721Predicate: MINT_FAILED");
+        // slither-disable-next-line reentrancy-events
+        emit L2ERC721DepositBatch(depositToken, address(childToken), depositor, receivers, tokenIds);
     }
 
     /**

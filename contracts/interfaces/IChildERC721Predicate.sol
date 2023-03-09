@@ -13,8 +13,6 @@ interface IChildERC721Predicate is IStateReceiver {
         address newNativeTokenRootAddress
     ) external;
 
-    function deployChildToken(address rootToken, bytes32 salt, string calldata name, string calldata symbol) external;
-
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external;
 
     function withdraw(IChildERC721 childToken, uint256 tokenId) external;

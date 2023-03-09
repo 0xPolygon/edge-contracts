@@ -10,6 +10,23 @@ Enables ERC721 token deposits and withdrawals across an arbitrary root chain and
 
 ## Methods
 
+### DEPOSIT_BATCH_SIG
+
+```solidity
+function DEPOSIT_BATCH_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### DEPOSIT_SIG
 
 ```solidity
@@ -146,6 +163,23 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### WITHDRAW_BATCH_SIG
+
+```solidity
+function WITHDRAW_BATCH_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### WITHDRAW_SIG
 
 ```solidity
@@ -179,25 +213,6 @@ function childTokenTemplate() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### deployChildToken
-
-```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol) external nonpayable
-```
-
-Deploys a child EC721 token contract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken | address | address of the ERC721 contract on the root chain |
-| salt | bytes32 | Noise for address generation |
-| name | string | The ERC721 token&#39;s name |
-| symbol | string | The ERC721 token&#39;s symbol |
 
 ### initialize
 
@@ -327,6 +342,24 @@ Function to withdraw tokens from the withdrawer to themselves on the root chain
 | childToken | contract IChildERC721 | Address of the child token being withdrawn |
 | tokenId | uint256 | index of the NFT to withdraw |
 
+### withdrawBatch
+
+```solidity
+function withdrawBatch(contract IChildERC721 childToken, address[] receivers, uint256[] tokenIds) external nonpayable
+```
+
+Function to batch withdraw tokens from the withdrawer to other addresses on the root chain
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| childToken | contract IChildERC721 | Address of the child token being withdrawn |
+| receivers | address[] | Addresses of the receivers on the root chain |
+| tokenIds | uint256[] | indices of the NFTs to withdraw |
+
 ### withdrawTo
 
 ```solidity
@@ -385,6 +418,26 @@ event L2ERC721Deposit(address indexed rootToken, address indexed childToken, add
 | receiver `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
 
+### L2ERC721DepositBatch
+
+```solidity
+event L2ERC721DepositBatch(address indexed rootToken, address indexed childToken, address sender, address[] indexed receivers, uint256[] tokenIds)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| sender  | address | undefined |
+| receivers `indexed` | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
+
 ### L2ERC721Withdraw
 
 ```solidity
@@ -404,6 +457,26 @@ event L2ERC721Withdraw(address indexed rootToken, address indexed childToken, ad
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
+
+### L2ERC721WithdrawBatch
+
+```solidity
+event L2ERC721WithdrawBatch(address indexed rootToken, address indexed childToken, address sender, address[] indexed receivers, uint256[] tokenIds)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| sender  | address | undefined |
+| receivers `indexed` | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
 
 ### L2TokenMapped
 

@@ -103,24 +103,6 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     }
 
     /**
-     * @notice Deploys a child ERC20 token contract
-     * @param rootToken Address of root ERC721 on root chain
-     * @param salt Random noise for address generation
-     * @param name The ERC20 token's name
-     * @param symbol The ERC20 token's symbol
-     * @param decimals Decimal precision of the token (default: 1e18)
-     */
-    function deployChildToken(
-        address rootToken,
-        bytes32 salt,
-        string calldata name,
-        string calldata symbol,
-        uint8 decimals
-    ) external {
-        //TODO
-    }
-
-    /**
      * @notice Function to withdraw tokens from the withdrawer to themselves on the root chain
      * @param childToken Address of the child token being withdrawn
      * @param amount Amount to withdraw

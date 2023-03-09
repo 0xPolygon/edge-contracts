@@ -180,26 +180,6 @@ function childTokenTemplate() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### deployChildToken
-
-```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol, uint8 decimals) external nonpayable
-```
-
-Deploys a child ERC20 token contract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken | address | Address of root ERC721 on root chain |
-| salt | bytes32 | Random noise for address generation |
-| name | string | The ERC20 token&#39;s name |
-| symbol | string | The ERC20 token&#39;s symbol |
-| decimals | uint8 | Decimal precision of the token (default: 1e18) |
-
 ### initialize
 
 ```solidity

@@ -45,7 +45,7 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
      * @param tokenIds Array of NFT indexes to mint
      * @return bool Returns true if function call is successful
      */
-    function batchMint(address[] calldata accounts, uint256[] calldata tokenIds) external returns (bool);
+    function mintBatch(address[] calldata accounts, uint256[] calldata tokenIds) external returns (bool);
 
     /**
      * @notice Burns an NFT tokens from a particular address
@@ -60,5 +60,5 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
      * @param tokenIds Array of NFT indexes to burn
      * @return bool Returns true if function call is successful
      */
-    function batchBurn(uint256[] calldata tokenIds) external returns (bool);
+    function burnBatch(uint256[] calldata tokenIds) external returns (bool);
 }

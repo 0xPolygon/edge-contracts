@@ -10,25 +10,6 @@
 
 ## Methods
 
-### deployChildToken
-
-```solidity
-function deployChildToken(address rootToken, bytes32 salt, string name, string symbol) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken | address | undefined |
-| salt | bytes32 | undefined |
-| name | string | undefined |
-| symbol | string | undefined |
-
 ### initialize
 
 ```solidity

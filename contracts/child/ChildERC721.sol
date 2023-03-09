@@ -54,7 +54,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
      * @inheritdoc IChildERC721
      */
     function mint(address account, uint256 tokenId) external virtual onlyPredicate returns (bool) {
-        _mint(account, tokenId);
+        _safeMint(account, tokenId);
 
         return true;
     }
@@ -69,7 +69,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
         uint256 length = accounts.length;
         require(length == tokenIds.length, "ChildERC721: array len mismatch");
         for (uint256 i; i < length; ) {
-            _mint(accounts[i], tokenIds[i]);
+            _safeMint(accounts[i], tokenIds[i]);
             unchecked {
                 ++i;
             }

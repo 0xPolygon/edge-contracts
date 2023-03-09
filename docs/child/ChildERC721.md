@@ -49,51 +49,6 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### batchBurn
-
-```solidity
-function batchBurn(uint256[] tokenIds) external nonpayable returns (bool)
-```
-
-Burns multiple NFTs in one transaction
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenIds | uint256[] | Array of NFT indexes to burn |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is successful |
-
-### batchMint
-
-```solidity
-function batchMint(address[] accounts, uint256[] tokenIds) external nonpayable returns (bool)
-```
-
-Mints multiple NFTs in one transaction
-
-*address and tokenId arrays must match in length*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| accounts | address[] | Array of addresses to mint each NFT to |
-| tokenIds | uint256[] | Array of NFT indexes to mint |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is successful |
-
 ### burn
 
 ```solidity
@@ -115,6 +70,28 @@ Burns an NFT tokens from a particular address
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | bool Returns true if function call is succesful |
+
+### burnBatch
+
+```solidity
+function burnBatch(uint256[] tokenIds) external nonpayable returns (bool)
+```
+
+Burns multiple NFTs in one transaction
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenIds | uint256[] | Array of NFT indexes to burn |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | bool Returns true if function call is successful |
 
 ### executeMetaTransaction
 
@@ -249,6 +226,29 @@ Mints an NFT token to a particular address
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | bool Returns true if function call is succesful |
+
+### mintBatch
+
+```solidity
+function mintBatch(address[] accounts, uint256[] tokenIds) external nonpayable returns (bool)
+```
+
+Mints multiple NFTs in one transaction
+
+*address and tokenId arrays must match in length*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| accounts | address[] | Array of addresses to mint each NFT to |
+| tokenIds | uint256[] | Array of NFT indexes to mint |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | bool Returns true if function call is successful |
 
 ### name
 
