@@ -9,8 +9,7 @@ interface IChildERC721Predicate is IStateReceiver {
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC721Predicate,
-        address newChildTokenTemplate,
-        address newNativeTokenRootAddress
+        address newChildTokenTemplate
     ) external;
 
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external;
@@ -18,4 +17,6 @@ interface IChildERC721Predicate is IStateReceiver {
     function withdraw(IChildERC721 childToken, uint256 tokenId) external;
 
     function withdrawTo(IChildERC721 childToken, address receiver, uint256 tokenId) external;
+
+    function withdrawBatch(IChildERC721 childToken, address[] calldata receivers, uint256[] calldata tokenIds) external;
 }

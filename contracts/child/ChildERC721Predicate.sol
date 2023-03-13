@@ -68,7 +68,6 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
-     * @param newNativeTokenRootAddress Address of native token on root chain
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
      */
     function initialize(
@@ -155,7 +154,8 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burn(tokenId), "ChildERC721Predicate: BURN_FAILED");
+        require(childToken.burn(msg.sender, tokenId), "ChildERC721Predicate: BURN_FAILED");
+
         l2StateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId)
@@ -179,7 +179,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burnBatch(tokenIds), "ChildERC721Predicate: BURN_FAILED");
+        require(childToken.burnBatch(msg.sender, tokenIds), "ChildERC721Predicate: BURN_FAILED");
         l2StateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)

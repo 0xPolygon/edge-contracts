@@ -18,7 +18,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     address private _rootToken;
 
     modifier onlyPredicate() {
-        require(msg.sender == _predicate, "ChildERC721: Only predicate can call");
+        require(msg.sender == _predicate, "ChildERC1155: Only predicate can call");
         _;
     }
 
@@ -62,24 +62,6 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     function mintBatch(address account, uint256[] calldata ids, uint256[] calldata amounts) external returns (bool) {
         _mintBatch(account, ids, amounts, "");
 
-        return true;
-    }
-
-    /**
-     * @inheritdoc IChildERC1155
-     */
-    function mintBatch(
-        address[] calldata accounts,
-        uint256[2][] calldata idsAndAmounts
-    ) external virtual onlyPredicate returns (bool) {
-        uint256 length = accounts.length;
-        require(length == idsAndAmounts.length, "ChildERC1155: array len mismatch");
-        for (uint256 i; i < length; ) {
-            _mint(accounts[i], idsAndAmounts[i][0], idsAndAmounts[i][1], "");
-            unchecked {
-                ++i;
-            }
-        }
         return true;
     }
 

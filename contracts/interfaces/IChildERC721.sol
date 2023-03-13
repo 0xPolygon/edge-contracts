@@ -50,15 +50,17 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
     /**
      * @notice Burns an NFT tokens from a particular address
      * @dev Can only be called by the predicate address
+     * @param account Address to burn the NFTs from
      * @param tokenId Index of NFT to burn
      * @return bool Returns true if function call is succesful
      */
-    function burn(uint256 tokenId) external returns (bool);
+    function burn(address account, uint256 tokenId) external returns (bool);
 
     /**
      * @notice Burns multiple NFTs in one transaction
+     * @param account Address to burn the NFTs from
      * @param tokenIds Array of NFT indexes to burn
      * @return bool Returns true if function call is successful
      */
-    function burnBatch(uint256[] calldata tokenIds) external returns (bool);
+    function burnBatch(address account, uint256[] calldata tokenIds) external returns (bool);
 }
