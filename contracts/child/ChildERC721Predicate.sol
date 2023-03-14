@@ -8,6 +8,7 @@ import "../interfaces/IChildERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC721.sol";
 import "./System.sol";
+import "hardhat/console.sol";
 
 /**
     @title ChildERC721Predicate
@@ -180,6 +181,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         assert(childToken.predicate() == address(this));
 
         require(childToken.burnBatch(msg.sender, tokenIds), "ChildERC721Predicate: BURN_FAILED");
+
         l2StateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)

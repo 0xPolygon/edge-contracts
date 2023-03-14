@@ -168,28 +168,20 @@ describe("ChildERC721Predicate", () => {
     ).to.be.revertedWithPanic();
   });
 
-  it("deposit tokens from root chain with same address", async () => {
-    const randomTokenId = Math.floor(Math.random() * 1000000 + 1);
-    depositedTokenIds.push(randomTokenId);
+  it("deposit fail: unmapped token", async () => {
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "address", "address", "address", "uint256"],
       [
         ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
-        rootToken,
+        ethers.Wallet.createRandom().address,
         accounts[0].address,
         accounts[0].address,
-        randomTokenId,
+        0,
       ]
     );
-    const depositTx = await stateReceiverChildERC721Predicate.onStateReceive(0, rootERC721Predicate, stateSyncData);
-    const depositReceipt = await depositTx.wait();
-    stopImpersonatingAccount(stateReceiverChildERC721Predicate.address);
-    const depositEvent = depositReceipt.events?.find((log) => log.event === "L2ERC721Deposit");
-    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
-    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
-    expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.tokenId).to.equal(randomTokenId);
+    await expect(
+      stateReceiverChildERC721Predicate.onStateReceive(0, rootERC721Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildERC721Predicate: UNMAPPED_TOKEN");
   });
 
   it("deposit tokens from root chain with same address", async () => {
@@ -289,6 +281,12 @@ describe("ChildERC721Predicate", () => {
     expect(depositEvent?.args?.sender).to.equal(accounts[1].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
     expect(depositEvent?.args?.tokenId).to.equal(depositedTokenIds[1]);
+  });
+
+  it("withdraw batch tokens fail: not contract", async () => {
+    await expect(
+      childERC721Predicate.withdrawBatch(ethers.Wallet.createRandom().address, [ethers.constants.AddressZero], [0])
+    ).to.be.revertedWith("ChildERC721Predicate: NOT_CONTRACT");
   });
 
   it("withdraw batch tokens from child chain", async () => {
@@ -404,15 +402,21 @@ describe("ChildERC721Predicate", () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const childToken = await (await ethers.getContractFactory("ChildERC721")).deploy();
     await childToken.initialize(rootToken, "TEST", "TEST");
-    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
+    let stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256"],
+      [ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]), rootToken, accounts[0].address, accounts[0].address, 0]
+    );
+    await expect(
+      stateReceiverChildERC721Predicate.onStateReceive(0, rootERC721Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildERC721Predicate: UNMAPPED_TOKEN");
+    stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address[]", "uint256[]"],
       [
-        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT_BATCH"]),
         rootToken,
-        childToken.address,
         accounts[0].address,
-        accounts[0].address,
-        0,
+        [accounts[0].address],
+        [0],
       ]
     );
     await expect(
@@ -424,45 +428,59 @@ describe("ChildERC721Predicate", () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const childToken = await (await ethers.getContractFactory("ChildERC721")).deploy();
     await childToken.initialize(rootToken, "TEST", "TEST");
-    await expect(stateReceiverChildERC721Predicate.withdraw(childToken.address, 1)).to.be.revertedWith(
+    await expect(stateReceiverChildERC721Predicate.withdraw(childToken.address, 0)).to.be.revertedWith(
       "ChildERC721Predicate: UNMAPPED_TOKEN"
     );
+    await expect(
+      childERC721Predicate.withdrawBatch(childToken.address, [ethers.constants.AddressZero], [0])
+    ).to.be.revertedWith("ChildERC721Predicate: UNMAPPED_TOKEN");
   });
 
-  // since we fake NativeERC20 here, keep this function last:
+  // since we fake ChildERC721 here, keep this function last:
   it("fail deposit tokens: mint failed", async () => {
-    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "address", "uint256"],
-      [
-        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
-        rootToken,
-        childTokenAddr,
-        accounts[0].address,
-        accounts[0].address,
-        1,
-      ]
+    let stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256"],
+      [ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]), rootToken, accounts[0].address, accounts[0].address, 1]
     );
-    const fakeNativeERC20 = await smock.fake<ChildERC721>("ChildERC721", {
+    const fakeChildERC721 = await smock.fake<ChildERC721>("ChildERC721", {
       address: childTokenAddr,
     });
-    fakeNativeERC20.rootToken.returns(rootToken);
-    fakeNativeERC20.predicate.returns(stateReceiverChildERC721Predicate.address);
-    fakeNativeERC20.mint.returns(false);
+    fakeChildERC721.rootToken.returns(rootToken);
+    fakeChildERC721.predicate.returns(stateReceiverChildERC721Predicate.address);
+    fakeChildERC721.mint.returns(false);
     await expect(
       stateReceiverChildERC721Predicate.onStateReceive(0, rootERC721Predicate, stateSyncData)
     ).to.be.revertedWith("ChildERC721Predicate: MINT_FAILED");
-    fakeNativeERC20.mint.returns();
+    stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address[]", "uint256[]"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT_BATCH"]),
+        rootToken,
+        accounts[0].address,
+        [accounts[0].address],
+        [1],
+      ]
+    );
+    fakeChildERC721.mintBatch.returns(false);
+    await expect(
+      stateReceiverChildERC721Predicate.onStateReceive(0, rootERC721Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildERC721Predicate: MINT_FAILED");
+    fakeChildERC721.mint.returns();
   });
 
   it("fail withdraw tokens: burn failed", async () => {
-    const fakeNativeERC20 = await smock.fake<ChildERC721>("ChildERC721", {
+    const fakeChildERC721 = await smock.fake<ChildERC721>("ChildERC721", {
       address: childTokenAddr,
     });
-    fakeNativeERC20.rootToken.returns(rootToken);
-    fakeNativeERC20.predicate.returns(stateReceiverChildERC721Predicate.address);
-    fakeNativeERC20.burn.returns(false);
+    fakeChildERC721.rootToken.returns(rootToken);
+    fakeChildERC721.predicate.returns(stateReceiverChildERC721Predicate.address);
+    fakeChildERC721.burn.returns(false);
     await expect(stateReceiverChildERC721Predicate.withdraw(childTokenAddr, 1)).to.be.revertedWith(
       "ChildERC721Predicate: BURN_FAILED"
     );
+    fakeChildERC721.burnBatch.returns(false);
+    await expect(
+      stateReceiverChildERC721Predicate.withdrawBatch(childTokenAddr, [accounts[0].address], [1])
+    ).to.be.revertedWith("ChildERC721Predicate: BURN_FAILED");
   });
 });
