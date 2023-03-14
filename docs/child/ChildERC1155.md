@@ -220,29 +220,6 @@ Mints an NFT token to a particular address
 ### mintBatch
 
 ```solidity
-function mintBatch(address[] accounts, uint256[2][] idsAndAmounts) external nonpayable returns (bool)
-```
-
-Mints multiple NFTs to multiple addresses
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| accounts | address[] | Array of addresses to mint the NFTs to |
-| idsAndAmounts | uint256[2][] | 2D array (uint256[2][]) of ids and amounts for each address |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | bool Returns true if function call is successful |
-
-### mintBatch
-
-```solidity
 function mintBatch(address account, uint256[] ids, uint256[] amounts) external nonpayable returns (bool)
 ```
 

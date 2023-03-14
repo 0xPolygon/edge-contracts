@@ -217,7 +217,7 @@ function childTokenTemplate() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 Initilization function for ChildERC721Predicate
@@ -232,7 +232,6 @@ Initilization function for ChildERC721Predicate
 | newStateReceiver | address | Address of StateReceiver to receive deposit information from |
 | newRootERC721Predicate | address | Address of root ERC721 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
-| newNativeTokenRootAddress | address | Address of native token on root chain |
 
 ### l2StateSender
 

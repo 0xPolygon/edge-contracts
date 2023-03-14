@@ -13,7 +13,7 @@
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 
@@ -28,7 +28,6 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 | newStateReceiver | address | undefined |
 | newRootERC721Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
-| newNativeTokenRootAddress | address | undefined |
 
 ### onStateReceive
 
@@ -64,6 +63,24 @@ function withdraw(contract IChildERC721 childToken, uint256 tokenId) external no
 |---|---|---|
 | childToken | contract IChildERC721 | undefined |
 | tokenId | uint256 | undefined |
+
+### withdrawBatch
+
+```solidity
+function withdrawBatch(contract IChildERC721 childToken, address[] receivers, uint256[] tokenIds) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| childToken | contract IChildERC721 | undefined |
+| receivers | address[] | undefined |
+| tokenIds | uint256[] | undefined |
 
 ### withdrawTo
 

@@ -52,7 +52,7 @@ function balanceOf(address owner) external view returns (uint256)
 ### burn
 
 ```solidity
-function burn(uint256 tokenId) external nonpayable returns (bool)
+function burn(address account, uint256 tokenId) external nonpayable returns (bool)
 ```
 
 Burns an NFT tokens from a particular address
@@ -63,6 +63,7 @@ Burns an NFT tokens from a particular address
 
 | Name | Type | Description |
 |---|---|---|
+| account | address | Address to burn the NFTs from |
 | tokenId | uint256 | Index of NFT to burn |
 
 #### Returns
@@ -74,7 +75,7 @@ Burns an NFT tokens from a particular address
 ### burnBatch
 
 ```solidity
-function burnBatch(uint256[] tokenIds) external nonpayable returns (bool)
+function burnBatch(address account, uint256[] tokenIds) external nonpayable returns (bool)
 ```
 
 Burns multiple NFTs in one transaction
@@ -85,6 +86,7 @@ Burns multiple NFTs in one transaction
 
 | Name | Type | Description |
 |---|---|---|
+| account | address | Address to burn the NFTs from |
 | tokenIds | uint256[] | Array of NFT indexes to burn |
 
 #### Returns
