@@ -63,7 +63,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
         address[] calldata accounts,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
-    ) external returns (bool) {
+    ) external virtual onlyPredicate returns (bool) {
         uint256 length = accounts.length;
         require(length == tokenIds.length && length == amounts.length, "ChildERC1155: array len mismatch");
         for (uint256 i = 0; i < length; ) {
