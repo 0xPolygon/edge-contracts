@@ -42,12 +42,16 @@ interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
     /**
      * @notice Mints multiple NFTs to one address
      * @dev single destination for compliance with the general format of EIP-1155
-     * @param account Account of user to mint the NFTs to
-     * @param ids Array of indexes of the NFTs to be minted
+     * @param accounts Array of addresses to mint each NFT to
+     * @param tokenIds Array of indexes of the NFTs to be minted
      * @param amounts Array of the amount of each NFT to be minted
      * @return bool Returns true if function call is successful
      */
-    function mintBatch(address account, uint256[] calldata ids, uint256[] calldata amounts) external returns (bool);
+    function mintBatch(
+        address[] calldata accounts,
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts
+    ) external returns (bool);
 
     /**
      * @notice Burns an NFT tokens from a particular address
@@ -63,9 +67,9 @@ interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
      * @notice Burns multiple NFTs from one address
      * @dev included for compliance with the general format of EIP-1155
      * @param from Address to burn NFTs from
-     * @param ids Array of indexes of the NFTs to be minted
+     * @param tokenIds Array of indexes of the NFTs to be minted
      * @param amounts Array of the amount of each NFT to be minted
      * @return bool Returns true if function call is successful
      */
-    function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external returns (bool);
+    function burnBatch(address from, uint256[] calldata tokenIds, uint256[] calldata amounts) external returns (bool);
 }

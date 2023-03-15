@@ -146,6 +146,23 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### WITHDRAW_BATCH_SIG
+
+```solidity
+function WITHDRAW_BATCH_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### WITHDRAW_SIG
 
 ```solidity
@@ -368,7 +385,7 @@ event Initialized(uint8 version)
 ### L2ERC1155Deposit
 
 ```solidity
-event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 id, uint256 amount)
+event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -383,13 +400,34 @@ event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, ad
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| id  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
+
+### L2ERC1155DepositBatch
+
+```solidity
+event L2ERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| sender `indexed` | address | undefined |
+| receivers  | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### L2ERC1155Withdraw
 
 ```solidity
-event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 id, uint256 amount)
+event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -404,8 +442,29 @@ event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, a
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| id  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
+
+### L2ERC1155WithdrawBatch
+
+```solidity
+event L2ERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| sender `indexed` | address | undefined |
+| receivers  | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### L2TokenMapped
 

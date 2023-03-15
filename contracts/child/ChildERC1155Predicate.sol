@@ -26,6 +26,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+    bytes32 public constant WITHDRAW_BATCH_SIG = keccak256("WITHDRAW_BATCH");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
     mapping(address => address) public rootTokenToChildToken;
@@ -35,16 +36,32 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address indexed childToken,
         address sender,
         address indexed receiver,
-        uint256 id,
+        uint256 tokenId,
         uint256 amount
+    );
+    event L2ERC1155DepositBatch(
+        address indexed rootToken,
+        address indexed childToken,
+        address indexed sender,
+        address[] receivers,
+        uint256[] tokenIds,
+        uint256[] amounts
     );
     event L2ERC1155Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address sender,
         address indexed receiver,
-        uint256 id,
+        uint256 tokenId,
         uint256 amount
+    );
+    event L2ERC1155WithdrawBatch(
+        address indexed rootToken,
+        address indexed childToken,
+        address indexed sender,
+        address[] receivers,
+        uint256[] tokenIds,
+        uint256[] amounts
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
@@ -136,6 +153,22 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         _withdraw(childToken, receiver, id, amount);
     }
 
+    /**
+     * @notice Function to batch withdraw tokens from the withdrawer to other addresses on the root chain
+     * @param childToken Address of the child token being withdrawn
+     * @param receivers Addresses of the receivers on the root chain
+     * @param tokenIds indices of the NFTs to withdraw
+     * @param amounts Amounts of NFTs to withdraw
+     */
+    function withdrawBatch(
+        IChildERC1155 childToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts
+    ) external {
+        _withdrawBatch(childToken, receivers, tokenIds, amounts);
+    }
+
     function _withdraw(
         IChildERC1155 childToken,
         address receiver,
@@ -164,7 +197,24 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address[] calldata receivers,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
-    ) private {}
+    ) private onlyValidToken(childToken) {
+        address rootToken = childToken.rootToken();
+
+        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC1155Predicate: UNMAPPED_TOKEN");
+        // a mapped token should never have root token unset
+        assert(rootToken != address(0));
+        // a mapped token should never have predicate unset
+        assert(childToken.predicate() == address(this));
+
+        require(childToken.burnBatch(msg.sender, tokenIds, amounts), "ChildERC1155Predicate: BURN_FAILED");
+
+        l2StateSender.syncState(
+            rootERC1155Predicate,
+            abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
+        );
+        // slither-disable-next-line reentrancy-events
+        emit L2ERC1155WithdrawBatch(rootToken, address(childToken), msg.sender, receivers, tokenIds, amounts);
+    }
 
     function _deposit(bytes calldata data) private {
         (address depositToken, address depositor, address receiver, uint256 id, uint256 amount) = abi.decode(
@@ -188,6 +238,37 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         require(IChildERC1155(childToken).mint(receiver, id, amount), "ChildERC1155Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
         emit L2ERC1155Deposit(depositToken, address(childToken), depositor, receiver, id, amount);
+    }
+
+    function _depositBatch(bytes calldata data) private {
+        (
+            ,
+            address depositToken,
+            address depositor,
+            address[] memory receivers,
+            uint256[] memory tokenIds,
+            uint256[] memory amounts
+        ) = abi.decode(data, (bytes32, address, address, address[], uint256[], uint256[]));
+
+        IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
+
+        require(address(childToken) != address(0), "ChildERC1155Predicate: UNMAPPED_TOKEN");
+        _verifyContract(childToken);
+
+        address rootToken = IChildERC1155(childToken).rootToken();
+
+        // a mapped child token should match deposited token
+        assert(rootToken == depositToken);
+        // a mapped token should never have root token unset
+        assert(rootToken != address(0));
+        // a mapped token should never have predicate unset
+        assert(IChildERC1155(childToken).predicate() == address(this));
+        require(
+            IChildERC1155(childToken).mintBatch(receivers, tokenIds, amounts),
+            "ChildERC1155Predicate: MINT_FAILED"
+        );
+        // slither-disable-next-line reentrancy-events
+        emit L2ERC1155DepositBatch(depositToken, address(childToken), depositor, receivers, tokenIds, amounts);
     }
 
     /**
@@ -218,6 +299,6 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         } catch (bytes memory /*lowLevelData*/) {
             isERC1155 = false;
         }
-        require(isERC1155, "ChildERC721Predicate: NOT_CONTRACT");
+        require(isERC1155, "ChildERC1155Predicate: NOT_CONTRACT");
     }
 }

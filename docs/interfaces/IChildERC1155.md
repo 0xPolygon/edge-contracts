@@ -83,7 +83,7 @@ Burns an NFT tokens from a particular address
 ### burnBatch
 
 ```solidity
-function burnBatch(address from, uint256[] ids, uint256[] amounts) external nonpayable returns (bool)
+function burnBatch(address from, uint256[] tokenIds, uint256[] amounts) external nonpayable returns (bool)
 ```
 
 Burns multiple NFTs from one address
@@ -95,7 +95,7 @@ Burns multiple NFTs from one address
 | Name | Type | Description |
 |---|---|---|
 | from | address | Address to burn NFTs from |
-| ids | uint256[] | Array of indexes of the NFTs to be minted |
+| tokenIds | uint256[] | Array of indexes of the NFTs to be minted |
 | amounts | uint256[] | Array of the amount of each NFT to be minted |
 
 #### Returns
@@ -172,7 +172,7 @@ Mints an NFT token to a particular address
 ### mintBatch
 
 ```solidity
-function mintBatch(address account, uint256[] ids, uint256[] amounts) external nonpayable returns (bool)
+function mintBatch(address[] accounts, uint256[] tokenIds, uint256[] amounts) external nonpayable returns (bool)
 ```
 
 Mints multiple NFTs to one address
@@ -183,8 +183,8 @@ Mints multiple NFTs to one address
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | Account of user to mint the NFTs to |
-| ids | uint256[] | Array of indexes of the NFTs to be minted |
+| accounts | address[] | Array of addresses to mint each NFT to |
+| tokenIds | uint256[] | Array of indexes of the NFTs to be minted |
 | amounts | uint256[] | Array of the amount of each NFT to be minted |
 
 #### Returns
