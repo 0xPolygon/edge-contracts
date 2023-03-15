@@ -63,6 +63,11 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
+    modifier onlyValidToken(IChildERC721 childToken) {
+        _verifyContract(childToken);
+        _;
+    }
+
     /**
      * @notice Initilization function for ChildERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
@@ -144,9 +149,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         _withdrawBatch(childToken, receivers, tokenIds);
     }
 
-    function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private {
-        require(address(childToken).code.length != 0, "ChildERC721Predicate: NOT_CONTRACT");
-
+    function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
         require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
@@ -169,9 +172,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         IChildERC721 childToken,
         address[] calldata receivers,
         uint256[] calldata tokenIds
-    ) private {
-        require(address(childToken).code.length != 0, "ChildERC721Predicate: NOT_CONTRACT");
-
+    ) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
         require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
@@ -199,7 +200,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
-        assert(address(childToken).code.length != 0);
+        _verifyContract(childToken);
 
         address rootToken = IChildERC721(childToken).rootToken();
 
@@ -223,7 +224,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
-        assert(address(childToken).code.length != 0);
+        _verifyContract(childToken);
 
         address rootToken = IChildERC721(childToken).rootToken();
 
@@ -257,5 +258,15 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
 
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));
+    }
+
+    function _verifyContract(IChildERC721 childToken) private view {
+        bool isERC721;
+        try childToken.supportsInterface(0x80ac58cd) returns (bool support) {
+            isERC721 = support;
+        } catch (bytes memory /*lowLevelData*/) {
+            isERC721 = false;
+        }
+        require(isERC721, "ChildERC721Predicate: NOT_CONTRACT");
     }
 }

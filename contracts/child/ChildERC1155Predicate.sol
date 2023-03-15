@@ -48,6 +48,11 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
+    modifier onlyValidToken(IChildERC1155 childToken) {
+        _verifyContract(childToken);
+        _;
+    }
+
     /**
      * @notice Initilization function for ChildERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
@@ -131,9 +136,12 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         _withdraw(childToken, receiver, id, amount);
     }
 
-    function _withdraw(IChildERC1155 childToken, address receiver, uint256 id, uint256 amount) private {
-        require(address(childToken).code.length != 0, "ChildERC1155Predicate: NOT_CONTRACT");
-
+    function _withdraw(
+        IChildERC1155 childToken,
+        address receiver,
+        uint256 id,
+        uint256 amount
+    ) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
         require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC1155Predicate: UNMAPPED_TOKEN");
@@ -151,6 +159,13 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         emit L2ERC1155Withdraw(rootToken, address(childToken), msg.sender, receiver, id, amount);
     }
 
+    function _withdrawBatch(
+        IChildERC1155 childToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts
+    ) private {}
+
     function _deposit(bytes calldata data) private {
         (address depositToken, address depositor, address receiver, uint256 id, uint256 amount) = abi.decode(
             data,
@@ -160,7 +175,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC1155Predicate: UNMAPPED_TOKEN");
-        assert(address(childToken).code.length != 0);
+        _verifyContract(childToken);
 
         address rootToken = IChildERC1155(childToken).rootToken();
 
@@ -194,5 +209,15 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
 
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));
+    }
+
+    function _verifyContract(IChildERC1155 childToken) private view {
+        bool isERC1155;
+        try childToken.supportsInterface(0xd9b67a26) returns (bool support) {
+            isERC1155 = support;
+        } catch (bytes memory /*lowLevelData*/) {
+            isERC1155 = false;
+        }
+        require(isERC1155, "ChildERC721Predicate: NOT_CONTRACT");
     }
 }
