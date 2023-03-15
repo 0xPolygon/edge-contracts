@@ -50,7 +50,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     /**
      * @inheritdoc IChildERC1155
      */
-    function mint(address account, uint256 id, uint256 amount) external virtual onlyPredicate returns (bool) {
+    function mint(address account, uint256 id, uint256 amount) external onlyPredicate returns (bool) {
         _mint(account, id, amount, "");
 
         return true;
@@ -63,7 +63,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
         address[] calldata accounts,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
-    ) external virtual onlyPredicate returns (bool) {
+    ) external onlyPredicate returns (bool) {
         uint256 length = accounts.length;
         require(length == tokenIds.length && length == amounts.length, "ChildERC1155: array len mismatch");
         for (uint256 i = 0; i < length; ) {
@@ -78,7 +78,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     /**
      * @inheritdoc IChildERC1155
      */
-    function burn(address from, uint256 id, uint256 amount) external virtual onlyPredicate returns (bool) {
+    function burn(address from, uint256 id, uint256 amount) external onlyPredicate returns (bool) {
         _burn(from, id, amount);
 
         return true;
@@ -91,7 +91,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
         address from,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
-    ) external virtual onlyPredicate returns (bool) {
+    ) external onlyPredicate returns (bool) {
         _burnBatch(from, tokenIds, amounts);
 
         return true;

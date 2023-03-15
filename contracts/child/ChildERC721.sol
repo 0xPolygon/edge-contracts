@@ -53,7 +53,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
     /**
      * @inheritdoc IChildERC721
      */
-    function mint(address account, uint256 tokenId) external virtual onlyPredicate returns (bool) {
+    function mint(address account, uint256 tokenId) external onlyPredicate returns (bool) {
         _safeMint(account, tokenId);
 
         return true;
@@ -62,10 +62,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
     /**
      * @inheritdoc IChildERC721
      */
-    function mintBatch(
-        address[] calldata accounts,
-        uint256[] calldata tokenIds
-    ) external virtual onlyPredicate returns (bool) {
+    function mintBatch(address[] calldata accounts, uint256[] calldata tokenIds) external onlyPredicate returns (bool) {
         uint256 length = accounts.length;
         require(length == tokenIds.length, "ChildERC721: array len mismatch");
         for (uint256 i = 0; i < length; ) {
@@ -80,7 +77,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
     /**
      * @inheritdoc IChildERC721
      */
-    function burn(address account, uint256 tokenId) external virtual onlyPredicate returns (bool) {
+    function burn(address account, uint256 tokenId) external onlyPredicate returns (bool) {
         require(account == ownerOf(tokenId), "ChildERC721: ONLY_TOKEN_OWNER");
 
         _burn(tokenId);
@@ -91,7 +88,7 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
     /**
      * @inheritdoc IChildERC721
      */
-    function burnBatch(address account, uint256[] calldata tokenIds) external virtual onlyPredicate returns (bool) {
+    function burnBatch(address account, uint256[] calldata tokenIds) external onlyPredicate returns (bool) {
         uint256 length = tokenIds.length;
         for (uint256 i = 0; i < length; ) {
             uint256 tokenId = tokenIds[i];
