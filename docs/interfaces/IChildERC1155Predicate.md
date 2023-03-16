@@ -10,27 +10,10 @@
 
 ## Methods
 
-### deployChildToken
-
-```solidity
-function deployChildToken(address rootToken, bytes32 salt) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken | address | undefined |
-| salt | bytes32 | undefined |
-
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 
@@ -45,7 +28,6 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 | newStateReceiver | address | undefined |
 | newRootERC721Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
-| newNativeTokenRootAddress | address | undefined |
 
 ### onStateReceive
 

@@ -10,6 +10,23 @@ Enables ERC1155 token deposits and withdrawals across an arbitrary root chain an
 
 ## Methods
 
+### DEPOSIT_BATCH_SIG
+
+```solidity
+function DEPOSIT_BATCH_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### DEPOSIT_SIG
 
 ```solidity
@@ -197,32 +214,15 @@ function childTokenTemplate() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### deployChildToken
-
-```solidity
-function deployChildToken(address rootToken, bytes32 salt) external nonpayable
-```
-
-Deploys a child ERC1155 token contract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken | address | Address of the ERC1155 token contract on root |
-| salt | bytes32 | Noise for address generation |
-
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC1155Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC1155Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 Initilization function for ChildERC1155Predicate
 
-*Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.*
+*Can only be called once.*
 
 #### Parameters
 
@@ -232,7 +232,6 @@ Initilization function for ChildERC1155Predicate
 | newStateReceiver | address | Address of StateReceiver to receive deposit information from |
 | newRootERC1155Predicate | address | Address of root ERC1155 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
-| newNativeTokenRootAddress | address | Address of native token on root chain |
 
 ### l2StateSender
 
@@ -328,7 +327,7 @@ function stateReceiver() external view returns (address)
 ### withdraw
 
 ```solidity
-function withdraw(contract IChildERC1155 childToken, uint256 id, uint256 amount) external nonpayable
+function withdraw(contract IChildERC1155 childToken, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to themselves on the root chain
@@ -340,13 +339,32 @@ Function to withdraw tokens from the withdrawer to themselves on the root chain
 | Name | Type | Description |
 |---|---|---|
 | childToken | contract IChildERC1155 | Address of the child token being withdrawn |
-| id | uint256 | Index of the NFT to withdraw |
+| tokenId | uint256 | Index of the NFT to withdraw |
 | amount | uint256 | Amount of the NFT to withdraw |
+
+### withdrawBatch
+
+```solidity
+function withdrawBatch(contract IChildERC1155 childToken, address[] receivers, uint256[] tokenIds, uint256[] amounts) external nonpayable
+```
+
+Function to batch withdraw tokens from the withdrawer to other addresses on the root chain
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| childToken | contract IChildERC1155 | Address of the child token being withdrawn |
+| receivers | address[] | Addresses of the receivers on the root chain |
+| tokenIds | uint256[] | indices of the NFTs to withdraw |
+| amounts | uint256[] | Amounts of NFTs to withdraw |
 
 ### withdrawTo
 
 ```solidity
-function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256 id, uint256 amount) external nonpayable
+function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to another address on the root chain
@@ -359,7 +377,7 @@ Function to withdraw tokens from the withdrawer to another address on the root c
 |---|---|---|
 | childToken | contract IChildERC1155 | Address of the child token being withdrawn |
 | receiver | address | Address of the receiver on the root chain |
-| id | uint256 | Index of the NFT to withdraw |
+| tokenId | uint256 | Index of the NFT to withdraw |
 | amount | uint256 | Amount of NFT to withdraw |
 
 

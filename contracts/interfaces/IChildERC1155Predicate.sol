@@ -9,11 +9,8 @@ interface IChildERC1155Predicate is IStateReceiver {
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC721Predicate,
-        address newChildTokenTemplate,
-        address newNativeTokenRootAddress
+        address newChildTokenTemplate
     ) external;
-
-    function deployChildToken(address rootToken, bytes32 salt) external;
 
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external;
 
