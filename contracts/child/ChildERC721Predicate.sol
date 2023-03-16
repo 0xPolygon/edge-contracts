@@ -8,7 +8,6 @@ import "../interfaces/IChildERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC721.sol";
 import "./System.sol";
-import "hardhat/console.sol";
 
 /**
     @title ChildERC721Predicate
