@@ -280,9 +280,12 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     }
 
     function _verifyContract(IChildERC1155 childToken) private view returns (bool) {
+        if (address(childToken).code.length == 0) {
+            return false;
+        }
         try childToken.supportsInterface(0xd9b67a26) returns (bool support) {
             return support;
-        } catch (bytes memory /*lowLevelData*/) {
+        } catch {
             return false;
         }
     }
