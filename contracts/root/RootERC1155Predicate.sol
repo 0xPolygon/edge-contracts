@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
-contract RootERC1155Predicate is Initializable {
+contract RootERC1155Predicate is Initializable, ERC1155Holder {
     struct ERC1155BridgeEvent {
         address rootToken;
         address childToken;

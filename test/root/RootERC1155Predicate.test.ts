@@ -23,7 +23,8 @@ describe("RootERC1155Predicate", () => {
     childTokenTemplate: ChildERC1155,
     rootToken: MockERC1155,
     totalSupply: number = 0,
-    accounts: SignerWithAddress[];
+    accounts: SignerWithAddress[],
+    id: number = 1337;
   before(async () => {
     accounts = await ethers.getSigners();
 
@@ -136,9 +137,7 @@ describe("RootERC1155Predicate", () => {
         0,
       ]
     );
-    await expect(
-      exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData)
-    ).to.be.revertedWithPanic();
+    await expect(exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData)).to.be.reverted;
   });
 
   it("map token success", async () => {
@@ -180,104 +179,110 @@ describe("RootERC1155Predicate", () => {
         1,
       ]
     );
-    await expect(
-      exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData)
-    ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+    await expect(exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData)).to.be.reverted;
   });
 
   it("deposit unmapped token: success", async () => {
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     const tempRootToken = await (await ethers.getContractFactory("MockERC1155")).deploy();
-    await tempRootToken.mint(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
-    await tempRootToken.approve(rootERC1155Predicate.address, ethers.utils.parseUnits(String(randomAmount)));
-    const depositTx = await rootERC1155Predicate.deposit(tempRootToken.address, 0, 1);
+    await tempRootToken.mint(accounts[0].address, id, randomAmount, []);
+    await tempRootToken.setApprovalForAll(rootERC1155Predicate.address, true);
+    const depositTx = await rootERC1155Predicate.deposit(tempRootToken.address, id, randomAmount);
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC20Deposit");
+    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC1155Deposit");
     const childToken = await rootERC1155Predicate.rootTokenToChildToken(tempRootToken.address);
+    await expect(depositTx).to.emit(rootERC1155Predicate, "TokenMapped").withArgs(tempRootToken.address, childToken);
     expect(depositEvent?.args?.rootToken).to.equal(tempRootToken.address);
     expect(depositEvent?.args?.childToken).to.equal(childToken);
     expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(depositEvent?.args?.id).to.equal(id);
+    expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
   it("deposit tokens to same address: success", async () => {
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
-    await rootToken.mint(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
-    await rootToken.approve(rootERC1155Predicate.address, ethers.utils.parseUnits(String(randomAmount)));
-    const depositTx = await rootERC1155Predicate.deposit(rootToken.address, 0, 1);
+    await rootToken.mint(accounts[0].address, id, randomAmount, []);
+    await rootToken.setApprovalForAll(rootERC1155Predicate.address, true);
+    const depositTx = await rootERC1155Predicate.deposit(rootToken.address, id, randomAmount);
+    await expect(depositTx).to.not.emit(rootERC1155Predicate, "TokenMapped");
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC20Deposit");
+    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC1155Deposit");
     const childToken = await rootERC1155Predicate.rootTokenToChildToken(rootToken.address);
     expect(depositEvent?.args?.rootToken).to.equal(rootToken.address);
     expect(depositEvent?.args?.childToken).to.equal(childToken);
     expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(depositEvent?.args?.id).to.equal(id);
+    expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
   it("deposit tokens to different address: success", async () => {
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
-    await rootToken.mint(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
-    await rootToken.approve(rootERC1155Predicate.address, ethers.utils.parseUnits(String(randomAmount)));
-    const depositTx = await rootERC1155Predicate.depositTo(rootToken.address, accounts[1].address, 0, 1);
+    await rootToken.mint(accounts[0].address, id, randomAmount, []);
+    const depositTx = await rootERC1155Predicate.depositTo(rootToken.address, accounts[1].address, id, randomAmount);
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC20Deposit");
+    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC1155Deposit");
     const childToken = await rootERC1155Predicate.rootTokenToChildToken(rootToken.address);
     expect(depositEvent?.args?.rootToken).to.equal(rootToken.address);
     expect(depositEvent?.args?.childToken).to.equal(childToken);
     expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[1].address);
-    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(depositEvent?.args?.id).to.equal(id);
+    expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
   it("withdraw tokens to same address: success", async () => {
     const randomAmount = Math.floor(Math.random() * totalSupply + 1);
     totalSupply -= randomAmount;
     const exitData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "uint256"],
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
       [
         ethers.utils.solidityKeccak256(["string"], ["WITHDRAW"]),
         rootToken.address,
         accounts[0].address,
         accounts[0].address,
-        ethers.utils.parseUnits(String(randomAmount)),
+        id,
+        randomAmount,
       ]
     );
     const withdrawTx = await exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData);
     const withdrawReceipt = await withdrawTx.wait();
-    const withdrawEvent = withdrawReceipt?.events?.find((log: any) => log.event === "ERC20Withdraw");
+    const withdrawEvent = withdrawReceipt?.events?.find((log: any) => log.event === "ERC1155Withdraw");
     const childToken = await rootERC1155Predicate.rootTokenToChildToken(rootToken.address);
     expect(withdrawEvent?.args?.rootToken).to.equal(rootToken.address);
     expect(withdrawEvent?.args?.childToken).to.equal(childToken);
     expect(withdrawEvent?.args?.withdrawer).to.equal(accounts[0].address);
     expect(withdrawEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(withdrawEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(withdrawEvent?.args?.id).to.equal(id);
+    expect(withdrawEvent?.args?.amount).to.equal(randomAmount);
   });
 
   it("withdraw tokens to different address: success", async () => {
     const randomAmount = Math.floor(Math.random() * totalSupply + 1);
     totalSupply -= randomAmount;
     const exitData = ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "address", "address", "uint256"],
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
       [
         ethers.utils.solidityKeccak256(["string"], ["WITHDRAW"]),
         rootToken.address,
         accounts[0].address,
         accounts[1].address,
-        ethers.utils.parseUnits(String(randomAmount)),
+        id,
+        randomAmount,
       ]
     );
     const withdrawTx = await exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData);
     const withdrawReceipt = await withdrawTx.wait();
-    const withdrawEvent = withdrawReceipt?.events?.find((log: any) => log.event === "ERC20Withdraw");
+    const withdrawEvent = withdrawReceipt?.events?.find((log: any) => log.event === "ERC1155Withdraw");
     const childToken = await rootERC1155Predicate.rootTokenToChildToken(rootToken.address);
     expect(withdrawEvent?.args?.rootToken).to.equal(rootToken.address);
     expect(withdrawEvent?.args?.childToken).to.equal(childToken);
     expect(withdrawEvent?.args?.withdrawer).to.equal(accounts[0].address);
     expect(withdrawEvent?.args?.receiver).to.equal(accounts[1].address);
-    expect(withdrawEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(withdrawEvent?.args?.id).to.equal(id);
+    expect(withdrawEvent?.args?.amount).to.equal(randomAmount);
   });
 });

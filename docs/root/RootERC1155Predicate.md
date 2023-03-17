@@ -185,6 +185,58 @@ Function to be used for token mapping
 |---|---|---|
 | rootToken | contract IERC1155MetadataURI | Address of the root token to map |
 
+### onERC1155BatchReceived
+
+```solidity
+function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256[] | undefined |
+| _3 | uint256[] | undefined |
+| _4 | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined |
+
+### onERC1155Received
+
+```solidity
+function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined |
+
 ### onL2StateReceive
 
 ```solidity
@@ -241,6 +293,28 @@ function stateSender() external view returns (contract IStateSender)
 | Name | Type | Description |
 |---|---|---|
 | _0 | contract IStateSender | undefined |
+
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*See {IERC165-supportsInterface}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 
 
