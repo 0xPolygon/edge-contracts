@@ -3,20 +3,14 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "../interfaces/IRootERC20Predicate.sol";
+import "../interfaces/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
-contract RootERC20Predicate is Initializable {
+contract RootERC20Predicate is IRootERC20Predicate, IL2StateReceiver, Initializable {
     using SafeERC20 for IERC20Metadata;
-
-    struct ERC20BridgeEvent {
-        address rootToken;
-        address childToken;
-        address sender;
-        address receiver;
-    }
 
     IStateSender public stateSender;
     address public exitHelper;
@@ -26,22 +20,6 @@ contract RootERC20Predicate is Initializable {
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
-
-    event ERC20Deposit(
-        address indexed rootToken,
-        address indexed childToken,
-        address depositor,
-        address indexed receiver,
-        uint256 amount
-    );
-    event ERC20Withdraw(
-        address indexed rootToken,
-        address indexed childToken,
-        address withdrawer,
-        address indexed receiver,
-        uint256 amount
-    );
-    event TokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
      * @notice Initilization function for RootERC20Predicate
@@ -75,9 +53,8 @@ contract RootERC20Predicate is Initializable {
     }
 
     /**
+     * @inheritdoc IL2StateReceiver
      * @notice Function to be used for token withdrawals
-     * @param sender Address of the sender on the child chain
-     * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
@@ -92,27 +69,21 @@ contract RootERC20Predicate is Initializable {
     }
 
     /**
-     * @notice Function to deposit tokens from the depositor to themselves on the child chain
-     * @param rootToken Address of the root token being deposited
-     * @param amount Amount to deposit
+     * @inheritdoc IRootERC20Predicate
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external {
         _deposit(rootToken, msg.sender, amount);
     }
 
     /**
-     * @notice Function to deposit tokens from the depositor to another address on the child chain
-     * @param rootToken Address of the root token being deposited
-     * @param amount Amount to deposit
+     * @inheritdoc IRootERC20Predicate
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
         _deposit(rootToken, receiver, amount);
     }
 
     /**
-     * @notice Function to be used for token mapping
-     * @param rootToken Address of the root token to map
-     * @dev Called internally on deposit if token is not mapped already
+     * @inheritdoc IRootERC20Predicate
      */
     function mapToken(IERC20Metadata rootToken) public {
         require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");

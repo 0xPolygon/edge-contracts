@@ -194,8 +194,7 @@ describe("RootERC721Predicate", () => {
   });
 
   it("deposit tokens to same address: success", async () => {
-    const mintTx = await rootToken.mint(accounts[0].address);
-    console.log((await mintTx.wait()).events);
+    await rootToken.mint(accounts[0].address);
     await rootToken.approve(rootERC721Predicate.address, 0);
     const depositTx = await rootERC721Predicate.deposit(rootToken.address, 0);
     const depositReceipt = await depositTx.wait();

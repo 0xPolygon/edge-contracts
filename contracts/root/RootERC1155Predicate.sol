@@ -2,46 +2,24 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "../interfaces/IRootERC1155Predicate.sol";
+import "../interfaces/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
-contract RootERC1155Predicate is Initializable, ERC1155Holder {
-    struct ERC1155BridgeEvent {
-        address rootToken;
-        address childToken;
-        address sender;
-        address receiver;
-    }
-
+contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initializable, ERC1155Holder {
     IStateSender public stateSender;
     address public exitHelper;
     address public childERC1155Predicate;
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    bytes32 public constant DEPOSIT_BATCH_SIG = keccak256("DEPOSIT_BATCH");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+    bytes32 public constant WITHDRAW_BATCH_SIG = keccak256("WITHDRAW_BATCH");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
-
-    event ERC1155Deposit(
-        address indexed rootToken,
-        address indexed childToken,
-        address depositor,
-        address indexed receiver,
-        uint256 id,
-        uint256 amount
-    );
-    event ERC1155Withdraw(
-        address indexed rootToken,
-        address indexed childToken,
-        address withdrawer,
-        address indexed receiver,
-        uint256 id,
-        uint256 amount
-    );
-    event TokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
      * @notice Initilization function for RootERC1155Predicate
@@ -75,9 +53,8 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder {
     }
 
     /**
+     * @inheritdoc IL2StateReceiver
      * @notice Function to be used for token withdrawals
-     * @param sender Address of the sender on the child chain
-     * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
@@ -86,41 +63,51 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder {
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
+        } else if (bytes32(data[:32]) == WITHDRAW_BATCH_SIG) {
+            _withdrawBatch(data);
         } else {
             revert("RootERC1155Predicate: INVALID_SIGNATURE");
         }
     }
 
     /**
-     * @notice Function to deposit tokens from the depositor to themselves on the child chain
-     * @param rootToken Address of the root token being deposited
-     * @param id Index of the NFT to deposit
-     * @param amount Amount to deposit
+     * @inheritdoc IRootERC1155Predicate
      */
-    function deposit(IERC1155MetadataURI rootToken, uint256 id, uint256 amount) external {
-        _deposit(rootToken, msg.sender, id, amount);
+    function deposit(IERC1155MetadataURI rootToken, uint256 tokenId, uint256 amount) external {
+        _deposit(rootToken, msg.sender, tokenId, amount);
     }
 
     /**
-     * @notice Function to deposit tokens from the depositor to another address on the child chain
-     * @param rootToken Address of the root token being deposited
-     * @param id Index of the NFT to deposit
-     * @param amount Amount to deposit
+     * @inheritdoc IRootERC1155Predicate
      */
-    function depositTo(IERC1155MetadataURI rootToken, address receiver, uint256 id, uint256 amount) external {
-        _deposit(rootToken, receiver, id, amount);
+    function depositTo(IERC1155MetadataURI rootToken, address receiver, uint256 tokenId, uint256 amount) external {
+        _deposit(rootToken, receiver, tokenId, amount);
     }
 
     /**
-     * @notice Function to be used for token mapping
-     * @param rootToken Address of the root token to map
-     * @dev Called internally on deposit if token is not mapped already
+     * @inheritdoc IRootERC1155Predicate
      */
-    function mapToken(IERC1155MetadataURI rootToken) public {
+    function depositBatch(
+        IERC1155MetadataURI rootToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts
+    ) external {
+        require(
+            receivers.length == tokenIds.length && receivers.length == amounts.length,
+            "RootERC1155Predicate: INVALID_LENGTH"
+        );
+        _depositBatch(rootToken, receivers, tokenIds, amounts);
+    }
+
+    /**
+     * @inheritdoc IRootERC1155Predicate
+     */
+    function mapToken(IERC1155MetadataURI rootToken) public returns (address childToken) {
         require(address(rootToken) != address(0), "RootERC1155Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC1155Predicate: ALREADY_MAPPED");
 
-        address childToken = Clones.predictDeterministicAddress(
+        childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
             childERC1155Predicate
@@ -133,35 +120,79 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder {
         emit TokenMapped(address(rootToken), childToken);
     }
 
-    function _deposit(IERC1155MetadataURI rootToken, address receiver, uint256 id, uint256 amount) private {
-        if (rootTokenToChildToken[address(rootToken)] == address(0)) {
-            mapToken(rootToken);
-        }
+    function _deposit(IERC1155MetadataURI rootToken, address receiver, uint256 tokenId, uint256 amount) private {
+        address childToken = _getChildToken(rootToken);
 
-        address childToken = rootTokenToChildToken[address(rootToken)];
-
-        assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
-
-        rootToken.safeTransferFrom(msg.sender, address(this), id, amount, "");
+        rootToken.safeTransferFrom(msg.sender, address(this), tokenId, amount, "");
 
         stateSender.syncState(
             childERC1155Predicate,
-            abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, id, amount)
+            abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, tokenId, amount)
         );
         // slither-disable-next-line reentrancy-events
-        emit ERC1155Deposit(address(rootToken), childToken, msg.sender, receiver, id, amount);
+        emit ERC1155Deposit(address(rootToken), childToken, msg.sender, receiver, tokenId, amount);
+    }
+
+    function _depositBatch(
+        IERC1155MetadataURI rootToken,
+        address[] calldata receivers,
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts
+    ) private {
+        address childToken = _getChildToken(rootToken);
+
+        for (uint256 i = 0; i < tokenIds.length; ) {
+            rootToken.safeTransferFrom(msg.sender, address(this), tokenIds[i], amounts[i], "");
+            unchecked {
+                ++i;
+            }
+        }
+
+        stateSender.syncState(
+            childERC1155Predicate,
+            abi.encode(DEPOSIT_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds, amounts)
+        );
+        // slither-disable-next-line reentrancy-events
+        emit ERC1155DepositBatch(address(rootToken), childToken, msg.sender, receivers, tokenIds, amounts);
     }
 
     function _withdraw(bytes calldata data) private {
-        (address rootToken, address withdrawer, address receiver, uint256 id, uint256 amount) = abi.decode(
+        (address rootToken, address withdrawer, address receiver, uint256 tokenId, uint256 amount) = abi.decode(
             data,
             (address, address, address, uint256, uint256)
         );
         address childToken = rootTokenToChildToken[rootToken];
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
-        IERC1155MetadataURI(rootToken).safeTransferFrom(address(this), receiver, id, amount, "");
+        IERC1155MetadataURI(rootToken).safeTransferFrom(address(this), receiver, tokenId, amount, "");
         // slither-disable-next-line reentrancy-events
-        emit ERC1155Withdraw(address(rootToken), childToken, withdrawer, receiver, id, amount);
+        emit ERC1155Withdraw(address(rootToken), childToken, withdrawer, receiver, tokenId, amount);
+    }
+
+    function _withdrawBatch(bytes calldata data) private {
+        (
+            ,
+            address rootToken,
+            address withdrawer,
+            address[] memory receivers,
+            uint256[] memory tokenIds,
+            uint256[] memory amounts
+        ) = abi.decode(data, (bytes32, address, address, address[], uint256[], uint256[]));
+        address childToken = rootTokenToChildToken[rootToken];
+        assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
+        for (uint256 i = 0; i < tokenIds.length; ) {
+            IERC1155MetadataURI(rootToken).safeTransferFrom(address(this), receivers[i], tokenIds[i], amounts[i], "");
+            unchecked {
+                ++i;
+            }
+        }
+        // slither-disable-next-line reentrancy-events
+        emit ERC1155WithdrawBatch(address(rootToken), childToken, withdrawer, receivers, tokenIds, amounts);
+    }
+
+    function _getChildToken(IERC1155MetadataURI rootToken) private returns (address childToken) {
+        childToken = rootTokenToChildToken[address(rootToken)];
+        if (childToken == address(0)) childToken = mapToken(IERC1155MetadataURI(rootToken));
+        assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
 }

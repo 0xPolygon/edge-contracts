@@ -10,6 +10,23 @@
 
 ## Methods
 
+### DEPOSIT_BATCH_SIG
+
+```solidity
+function DEPOSIT_BATCH_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### DEPOSIT_SIG
 
 ```solidity
@@ -31,6 +48,23 @@ function DEPOSIT_SIG() external view returns (bytes32)
 
 ```solidity
 function MAP_TOKEN_SIG() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
+### WITHDRAW_BATCH_SIG
+
+```solidity
+function WITHDRAW_BATCH_SIG() external view returns (bytes32)
 ```
 
 
@@ -98,7 +132,7 @@ function childTokenTemplate() external view returns (address)
 ### deposit
 
 ```solidity
-function deposit(contract IERC1155MetadataURI rootToken, uint256 id, uint256 amount) external nonpayable
+function deposit(contract IERC1155MetadataURI rootToken, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to themselves on the child chain
@@ -110,13 +144,32 @@ Function to deposit tokens from the depositor to themselves on the child chain
 | Name | Type | Description |
 |---|---|---|
 | rootToken | contract IERC1155MetadataURI | Address of the root token being deposited |
-| id | uint256 | Index of the NFT to deposit |
+| tokenId | uint256 | Index of the NFT to deposit |
 | amount | uint256 | Amount to deposit |
+
+### depositBatch
+
+```solidity
+function depositBatch(contract IERC1155MetadataURI rootToken, address[] receivers, uint256[] tokenIds, uint256[] amounts) external nonpayable
+```
+
+Function to deposit tokens from the depositor to other addresses on the child chain
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken | contract IERC1155MetadataURI | Address of the root token being deposited |
+| receivers | address[] | Addresses of the receivers on the child chain |
+| tokenIds | uint256[] | Indeices of the NFTs to deposit |
+| amounts | uint256[] | Amounts to deposit |
 
 ### depositTo
 
 ```solidity
-function depositTo(contract IERC1155MetadataURI rootToken, address receiver, uint256 id, uint256 amount) external nonpayable
+function depositTo(contract IERC1155MetadataURI rootToken, address receiver, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to another address on the child chain
@@ -129,7 +182,7 @@ Function to deposit tokens from the depositor to another address on the child ch
 |---|---|---|
 | rootToken | contract IERC1155MetadataURI | Address of the root token being deposited |
 | receiver | address | undefined |
-| id | uint256 | Index of the NFT to deposit |
+| tokenId | uint256 | Index of the NFT to deposit |
 | amount | uint256 | Amount to deposit |
 
 ### exitHelper
@@ -172,7 +225,7 @@ Initilization function for RootERC1155Predicate
 ### mapToken
 
 ```solidity
-function mapToken(contract IERC1155MetadataURI rootToken) external nonpayable
+function mapToken(contract IERC1155MetadataURI rootToken) external nonpayable returns (address childToken)
 ```
 
 Function to be used for token mapping
@@ -184,6 +237,12 @@ Function to be used for token mapping
 | Name | Type | Description |
 |---|---|---|
 | rootToken | contract IERC1155MetadataURI | Address of the root token to map |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| childToken | address | Address of the mapped child token |
 
 ### onERC1155BatchReceived
 
@@ -323,7 +382,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### ERC1155Deposit
 
 ```solidity
-event ERC1155Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 id, uint256 amount)
+event ERC1155Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -338,13 +397,34 @@ event ERC1155Deposit(address indexed rootToken, address indexed childToken, addr
 | childToken `indexed` | address | undefined |
 | depositor  | address | undefined |
 | receiver `indexed` | address | undefined |
-| id  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
+
+### ERC1155DepositBatch
+
+```solidity
+event ERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed depositor, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| depositor `indexed` | address | undefined |
+| receivers  | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### ERC1155Withdraw
 
 ```solidity
-event ERC1155Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 id, uint256 amount)
+event ERC1155Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -359,8 +439,29 @@ event ERC1155Withdraw(address indexed rootToken, address indexed childToken, add
 | childToken `indexed` | address | undefined |
 | withdrawer  | address | undefined |
 | receiver `indexed` | address | undefined |
-| id  | uint256 | undefined |
+| tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
+
+### ERC1155WithdrawBatch
+
+```solidity
+event ERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed withdrawer, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rootToken `indexed` | address | undefined |
+| childToken `indexed` | address | undefined |
+| withdrawer `indexed` | address | undefined |
+| receivers  | address[] | undefined |
+| tokenIds  | uint256[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### Initialized
 

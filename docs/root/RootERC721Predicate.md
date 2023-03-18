@@ -221,7 +221,7 @@ Initilization function for RootERC721Predicate
 ### mapToken
 
 ```solidity
-function mapToken(contract IERC721Metadata rootToken) external nonpayable
+function mapToken(contract IERC721Metadata rootToken) external nonpayable returns (address)
 ```
 
 Function to be used for token mapping
@@ -233,6 +233,12 @@ Function to be used for token mapping
 | Name | Type | Description |
 |---|---|---|
 | rootToken | contract IERC721Metadata | Address of the root token to map |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | Address of the mapped child token |
 
 ### onERC721Received
 

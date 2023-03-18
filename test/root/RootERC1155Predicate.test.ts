@@ -196,7 +196,7 @@ describe("RootERC1155Predicate", () => {
     expect(depositEvent?.args?.childToken).to.equal(childToken);
     expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.id).to.equal(id);
+    expect(depositEvent?.args?.tokenId).to.equal(id);
     expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
@@ -214,7 +214,7 @@ describe("RootERC1155Predicate", () => {
     expect(depositEvent?.args?.childToken).to.equal(childToken);
     expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.id).to.equal(id);
+    expect(depositEvent?.args?.tokenId).to.equal(id);
     expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
@@ -230,7 +230,7 @@ describe("RootERC1155Predicate", () => {
     expect(depositEvent?.args?.childToken).to.equal(childToken);
     expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
     expect(depositEvent?.args?.receiver).to.equal(accounts[1].address);
-    expect(depositEvent?.args?.id).to.equal(id);
+    expect(depositEvent?.args?.tokenId).to.equal(id);
     expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
@@ -256,7 +256,7 @@ describe("RootERC1155Predicate", () => {
     expect(withdrawEvent?.args?.childToken).to.equal(childToken);
     expect(withdrawEvent?.args?.withdrawer).to.equal(accounts[0].address);
     expect(withdrawEvent?.args?.receiver).to.equal(accounts[0].address);
-    expect(withdrawEvent?.args?.id).to.equal(id);
+    expect(withdrawEvent?.args?.tokenId).to.equal(id);
     expect(withdrawEvent?.args?.amount).to.equal(randomAmount);
   });
 
@@ -282,7 +282,7 @@ describe("RootERC1155Predicate", () => {
     expect(withdrawEvent?.args?.childToken).to.equal(childToken);
     expect(withdrawEvent?.args?.withdrawer).to.equal(accounts[0].address);
     expect(withdrawEvent?.args?.receiver).to.equal(accounts[1].address);
-    expect(withdrawEvent?.args?.id).to.equal(id);
+    expect(withdrawEvent?.args?.tokenId).to.equal(id);
     expect(withdrawEvent?.args?.amount).to.equal(randomAmount);
   });
 });
