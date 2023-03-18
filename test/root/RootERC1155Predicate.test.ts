@@ -234,6 +234,26 @@ describe("RootERC1155Predicate", () => {
     expect(depositEvent?.args?.amount).to.equal(randomAmount);
   });
 
+  it("batch deposit tokens to same address: success", async () => {
+    const receivers = [accounts[0].address, accounts[1].address, accounts[2].address];
+    const ids = [id + 1, id + 2, id + 3];
+    const amounts = [1, 2, 3];
+    for (let i = 0; i < ids.length; i++) {
+      await rootToken.mint(accounts[0].address, ids[i], amounts[i], []);
+    }
+    await rootToken.setApprovalForAll(rootERC1155Predicate.address, true);
+    const depositTx = await rootERC1155Predicate.depositBatch(rootToken.address, receivers, ids, amounts);
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt?.events?.find((log: any) => log.event === "ERC1155DepositBatch");
+    const childToken = await rootERC1155Predicate.rootTokenToChildToken(rootToken.address);
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken.address);
+    expect(depositEvent?.args?.childToken).to.equal(childToken);
+    expect(depositEvent?.args?.depositor).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.receivers).to.deep.equal(receivers);
+    expect(depositEvent?.args?.tokenIds).to.deep.equal(ids);
+    expect(depositEvent?.args?.amounts).to.deep.equal(amounts);
+  });
+
   it("withdraw tokens to same address: success", async () => {
     const randomAmount = Math.floor(Math.random() * totalSupply + 1);
     totalSupply -= randomAmount;
@@ -284,5 +304,32 @@ describe("RootERC1155Predicate", () => {
     expect(withdrawEvent?.args?.receiver).to.equal(accounts[1].address);
     expect(withdrawEvent?.args?.tokenId).to.equal(id);
     expect(withdrawEvent?.args?.amount).to.equal(randomAmount);
+  });
+
+  it("batch withdraw tokens to same address: success", async () => {
+    const receivers = [accounts[0].address, accounts[1].address, accounts[2].address];
+    const ids = [id + 1, id + 2, id + 3];
+    const amounts = [1, 2, 3];
+    const exitData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address[]", "uint256[]", "uint256[]"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["WITHDRAW_BATCH"]),
+        rootToken.address,
+        accounts[0].address,
+        receivers,
+        ids,
+        amounts,
+      ]
+    );
+    const withdrawTx = await exitHelperRootERC1155Predicate.onL2StateReceive(0, childERC1155Predicate, exitData);
+    const withdrawReceipt = await withdrawTx.wait();
+    const withdrawEvent = withdrawReceipt?.events?.find((log: any) => log.event === "ERC1155WithdrawBatch");
+    const childToken = await rootERC1155Predicate.rootTokenToChildToken(rootToken.address);
+    expect(withdrawEvent?.args?.rootToken).to.equal(rootToken.address);
+    expect(withdrawEvent?.args?.childToken).to.equal(childToken);
+    expect(withdrawEvent?.args?.withdrawer).to.equal(accounts[0].address);
+    expect(withdrawEvent?.args?.receivers).to.deep.equal(receivers);
+    expect(withdrawEvent?.args?.tokenIds).to.deep.equal(ids);
+    expect(withdrawEvent?.args?.amounts).to.deep.equal(amounts);
   });
 });
