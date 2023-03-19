@@ -475,6 +475,7 @@ describe("ChildERC721Predicate", () => {
     fakeChildERC721.rootToken.returns(rootToken);
     fakeChildERC721.predicate.returns(stateReceiverChildERC721Predicate.address);
     fakeChildERC721.burn.returns(false);
+    fakeChildERC721.supportsInterface.returns(true);
     await expect(stateReceiverChildERC721Predicate.withdraw(childTokenAddr, 1)).to.be.revertedWith(
       "ChildERC721Predicate: BURN_FAILED"
     );

@@ -63,7 +63,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
     modifier onlyValidToken(IChildERC721 childToken) {
-        _verifyContract(childToken);
+        require(_verifyContract(childToken), "ChildERC721Predicate: NOT_CONTRACT");
         _;
     }
 
@@ -259,13 +259,14 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         emit L2TokenMapped(rootToken, address(childToken));
     }
 
-    function _verifyContract(IChildERC721 childToken) private view {
-        bool isERC721;
-        try childToken.supportsInterface(0x80ac58cd) returns (bool support) {
-            isERC721 = support;
-        } catch (bytes memory /*lowLevelData*/) {
-            isERC721 = false;
+    function _verifyContract(IChildERC721 childToken) private view returns (bool) {
+        if (address(childToken).code.length == 0) {
+            return false;
         }
-        require(isERC721, "ChildERC721Predicate: NOT_CONTRACT");
+        try childToken.supportsInterface(0x80ac58cd) returns (bool support) {
+            return support;
+        } catch {
+            return false;
+        }
     }
 }
