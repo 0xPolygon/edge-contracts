@@ -14,7 +14,8 @@ describe("ChildERC721", () => {
     predicateChildERC721: ChildERC721,
     childERC721Predicate: ChildERC721Predicate,
     rootToken: string,
-    totalSupply: number,
+    depositedTokenIds: number[] = [],
+    batchDepositedTokenIds: number[] = [],
     accounts: SignerWithAddress[];
   before(async () => {
     accounts = await ethers.getSigners();
@@ -33,13 +34,11 @@ describe("ChildERC721", () => {
     setBalance(childERC721Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
     rootToken = ethers.Wallet.createRandom().address;
-
-    totalSupply = 0;
   });
 
   it("fail initialization", async () => {
     await expect(childERC721.initialize(ethers.constants.AddressZero, "", "")).to.be.revertedWith(
-      "ChildERC721: BAD_INITIALIZATION"
+      "ChildERC721: Bad initialization"
     );
   });
 
@@ -71,20 +70,49 @@ describe("ChildERC721", () => {
   });
 
   it("burn tokens fail: only predicate", async () => {
-    await expect(childERC721.burn(0)).to.be.revertedWith("ChildERC721: Only predicate can call");
+    await expect(childERC721.burn(ethers.constants.AddressZero, 0)).to.be.revertedWith(
+      "ChildERC721: Only predicate can call"
+    );
   });
 
   it("mint tokens success", async () => {
-    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
-    totalSupply += randomAmount;
-    const mintTx = await predicateChildERC721.mint(accounts[0].address, 0);
+    const randomTokenId = Math.floor(Math.random() * 1000000 + 1);
+    depositedTokenIds.push(randomTokenId);
+    const mintTx = await predicateChildERC721.mint(accounts[0].address, randomTokenId);
     const mintReceipt = await mintTx.wait();
 
     const transferEvent = mintReceipt?.events?.find((log) => log.event === "Transfer");
 
     expect(transferEvent?.args?.from).to.equal(ethers.constants.AddressZero);
     expect(transferEvent?.args?.to).to.equal(accounts[0].address);
-    expect(transferEvent?.args?.value).to.equal(0);
+    expect(transferEvent?.args?.tokenId).to.equal(randomTokenId);
+  });
+
+  it("batch mint tokens fail: only predicate", async () => {
+    await expect(childERC721.mintBatch([], [])).to.be.revertedWith("ChildERC721: Only predicate can call");
+  });
+
+  it("batch mint tokens fail: length mismatch", async () => {
+    await expect(predicateChildERC721.mintBatch([], [0])).to.be.revertedWith("ChildERC721: Array len mismatch");
+  });
+
+  it("batch mint tokens success", async () => {
+    const batchSize = Math.floor(Math.random() * 10 + 2);
+    const receiverArr = [];
+    for (let i = 0; i < batchSize; i++) {
+      const randomTokenId = Math.floor(Math.random() * 1000000 + 1);
+      batchDepositedTokenIds.push(randomTokenId);
+      receiverArr.push(accounts[1].address);
+    }
+    const mintTx = await predicateChildERC721.mintBatch(receiverArr, batchDepositedTokenIds);
+    const mintReceipt = await mintTx.wait();
+
+    const transferEvents = mintReceipt?.events?.filter((log: any) => log.event === "Transfer");
+    for (let i = 0; i < transferEvents!.length; i++) {
+      expect(transferEvents![i]?.args?.from).to.equal(ethers.constants.AddressZero);
+      expect(transferEvents![i]?.args?.to).to.equal(accounts[1].address);
+      expect(transferEvents![i]?.args?.tokenId).to.equal(batchDepositedTokenIds[i]);
+    }
   });
 
   it("execute meta-tx: fail", async () => {
@@ -106,7 +134,7 @@ describe("ChildERC721", () => {
     const functionData = childERC721.interface.encodeFunctionData("transferFrom", [
       accounts[0].address,
       accounts[1].address,
-      1,
+      depositedTokenIds[0],
     ]);
     const value = {
       nonce: 0,
@@ -114,16 +142,16 @@ describe("ChildERC721", () => {
       functionSignature: childERC721.interface.encodeFunctionData("transferFrom", [
         accounts[0].address,
         accounts[1].address,
-        1,
+        depositedTokenIds[0],
       ]),
     };
 
-    const signature = await (await ethers.getSigner(accounts[0].address))._signTypedData(domain, types, value);
+    const signature = await (await ethers.getSigner(accounts[1].address))._signTypedData(domain, types, value);
     const r = signature.slice(0, 66);
     const s = "0x".concat(signature.slice(66, 130));
     let v: any = "0x".concat(signature.slice(130, 132));
     v = ethers.BigNumber.from(v).toNumber();
-    await expect(childERC721.executeMetaTransaction(accounts[1].address, functionData, r, s, v)).to.be.revertedWith(
+    await expect(childERC721.executeMetaTransaction(accounts[0].address, functionData, r, s, v)).to.be.revertedWith(
       "Signer and signature do not match"
     );
   });
@@ -147,7 +175,7 @@ describe("ChildERC721", () => {
     const functionData = childERC721.interface.encodeFunctionData("transferFrom", [
       accounts[0].address,
       accounts[1].address,
-      1,
+      depositedTokenIds[0],
     ]);
     const value = {
       nonce: 0,
@@ -155,7 +183,7 @@ describe("ChildERC721", () => {
       functionSignature: childERC721.interface.encodeFunctionData("transferFrom", [
         accounts[0].address,
         accounts[1].address,
-        1,
+        depositedTokenIds[0],
       ]),
     };
 
@@ -169,21 +197,51 @@ describe("ChildERC721", () => {
 
     const transferEvent = transferReceipt?.events?.find((log) => log.event === "Transfer");
     expect(transferEvent?.args?.from).to.equal(accounts[0].address);
-    expect(transferEvent?.args?.to).to.equal(accounts[0].address);
-    expect(transferEvent?.args?.value).to.equal(1);
+    expect(transferEvent?.args?.to).to.equal(accounts[1].address);
+    expect(transferEvent?.args?.tokenId).to.equal(depositedTokenIds[0]);
+  });
+
+  it("burn tokens fail: only token owner", async () => {
+    await expect(predicateChildERC721.burn(accounts[0].address, depositedTokenIds[0])).to.be.revertedWith(
+      "ChildERC721: Only owner can burn"
+    );
   });
 
   it("burn tokens success", async () => {
-    const randomAmount = Math.floor(Math.random() * totalSupply + 1);
-    totalSupply -= randomAmount;
-    const burnTx = await predicateChildERC721.burn(ethers.utils.parseUnits(String(randomAmount)));
+    const burnTx = await predicateChildERC721.burn(accounts[1].address, depositedTokenIds[0]);
     const burnReceipt = await burnTx.wait();
 
     const transferEvent = burnReceipt?.events?.find((log: any) => log.event === "Transfer");
-    expect(transferEvent?.args?.from).to.equal(accounts[0].address);
+    expect(transferEvent?.args?.from).to.equal(accounts[1].address);
     expect(transferEvent?.args?.to).to.equal(ethers.constants.AddressZero);
-    expect(transferEvent?.args?.value).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(transferEvent?.args?.tokenId).to.equal(depositedTokenIds[0]);
   });
 
-  it("batch mint tokens success");
+  it("batch burn tokens fail: only predicate", async () => {
+    await expect(childERC721.burnBatch(ethers.constants.AddressZero, [])).to.be.revertedWith(
+      "ChildERC721: Only predicate can call"
+    );
+  });
+
+  it("batch burn tokens fail: only token owner", async () => {
+    await expect(
+      predicateChildERC721.burnBatch(ethers.constants.AddressZero, batchDepositedTokenIds)
+    ).to.be.revertedWith("ChildERC721: Only owner can burn");
+  });
+
+  it("batch burn tokens success", async () => {
+    const batchSize = Math.floor(Math.random() * batchDepositedTokenIds.length + 2);
+    const mintTx = await predicateChildERC721.burnBatch(
+      accounts[1].address,
+      batchDepositedTokenIds.slice(0, batchSize)
+    );
+    const mintReceipt = await mintTx.wait();
+
+    const transferEvents = mintReceipt?.events?.filter((log: any) => log.event === "Transfer");
+    for (let i = 0; i < transferEvents!.length; i++) {
+      expect(transferEvents![i]?.args?.from).to.equal(accounts[1].address);
+      expect(transferEvents![i]?.args?.to).to.equal(ethers.constants.AddressZero);
+      expect(transferEvents![i]?.args?.tokenId).to.equal(batchDepositedTokenIds[i]);
+    }
+  });
 });
