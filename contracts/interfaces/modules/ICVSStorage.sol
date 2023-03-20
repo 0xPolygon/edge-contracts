@@ -23,7 +23,24 @@ struct Epoch {
 interface ICVSStorage {
     /**
      * @notice Gets validator by address.
-     * @return Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status)
+     * @return blsKey BLS public key
+     * @return stake self-stake
+     * @return totalStake self-stake + delegation
+     * @return commission
+     * @return withdrawableRewards withdrawable rewards
+     * @return active activity status
      */
-    function getValidator(address validator) external view returns (Validator memory);
+    function getValidator(
+        address validator
+    )
+        external
+        view
+        returns (
+            uint256[4] memory blsKey,
+            uint256 stake,
+            uint256 totalStake,
+            uint256 commission,
+            uint256 withdrawableRewards,
+            bool active
+        );
 }

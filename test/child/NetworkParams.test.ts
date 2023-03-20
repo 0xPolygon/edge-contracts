@@ -1,4 +1,4 @@
-import { impersonateAccount, stopImpersonatingAccount } from "@nomicfoundation/hardhat-network-helpers";
+import { impersonateAccount, stopImpersonatingAccount, setBalance } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
@@ -47,6 +47,7 @@ describe("NetworkParams", () => {
 
   it("set new block gas limit fail: only owner", async () => {
     await impersonateAccount(accounts[1].address);
+    await setBalance(accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
     const newNetworkParams = networkParams.connect(accounts[1]);
 
     await expect(newNetworkParams.setNewBlockGasLimit(1)).to.be.revertedWith("Ownable: caller is not the owner");

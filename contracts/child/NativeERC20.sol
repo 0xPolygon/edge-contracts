@@ -1,29 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../interfaces/IStateReceiver.sol";
+import "../interfaces/INativeERC20.sol";
 import "./System.sol";
 
 /**
-    @title MRC20
+    @title NativeERC20
     @author Polygon Technology
-    @notice MATIC native token contract on Polygon V3 PoS chain
-    @dev The contract exposes ERC20-like functions that are compatible with the MATIC native token
+    @notice Native token contract on Polygon V3 / supernet chains
+    @dev The contract exposes ERC20-like functions that are compatible with the native token
  */
 // solhint-disable reason-string
-contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
+contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
-
+    address private _predicate;
+    address private _rootToken;
     string private _name;
     string private _symbol;
+    uint8 private _decimals;
 
-    address public predicate;
+    modifier onlyPredicate() {
+        require(msg.sender == _predicate, "NativeERC20: Only predicate can call");
 
-    address private constant ZERO_ADDRESS = address(0);
+        _;
+    }
 
     /**
      * @dev Sets the values for {predicate}, {name} and {symbol}.
@@ -33,26 +38,21 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * All three of these values are immutable: they can only be set once during
      * initialization.
      */
-    function initialize(address predicate_, string memory name_, string memory symbol_) external onlySystemCall {
+    function initialize(
+        address predicate_,
+        address rootToken_,
+        string calldata name_,
+        string calldata symbol_,
+        uint8 decimals_
+    ) external initializer onlySystemCall {
+        // slither-disable-next-line missing-zero-check,events-access
+        _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
-        predicate = predicate_;
+        _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
         _symbol = symbol_;
-    }
-
-    /**
-     * @notice Used to deposit tokens from L1 to V3 PoS chain
-     * @param sender Address of L1 message sender
-     * @param data Data received via state sync
-     */
-    function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        // slither-disable-next-line too-many-digits
-        require(msg.sender == 0x0000000000000000000000000000000000001001, "ONLY_STATERECEIVER");
-        require(sender == predicate, "INVALID_SENDER");
-
-        (address receiver, uint256 amount) = abi.decode(data, (address, uint256));
-
-        _mint(receiver, amount);
+        // slither-disable-next-line events-maths
+        _decimals = decimals_;
     }
 
     /**
@@ -66,15 +66,6 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
     function transfer(address to, uint256 amount) external returns (bool) {
         address owner = _msgSender();
         _transfer(owner, to, amount);
-        return true;
-    }
-
-    /**
-     * @notice Used to withdraw tokens from V3 PoS chain to L1
-     * @param amount Amount of tokens to withdraw
-     */
-    function withdraw(uint256 amount) external returns (bool) {
-        _burn(_msgSender(), amount);
         return true;
     }
 
@@ -161,6 +152,24 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
     }
 
     /**
+     * @inheritdoc INativeERC20
+     */
+    function mint(address account, uint256 amount) external onlyPredicate returns (bool) {
+        _mint(account, amount);
+
+        return true;
+    }
+
+    /**
+     * @inheritdoc INativeERC20
+     */
+    function burn(address account, uint256 amount) external onlyPredicate returns (bool) {
+        _burn(account, amount);
+
+        return true;
+    }
+
+    /**
      * @dev Returns the name of the token.
      */
     function name() external view returns (string memory) {
@@ -188,8 +197,8 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() external pure returns (uint8) {
-        return 18;
+    function decimals() external view returns (uint8) {
+        return _decimals;
     }
 
     /**
@@ -211,6 +220,20 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
      */
     function allowance(address owner, address spender) public view returns (uint256) {
         return _allowances[owner][spender];
+    }
+
+    /**
+     * @inheritdoc INativeERC20
+     */
+    function predicate() public view virtual override returns (address) {
+        return _predicate;
+    }
+
+    /**
+     * @inheritdoc INativeERC20
+     */
+    function rootToken() public view virtual override returns (address) {
+        return _rootToken;
     }
 
     /**
@@ -253,9 +276,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         _totalSupply += amount;
 
         // slither-disable-next-line reentrancy-events,low-level-calls
-        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call( // solhint-disable-line avoid-low-level-calls
-            abi.encode(ZERO_ADDRESS, account, amount)
-        );
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(address(0), account, amount)); // solhint-disable-line avoid-low-level-calls
         require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
         emit Transfer(address(0), account, amount);
@@ -278,9 +299,7 @@ contract MRC20 is Context, IERC20, IERC20Metadata, IStateReceiver, System {
         _totalSupply -= amount;
 
         // slither-disable-next-line reentrancy-events,low-level-calls
-        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call( // solhint-disable-line avoid-low-level-calls
-            abi.encode(account, ZERO_ADDRESS, amount)
-        );
+        (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(abi.encode(account, address(0), amount)); // solhint-disable-line avoid-low-level-calls
         require(success && abi.decode(result, (bool)), "PRECOMPILE_CALL_FAILED");
 
         emit Transfer(account, address(0), amount);

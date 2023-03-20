@@ -430,6 +430,8 @@ describe("CheckpointManager", () => {
 
     expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
     expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
+    expect(await checkpointManager.getCheckpointBlock(1)).to.deep.equal([true, checkpoint.blockNumber]);
+    expect(await checkpointManager.getCheckpointBlock(checkpoint.blockNumber + 1)).to.deep.equal([false, 0]);
 
     const leafIndex = 0;
     let proof = [];
@@ -652,6 +654,8 @@ describe("CheckpointManager", () => {
 
     expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
     expect(await checkpointManager.checkpointBlockNumbers(0)).to.equal(checkpoint.blockNumber);
+    expect(await checkpointManager.getCheckpointBlock(1)).to.deep.equal([true, checkpoint.blockNumber]);
+    expect(await checkpointManager.getCheckpointBlock(checkpoint.blockNumber + 1)).to.deep.equal([false, 0]);
 
     const leafIndex = 0;
     let proof = [];
@@ -731,6 +735,11 @@ describe("CheckpointManager", () => {
 
       expect(await checkpointManager.getEventRootByBlock(checkpoint.blockNumber)).to.equal(checkpoint.eventRoot);
       expect(await checkpointManager.checkpointBlockNumbers(1)).to.equal(checkpoint.blockNumber);
+      expect(await checkpointManager.getCheckpointBlock(checkpoint.blockNumber)).to.deep.equal([
+        true,
+        checkpoint.blockNumber,
+      ]);
+      expect(await checkpointManager.getCheckpointBlock(checkpoint.blockNumber + 1)).to.deep.equal([false, 0]);
 
       const leafIndex = 0;
       let proof = [];

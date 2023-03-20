@@ -52,7 +52,12 @@ library ValidatorQueueLib {
      * @param self ValidatorQueue struct
      */
     function reset(ValidatorQueue storage self) internal {
-        delete self.queue;
+        // delete self.queue;
+        // slither-disable-next-line assembly
+        assembly {
+            // solhint-disable-line no-inline-assembly
+            sstore(self.slot, 0)
+        }
     }
 
     /**

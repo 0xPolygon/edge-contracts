@@ -42,8 +42,27 @@ abstract contract CVSStorage is ICVSStorage {
     /**
      * @inheritdoc ICVSStorage
      */
-    function getValidator(address validator) public view returns (Validator memory) {
-        return _validators.get(validator);
+    function getValidator(
+        address validator
+    )
+        external
+        view
+        returns (
+            uint256[4] memory blsKey,
+            uint256 stake,
+            uint256 totalStake,
+            uint256 commission,
+            uint256 withdrawableRewards,
+            bool active
+        )
+    {
+        Validator memory v = _validators.get(validator);
+        blsKey = v.blsKey;
+        stake = v.stake;
+        totalStake = v.stake + _validators.getDelegationPool(validator).supply;
+        commission = v.commission;
+        withdrawableRewards = v.withdrawableRewards;
+        active = v.active;
     }
 
     function verifyValidatorRegistration(

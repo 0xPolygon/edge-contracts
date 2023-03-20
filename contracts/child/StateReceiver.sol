@@ -10,6 +10,7 @@ import {Merkle} from "../common/Merkle.sol";
  * @author Polygon Technology (JD Kanani @jdkanani, @QEDK)
  * @notice executes and relays the state data on the child chain
  */
+// solhint-disable reason-string
 contract StateReceiver is System {
     using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
@@ -74,7 +75,12 @@ contract StateReceiver is System {
         StateSyncCommitment memory commitment = getCommitmentByStateSyncId(obj.id);
 
         require(
-            keccak256(abi.encode(obj)).checkMembership(obj.id - commitment.startId, commitment.root, proof),
+            keccak256(abi.encode(obj)).checkMembershipWithHeight(
+                obj.id - commitment.startId,
+                commitment.endId - commitment.startId + 1,
+                commitment.root,
+                proof
+            ),
             "INVALID_PROOF"
         );
 
@@ -95,8 +101,9 @@ contract StateReceiver is System {
         for (uint256 i = 0; i < length; ) {
             StateSyncCommitment memory commitment = getCommitmentByStateSyncId(objs[i].id);
 
-            bool isMember = keccak256(abi.encode(objs[i])).checkMembership(
+            bool isMember = keccak256(abi.encode(objs[i])).checkMembershipWithHeight(
                 objs[i].id - commitment.startId,
+                commitment.endId - commitment.startId + 1,
                 commitment.root,
                 proofs[i]
             );

@@ -195,11 +195,11 @@ contract ChildValidatorSet is
         if (length == 0) return 0;
 
         address tmpValidator = _validators.last();
-        activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
+        activeStake += _validators.get(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
 
         for (uint256 i = 1; i < length; i++) {
             tmpValidator = _validators.prev(tmpValidator);
-            activeStake += getValidator(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
+            activeStake += _validators.get(tmpValidator).stake + _validators.getDelegationPool(tmpValidator).supply;
         }
     }
 
@@ -231,18 +231,38 @@ contract ChildValidatorSet is
 
     function _processQueue() internal {
         QueuedValidator[] storage queue = _queue.get();
+        // process all existing validators first to maintain sort
         for (uint256 i = 0; i < queue.length; ++i) {
             QueuedValidator memory item = queue[i];
             address validatorAddr = item.validator;
-            // values will be zero for non existing validators
-            Validator storage validator = _validators.get(validatorAddr);
             // if validator already present in tree, remove and reinsert to maintain sort
             if (_validators.exists(validatorAddr)) {
-                _validators.remove(validatorAddr);
+                Validator storage validator = _validators.get(validatorAddr);
+                validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
+                _validators.totalStake = (int(_validators.totalStake) + item.stake).toUint256Safe();
+                uint256 newTotalStake = _validators.totalStakeOf(validatorAddr);
+                address higher = _validators.next(validatorAddr);
+                if (
+                    (higher != address(0) && _validators.totalStakeOf(higher) < newTotalStake) ||
+                    (_validators.totalStakeOf(_validators.prev(validatorAddr)) > newTotalStake)
+                ) {
+                    // resort validator if stake is higher than next or lower than previous
+                    _validators.remove(validatorAddr);
+                    _validators.insert(validatorAddr, validator);
+                }
+                _queue.resetIndex(validatorAddr);
             }
-            validator.stake = (int256(validator.stake) + item.stake).toUint256Safe();
-            _validators.insert(validatorAddr, validator);
-            _queue.resetIndex(validatorAddr);
+        }
+        // process all new validators after processing existsing validators
+        for (uint256 i = 0; i < queue.length; ++i) {
+            QueuedValidator memory item = queue[i];
+            address validatorAddr = item.validator;
+            if (!_validators.exists(item.validator) && _queue.indices[validatorAddr] != 0) {
+                Validator storage validator = _validators.get(validatorAddr);
+                validator.stake = (item.stake).toUint256Safe();
+                _validators.insert(validatorAddr, validator);
+                _queue.resetIndex(validatorAddr);
+            }
         }
         _queue.reset();
     }
@@ -257,8 +277,10 @@ contract ChildValidatorSet is
             (_validators.delegationPools[key].supply * DOUBLE_SIGNING_SLASHING_PERCENT) /
             100;
         uint256 slashedAmount = (validator.stake * DOUBLE_SIGNING_SLASHING_PERCENT) / 100;
+        // // remove and reinsert to maintain sort
+        _validators.remove(key);
         validator.stake -= slashedAmount;
-        _validators.totalStake -= slashedAmount;
+        _validators.insert(key, validator);
         emit DoubleSignerSlashed(key, epoch, pbftRound);
     }
 
@@ -317,7 +339,7 @@ contract ChildValidatorSet is
         address validatorAddr,
         uint256 totalReward
     ) private view returns (uint256, uint256) {
-        Validator memory validator = getValidator(validatorAddr);
+        Validator memory validator = _validators.get(validatorAddr);
         uint256 stakedAmount = validator.stake;
         uint256 delegations = _validators.getDelegationPool(validatorAddr).supply;
 

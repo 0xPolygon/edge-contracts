@@ -222,7 +222,7 @@ function epochs(uint256) external view returns (uint256 startBlock, uint256 endB
 ### getValidator
 
 ```solidity
-function getValidator(address validator) external view returns (struct Validator)
+function getValidator(address validator) external view returns (uint256[4] blsKey, uint256 stake, uint256 totalStake, uint256 commission, uint256 withdrawableRewards, bool active)
 ```
 
 Gets validator by address.
@@ -239,7 +239,12 @@ Gets validator by address.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | Validator | Validator (BLS public key, self-stake, total stake, commission, withdrawable rewards, activity status) |
+| blsKey | uint256[4] | BLS public key |
+| stake | uint256 | self-stake |
+| totalStake | uint256 | self-stake + delegation |
+| commission | uint256 | commission |
+| withdrawableRewards | uint256 | withdrawable rewards |
+| active | bool | activity status |
 
 ### minDelegation
 

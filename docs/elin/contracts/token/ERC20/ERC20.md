@@ -1,116 +1,14 @@
-# MRC20
+# ERC20
 
-*Polygon Technology*
 
-> MRC20
 
-MATIC native token contract on Polygon V3 PoS chain
 
-*The contract exposes ERC20-like functions that are compatible with the MATIC native token*
+
+
+
+*Implementation of the {IERC20} interface. This implementation is agnostic to the way tokens are created. This means that a supply mechanism has to be added in a derived contract using {_mint}. For a generic mechanism see {ERC20PresetMinterPauser}. TIP: For a detailed writeup see our guide https://forum.openzeppelin.com/t/how-to-implement-erc20-supply-mechanisms/226[How to implement supply mechanisms]. We have followed general OpenZeppelin Contracts guidelines: functions revert instead returning `false` on failure. This behavior is nonetheless conventional and does not conflict with the expectations of ERC20 applications. Additionally, an {Approval} event is emitted on calls to {transferFrom}. This allows applications to reconstruct the allowance for all accounts just by listening to said events. Other implementations of the EIP may not emit these events, as it isn&#39;t required by the specification. Finally, the non-standard {decreaseAllowance} and {increaseAllowance} functions have been added to mitigate the well-known issues around setting allowances. See {IERC20-approve}.*
 
 ## Methods
-
-### NATIVE_TOKEN_CONTRACT
-
-```solidity
-function NATIVE_TOKEN_CONTRACT() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### NATIVE_TRANSFER_PRECOMPILE
-
-```solidity
-function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### NATIVE_TRANSFER_PRECOMPILE_GAS
-
-```solidity
-function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### SYSTEM
-
-```solidity
-function SYSTEM() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### VALIDATOR_PKCHECK_PRECOMPILE
-
-```solidity
-function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### VALIDATOR_PKCHECK_PRECOMPILE_GAS
-
-```solidity
-function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### allowance
 
@@ -183,7 +81,7 @@ function balanceOf(address account) external view returns (uint256)
 ### decimals
 
 ```solidity
-function decimals() external pure returns (uint8)
+function decimals() external view returns (uint8)
 ```
 
 
@@ -243,24 +141,6 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### initialize
-
-```solidity
-function initialize(address predicate_, string name_, string symbol_) external nonpayable
-```
-
-
-
-*Sets the values for {predicate}, {name} and {symbol}. The default value of {decimals} is 18. All three of these values are immutable: they can only be set once during initialization.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| predicate_ | address | undefined |
-| name_ | string | undefined |
-| symbol_ | string | undefined |
-
 ### name
 
 ```solidity
@@ -277,41 +157,6 @@ function name() external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### onStateReceive
-
-```solidity
-function onStateReceive(uint256, address sender, bytes data) external nonpayable
-```
-
-Used to deposit tokens from L1 to V3 PoS chain
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-| sender | address | Address of L1 message sender |
-| data | bytes | Data received via state sync |
-
-### predicate
-
-```solidity
-function predicate() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### symbol
 
@@ -394,28 +239,6 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### withdraw
-
-```solidity
-function withdraw(uint256 amount) external nonpayable returns (bool)
-```
-
-Used to withdraw tokens from V3 PoS chain to L1
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | Amount of tokens to withdraw |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 
 
 ## Events
@@ -456,24 +279,5 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
 
-
-
-## Errors
-
-### Unauthorized
-
-```solidity
-error Unauthorized(string only)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| only | string | undefined |
 
 

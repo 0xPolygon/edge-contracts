@@ -314,4 +314,22 @@ contract CheckpointManager_SubmitSecond is FirstSubmitted {
         vm.expectRevert("NO_EVENT_ROOT_FOR_EPOCH");
         checkpointManager.getEventMembershipByEpoch(epoch, leaf, leafIndex, proof);
     }
+
+    function testGetCheckpointBlock_BlockNumberIsCheckpointBlock() public {
+        uint256 expectedCheckpointBlock = 1;
+        uint256 blockNumber = 1;
+
+        (bool isFound, uint256 foundCheckpointBlock) = checkpointManager.getCheckpointBlock(blockNumber);
+        assertEq(foundCheckpointBlock, expectedCheckpointBlock);
+        assertEq(isFound, true);
+    }
+
+    function testGetCheckpointBlock_NonExistingCheckpointBlock() public {
+        uint256 expectedCheckpointBlock = 0;
+        uint256 blockNumber = 5;
+
+        (bool isFound, uint256 foundCheckpointBlock) = checkpointManager.getCheckpointBlock(blockNumber);
+        assertEq(foundCheckpointBlock, expectedCheckpointBlock);
+        assertEq(isFound, false);
+    }
 }
