@@ -14,7 +14,6 @@ describe("ChildERC1155", () => {
     predicateChildERC1155: ChildERC1155,
     childERC1155Predicate: ChildERC1155Predicate,
     rootToken: string,
-    totalSupply: number,
     accounts: SignerWithAddress[];
   before(async () => {
     accounts = await ethers.getSigners();
@@ -35,8 +34,6 @@ describe("ChildERC1155", () => {
     setBalance(childERC1155Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
     rootToken = ethers.Wallet.createRandom().address;
-
-    totalSupply = 0;
   });
 
   it("fail initialization", async () => {
@@ -75,16 +72,15 @@ describe("ChildERC1155", () => {
   });
 
   it("mint tokens success", async () => {
-    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
-    totalSupply += randomAmount;
     const mintTx = await predicateChildERC1155.mint(accounts[0].address, 0, 1);
     const mintReceipt = await mintTx.wait();
 
-    const transferEvent = mintReceipt?.events?.find((log) => log.event === "Transfer");
+    const transferEvent = mintReceipt?.events?.find((log) => log.event === "TransferSingle");
 
     expect(transferEvent?.args?.from).to.equal(ethers.constants.AddressZero);
     expect(transferEvent?.args?.to).to.equal(accounts[0].address);
-    expect(transferEvent?.args?.value).to.equal(0);
+    expect(transferEvent?.args?.id).to.equal(0);
+    expect(transferEvent?.args?.value).to.equal(1);
   });
 
   it("execute meta-tx: fail", async () => {
@@ -108,6 +104,7 @@ describe("ChildERC1155", () => {
       accounts[1].address,
       0,
       1,
+      [],
     ]);
     const value = {
       nonce: 0,
@@ -117,6 +114,7 @@ describe("ChildERC1155", () => {
         accounts[1].address,
         0,
         1,
+        [],
       ]),
     };
 
@@ -151,6 +149,7 @@ describe("ChildERC1155", () => {
       accounts[1].address,
       0,
       1,
+      [],
     ]);
     const value = {
       nonce: 0,
@@ -160,6 +159,7 @@ describe("ChildERC1155", () => {
         accounts[1].address,
         0,
         1,
+        [],
       ]),
     };
 
@@ -173,24 +173,46 @@ describe("ChildERC1155", () => {
 
     const transferEvent = transferReceipt?.events?.find((log) => log.event === "TransferSingle");
     expect(transferEvent?.args?.from).to.equal(accounts[0].address);
-    expect(transferEvent?.args?.to).to.equal(accounts[0].address);
+    expect(transferEvent?.args?.to).to.equal(accounts[1].address);
     expect(transferEvent?.args?.value).to.equal(1);
   });
 
   it("burn tokens success", async () => {
-    const randomAmount = Math.floor(Math.random() * totalSupply + 1);
-    totalSupply -= randomAmount;
-    const burnTx = await predicateChildERC1155.burn(ethers.constants.AddressZero, 0, 1);
+    const burnTx = await predicateChildERC1155.burn(accounts[1].address, 0, 1);
     const burnReceipt = await burnTx.wait();
 
     const transferEvent = burnReceipt?.events?.find((log: any) => log.event === "TransferSingle");
-    expect(transferEvent?.args?.from).to.equal(accounts[0].address);
+    expect(transferEvent?.args?.from).to.equal(accounts[1].address);
     expect(transferEvent?.args?.to).to.equal(ethers.constants.AddressZero);
-    expect(transferEvent?.args?.value).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(transferEvent?.args?.value).to.equal(1);
   });
 
-  it("batch mint tokens success (single address)");
-  it("batch mint tokens success (multiple address)");
-  it("batch burn tokens success (single address)");
-  it("batch burn tokens success (multiple address)");
+  it("batch mint tokens success", async () => {
+    const mintTx = await predicateChildERC1155.mintBatch(
+      [accounts[0].address, accounts[0].address, accounts[1].address],
+      [0, 1, 2],
+      [1, 2, 3]
+    );
+    await expect(mintTx)
+      .to.emit(predicateChildERC1155, "TransferSingle")
+      .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[0].address, 0, 1);
+    await expect(mintTx)
+      .to.emit(predicateChildERC1155, "TransferSingle")
+      .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[0].address, 1, 2);
+    await expect(mintTx)
+      .to.emit(predicateChildERC1155, "TransferSingle")
+      .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[1].address, 2, 3);
+  });
+  it("batch burn tokens success", async () => {
+    const burnTx = await predicateChildERC1155.burnBatch(accounts[0].address, [0, 1], [1, 2]);
+    await expect(burnTx)
+      .to.emit(predicateChildERC1155, "TransferBatch")
+      .withArgs(
+        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        accounts[0].address,
+        ethers.constants.AddressZero,
+        [0, 1],
+        [1, 2]
+      );
+  });
 });
