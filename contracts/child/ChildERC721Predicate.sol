@@ -259,10 +259,13 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         emit L2TokenMapped(rootToken, address(childToken));
     }
 
+    // slither does not handle try-catch blocks correctly
+    // slither-disable-next-line unused-return
     function _verifyContract(IChildERC721 childToken) private view returns (bool) {
         if (address(childToken).code.length == 0) {
             return false;
         }
+        // slither-disable-next-line uninitialized-local,variable-scope
         try childToken.supportsInterface(0x80ac58cd) returns (bool support) {
             return support;
         } catch {
