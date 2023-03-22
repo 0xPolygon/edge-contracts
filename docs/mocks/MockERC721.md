@@ -603,7 +603,7 @@ event Approval(address indexed owner, address indexed approved, uint256 indexed 
 
 
 
-
+*Emitted when `owner` enables `approved` to manage the `tokenId` token.*
 
 #### Parameters
 
@@ -621,7 +621,7 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 
 
 
-
+*Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.*
 
 #### Parameters
 
@@ -639,7 +639,7 @@ event Paused(address account)
 
 
 
-
+*Emitted when the pause is triggered by `account`.*
 
 #### Parameters
 
@@ -655,7 +655,7 @@ event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, 
 
 
 
-
+*Emitted when `newAdminRole` is set as ``role``&#39;s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted signaling this. _Available since v3.1._*
 
 #### Parameters
 
@@ -673,7 +673,7 @@ event RoleGranted(bytes32 indexed role, address indexed account, address indexed
 
 
 
-
+*Emitted when `account` is granted `role`. `sender` is the account that originated the contract call, an admin role bearer except when using {AccessControl-_setupRole}.*
 
 #### Parameters
 
@@ -691,7 +691,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 
 
 
-
+*Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)*
 
 #### Parameters
 
@@ -709,7 +709,7 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 
 
 
-
+*Emitted when `tokenId` token is transferred from `from` to `to`.*
 
 #### Parameters
 
@@ -727,7 +727,7 @@ event Unpaused(address account)
 
 
 
-
+*Emitted when the pause is lifted by `account`.*
 
 #### Parameters
 

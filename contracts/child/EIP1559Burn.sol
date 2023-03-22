@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../interfaces/child/IChildERC20.sol";
