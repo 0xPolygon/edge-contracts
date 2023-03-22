@@ -70,23 +70,6 @@ registers a new child chain with the staking contract
 |---|---|---|
 | manager | address | undefined |
 
-### registerValidatorFor
-
-```solidity
-function registerValidatorFor(uint256 id, bytes data) external nonpayable
-```
-
-called when a new validator registers for a child chain
-
-*optional, only if the child chain requires information before registering*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined |
-| data | bytes | undefined |
-
 ### releaseStakeOf
 
 ```solidity
@@ -333,5 +316,27 @@ event ValidatorSlashed(uint256 indexed id, address indexed validator, uint256 am
 | validator `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
+
+
+## Errors
+
+### SlashExceedsStake
+
+```solidity
+error SlashExceedsStake(uint256 id, address validator, uint256 amount, uint256 stake)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined |
+| validator | address | undefined |
+| amount | uint256 | undefined |
+| stake | uint256 | undefined |
 
 
