@@ -18,7 +18,7 @@ In the current implementation potential validators must be whitelisted before be
 
 Lastly, a validator by default splits protocol rewards with the validator's delegators. The validator possesses the ability to further incentivize delegators by committing some of the validator's own portion of rewards to the delegators. This functionality is also located in Child Validator Set, in the `setCommission()` function.
 
-There are a number of libraries to assist in these processes which are described in greater detail in [`libs/`](../libs/README.md).
+There are a number of libraries to assist in these processes which are described in greater detail in [`lib/`](../lib/README.md).
 
 ## MRC
 

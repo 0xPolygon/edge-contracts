@@ -9,9 +9,9 @@ import {StdAssertions} from "forge-std/StdAssertions.sol";
 
 // 📦 BOILERPLATE
 import {StateReceiver} from "contracts/child/StateReceiver.sol";
-import {QueuedValidator} from "contracts/libs/ValidatorQueue.sol";
-import {Withdrawal} from "contracts/libs/WithdrawalQueue.sol";
-import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/IValidator.sol";
+import {QueuedValidator} from "contracts/lib/ValidatorQueue.sol";
+import {Withdrawal} from "contracts/lib/WithdrawalQueue.sol";
+import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/lib/IValidator.sol";
 
 // ⭐️ ASSERTIONS
 abstract contract Assertions is StdAssertions {

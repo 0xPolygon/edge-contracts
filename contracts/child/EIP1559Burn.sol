@@ -2,8 +2,8 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "../interfaces/IChildERC20.sol";
-import "../interfaces/IChildERC20Predicate.sol";
+import "../interfaces/child/IChildERC20.sol";
+import "../interfaces/child/IChildERC20Predicate.sol";
 
 /**
     @title EIP1559Burn

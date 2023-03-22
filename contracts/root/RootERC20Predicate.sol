@@ -4,8 +4,8 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/IRootERC20Predicate.sol";
-import "../interfaces/IL2StateReceiver.sol";
+import "../interfaces/root/IRootERC20Predicate.sol";
+import "../interfaces/root/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string

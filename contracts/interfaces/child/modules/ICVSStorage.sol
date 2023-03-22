@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../IValidator.sol";
+import "../../lib/IValidator.sol";
 
 struct UptimeData {
     address validator;

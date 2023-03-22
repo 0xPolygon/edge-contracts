@@ -2,7 +2,7 @@
 // solium-disable security/no-assign-params
 
 pragma solidity 0.8.17;
-import "../interfaces/IBN256G2.sol";
+import "../interfaces/common/IBN256G2.sol";
 
 /**
  * @title Elliptic curve operations on twist points on bn256 (G2)

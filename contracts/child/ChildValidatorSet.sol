@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../interfaces/IChildValidatorSetBase.sol";
+import "../interfaces/child/IChildValidatorSetBase.sol";
 import "./modules/CVSStorage.sol";
 import "./modules/CVSAccessControl.sol";
 import "./modules/CVSWithdrawal.sol";
@@ -9,9 +9,9 @@ import "./modules/CVSStaking.sol";
 import "./modules/CVSDelegation.sol";
 import "./System.sol";
 
-import "../libs/ValidatorStorage.sol";
-import "../libs/ValidatorQueue.sol";
-import "../libs/SafeMathInt.sol";
+import "../lib/ValidatorStorage.sol";
+import "../lib/ValidatorQueue.sol";
+import "../lib/SafeMathInt.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 
 // solhint-disable max-states-count

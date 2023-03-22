@@ -2,8 +2,8 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../interfaces/ICheckpointManager.sol";
-import "../interfaces/IExitHelper.sol";
+import "../interfaces/root/ICheckpointManager.sol";
+import "../interfaces/root/IExitHelper.sol";
 
 contract ExitHelper is IExitHelper, Initializable {
     mapping(uint256 => bool) public processedExits;

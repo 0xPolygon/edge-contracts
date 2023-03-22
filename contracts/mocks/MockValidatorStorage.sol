@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../libs/ValidatorStorage.sol";
+import "../lib/ValidatorStorage.sol";
 
 contract MockValidatorStorage {
     // slither-disable-next-line uninitialized-state

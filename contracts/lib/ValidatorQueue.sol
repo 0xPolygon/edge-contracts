@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../interfaces/IValidatorQueue.sol";
-import "../interfaces/IValidator.sol";
+import "../interfaces/lib/IValidatorQueue.sol";
+import "../interfaces/lib/IValidator.sol";
 
 /**
  * @title Validator Queue Lib

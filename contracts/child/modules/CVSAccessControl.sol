@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../../interfaces/modules/ICVSAccessControl.sol";
+import "../../interfaces/child/modules/ICVSAccessControl.sol";
 import "./CVSStorage.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
