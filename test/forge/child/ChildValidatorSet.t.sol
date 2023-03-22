@@ -7,10 +7,9 @@ import {ChildValidatorSet} from "contracts/child/ChildValidatorSet.sol";
 import {System} from "contracts/child/ChildValidatorSet.sol";
 import {BLS} from "contracts/common/BLS.sol";
 import "contracts/interfaces/Errors.sol";
-import "contracts/interfaces/IValidator.sol";
-import "contracts/interfaces/modules/ICVSStorage.sol";
-import "contracts/interfaces/IValidator.sol";
-import "contracts/interfaces/IChildValidatorSetBase.sol";
+import "contracts/interfaces/lib/IValidator.sol";
+import "contracts/interfaces/child/modules/ICVSStorage.sol";
+import "contracts/interfaces/child/IChildValidatorSetBase.sol";
 
 abstract contract Uninitialized is Test, System {
     ChildValidatorSet childValidatorSet;

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../../interfaces/modules/ICVSStaking.sol";
+import "../../interfaces/child/modules/ICVSStaking.sol";
 import "./CVSStorage.sol";
 import "./CVSAccessControl.sol";
 import "./CVSWithdrawal.sol";
 import "../../interfaces/Errors.sol";
 
-import "../../libs/ValidatorStorage.sol";
-import "../../libs/ValidatorQueue.sol";
-import "../../libs/SafeMathInt.sol";
+import "../../lib/ValidatorStorage.sol";
+import "../../lib/ValidatorQueue.sol";
+import "../../lib/SafeMathInt.sol";
 
 abstract contract CVSStaking is ICVSStaking, CVSStorage, CVSAccessControl, CVSWithdrawal {
     using ValidatorStorageLib for ValidatorTree;

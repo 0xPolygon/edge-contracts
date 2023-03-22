@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../libs/ValidatorQueue.sol";
+import "../lib/ValidatorQueue.sol";
 
 contract MockValidatorQueue {
     using ValidatorQueueLib for ValidatorQueue;

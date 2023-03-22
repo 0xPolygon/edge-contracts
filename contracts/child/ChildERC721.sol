@@ -4,8 +4,8 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "../libs/EIP712MetaTransaction.sol";
-import "../interfaces/IChildERC721.sol";
+import "../lib/EIP712MetaTransaction.sol";
+import "../interfaces/child/IChildERC721.sol";
 
 /**
     @title ChildERC721

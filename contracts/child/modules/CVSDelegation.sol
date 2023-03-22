@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../../interfaces/modules/ICVSDelegation.sol";
+import "../../interfaces/child/modules/ICVSDelegation.sol";
 import "./CVSStorage.sol";
 import "./CVSWithdrawal.sol";
 import "../../interfaces/Errors.sol";
 
-import "../../libs/ValidatorStorage.sol";
-import "../../libs/ValidatorQueue.sol";
-import "../../libs/RewardPool.sol";
-import "../../libs/SafeMathInt.sol";
+import "../../lib/ValidatorStorage.sol";
+import "../../lib/ValidatorQueue.sol";
+import "../../lib/RewardPool.sol";
+import "../../lib/SafeMathInt.sol";
 
 abstract contract CVSDelegation is ICVSDelegation, CVSStorage, CVSWithdrawal {
     using ValidatorStorageLib for ValidatorTree;
