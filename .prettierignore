@@ -8,7 +8,7 @@ typechain-types
 .husky
 .prettierignore
 foundry.toml
-lib
+forge
 forge-cache
 out
 !/broadcast

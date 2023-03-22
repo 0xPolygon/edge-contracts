@@ -10,7 +10,7 @@ describe("ValidatorStorage", async () => {
 
   before(async () => {
     accounts = await ethers.getSigners();
-    vs = await (await ethers.getContractFactory("MockValidatorStorage")).deploy() as MockValidatorStorage;
+    vs = (await (await ethers.getContractFactory("MockValidatorStorage")).deploy()) as MockValidatorStorage;
   });
 
   it("should be able to insert values", async () => {

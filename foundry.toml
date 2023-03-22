@@ -1,7 +1,7 @@
 [profile.default]
 src = 'contracts'
 test = 'test/forge'
-libs = ['node_modules', 'lib']
+libs = ['node_modules', 'forge']
 out = 'out'
 cache_path  = 'forge-cache'
 remappings = [

@@ -1,4 +1,4 @@
-# ISupernetManager
+# SupernetManager
 
 
 
@@ -10,13 +10,30 @@
 
 ## Methods
 
+### id
+
+```solidity
+function id() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### onInit
 
 ```solidity
-function onInit(uint256 id) external nonpayable
+function onInit(uint256 id_) external nonpayable
 ```
 
-called when a new child chain is registered
+
 
 
 
@@ -24,7 +41,7 @@ called when a new child chain is registered
 
 | Name | Type | Description |
 |---|---|---|
-| id | uint256 | undefined |
+| id_ | uint256 | undefined |
 
 ### onStake
 
