@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "../interfaces/lib/IValidatorStorage.sol";
 import "../interfaces/lib/IValidator.sol";
