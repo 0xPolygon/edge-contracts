@@ -19,6 +19,7 @@ struct Validator {
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, SupernetManager {
     using SafeERC20 for IERC20;
 
+    bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
     uint256 private constant SLASHING_PERCENTAGE = 50;
@@ -105,7 +106,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
         uint256 amount,
         bytes calldata /* data */
     ) internal override onlyValidator(validator) {
-        STATE_SENDER.syncState(CHILD_VALIDATOR_SET, abi.encode(validator, amount));
+        STATE_SENDER.syncState(CHILD_VALIDATOR_SET, abi.encode(STAKE_SIG, validator, amount));
     }
 
     function _unstake(address validator, uint256 amount) internal {
