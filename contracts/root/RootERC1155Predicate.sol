@@ -32,8 +32,7 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
         address newStateSender,
         address newExitHelper,
         address newChildERC1155Predicate,
-        address newChildTokenTemplate,
-        address nativeTokenRootAddress
+        address newChildTokenTemplate
     ) external initializer {
         require(
             newStateSender != address(0) &&
@@ -46,10 +45,6 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
         exitHelper = newExitHelper;
         childERC1155Predicate = newChildERC1155Predicate;
         childTokenTemplate = newChildTokenTemplate;
-        if (nativeTokenRootAddress != address(0)) {
-            rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
-            emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
-        }
     }
 
     /**
