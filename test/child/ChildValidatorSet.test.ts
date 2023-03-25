@@ -585,13 +585,6 @@ describe("ChildValidatorSet", () => {
       const delegateAmount = minDelegation + 1;
       const restake = false;
 
-      // //Register accounts[2] as validator
-      // await childValidatorSet.addToWhitelist([accounts[2].address]);
-      // const keyPair = mcl.newKeyPair();
-      // const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[2].address, keyPair.secret).signature;
-
-      // await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
-      // await childValidatorSet.connect(accounts[2]).stake({ value: minStake });
       const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[0].address, restake, {
         value: delegateAmount,
       });
