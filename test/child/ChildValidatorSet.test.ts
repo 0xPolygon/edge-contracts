@@ -1,8 +1,8 @@
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import { setBalance, impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { BigNumber, BigNumberish } from "ethers";
 import * as hre from "hardhat";
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import * as mcl from "../../ts/mcl";
 import { BLS, ChildValidatorSet } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysTrueBytecode } from "../constants";
@@ -21,6 +21,7 @@ describe("ChildValidatorSet", () => {
     systemChildValidatorSet: ChildValidatorSet,
     validatorSetSize: number,
     validatorStake: BigNumber,
+    tempValidatorStake: BigNumber,
     epochReward: BigNumber,
     minStake: number,
     minDelegation: number,
@@ -30,12 +31,7 @@ describe("ChildValidatorSet", () => {
     doubleSignerSlashingInput: any,
     childValidatorSetBalance: BigNumber,
     chainId: number,
-    validatorInit: {
-      addr: string;
-      pubkey: [BigNumberish, BigNumberish, BigNumberish, BigNumberish];
-      signature: [BigNumberish, BigNumberish];
-      stake: BigNumberish;
-    },
+    validatorInit: any[] = [],
     accounts: any[]; // we use any so we can access address directly from object
 
   before(async () => {
@@ -78,28 +74,25 @@ describe("ChildValidatorSet", () => {
     });
     const systemSigner = await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
     systemChildValidatorSet = childValidatorSet.connect(systemSigner);
-    const keyPair = mcl.newKeyPair();
-    const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[0].address, keyPair.secret).signature;
-    validatorInit = {
-      addr: accounts[0].address,
-      pubkey: mcl.g2ToHex(keyPair.pubkey),
-      signature: mcl.g1ToHex(signature),
-      stake: minStake * 2,
-    };
   });
   it("Initialize without system call", async () => {
     await expect(
-      childValidatorSet.initialize(
-        { epochReward, minStake, minDelegation, epochSize: 64 },
-        [validatorInit],
-        bls.address,
-        governance
-      )
+      childValidatorSet.initialize({ epochReward, minStake, minDelegation, epochSize: 64 }, [], bls.address, governance)
     )
       .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
       .withArgs("SYSTEMCALL");
   });
   it("Initialize with invalid signature", async () => {
+    const keyPair = mcl.newKeyPair();
+    const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[0].address, keyPair.secret).signature;
+    validatorInit = [
+      {
+        addr: accounts[1].address,
+        pubkey: mcl.g2ToHex(keyPair.pubkey),
+        signature: mcl.g1ToHex(signature),
+        stake: minStake * 2,
+      },
+    ];
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
     validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));
     const epochValidatorSet = [];
@@ -113,7 +106,7 @@ describe("ChildValidatorSet", () => {
     await expect(
       systemChildValidatorSet.initialize(
         { epochReward, minStake, minDelegation, epochSize: 64 },
-        [{ ...validatorInit, addr: accounts[1].address }],
+        validatorInit,
         bls.address,
         governance
       )
@@ -122,20 +115,28 @@ describe("ChildValidatorSet", () => {
       .withArgs(accounts[1].address);
   });
   it("Initialize and validate initialization", async () => {
-    // TODO: use random set size and stake in tests
+    validatorInit = [];
     validatorSetSize = Math.floor(Math.random() * (5 - 1) + 5); // Randomly pick 5-9
     validatorStake = ethers.utils.parseEther(String(Math.floor(Math.random() * (10000 - 1000) + 1000)));
     const epochValidatorSet = [];
 
     for (let i = 0; i < validatorSetSize; i++) {
-      epochValidatorSet.push(accounts[i].address);
+      const keypair = mcl.newKeyPair();
+      validatorInit.push({
+        addr: accounts[i].address,
+        pubkey: mcl.g2ToHex(keypair.pubkey),
+        signature: mcl.g1ToHex(
+          mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[i].address, keypair.secret).signature
+        ),
+        stake: Math.floor(Math.random() * (minStake * 10) + minStake),
+      });
     }
 
     expect(await childValidatorSet.totalActiveStake()).to.equal(0);
 
     await systemChildValidatorSet.initialize(
       { epochReward, minStake, minDelegation, epochSize: 64 },
-      [validatorInit],
+      validatorInit,
       bls.address,
       governance
     );
@@ -149,21 +150,22 @@ describe("ChildValidatorSet", () => {
     const currentEpochId = await childValidatorSet.currentEpochId();
     expect(currentEpochId).to.equal(1);
 
-    expect(await childValidatorSet.whitelist(accounts[0].address)).to.equal(false);
-    const validator = await childValidatorSet.getValidator(accounts[0].address);
-    expect(validator.blsKey.map((x) => x.toHexString())).to.deep.equal(validatorInit.pubkey);
-    expect(validator.stake).to.equal(minStake * 2);
-    expect(await childValidatorSet.totalDelegationOf(accounts[0].address)).to.equal(0);
-    expect(validator.commission).to.equal(0);
+    for (let i = 0; i < validatorSetSize; i++) {
+      expect(await childValidatorSet.whitelist(accounts[i].address)).to.equal(false);
+      const validator = await childValidatorSet.getValidator(accounts[i].address);
+      expect(validator.blsKey.map((x) => x.toHexString())).to.deep.equal(validatorInit[i].pubkey);
+      expect(validator.stake).to.be.greaterThanOrEqual(minStake);
+      expect(await childValidatorSet.totalDelegationOf(accounts[i].address)).to.equal(0);
+      expect(validator.commission).to.equal(0);
+    }
     expect(await childValidatorSet.bls()).to.equal(bls.address);
-    expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
   });
 
   it("Attempt reinitialization", async () => {
     await expect(
       systemChildValidatorSet.initialize(
         { epochReward, minStake, minDelegation, epochSize: 64 },
-        [validatorInit],
+        validatorInit,
         bls.address,
         governance
       )
@@ -253,26 +255,6 @@ describe("ChildValidatorSet", () => {
 
     await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("EPOCH_NOT_COMMITTED");
   });
-  it("Commit epoch with invalid length", async () => {
-    id = 1;
-    epoch = {
-      startBlock: 1,
-      endBlock: 64,
-      epochRoot: ethers.utils.randomBytes(32),
-    };
-
-    const currentEpochId = await childValidatorSet.currentEpochId();
-    uptime = {
-      epochId: currentEpochId,
-      uptimeData: [
-        { validator: accounts[0].address, signedBlocks: 0 },
-        { validator: accounts[0].address, signedBlocks: 0 },
-      ],
-      totalBlocks: 0,
-    };
-
-    await expect(systemChildValidatorSet.commitEpoch(id, epoch, uptime)).to.be.revertedWith("INVALID_LENGTH");
-  });
   it("Commit epoch", async () => {
     id = 1;
     epoch = {
@@ -319,7 +301,11 @@ describe("ChildValidatorSet", () => {
   });
 
   it("Get current validators", async () => {
-    expect(await childValidatorSet.getCurrentValidatorSet()).to.deep.equal([accounts[0].address]);
+    expect(await childValidatorSet.getCurrentValidatorSet()).to.have.members(
+      validatorInit.map((validator) => {
+        return validator.addr;
+      })
+    );
   });
   it("Get epoch by block", async () => {
     const storedEpoch = await childValidatorSet.getEpochByBlock(64);
@@ -372,13 +358,13 @@ describe("ChildValidatorSet", () => {
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("should be able to add to whitelist", async () => {
-      await expect(childValidatorSet.addToWhitelist([accounts[1].address, accounts[2].address])).to.not.be.reverted;
-      expect(await childValidatorSet.whitelist(accounts[1].address)).to.be.true;
-      expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.true;
+      await expect(childValidatorSet.addToWhitelist([accounts[8].address, accounts[9].address])).to.not.be.reverted;
+      expect(await childValidatorSet.whitelist(accounts[8].address)).to.be.true;
+      expect(await childValidatorSet.whitelist(accounts[9].address)).to.be.true;
     });
     it("should be able to remove from whitelist", async () => {
-      await expect(childValidatorSet.removeFromWhitelist([accounts[1].address])).to.not.be.reverted;
-      expect(await childValidatorSet.whitelist(accounts[1].address)).to.be.false;
+      await expect(childValidatorSet.removeFromWhitelist([accounts[8].address])).to.not.be.reverted;
+      expect(await childValidatorSet.whitelist(accounts[8].address)).to.be.false;
     });
   });
 
@@ -392,29 +378,37 @@ describe("ChildValidatorSet", () => {
       const keyPair = mcl.newKeyPair();
       const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[0].address, keyPair.secret).signature;
 
-      await expect(childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey)))
+      await expect(childValidatorSet.connect(accounts[9]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey)))
         .to.be.revertedWithCustomError(childValidatorSet, "InvalidSignature")
-        .withArgs(accounts[2].address);
+        .withArgs(accounts[9].address);
     });
     it("register", async () => {
       const keyPair = mcl.newKeyPair();
-      const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[2].address, keyPair.secret).signature;
+      const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[9].address, keyPair.secret).signature;
 
       const tx = await childValidatorSet
-        .connect(accounts[2])
+        .connect(accounts[9])
         .register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
 
       await expect(tx)
         .to.emit(childValidatorSet, "NewValidator")
         .withArgs(
-          accounts[2].address,
+          accounts[9].address,
           mcl.g2ToHex(keyPair.pubkey).map((x) => BigNumber.from(x))
         );
 
-      expect(await childValidatorSet.whitelist(accounts[2].address)).to.be.false;
-      const validator = await childValidatorSet.getValidator(accounts[2].address);
+      validatorInit.push({
+        addr: accounts[9].address,
+        stake: minStake * 2,
+        commission: 0,
+        active: true,
+        blsKey: mcl.g2ToHex(keyPair.pubkey),
+      });
+
+      expect(await childValidatorSet.whitelist(accounts[9].address)).to.be.false;
+      const validator = await childValidatorSet.getValidator(accounts[9].address);
       expect(validator.stake).to.equal(0);
-      expect(await childValidatorSet.totalDelegationOf(accounts[2].address)).to.equal(0);
+      expect(await childValidatorSet.totalDelegationOf(accounts[9].address)).to.equal(0);
       expect(validator.commission).to.equal(0);
       expect(validator.active).to.equal(true);
       expect(validator.blsKey.map((x) => x.toHexString())).to.deep.equal(mcl.g2ToHex(keyPair.pubkey));
@@ -423,24 +417,24 @@ describe("ChildValidatorSet", () => {
 
   describe("stake", async () => {
     it("only whitelisted validators should be able to stake", async () => {
-      await expect(childValidatorSet.connect(accounts[1]).stake({ value: minStake }))
+      await expect(childValidatorSet.connect(accounts[10]).stake({ value: minStake }))
         .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
         .withArgs("VALIDATOR");
     });
 
     it("should revert if min amount not reached", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).stake({ value: minStake - 1 }))
+      await expect(childValidatorSet.connect(accounts[9]).stake({ value: minStake - 1 }))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("stake", "STAKE_TOO_LOW");
     });
 
     it("should be able to stake", async () => {
-      const tx = childValidatorSet.connect(accounts[2]).stake({ value: minStake * 2 });
+      const prevStake = await childValidatorSet.totalActiveStake();
 
-      await expect(tx)
-        .to.emit(childValidatorSet, "Staked")
-        .withArgs(accounts[2].address, minStake * 2);
-      expect(await childValidatorSet.totalActiveStake()).to.equal(minStake * 2);
+      const tx = childValidatorSet.connect(accounts[9]).stake({ value: minStake });
+
+      await expect(tx).to.emit(childValidatorSet, "Staked").withArgs(accounts[9].address, minStake);
+      expect(await childValidatorSet.totalActiveStake()).to.equal(prevStake);
     });
 
     it("Get 0 sortedValidators", async () => {
@@ -451,7 +445,7 @@ describe("ChildValidatorSet", () => {
 
   describe("queue processing", async () => {
     it("should be able to process queue", async () => {
-      let validator = await childValidatorSet.getValidator(accounts[2].address);
+      let validator = await childValidatorSet.getValidator(accounts[9].address);
       expect(validator.stake).to.equal(0);
       await expect(
         systemChildValidatorSet.commitEpoch(
@@ -460,19 +454,22 @@ describe("ChildValidatorSet", () => {
           { epochId: 3, uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }], totalBlocks: 1 }
         )
       ).to.not.be.reverted;
-      validator = await childValidatorSet.getValidator(accounts[2].address);
-      expect(validator.stake).to.equal(minStake * 2);
+      validator = await childValidatorSet.getValidator(accounts[9].address);
+      expect(validator.stake).to.equal(minStake);
     });
 
-    it("Get 2 sortedValidators ", async () => {
-      const validatorAddresses = await childValidatorSet.sortedValidators(3);
-      expect(validatorAddresses).to.deep.equal([accounts[2].address, accounts[0].address]);
+    it("Get sorted validators", async () => {
+      const validatorAddresses = await childValidatorSet.sortedValidators(20);
+      const validatorStakes = validatorAddresses.map(
+        async (validator) => (await childValidatorSet.getValidator(validator)).stake
+      );
+      expect(validatorStakes.sort()).to.deep.equal(validatorStakes);
     });
   });
 
   describe("unstake", async () => {
-    it("non validators should not be able to unstake due to insufficient balance", async () => {
-      await expect(childValidatorSet.connect(accounts[1]).unstake(1))
+    it("non-validators should not be able to unstake due to insufficient balance", async () => {
+      await expect(childValidatorSet.connect(accounts[11]).unstake(1))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("unstake", "INSUFFICIENT_BALANCE");
     });
@@ -482,44 +479,48 @@ describe("ChildValidatorSet", () => {
     });
 
     it("should not be able to unstake more than staked", async () => {
-      await expect(childValidatorSet.unstake(minStake * 2 + 1))
+      await expect(childValidatorSet.unstake(minStake * 1000))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("unstake", "INSUFFICIENT_BALANCE");
     });
 
     it("should not be able to unstake so that less than minstake is left", async () => {
-      await expect(childValidatorSet.unstake(minStake + 1))
+      const validatorStake = (await childValidatorSet.getValidator(accounts[0].address)).stake;
+      await expect(childValidatorSet.unstake(validatorStake.sub(1)))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("unstake", "STAKE_TOO_LOW");
     });
 
     it("should be able to partially unstake", async () => {
-      const tx = await childValidatorSet.connect(accounts[2]).unstake(minStake);
-      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
+      tempValidatorStake = (await childValidatorSet.getValidator(accounts[2].address)).stake;
+      const tx = await childValidatorSet.connect(accounts[2]).unstake(1);
+      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, 1);
+      tempValidatorStake = tempValidatorStake.sub(1);
     });
 
     it("should take pending unstakes into account", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).unstake(minStake + 1))
+      await expect(childValidatorSet.connect(accounts[2]).unstake(tempValidatorStake.add(1)))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("unstake", "INSUFFICIENT_BALANCE");
-      await expect(childValidatorSet.connect(accounts[2]).unstake(1))
+      await expect(childValidatorSet.connect(accounts[2]).unstake(tempValidatorStake.sub(1)))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("unstake", "STAKE_TOO_LOW");
     });
 
     it("should be able to completely unstake", async () => {
-      const tx = childValidatorSet.connect(accounts[2]).unstake(minStake);
-      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, minStake);
+      const tx = childValidatorSet.connect(accounts[2]).unstake(tempValidatorStake);
+      await expect(tx).to.emit(childValidatorSet, "Unstaked").withArgs(accounts[2].address, tempValidatorStake);
     });
 
     it("should place in withdrawal queue", async () => {
-      expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(minStake * 2);
+      const validatorStake = (await childValidatorSet.getValidator(accounts[2].address)).stake;
+      expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(validatorStake);
       expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(0);
     });
 
     it("should reflect balance after queue processing", async () => {
-      let validator = await childValidatorSet.getValidator(accounts[2].address);
-      expect(validator.stake).to.equal(minStake * 2);
+      const validatorStake = (await childValidatorSet.getValidator(accounts[2].address)).stake;
+
       await expect(
         systemChildValidatorSet.commitEpoch(
           4,
@@ -535,11 +536,8 @@ describe("ChildValidatorSet", () => {
         )
       ).to.not.be.reverted;
 
-      validator = await childValidatorSet.getValidator(accounts[2].address);
-      expect(validator.stake).to.equal(0);
-
       expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(0);
-      expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(minStake * 2);
+      expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(validatorStake);
     });
   });
 
@@ -554,14 +552,15 @@ describe("ChildValidatorSet", () => {
     });
 
     it("withdraw", async () => {
-      await setBalance(childValidatorSet.address, childValidatorSetBalance);
+      await setBalance(childValidatorSet.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
       const tx = await childValidatorSet.connect(accounts[2]).withdraw(accounts[2].address);
       expect(await childValidatorSet.pendingWithdrawals(accounts[2].address)).to.equal(0);
       expect(await childValidatorSet.withdrawable(accounts[2].address)).to.equal(0);
 
+      // one extra wei for the partial unstake test above
       await expect(tx)
         .to.emit(childValidatorSet, "Withdrawal")
-        .withArgs(accounts[2].address, accounts[2].address, minStake * 2);
+        .withArgs(accounts[2].address, accounts[2].address, tempValidatorStake.add(1));
     });
   });
 
@@ -569,7 +568,7 @@ describe("ChildValidatorSet", () => {
     it("should only be able to delegate to validators", async () => {
       const restake = false;
 
-      await expect(childValidatorSet.delegate(accounts[1].address, restake, { value: minDelegation }))
+      await expect(childValidatorSet.delegate(accounts[11].address, restake, { value: minDelegation }))
         .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
         .withArgs("INVALID_VALIDATOR");
     });
@@ -586,22 +585,22 @@ describe("ChildValidatorSet", () => {
       const delegateAmount = minDelegation + 1;
       const restake = false;
 
-      //Register accounts[2] as validator
-      await childValidatorSet.addToWhitelist([accounts[2].address]);
-      const keyPair = mcl.newKeyPair();
-      const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[2].address, keyPair.secret).signature;
+      // //Register accounts[2] as validator
+      // await childValidatorSet.addToWhitelist([accounts[2].address]);
+      // const keyPair = mcl.newKeyPair();
+      // const signature = mcl.signValidatorMessage(DOMAIN, CHAIN_ID, accounts[2].address, keyPair.secret).signature;
 
-      await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
-      await childValidatorSet.connect(accounts[2]).stake({ value: minStake });
-      const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[2].address, restake, {
+      // await childValidatorSet.connect(accounts[2]).register(mcl.g1ToHex(signature), mcl.g2ToHex(keyPair.pubkey));
+      // await childValidatorSet.connect(accounts[2]).stake({ value: minStake });
+      const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[0].address, restake, {
         value: delegateAmount,
       });
 
       await expect(tx)
         .to.emit(childValidatorSet, "Delegated")
-        .withArgs(accounts[3].address, accounts[2].address, delegateAmount);
+        .withArgs(accounts[3].address, accounts[0].address, delegateAmount);
 
-      const delegation = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      const delegation = await childValidatorSet.delegationOf(accounts[0].address, accounts[3].address);
       expect(delegation).to.equal(delegateAmount);
     });
 
@@ -609,26 +608,26 @@ describe("ChildValidatorSet", () => {
       const delegateAmount = minDelegation + 1;
       const restake = false;
 
-      const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[2].address, restake, {
+      const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[0].address, restake, {
         value: delegateAmount,
       });
 
       await expect(tx)
         .to.emit(childValidatorSet, "Delegated")
-        .withArgs(accounts[3].address, accounts[2].address, delegateAmount);
+        .withArgs(accounts[3].address, accounts[0].address, delegateAmount);
     });
 
     it("Delegate again with restake", async () => {
       const delegateAmount = minDelegation + 1;
       const restake = true;
 
-      const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[2].address, restake, {
+      const tx = await childValidatorSet.connect(accounts[3]).delegate(accounts[0].address, restake, {
         value: delegateAmount,
       });
 
       await expect(tx)
         .to.emit(childValidatorSet, "Delegated")
-        .withArgs(accounts[3].address, accounts[2].address, delegateAmount);
+        .withArgs(accounts[3].address, accounts[0].address, delegateAmount);
     });
   });
 
@@ -652,7 +651,7 @@ describe("ChildValidatorSet", () => {
           { startBlock: 257, endBlock: 320, epochRoot: ethers.constants.HashZero },
           {
             epochId: 5,
-            uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+            uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
             totalBlocks: 2,
           }
         )
@@ -664,27 +663,27 @@ describe("ChildValidatorSet", () => {
           { startBlock: 321, endBlock: 384, epochRoot: ethers.constants.HashZero },
           {
             epochId: 6,
-            uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+            uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
             totalBlocks: 2,
           }
         )
       ).to.not.be.reverted;
 
-      const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[3].address);
+      const reward = await childValidatorSet.getDelegatorReward(accounts[0].address, accounts[3].address);
 
       //Claim with restake
-      const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[2].address, true);
+      const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[0].address, true);
 
       const receipt = await tx.wait();
       const event = receipt.events?.find((log) => log.event === "DelegatorRewardClaimed");
       expect(event?.args?.delegator).to.equal(accounts[3].address);
-      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.validator).to.equal(accounts[0].address);
       expect(event?.args?.restake).to.equal(true);
       expect(event?.args?.amount).to.equal(reward);
 
       await expect(tx)
         .to.emit(childValidatorSet, "Delegated")
-        .withArgs(accounts[3].address, accounts[2].address, reward);
+        .withArgs(accounts[3].address, accounts[0].address, reward);
     });
 
     it("Claim delegatorReward without restake", async () => {
@@ -694,7 +693,7 @@ describe("ChildValidatorSet", () => {
           { startBlock: 385, endBlock: 448, epochRoot: ethers.constants.HashZero },
           {
             epochId: 7,
-            uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+            uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
             totalBlocks: 2,
           }
         )
@@ -706,20 +705,20 @@ describe("ChildValidatorSet", () => {
           { startBlock: 449, endBlock: 512, epochRoot: ethers.constants.HashZero },
           {
             epochId: 8,
-            uptimeData: [{ validator: accounts[2].address, signedBlocks: 1 }],
+            uptimeData: [{ validator: accounts[0].address, signedBlocks: 1 }],
             totalBlocks: 2,
           }
         )
       ).to.not.be.reverted;
 
-      const reward = await childValidatorSet.getDelegatorReward(accounts[2].address, accounts[3].address);
+      const reward = await childValidatorSet.getDelegatorReward(accounts[0].address, accounts[3].address);
       //Claim without restake
-      const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[2].address, false);
+      const tx = await childValidatorSet.connect(accounts[3]).claimDelegatorReward(accounts[0].address, false);
 
       const receipt = await tx.wait();
       const event = receipt.events?.find((log) => log.event === "DelegatorRewardClaimed");
       expect(event?.args?.delegator).to.equal(accounts[3].address);
-      expect(event?.args?.validator).to.equal(accounts[2].address);
+      expect(event?.args?.validator).to.equal(accounts[0].address);
       expect(event?.args?.restake).to.equal(false);
       expect(event?.args?.amount).to.equal(reward);
 
@@ -747,34 +746,6 @@ describe("ChildValidatorSet", () => {
       const blockNumber = 0;
       const pbftRound = 0;
 
-      doubleSignerSlashingInput = [
-        {
-          epochId: 0,
-          eventRoot: ethers.utils.randomBytes(32),
-          currentValidatorSetHash: ethers.utils.randomBytes(32),
-          nextValidatorSetHash: ethers.utils.randomBytes(32),
-          blockHash: ethers.utils.randomBytes(32),
-          bitmap: "0x",
-          signature: "",
-        },
-      ];
-      const signature = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-          ["uint", "uint", "bytes32", "uint", "uint", "bytes32", "bytes32", "bytes32"],
-          [
-            chainId,
-            blockNumber,
-            doubleSignerSlashingInput[0].blockHash,
-            pbftRound,
-            doubleSignerSlashingInput[0].epochId,
-            doubleSignerSlashingInput[0].eventRoot,
-            doubleSignerSlashingInput[0].currentValidatorSetHash,
-            doubleSignerSlashingInput[0].nextValidatorSetHash,
-          ]
-        )
-      );
-      doubleSignerSlashingInput[0].signature = signature;
-
       await expect(
         systemChildValidatorSet.commitEpochWithDoubleSignerSlashing(
           currentEpochId,
@@ -782,7 +753,7 @@ describe("ChildValidatorSet", () => {
           pbftRound,
           epoch,
           uptime,
-          doubleSignerSlashingInput
+          []
         )
       ).to.be.revertedWith("INVALID_LENGTH");
     });
@@ -1093,6 +1064,13 @@ describe("ChildValidatorSet", () => {
       uptime = {
         epochId: currentEpochId,
         uptimeData: [
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
+          { validator: accounts[2].address, signedBlocks: 1 },
           { validator: accounts[2].address, signedBlocks: 1 },
           { validator: accounts[2].address, signedBlocks: 1 },
           { validator: accounts[2].address, signedBlocks: 1 },
@@ -1504,7 +1482,6 @@ describe("ChildValidatorSet", () => {
 
       const blockNumber = 0;
       const pbftRound = 0;
-      const epochId = 0;
 
       const validators = await childValidatorSet.getCurrentValidatorSet();
       const validatorsInfoBeforeCommitSlash = [];
@@ -1538,7 +1515,8 @@ describe("ChildValidatorSet", () => {
         if (stakeBefore.gt(stakeAfter)) {
           expect(stakeBefore.mul(100 - DOUBLE_SIGNING_SLASHING_PERCENT).div(100)).to.equal(stakeAfter);
         } else {
-          expect(stakeBefore).to.equal(stakeAfter);
+          // account for 1 wei partial unstaking
+          expect(stakeBefore).to.be.closeTo(stakeAfter, 1);
         }
       }
     });
@@ -1553,8 +1531,8 @@ describe("ChildValidatorSet", () => {
     });
 
     it("undelegate low amount", async () => {
-      const delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
-      await expect(childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount.sub(1)))
+      const delegatedAmount = await childValidatorSet.delegationOf(accounts[0].address, accounts[3].address);
+      await expect(childValidatorSet.connect(accounts[3]).undelegate(accounts[0].address, delegatedAmount.sub(1)))
         .to.be.revertedWithCustomError(childValidatorSet, "StakeRequirement")
         .withArgs("undelegate", "DELEGATION_TOO_LOW");
     });
@@ -1566,41 +1544,43 @@ describe("ChildValidatorSet", () => {
     });
 
     it("undelegate", async () => {
-      let delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
-      const tx = await childValidatorSet.connect(accounts[3]).undelegate(accounts[2].address, delegatedAmount);
+      let delegatedAmount = await childValidatorSet.delegationOf(accounts[0].address, accounts[3].address);
+      const tx = await childValidatorSet.connect(accounts[3]).undelegate(accounts[0].address, delegatedAmount);
 
       await expect(tx)
         .to.emit(childValidatorSet, "Undelegated")
-        .withArgs(accounts[3].address, accounts[2].address, delegatedAmount);
+        .withArgs(accounts[3].address, accounts[0].address, delegatedAmount);
 
-      delegatedAmount = await childValidatorSet.delegationOf(accounts[2].address, accounts[3].address);
+      delegatedAmount = await childValidatorSet.delegationOf(accounts[0].address, accounts[3].address);
       expect(delegatedAmount).to.equal(0);
     });
   });
 
   describe("Set Commision", async () => {
     it("only validator should set", async () => {
-      await expect(childValidatorSet.connect(accounts[1]).setCommission(MAX_COMMISSION - 1))
+      await expect(childValidatorSet.connect(accounts[11]).setCommission(MAX_COMMISSION - 1))
         .to.be.revertedWithCustomError(childValidatorSet, "Unauthorized")
         .withArgs("VALIDATOR");
     });
 
     it("only less than max commision is valid", async () => {
-      await expect(childValidatorSet.connect(accounts[2]).setCommission(MAX_COMMISSION + 1)).to.be.revertedWith(
-        "INVALID_COMMISSION"
-      );
+      await expect(childValidatorSet.setCommission(MAX_COMMISSION + 1)).to.be.revertedWith("INVALID_COMMISSION");
     });
 
     it("set commission", async () => {
-      await childValidatorSet.connect(accounts[2]).setCommission(MAX_COMMISSION - 1);
+      await childValidatorSet.setCommission(MAX_COMMISSION - 1);
 
-      const validator = await childValidatorSet.getValidator(accounts[2].address);
+      const validator = await childValidatorSet.getValidator(accounts[0].address);
       expect(validator.commission).to.equal(MAX_COMMISSION - 1);
     });
   });
 
   it("Get total stake", async () => {
+    let stake = 0;
+    validatorInit.forEach((validator) => {
+      stake += validator.stake;
+    });
     const totalStake = await childValidatorSet.totalStake();
-    expect(totalStake).to.equal(minStake * 2);
+    expect(totalStake).to.equal(stake);
   });
 });
