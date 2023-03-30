@@ -37,7 +37,7 @@ describe("ChildERC1155", () => {
   });
 
   it("fail initialization", async () => {
-    await expect(childERC1155.initialize(ethers.constants.AddressZero, "", "")).to.be.revertedWith(
+    await expect(childERC1155.initialize(ethers.constants.AddressZero, "")).to.be.revertedWith(
       "ChildERC1155: BAD_INITIALIZATION"
     );
   });
@@ -47,14 +47,14 @@ describe("ChildERC1155", () => {
     expect(await childERC1155.predicate()).to.equal(ethers.constants.AddressZero);
 
     predicateChildERC1155 = childERC1155.connect(await ethers.getSigner(childERC1155Predicate.address));
-    await predicateChildERC1155.initialize(rootToken, "TEST", "TEST");
+    await predicateChildERC1155.initialize(rootToken, "TEST");
 
     expect(await childERC1155.rootToken()).to.equal(rootToken);
     expect(await childERC1155.predicate()).to.equal(childERC1155Predicate.address);
   });
 
   it("fail reinitialization", async () => {
-    await expect(childERC1155.initialize(ethers.constants.AddressZero, "", "")).to.be.revertedWith(
+    await expect(childERC1155.initialize(ethers.constants.AddressZero, "")).to.be.revertedWith(
       "Initializable: contract is already initialized"
     );
   });

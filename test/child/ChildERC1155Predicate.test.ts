@@ -406,7 +406,7 @@ describe("ChildERC1155Predicate", () => {
   it("fail deposit tokens of unknown child token: unmapped token", async () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
-    await childToken.initialize(rootToken, "TEST", "TEST");
+    await childToken.initialize(rootToken, "TEST");
     let stateSyncData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "address", "address", "address", "uint256", "uint256"],
       [
@@ -440,7 +440,7 @@ describe("ChildERC1155Predicate", () => {
   it("fail withdraw tokens of unknown child token: unmapped token", async () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
-    await childToken.initialize(rootToken, "TEST", "TEST");
+    await childToken.initialize(rootToken, "TEST");
     await expect(stateReceiverChildERC1155Predicate.withdraw(childToken.address, 0, 1)).to.be.revertedWith(
       "ChildERC1155Predicate: UNMAPPED_TOKEN"
     );
