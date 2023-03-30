@@ -15,7 +15,7 @@ interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
      * This value is immutable: it can only be set once during
      * initialization.
      */
-    function initialize(address rootToken_, string calldata name_, string calldata uri_) external;
+    function initialize(address rootToken_, string calldata uri_) external;
 
     /**
      * @notice Returns predicate address controlling the child token
