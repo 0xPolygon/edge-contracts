@@ -9,15 +9,9 @@ import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
 
-struct Validator {
-    uint256[4] blsKey;
-    uint256 stake;
-    bool isWhitelisted;
-    bool isActive;
-}
-
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, SupernetManager {
     using SafeERC20 for IERC20;
+    using GenesisLib for GenesisSet;
 
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
@@ -32,6 +26,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
 
     bytes32 public immutable DOMAIN;
 
+    GenesisSet private _genesis;
     mapping(address => Validator) public validators;
 
     modifier onlyValidator(address validator) {
@@ -82,6 +77,20 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
     /**
      * @inheritdoc ICustomSupernetManager
      */
+    function finalizeGenesis() external onlyOwner {
+        _genesis.finalize();
+    }
+
+    /**
+     * @inheritdoc ICustomSupernetManager
+     */
+    function enableStaking() external onlyOwner {
+        _genesis.enableStaking();
+    }
+
+    /**
+     * @inheritdoc ICustomSupernetManager
+     */
     function withdrawSlashedStake(address to) external onlyOwner {
         uint256 balance = MATIC.balanceOf(address(this));
         MATIC.safeTransfer(to, balance);
@@ -101,12 +110,25 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
         }
     }
 
+    /**
+     * @inheritdoc ICustomSupernetManager
+     */
+    function genesisSet() external view returns (GenesisValidator[] memory) {
+        return _genesis.set();
+    }
+
     function _onStake(
         address validator,
         uint256 amount,
         bytes calldata /* data */
     ) internal override onlyValidator(validator) {
-        STATE_SENDER.syncState(CHILD_VALIDATOR_SET, abi.encode(STAKE_SIG, validator, amount));
+        if (_genesis.gatheringGenesisValidators()) {
+            _genesis.insert(validator, amount);
+        } else if (_genesis.completed()) {
+            STATE_SENDER.syncState(CHILD_VALIDATOR_SET, abi.encode(STAKE_SIG, validator, amount));
+        } else {
+            revert Unauthorized("wait for genesis");
+        }
     }
 
     function _unstake(address validator, uint256 amount) internal {
