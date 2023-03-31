@@ -37,6 +37,9 @@ contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
         currentEpochId = 1;
     }
 
+    /**
+     * @inheritdoc IValidatorSet
+     */
     function commitEpoch(uint256 id, Epoch calldata epoch) external onlySystemCall {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
@@ -56,11 +59,17 @@ contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
         }
     }
 
+    /**
+     * @inheritdoc IValidatorSet
+     */
     function unstake(uint256 amount) external {
         _burn(msg.sender, amount);
         _registerWithdrawal(msg.sender, amount);
     }
 
+    /**
+     * @inheritdoc IValidatorSet
+     */
     function withdraw() external {
         WithdrawalQueue storage queue = _withdrawals[msg.sender];
         (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
@@ -69,6 +78,9 @@ contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
         STATE_SENDER.syncState(ROOT_CHAIN_MANAGER, abi.encode(UNSTAKE_SIG, msg.sender, amount));
     }
 
+    /**
+     * @inheritdoc IValidatorSet
+     */
     function totalBlocks(uint256 epochId) external view returns (uint256 length) {
         length = epochs[epochId].endBlock - epochs[epochId].startBlock + 1;
     }
@@ -99,8 +111,6 @@ contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
     function EPOCH_SIZE() external view override returns (uint256) {
         return _EPOCH_SIZE;
     }
-
-    function epochLenght(uint256 epochId) external view returns (uint256 length) {}
 
     function balanceOfAt(
         address account,

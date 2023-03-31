@@ -18,6 +18,9 @@ contract RewardDistributor is IRewardDistributor, System {
         BASE_REWARD = baseReward;
     }
 
+    /**
+     * @inheritdoc IRewardDistributor
+     */
     function distributeRewardFor(uint256 epochId, Uptime calldata uptime) external onlySystemCall {
         require(paidRewardPerEpoch[epochId] == 0, "REWARD_ALREADY_DISTRIBUTED");
         uint256 totalBlocks = VALIDATOR_SET.totalBlocks(epochId);
@@ -40,6 +43,9 @@ contract RewardDistributor is IRewardDistributor, System {
         _transferRewards(totalReward);
     }
 
+    /**
+     * @inheritdoc IRewardDistributor
+     */
     function withdrawReward() external {
         uint256 pendingReward = pendingRewards[msg.sender];
         pendingRewards[msg.sender] = 0;
