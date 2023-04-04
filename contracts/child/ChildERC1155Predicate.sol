@@ -193,6 +193,11 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
+        require(
+            receivers.length == tokenIds.length && tokenIds.length == amounts.length,
+            "ChildERC1155Predicate: INVALID_LENGTH"
+        );
+
         require(childToken.burnBatch(msg.sender, tokenIds, amounts), "ChildERC1155Predicate: BURN_FAILED");
 
         l2StateSender.syncState(
