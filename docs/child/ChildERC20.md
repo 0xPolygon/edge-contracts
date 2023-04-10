@@ -231,6 +231,22 @@ function initialize(address rootToken_, string name_, string symbol_, uint8 deci
 | symbol_ | string | undefined |
 | decimals_ | uint8 | undefined |
 
+### invalidateNext
+
+```solidity
+function invalidateNext(uint256 offset) external nonpayable
+```
+
+
+
+*Invalidates next &quot;offset&quot; number of nonces for the calling address*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| offset | uint256 | undefined |
+
 ### mint
 
 ```solidity

@@ -54,6 +54,13 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
         return returnData;
     }
 
+    /**
+     @dev Invalidates next "offset" number of nonces for the calling address
+     */
+    function invalidateNext(uint256 offset) external {
+        nonces[msg.sender] += offset;
+    }
+
     function getNonce(address user) external view returns (uint256 nonce) {
         nonce = nonces[user];
     }
