@@ -10,12 +10,12 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/IERC1155Met
  */
 interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
     /**
-     * @dev Sets the value for {rootToken}.
+     * @dev Sets the value for {rootToken} and {uri_}
      *
      * This value is immutable: it can only be set once during
      * initialization.
      */
-    function initialize(address rootToken_, string calldata name_, string calldata uri_) external;
+    function initialize(address rootToken_, string calldata uri_) external;
 
     /**
      * @notice Returns predicate address controlling the child token

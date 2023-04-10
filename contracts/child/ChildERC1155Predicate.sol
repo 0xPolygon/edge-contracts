@@ -268,17 +268,14 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
      * @dev Allows for 1-to-1 mappings for any root token to a child token
      */
     function _mapToken(bytes calldata data) private {
-        (, address rootToken, string memory name_, string memory uri_) = abi.decode(
-            data,
-            (bytes32, address, string, string)
-        );
+        (, address rootToken, string memory uri_) = abi.decode(data, (bytes32, address, string));
         assert(rootToken != address(0)); // invariant since root predicate performs the same check
         assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
         IChildERC1155 childToken = IChildERC1155(
             Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))
         );
         rootTokenToChildToken[rootToken] = address(childToken);
-        childToken.initialize(rootToken, name_, uri_);
+        childToken.initialize(rootToken, uri_);
 
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));

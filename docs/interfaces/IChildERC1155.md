@@ -107,19 +107,18 @@ Burns multiple NFTs from one address
 ### initialize
 
 ```solidity
-function initialize(address rootToken_, string name_, string uri_) external nonpayable
+function initialize(address rootToken_, string uri_) external nonpayable
 ```
 
 
 
-*Sets the value for {rootToken}. This value is immutable: it can only be set once during initialization.*
+*Sets the value for {rootToken} and {uri_} This value is immutable: it can only be set once during initialization.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | rootToken_ | address | undefined |
-| name_ | string | undefined |
 | uri_ | string | undefined |
 
 ### isApprovedForAll
