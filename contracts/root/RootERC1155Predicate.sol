@@ -110,7 +110,12 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
-        stateSender.syncState(childERC1155Predicate, abi.encode(MAP_TOKEN_SIG, rootToken));
+        string memory uri = "";
+        try rootToken.uri(0) returns (string memory tokenUri) {
+            uri = tokenUri;
+        } catch {}
+
+        stateSender.syncState(childERC1155Predicate, abi.encode(MAP_TOKEN_SIG, rootToken, uri));
         // slither-disable-next-line reentrancy-events
         emit TokenMapped(address(rootToken), childToken);
     }

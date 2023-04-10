@@ -25,12 +25,12 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     /**
      * @inheritdoc IChildERC1155
      */
-    function initialize(address rootToken_, string calldata name_, string calldata uri_) external initializer {
+    function initialize(address rootToken_, string calldata uri_) external initializer {
         require(rootToken_ != address(0), "ChildERC1155: BAD_INITIALIZATION");
         _rootToken = rootToken_;
         _predicate = msg.sender;
         __ERC1155_init(uri_);
-        _initializeEIP712(name_, "1");
+        _initializeEIP712(string(abi.encodePacked("ChildERC1155-", rootToken_)), "1");
     }
 
     /**
