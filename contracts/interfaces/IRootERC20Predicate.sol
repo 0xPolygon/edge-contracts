@@ -45,6 +45,7 @@ interface IRootERC20Predicate {
      * @notice Function to be used for token mapping
      * @param rootToken Address of the root token to map
      * @dev Called internally on deposit if token is not mapped already
+     * @return address Address of the child token
      */
-    function mapToken(IERC20Metadata rootToken) external;
+    function mapToken(IERC20Metadata rootToken) external returns (address);
 }
