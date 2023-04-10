@@ -58,6 +58,22 @@ function getNonce(address user) external view returns (uint256 nonce)
 |---|---|---|
 | nonce | uint256 | undefined |
 
+### invalidateNext
+
+```solidity
+function invalidateNext(uint256 offset) external nonpayable
+```
+
+
+
+*Invalidates next &quot;offset&quot; number of nonces for the calling address*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| offset | uint256 | undefined |
+
 
 
 ## Events
