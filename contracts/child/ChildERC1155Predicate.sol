@@ -202,7 +202,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
 
         l2StateSender.syncState(
             rootERC1155Predicate,
-            abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
+            abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds, amounts)
         );
         // slither-disable-next-line reentrancy-events
         emit L2ERC1155WithdrawBatch(rootToken, address(childToken), msg.sender, receivers, tokenIds, amounts);
