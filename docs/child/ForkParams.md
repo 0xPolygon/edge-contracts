@@ -136,6 +136,23 @@ function to update the block number for a feature
 
 ## Events
 
+### NewFeature
+
+```solidity
+event NewFeature(bytes32 indexed feature, uint256 indexed block)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feature `indexed` | bytes32 | undefined |
+| block `indexed` | uint256 | undefined |
+
 ### OwnershipTransferred
 
 ```solidity
@@ -152,6 +169,23 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 |---|---|---|
 | previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
+
+### UpdatedFeature
+
+```solidity
+event UpdatedFeature(bytes32 indexed feature, uint256 indexed block)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feature `indexed` | bytes32 | undefined |
+| block `indexed` | uint256 | undefined |
 
 
 

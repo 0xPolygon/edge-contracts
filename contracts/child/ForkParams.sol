@@ -12,6 +12,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ForkParams is Ownable {
     mapping(bytes32 => uint256) public featureToBlockNumber; // keccak256("FEATURE_NAME") -> blockNumber
 
+    event NewFeature(bytes32 indexed feature, uint256 indexed block);
+    event UpdatedFeature(bytes32 indexed feature, uint256 indexed block);
+
     /**
      * @notice constructor function to set the owner
      * @param newOwner address to transfer the ownership to
@@ -31,6 +34,8 @@ contract ForkParams is Ownable {
         bytes32 featureHash = keccak256(abi.encode(feature));
         require(featureToBlockNumber[featureHash] == 0, "ForkParams: FEATURE_EXISTS");
         featureToBlockNumber[featureHash] = blockNumber;
+
+        emit NewFeature(featureHash, blockNumber);
     }
 
     /**
@@ -45,6 +50,8 @@ contract ForkParams is Ownable {
         require(featureBlock != 0, "ForkParams: NONEXISTENT_FEATURE");
         require(newBlockNumber >= block.number && block.number < featureBlock, "ForkParams: INVALID_BLOCK");
         featureToBlockNumber[featureHash] = newBlockNumber;
+
+        emit UpdatedFeature(featureHash, newBlockNumber);
     }
 
     /**

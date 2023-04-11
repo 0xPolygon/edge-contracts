@@ -15,6 +15,11 @@ contract NetworkParams is Ownable {
     uint256 public minStake; // in wei
     uint256 public maxValidatorSetSize;
 
+    event NewBlockGasLimit(uint256 indexed value);
+    event NewCheckpointBlockInterval(uint256 indexed value);
+    event NewMinStake(uint256 indexed value);
+    event NewMaxValdidatorSetSize(uint256 indexed value);
+
     /**
      * @notice initializer for NetworkParams, sets the initial set of values for the network
      * @dev disallows setting of zero values for sanity check purposes
@@ -54,6 +59,8 @@ contract NetworkParams is Ownable {
     function setNewBlockGasLimit(uint256 newBlockGasLimit) external onlyOwner {
         require(newBlockGasLimit != 0, "NetworkParams: INVALID_BLOCK_GAS_LIMIT");
         blockGasLimit = newBlockGasLimit;
+
+        emit NewBlockGasLimit(newBlockGasLimit);
     }
 
     /**
@@ -64,6 +71,8 @@ contract NetworkParams is Ownable {
     function setNewCheckpointBlockInterval(uint256 newCheckpointBlockInterval) external onlyOwner {
         require(newCheckpointBlockInterval != 0, "NetworkParams: INVALID_CHECKPOINT_INTERVAL");
         checkpointBlockInterval = newCheckpointBlockInterval;
+
+        emit NewCheckpointBlockInterval(newCheckpointBlockInterval);
     }
 
     /**
@@ -74,6 +83,8 @@ contract NetworkParams is Ownable {
     function setNewMinStake(uint256 newMinStake) external onlyOwner {
         require(newMinStake != 0, "NetworkParams: INVALID_MIN_STAKE");
         minStake = newMinStake;
+
+        emit NewMinStake(newMinStake);
     }
 
     /**
@@ -84,5 +95,7 @@ contract NetworkParams is Ownable {
     function setNewMaxValidatorSetSize(uint256 newMaxValidatorSetSize) external onlyOwner {
         require(newMaxValidatorSetSize != 0, "NetworkParams: INVALID_MAX_VALIDATOR_SET_SIZE");
         maxValidatorSetSize = newMaxValidatorSetSize;
+
+        emit NewMaxValdidatorSetSize(newMaxValidatorSetSize);
     }
 }
