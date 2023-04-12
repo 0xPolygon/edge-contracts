@@ -201,11 +201,12 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
-        _verifyContract(childToken);
+        // a mapped token should always pass specifications
+        assert(_verifyContract(childToken));
 
         address rootToken = IChildERC721(childToken).rootToken();
 
-        // a mapped child token should match deposited token
+        // a mapped token should match deposited token
         assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
@@ -225,11 +226,12 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
-        _verifyContract(childToken);
+        // a mapped token should always pass specifications
+        assert(_verifyContract(childToken));
 
         address rootToken = IChildERC721(childToken).rootToken();
 
-        // a mapped child token should match deposited token
+        // a mapped token should match deposited token
         assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
