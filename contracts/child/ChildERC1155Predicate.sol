@@ -217,7 +217,8 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC1155Predicate: UNMAPPED_TOKEN");
-        _verifyContract(childToken);
+        // a mapped token should always pass specifications
+        assert(_verifyContract(childToken));
 
         address rootToken = IChildERC1155(childToken).rootToken();
 
@@ -245,7 +246,8 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
 
         require(address(childToken) != address(0), "ChildERC1155Predicate: UNMAPPED_TOKEN");
-        _verifyContract(childToken);
+        // a mapped token should always pass specifications
+        assert(_verifyContract(childToken));
 
         address rootToken = IChildERC1155(childToken).rootToken();
 
