@@ -111,6 +111,8 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
         rootTokenToChildToken[address(rootToken)] = childToken;
 
         string memory uri = "";
+        // slither does not deal well with try-catch: https://github.com/crytic/slither/issues/982
+        // slither-disable-next-line uninitialized-local,unused-return,variable-scope
         try rootToken.uri(0) returns (string memory tokenUri) {
             uri = tokenUri;
         } catch {}
