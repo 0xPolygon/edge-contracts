@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../libs/EIP712MetaTransaction.sol";
 import "../interfaces/IChildERC1155.sol";
 
@@ -14,6 +15,7 @@ import "../interfaces/IChildERC1155.sol";
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
 contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC1155 {
+    using StringsUpgradeable for address;
     address private _predicate;
     address private _rootToken;
 
@@ -30,7 +32,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
         _rootToken = rootToken_;
         _predicate = msg.sender;
         __ERC1155_init(uri_);
-        _initializeEIP712(string(abi.encodePacked("ChildERC1155-", rootToken_)), "1");
+        _initializeEIP712(string.concat("ChildERC1155-", rootToken_.toHexString()), "1");
     }
 
     /**
