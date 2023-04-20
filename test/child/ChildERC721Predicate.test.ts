@@ -445,6 +445,7 @@ describe("ChildERC721Predicate", () => {
     const fakeChildERC721 = await smock.fake<ChildERC721>("ChildERC721", {
       address: childTokenAddr,
     });
+    fakeChildERC721.supportsInterface.returns(true);
     fakeChildERC721.rootToken.returns(rootToken);
     fakeChildERC721.predicate.returns(stateReceiverChildERC721Predicate.address);
     fakeChildERC721.mint.returns(false);
@@ -472,10 +473,10 @@ describe("ChildERC721Predicate", () => {
     const fakeChildERC721 = await smock.fake<ChildERC721>("ChildERC721", {
       address: childTokenAddr,
     });
+    fakeChildERC721.supportsInterface.returns(true);
     fakeChildERC721.rootToken.returns(rootToken);
     fakeChildERC721.predicate.returns(stateReceiverChildERC721Predicate.address);
     fakeChildERC721.burn.returns(false);
-    fakeChildERC721.supportsInterface.returns(true);
     await expect(stateReceiverChildERC721Predicate.withdraw(childTokenAddr, 1)).to.be.revertedWith(
       "ChildERC721Predicate: BURN_FAILED"
     );
