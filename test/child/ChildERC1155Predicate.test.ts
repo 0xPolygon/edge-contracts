@@ -286,7 +286,7 @@ describe("ChildERC1155Predicate", () => {
   });
 
   it("batch withdraw tokens from child chain: success", async () => {
-    const batchSize = Math.floor(Math.random() * batchDepositedTokenIds.length + 2);
+    const batchSize = Math.max(1, Math.floor(Math.random() * batchDepositedTokenIds.length));
     const receiverArr = [];
     for (let i = 0; i < batchSize; i++) {
       receiverArr.push(accounts[1].address);
