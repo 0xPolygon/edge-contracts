@@ -117,6 +117,14 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
         return _genesis.set();
     }
 
+    /**
+     *
+     * @inheritdoc ICustomSupernetManager
+     */
+    function getValidator(address validator_) external view returns (Validator memory) {
+        return validators[validator_];
+    }
+
     function _onStake(
         address validator,
         uint256 amount,
