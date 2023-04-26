@@ -94,7 +94,9 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         require(sender == rootERC20Predicate, "ChildERC20Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
+            _beforeTokenDeposit();
             _deposit(data[32:]);
+            _afterTokenDeposit();
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
@@ -108,7 +110,9 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
      * @param amount Amount to withdraw
      */
     function withdraw(IChildERC20 childToken, uint256 amount) external {
+        _beforeTokenWithdraw();
         _withdraw(childToken, msg.sender, amount);
+        _afterTokenWithdraw();
     }
 
     /**
@@ -118,8 +122,19 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
      * @param amount Amount to withdraw
      */
     function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external {
+        _beforeTokenWithdraw();
         _withdraw(childToken, receiver, amount);
+        _afterTokenWithdraw();
     }
+
+    // solhint-disable no-empty-blocks
+    function _beforeTokenDeposit() internal virtual {}
+
+    function _beforeTokenWithdraw() internal virtual {}
+
+    function _afterTokenDeposit() internal virtual {}
+
+    function _afterTokenWithdraw() internal virtual {}
 
     function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
         require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
@@ -134,6 +149,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
 
         require(childToken.burn(msg.sender, amount), "ChildERC20Predicate: BURN_FAILED");
         l2StateSender.syncState(rootERC20Predicate, abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount));
+
         // slither-disable-next-line reentrancy-events
         emit L2ERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
     }
@@ -157,7 +173,9 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC20(childToken).predicate() == address(this));
+
         require(IChildERC20(childToken).mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
+
         // slither-disable-next-line reentrancy-events
         emit L2ERC20Deposit(depositToken, address(childToken), depositor, receiver, amount);
     }

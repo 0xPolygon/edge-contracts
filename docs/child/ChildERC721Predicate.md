@@ -1,10 +1,10 @@
-# ChildERC721PredicateAccessList
+# ChildERC721Predicate
 
-*Polygon Technology (@QEDK)*
+*Polygon Technology (@QEDK, @wschwab)*
 
-> ChildERC721PredicateAccessList
+> ChildERC721Predicate
 
-Enables ERC721 token deposits and withdrawals (only from allowlisted address, and not from blocklisted addresses) across an arbitrary root chain and child chain
+Enables ERC721 token deposits and withdrawals across an arbitrary root chain and child chain
 
 
 

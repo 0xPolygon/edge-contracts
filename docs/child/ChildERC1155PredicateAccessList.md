@@ -1,10 +1,10 @@
 # ChildERC1155PredicateAccessList
 
-*Polygon Technology (@QEDK, @wschwab)*
+*Polygon Technology (@QEDK)*
 
 > ChildERC1155PredicateAccessList
 
-Enables ERC1155 token deposits and withdrawals (only from allowlisted addresses, and not from blocklisted addresses) across an arbitrary root chain and child chain
+Enables ERC1155 token deposits and withdrawals (only from allowlisted address, and not from blocklisted addresses) across an arbitrary root chain and child chain
 
 
 
