@@ -7,15 +7,16 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/IChildERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
 import "../interfaces/IChildERC721.sol";
+import "../interfaces/IAddressList.sol";
 import "./System.sol";
 
 /**
-    @title ChildERC721Predicate
+    @title ChildERC721PredicateAccessList
     @author Polygon Technology (@QEDK, @wschwab)
-    @notice Enables ERC721 token deposits and withdrawals across an arbitrary root chain and child chain
+    @notice Enables ERC721 token deposits and withdrawals (only from allowlisted address, and not from blocklisted addresses) across an arbitrary root chain and child chain
  */
 // solhint-disable reason-string
-contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
+contract ChildERC721PredicateAccessList is IChildERC721Predicate, Initializable, System {
     /// @custom:security write-protection="onlySystemCall()"
     IStateSender public l2StateSender;
     /// @custom:security write-protection="onlySystemCall()"
@@ -149,6 +150,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     }
 
     function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private onlyValidToken(childToken) {
+        _checkAddressList();
         address rootToken = childToken.rootToken();
 
         require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
@@ -172,6 +174,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         address[] calldata receivers,
         uint256[] calldata tokenIds
     ) private onlyValidToken(childToken) {
+        _checkAddressList();
         address rootToken = childToken.rootToken();
 
         require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
@@ -275,5 +278,17 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         } catch {
             return false;
         }
+    }
+
+    function _checkAddressList() private view {
+        // solhint-disable avoid-low-level-calls
+        (bool allowSuccess, bytes memory allowlistRes) = ALLOWLIST_PRECOMPILE.staticcall{gas: READ_ADDRESSLIST_GAS}(
+            abi.encodeWithSelector(IAddressList.readAddressList.selector, msg.sender)
+        );
+        require(allowSuccess && abi.decode(allowlistRes, (uint256)) > 0, "DISALLOWED_SENDER");
+        (bool blockSuccess, bytes memory blocklistRes) = BLOCKLIST_PRECOMPILE.staticcall{gas: READ_ADDRESSLIST_GAS}(
+            abi.encodeWithSelector(IAddressList.readAddressList.selector, msg.sender)
+        );
+        require(blockSuccess && abi.decode(blocklistRes, (uint256)) > 0, "BLOCKED_SENDER");
     }
 }

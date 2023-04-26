@@ -1,10 +1,10 @@
-# ChildERC1155Predicate
+# ChildERC20PredicateAccessList
 
-*Polygon Technology (@QEDK, @wschwab)*
+*Polygon Technology (@QEDK)*
 
-> ChildERC1155Predicate
+> ChildERC20PredicateAccessList
 
-Enables ERC1155 token deposits and withdrawals across an arbitrary root chain and child chain
+Enables ERC20 token deposits and withdrawals (only from allowlisted address, and not from blocklisted addresses) across an arbitrary root chain and child chain
 
 
 
@@ -43,23 +43,6 @@ function BLOCKLIST_PRECOMPILE() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### DEPOSIT_BATCH_SIG
-
-```solidity
-function DEPOSIT_BATCH_SIG() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
 
 ### DEPOSIT_SIG
 
@@ -214,23 +197,6 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### WITHDRAW_BATCH_SIG
-
-```solidity
-function WITHDRAW_BATCH_SIG() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### WITHDRAW_SIG
 
 ```solidity
@@ -268,12 +234,12 @@ function childTokenTemplate() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC1155Predicate, address newChildTokenTemplate) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
 ```
 
-Initilization function for ChildERC1155Predicate
+Initilization function for ChildERC20Predicate
 
-*Can only be called once.*
+*Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.*
 
 #### Parameters
 
@@ -281,8 +247,9 @@ Initilization function for ChildERC1155Predicate
 |---|---|---|
 | newL2StateSender | address | Address of L2StateSender to send exit information to |
 | newStateReceiver | address | Address of StateReceiver to receive deposit information from |
-| newRootERC1155Predicate | address | Address of root ERC1155 predicate to communicate with |
+| newRootERC20Predicate | address | Address of root ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
+| newNativeTokenRootAddress | address | Address of native token on root chain |
 
 ### l2StateSender
 
@@ -319,10 +286,10 @@ Function to be used for token deposits
 | sender | address | Address of the sender on the root chain |
 | data | bytes | Data sent by the sender |
 
-### rootERC1155Predicate
+### rootERC20Predicate
 
 ```solidity
-function rootERC1155Predicate() external view returns (address)
+function rootERC20Predicate() external view returns (address)
 ```
 
 
@@ -378,7 +345,7 @@ function stateReceiver() external view returns (address)
 ### withdraw
 
 ```solidity
-function withdraw(contract IChildERC1155 childToken, uint256 tokenId, uint256 amount) external nonpayable
+function withdraw(contract IChildERC20 childToken, uint256 amount) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to themselves on the root chain
@@ -389,33 +356,13 @@ Function to withdraw tokens from the withdrawer to themselves on the root chain
 
 | Name | Type | Description |
 |---|---|---|
-| childToken | contract IChildERC1155 | Address of the child token being withdrawn |
-| tokenId | uint256 | Index of the NFT to withdraw |
-| amount | uint256 | Amount of the NFT to withdraw |
-
-### withdrawBatch
-
-```solidity
-function withdrawBatch(contract IChildERC1155 childToken, address[] receivers, uint256[] tokenIds, uint256[] amounts) external nonpayable
-```
-
-Function to batch withdraw tokens from the withdrawer to other addresses on the root chain
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| childToken | contract IChildERC1155 | Address of the child token being withdrawn |
-| receivers | address[] | Addresses of the receivers on the root chain |
-| tokenIds | uint256[] | indices of the NFTs to withdraw |
-| amounts | uint256[] | Amounts of NFTs to withdraw |
+| childToken | contract IChildERC20 | Address of the child token being withdrawn |
+| amount | uint256 | Amount to withdraw |
 
 ### withdrawTo
 
 ```solidity
-function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external nonpayable
+function withdrawTo(contract IChildERC20 childToken, address receiver, uint256 amount) external nonpayable
 ```
 
 Function to withdraw tokens from the withdrawer to another address on the root chain
@@ -426,10 +373,9 @@ Function to withdraw tokens from the withdrawer to another address on the root c
 
 | Name | Type | Description |
 |---|---|---|
-| childToken | contract IChildERC1155 | Address of the child token being withdrawn |
+| childToken | contract IChildERC20 | Address of the child token being withdrawn |
 | receiver | address | Address of the receiver on the root chain |
-| tokenId | uint256 | Index of the NFT to withdraw |
-| amount | uint256 | Amount of NFT to withdraw |
+| amount | uint256 | Amount to withdraw |
 
 
 
@@ -451,10 +397,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### L2ERC1155Deposit
+### L2ERC20Deposit
 
 ```solidity
-event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
+event L2ERC20Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 amount)
 ```
 
 
@@ -469,34 +415,12 @@ event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, ad
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
-### L2ERC1155DepositBatch
+### L2ERC20Withdraw
 
 ```solidity
-event L2ERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken `indexed` | address | undefined |
-| childToken `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-| receivers  | address[] | undefined |
-| tokenIds  | uint256[] | undefined |
-| amounts  | uint256[] | undefined |
-
-### L2ERC1155Withdraw
-
-```solidity
-event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
+event L2ERC20Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 amount)
 ```
 
 
@@ -511,29 +435,7 @@ event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, a
 | childToken `indexed` | address | undefined |
 | sender  | address | undefined |
 | receiver `indexed` | address | undefined |
-| tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
-
-### L2ERC1155WithdrawBatch
-
-```solidity
-event L2ERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| rootToken `indexed` | address | undefined |
-| childToken `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-| receivers  | address[] | undefined |
-| tokenIds  | uint256[] | undefined |
-| amounts  | uint256[] | undefined |
 
 ### L2TokenMapped
 
