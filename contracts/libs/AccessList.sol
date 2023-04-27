@@ -39,7 +39,7 @@ contract AccessList is Ownable2StepUpgradeable, System {
             (bool blockSuccess, bytes memory blocklistRes) = BLOCKLIST_PRECOMPILE.staticcall{gas: READ_ADDRESSLIST_GAS}(
                 abi.encodeWithSelector(IAddressList.readAddressList.selector, msg.sender)
             );
-            require(blockSuccess && abi.decode(blocklistRes, (uint256)) > 0, "BLOCKED_SENDER");
+            require(blockSuccess && abi.decode(blocklistRes, (uint256)) != 1, "BLOCKED_SENDER");
         }
     }
 }
