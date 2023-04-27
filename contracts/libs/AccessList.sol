@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {IAddressList} from "../interfaces/IAddressList.sol";
 import {System} from "../child/System.sol";
 
@@ -9,25 +10,21 @@ import {System} from "../child/System.sol";
     @author Polygon Technology (@QEDK, @wschwab)
     @notice Checks the access lists to see if an address is allowed and not blocked
  */
-contract AccessList is System {
-    bool private useAllowList;
-    bool private useBlockList;
+contract AccessList is Ownable2StepUpgradeable, System {
+    bool private useAllowList = true;
+    bool private useBlockList = true;
 
-    event AllowListUsageSet(uint256 timestamp, bool status);
-    event BlockListUsageSet(uint256 timestamp, bool status);
+    event AllowListUsageSet(uint256 indexed block, bool indexed status);
+    event BlockListUsageSet(uint256 indexed block, bool indexed status);
 
-    function setAllowList(bool _useAllowList) external {
-        if (_useAllowList != useAllowList) {
-            useAllowList = _useAllowList;
-            emit AllowListUsageSet(block.timestamp, _useAllowList);
-        }
+    function setAllowList(bool _useAllowList) external onlyOwner {
+        useAllowList = _useAllowList;
+        emit AllowListUsageSet(block.number, _useAllowList);
     }
 
-    function setBlockList(bool _useBlockList) external {
-        if (_useBlockList != useBlockList) {
-            useBlockList = _useBlockList;
-            emit BlockListUsageSet(block.timestamp, _useBlockList);
-        }
+    function setBlockList(bool _useBlockList) external onlyOwner {
+        useBlockList = _useBlockList;
+        emit BlockListUsageSet(block.number, _useBlockList);
     }
 
     function _checkAccessList() internal view {

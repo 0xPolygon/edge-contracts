@@ -64,7 +64,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         address newRootERC20Predicate,
         address newChildTokenTemplate,
         address newNativeTokenRootAddress
-    ) external onlySystemCall initializer {
+    ) public virtual onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&

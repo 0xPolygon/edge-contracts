@@ -214,6 +214,17 @@ function WITHDRAW_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### acceptOwnership
+
+```solidity
+function acceptOwnership() external nonpayable
+```
+
+
+
+*The new owner accepts the ownership transfer.*
+
+
 ### childTokenTemplate
 
 ```solidity
@@ -251,6 +262,27 @@ Initilization function for ChildERC20Predicate
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
 | newNativeTokenRootAddress | address | Address of native token on root chain |
 
+### initialize
+
+```solidity
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress, address newOwner) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newL2StateSender | address | undefined |
+| newStateReceiver | address | undefined |
+| newRootERC20Predicate | address | undefined |
+| newChildTokenTemplate | address | undefined |
+| newNativeTokenRootAddress | address | undefined |
+| newOwner | address | undefined |
+
 ### l2StateSender
 
 ```solidity
@@ -285,6 +317,51 @@ Function to be used for token deposits
 | _0 | uint256 | undefined |
 | sender | address | Address of the sender on the root chain |
 | data | bytes | Data sent by the sender |
+
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+
+
+*Returns the address of the current owner.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### pendingOwner
+
+```solidity
+function pendingOwner() external view returns (address)
+```
+
+
+
+*Returns the address of the pending owner.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### renounceOwnership
+
+```solidity
+function renounceOwnership() external nonpayable
+```
+
+
+
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+
 
 ### rootERC20Predicate
 
@@ -325,6 +402,38 @@ function rootTokenToChildToken(address) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### setAllowList
+
+```solidity
+function setAllowList(bool _useAllowList) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _useAllowList | bool | undefined |
+
+### setBlockList
+
+```solidity
+function setBlockList(bool _useBlockList) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _useBlockList | bool | undefined |
+
 ### stateReceiver
 
 ```solidity
@@ -341,6 +450,22 @@ function stateReceiver() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### transferOwnership
+
+```solidity
+function transferOwnership(address newOwner) external nonpayable
+```
+
+
+
+*Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one. Can only be called by the current owner.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address | undefined |
 
 ### withdraw
 
@@ -380,6 +505,40 @@ Function to withdraw tokens from the withdrawer to another address on the root c
 
 
 ## Events
+
+### AllowListUsageSet
+
+```solidity
+event AllowListUsageSet(uint256 indexed block, bool indexed status)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| block `indexed` | uint256 | undefined |
+| status `indexed` | bool | undefined |
+
+### BlockListUsageSet
+
+```solidity
+event BlockListUsageSet(uint256 indexed block, bool indexed status)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| block `indexed` | uint256 | undefined |
+| status `indexed` | bool | undefined |
 
 ### Initialized
 
@@ -453,6 +612,40 @@ event L2TokenMapped(address indexed rootToken, address indexed childToken)
 |---|---|---|
 | rootToken `indexed` | address | undefined |
 | childToken `indexed` | address | undefined |
+
+### OwnershipTransferStarted
+
+```solidity
+event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
+
+### OwnershipTransferred
+
+```solidity
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 
 

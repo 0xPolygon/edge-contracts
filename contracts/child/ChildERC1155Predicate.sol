@@ -84,7 +84,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address newStateReceiver,
         address newRootERC1155Predicate,
         address newChildTokenTemplate
-    ) external onlySystemCall initializer {
+    ) public virtual onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&

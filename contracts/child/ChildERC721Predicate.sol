@@ -80,7 +80,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         address newStateReceiver,
         address newRootERC721Predicate,
         address newChildTokenTemplate
-    ) external onlySystemCall initializer {
+    ) public virtual onlySystemCall initializer {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&

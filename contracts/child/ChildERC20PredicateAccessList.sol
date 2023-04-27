@@ -10,7 +10,25 @@ import {AccessList} from "../libs/AccessList.sol";
     @notice Enables ERC20 token deposits and withdrawals (only from allowlisted address, and not from blocklisted addresses) across an arbitrary root chain and child chain
  */
 // solhint-disable reason-string
-contract ChildERC20PredicateAccessList is ChildERC20Predicate, AccessList {
+contract ChildERC20PredicateAccessList is AccessList, ChildERC20Predicate {
+    function initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newRootERC20Predicate,
+        address newChildTokenTemplate,
+        address newNativeTokenRootAddress,
+        address newOwner
+    ) public virtual onlySystemCall initializer {
+        super.initialize(
+            newL2StateSender,
+            newStateReceiver,
+            newRootERC20Predicate,
+            newChildTokenTemplate,
+            newNativeTokenRootAddress
+        );
+        _transferOwnership(newOwner);
+    }
+
     function _beforeTokenWithdraw() internal virtual override {
         _checkAccessList();
     }
