@@ -4,10 +4,6 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IValidatorSet.sol";
 
-interface RewardToken is IERC20 {
-    function mintRewards(uint256 amount) external;
-}
-
 interface IRewardDistributor {
     /// @notice distributes reward for the given epoch
     /// @dev transfers funds from sender to this contract

@@ -1,19 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "../System.sol";
 import "../../interfaces/child/validator/IRewardDistributor.sol";
 
-contract RewardDistributor is IRewardDistributor, System {
-    RewardToken public immutable REWARD_TOKEN;
-    IValidatorSet public immutable VALIDATOR_SET;
-    uint256 public immutable BASE_REWARD;
+contract RewardDistributor is IRewardDistributor, System, Initializable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+
+    IERC20Upgradeable public REWARD_TOKEN;
+    address public REWARD_WALLET;
+    IValidatorSet public VALIDATOR_SET;
+    uint256 public BASE_REWARD;
 
     mapping(uint256 => uint256) public paidRewardPerEpoch;
     mapping(address => uint256) public pendingRewards;
 
-    constructor(address rewardToken, address validatorSet, uint256 baseReward) {
-        REWARD_TOKEN = RewardToken(rewardToken);
+    function initialize(
+        address rewardToken,
+        address rewardWallet,
+        address validatorSet,
+        uint256 baseReward
+    ) public initializer {
+        REWARD_TOKEN = IERC20Upgradeable(rewardToken);
+        REWARD_WALLET = rewardWallet;
         VALIDATOR_SET = IValidatorSet(validatorSet);
         BASE_REWARD = baseReward;
     }
@@ -49,11 +61,11 @@ contract RewardDistributor is IRewardDistributor, System {
     function withdrawReward() external {
         uint256 pendingReward = pendingRewards[msg.sender];
         pendingRewards[msg.sender] = 0;
-        REWARD_TOKEN.transfer(msg.sender, pendingReward);
+        REWARD_TOKEN.safeTransfer(msg.sender, pendingReward);
     }
 
     /// @dev this method can be overridden to add logic depending on the reward token
     function _transferRewards(uint256 amount) internal virtual {
-        REWARD_TOKEN.mintRewards(amount);
+        REWARD_TOKEN.safeTransferFrom(REWARD_WALLET, address(this), amount);
     }
 }

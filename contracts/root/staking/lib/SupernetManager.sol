@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../../interfaces/root/staking/IStakeManager.sol";
 import "../../../interfaces/root/staking/ISupernetManager.sol";
 
-abstract contract SupernetManager is ISupernetManager {
-    IStakeManager internal immutable STAKE_MANAGER;
+contract SupernetManager is ISupernetManager, Initializable {
+    IStakeManager internal STAKE_MANAGER;
     uint256 public id;
 
     modifier onlyStakeManager() {
@@ -13,7 +14,7 @@ abstract contract SupernetManager is ISupernetManager {
         _;
     }
 
-    constructor(address stakeManager) {
+    function initialize(address stakeManager) public initializer {
         STAKE_MANAGER = IStakeManager(stakeManager);
     }
 
@@ -21,9 +22,9 @@ abstract contract SupernetManager is ISupernetManager {
         id = id_;
     }
 
-    function onStake(address validator, uint256 amount, bytes calldata data) external onlyStakeManager {
-        _onStake(validator, amount, data);
+    function onStake(address validator, uint256 amount) external onlyStakeManager {
+        _onStake(validator, amount);
     }
 
-    function _onStake(address validator, uint256 amount, bytes calldata data) internal virtual;
+    function _onStake(address validator, uint256 amount) internal virtual {}
 }

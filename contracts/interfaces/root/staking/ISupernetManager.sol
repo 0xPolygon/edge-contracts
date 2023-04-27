@@ -6,5 +6,5 @@ interface ISupernetManager {
     function onInit(uint256 id) external;
 
     /// @notice called when a validator stakes
-    function onStake(address validator, uint256 amount, bytes calldata data) external;
+    function onStake(address validator, uint256 amount) external;
 }

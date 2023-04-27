@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
 import "../../interfaces/child/validator/IValidatorSet.sol";
 import "../../interfaces/IStateSender.sol";
 import "../System.sol";
 
-contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
+contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System, CVSWithdrawal {
     using WithdrawalQueueLib for WithdrawalQueue;
 
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
 
-    IStateSender private immutable STATE_SENDER;
-    address private immutable STATE_RECEIVER;
-    address private immutable ROOT_CHAIN_MANAGER;
-    uint256 private immutable _EPOCH_SIZE;
+    IStateSender private STATE_SENDER;
+    address private STATE_RECEIVER;
+    address private ROOT_CHAIN_MANAGER;
+    uint256 private _EPOCH_SIZE;
 
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
 
-    constructor(
+    function initialize(
         address stateSender,
         address stateReceiver,
         address rootChainManager,
         uint256 epochSize_,
         ValidatorInit[] memory initalValidators
-    ) ERC20("ValidatorSet", "VSET") {
+    ) public initializer {
+        __ERC20_init("ValidatorSet", "VSET");
         STATE_SENDER = IStateSender(stateSender);
         STATE_RECEIVER = stateReceiver;
         ROOT_CHAIN_MANAGER = rootChainManager;
@@ -115,7 +116,13 @@ contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
     function balanceOfAt(
         address account,
         uint256 epochNumber
-    ) public view override(ERC20Snapshot, IValidatorSet) returns (uint256) {}
+    ) public view override(ERC20SnapshotUpgradeable, IValidatorSet) returns (uint256) {
+        return super.balanceOfAt(account, epochNumber);
+    }
 
-    function totalSupplyAt(uint256 epochNumber) public view override(ERC20Snapshot, IValidatorSet) returns (uint256) {}
+    function totalSupplyAt(
+        uint256 epochNumber
+    ) public view override(ERC20SnapshotUpgradeable, IValidatorSet) returns (uint256) {
+        return super.totalSupplyAt(epochNumber);
+    }
 }

@@ -1,28 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./lib/StakeManagerLibs.sol";
 
-contract StakeManager is IStakeManager {
+contract StakeManager is IStakeManager, Initializable {
     using ChildManager for ChildChains;
     using SafeERC20 for IERC20;
     using StakesManager for Stakes;
 
-    IERC20 private immutable MATIC;
+    IERC20 internal MATIC;
     ChildChains private _chains;
     Stakes private _stakes;
 
-    constructor(address MATIC_) {
+    function initialize(address MATIC_) public initializer {
         MATIC = IERC20(MATIC_);
     }
 
     /**
      * @inheritdoc IStakeManager
      */
-    function registerChildChain(address manager) external {
-        uint256 id = _chains.registerChild(manager);
+    // TODO call in initializer from supernet manager?
+    function registerChildChain(address manager) external returns (uint256 id) {
+        id = _chains.registerChild(manager);
         ISupernetManager(manager).onInit(id);
         emit ChildManagerRegistered(id, manager);
     }
@@ -30,11 +32,11 @@ contract StakeManager is IStakeManager {
     /**
      * @inheritdoc IStakeManager
      */
-    function stakeFor(uint256 id, uint256 amount, bytes calldata data) external {
+    function stakeFor(uint256 id, uint256 amount) external {
         MATIC.safeTransferFrom(msg.sender, address(this), amount);
         _stakes.addStake(msg.sender, id, amount);
         ISupernetManager manager = managerOf(id);
-        manager.onStake(msg.sender, amount, data);
+        manager.onStake(msg.sender, amount);
         emit StakeAdded(id, msg.sender, amount);
     }
 
@@ -79,6 +81,13 @@ contract StakeManager is IStakeManager {
      */
     function totalStake() external view returns (uint256 amount) {
         amount = _stakes.totalStake;
+    }
+
+    /**
+     * @inheritdoc IStakeManager
+     */
+    function totalStakeOfChild(uint256 id) external view returns (uint256 amount) {
+        amount = _stakes.totalStakeOfChild(id);
     }
 
     /**

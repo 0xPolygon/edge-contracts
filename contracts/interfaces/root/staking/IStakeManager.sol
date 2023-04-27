@@ -13,10 +13,11 @@ interface IStakeManager {
     error SlashExceedsStake(uint256 id, address validator, uint256 amount, uint256 stake);
 
     /// @notice registers a new child chain with the staking contract
-    function registerChildChain(address manager) external;
+    /// @return id of the child chain
+    function registerChildChain(address manager) external returns (uint256 id);
 
     /// @notice called by a validator to stake for a child chain
-    function stakeFor(uint256 id, uint256 amount, bytes calldata data) external;
+    function stakeFor(uint256 id, uint256 amount) external;
 
     /// @notice called by child manager contract to release a validator's stake
     function releaseStakeOf(address validator, uint256 amount) external;
@@ -33,6 +34,9 @@ interface IStakeManager {
 
     /// @notice returns the total amount staked for all child chains
     function totalStake() external view returns (uint256 amount);
+
+    /// @notice returns the total amount staked for a child chain
+    function totalStakeOfChild(uint256 id) external view returns (uint256 amount);
 
     /// @notice returns the total amount staked of a validator for all child chains
     function totalStakeOf(address validator) external view returns (uint256 amount);

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./lib/SupernetManager.sol";
 import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
 
-contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, SupernetManager {
+contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeable, SupernetManager {
     using SafeERC20 for IERC20;
     using GenesisLib for GenesisSet;
 
@@ -18,13 +18,13 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
     uint256 private constant SLASHING_PERCENTAGE = 50;
 
-    IBLS private immutable BLS;
-    IStateSender private immutable STATE_SENDER;
-    IERC20 private immutable MATIC;
-    address private immutable CHILD_VALIDATOR_SET;
-    address private immutable EXIT_HELPER;
+    IBLS private BLS;
+    IStateSender private STATE_SENDER;
+    IERC20 private MATIC;
+    address private CHILD_VALIDATOR_SET;
+    address private EXIT_HELPER;
 
-    bytes32 public immutable DOMAIN;
+    bytes32 public DOMAIN;
 
     GenesisSet private _genesis;
     mapping(address => Validator) public validators;
@@ -34,7 +34,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
         _;
     }
 
-    constructor(
+    function initialize(
         address stakeManager,
         address bls,
         address stateSender,
@@ -42,13 +42,15 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
         address childValidatorSet,
         address exitHelper,
         string memory domain
-    ) SupernetManager(stakeManager) {
+    ) public initializer {
         BLS = IBLS(bls);
         STATE_SENDER = IStateSender(stateSender);
         MATIC = IERC20(matic);
         CHILD_VALIDATOR_SET = childValidatorSet;
         EXIT_HELPER = exitHelper;
         DOMAIN = keccak256(abi.encodePacked(domain));
+        super.initialize(stakeManager);
+        __Ownable2Step_init();
     }
 
     /**
@@ -125,11 +127,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2Step, Supernet
         return validators[validator_];
     }
 
-    function _onStake(
-        address validator,
-        uint256 amount,
-        bytes calldata /* data */
-    ) internal override onlyValidator(validator) {
+    function _onStake(address validator, uint256 amount) internal override onlyValidator(validator) {
         if (_genesis.gatheringGenesisValidators()) {
             _genesis.insert(validator, amount);
         } else if (_genesis.completed()) {
