@@ -13,20 +13,22 @@ contract ValidatorSet is IValidatorSet, ERC20Snapshot, System, CVSWithdrawal {
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
 
-    IStateSender private immutable STATE_SENDER;
-    address private immutable STATE_RECEIVER;
-    address private immutable ROOT_CHAIN_MANAGER;
-    uint256 private immutable _EPOCH_SIZE;
+    IStateSender private STATE_SENDER;
+    address private STATE_RECEIVER;
+    address private ROOT_CHAIN_MANAGER;
+    uint256 private _EPOCH_SIZE;
 
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
 
-    constructor(
+    constructor() ERC20("ValidatorSet", "VSET") {}
+
+    function initialize(
         address stateSender,
         address stateReceiver,
         address rootChainManager,
         uint256 epochSize_,
         ValidatorInit[] memory initalValidators
-    ) ERC20("ValidatorSet", "VSET") {
+    ) external initializer onlySystemCall {
         STATE_SENDER = IStateSender(stateSender);
         STATE_RECEIVER = stateReceiver;
         ROOT_CHAIN_MANAGER = rootChainManager;
