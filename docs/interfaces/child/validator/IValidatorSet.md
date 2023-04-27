@@ -16,9 +16,9 @@
 function EPOCH_SIZE() external view returns (uint256)
 ```
 
+amount of blocks in an epoch
 
-
-
+*when an epoch is committed a multiple of this number of blocks must be committed*
 
 
 #### Returns
@@ -33,7 +33,7 @@ function EPOCH_SIZE() external view returns (uint256)
 function balanceOfAt(address account, uint256 epochNumber) external view returns (uint256)
 ```
 
-
+returns a validator balance for a given epoch
 
 
 
@@ -91,7 +91,7 @@ function onStateReceive(uint256 counter, address sender, bytes data) external no
 function totalBlocks(uint256 epochId) external view returns (uint256 length)
 ```
 
-
+total amount of blocks in a given epoch
 
 
 
@@ -113,7 +113,7 @@ function totalBlocks(uint256 epochId) external view returns (uint256 length)
 function totalSupplyAt(uint256 epochNumber) external view returns (uint256)
 ```
 
-
+returns the total supply for a given epoch
 
 
 
@@ -135,9 +135,9 @@ function totalSupplyAt(uint256 epochNumber) external view returns (uint256)
 function unstake(uint256 amount) external nonpayable
 ```
 
+allows a validator to announce their intention to withdraw a given amount of tokens
 
-
-
+*initializes a waiting period before the tokens can be withdrawn*
 
 #### Parameters
 
@@ -151,9 +151,9 @@ function unstake(uint256 amount) external nonpayable
 function withdraw() external nonpayable
 ```
 
+allows a validator to complete a withdrawal
 
-
-
+*calls the bridge to release the funds on root*
 
 
 

@@ -33,7 +33,7 @@ function distributeRewardFor(uint256 epochId, Uptime uptime) external nonpayable
 function paidRewardPerEpoch(uint256 epochId) external view returns (uint256)
 ```
 
-
+returns the total reward paid for the given epoch
 
 
 
@@ -55,7 +55,7 @@ function paidRewardPerEpoch(uint256 epochId) external view returns (uint256)
 function pendingRewards(address account) external view returns (uint256)
 ```
 
-
+returns the pending reward for the given account
 
 
 
@@ -77,7 +77,7 @@ function pendingRewards(address account) external view returns (uint256)
 function withdrawReward() external nonpayable
 ```
 
-
+withdraws pending rewards for the sender (validator)
 
 
 

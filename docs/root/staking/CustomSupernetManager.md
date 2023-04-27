@@ -38,6 +38,67 @@ function acceptOwnership() external nonpayable
 *The new owner accepts the ownership transfer.*
 
 
+### enableStaking
+
+```solidity
+function enableStaking() external nonpayable
+```
+
+enables staking after successful initialisation of the child chain
+
+*only callable by owner*
+
+
+### finalizeGenesis
+
+```solidity
+function finalizeGenesis() external nonpayable
+```
+
+finalizes initial genesis validator set
+
+*only callable by owner*
+
+
+### genesisSet
+
+```solidity
+function genesisSet() external view returns (struct GenesisValidator[])
+```
+
+returns the genesis validator set with their balances
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | GenesisValidator[] | undefined |
+
+### getValidator
+
+```solidity
+function getValidator(address validator_) external view returns (struct Validator)
+```
+
+returns validator instance based on provided address
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator_ | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | Validator | undefined |
+
 ### id
 
 ```solidity

@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../System.sol";
 import "../../interfaces/child/validator/IRewardDistributor.sol";
 
-contract RewardDistributor is IRewardDistributor, System {
-    RewardToken public immutable REWARD_TOKEN;
-    IValidatorSet public immutable VALIDATOR_SET;
-    uint256 public immutable BASE_REWARD;
+contract RewardDistributor is IRewardDistributor, System, ReentrancyGuardUpgradeable {
+    RewardToken public REWARD_TOKEN;
+    IValidatorSet public VALIDATOR_SET;
+    uint256 public BASE_REWARD;
 
     mapping(uint256 => uint256) public paidRewardPerEpoch;
     mapping(address => uint256) public pendingRewards;
 
-    constructor(address rewardToken, address validatorSet, uint256 baseReward) {
+    function initialize(
+        address rewardToken,
+        address validatorSet,
+        uint256 baseReward
+    ) external initializer onlySystemCall {
         REWARD_TOKEN = RewardToken(rewardToken);
         VALIDATOR_SET = IValidatorSet(validatorSet);
         BASE_REWARD = baseReward;

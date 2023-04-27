@@ -180,13 +180,31 @@ function distributeRewardFor(uint256 epochId, Uptime uptime) external nonpayable
 | epochId | uint256 | undefined |
 | uptime | Uptime | undefined |
 
+### initialize
+
+```solidity
+function initialize(address rewardToken, address validatorSet, uint256 baseReward) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| rewardToken | address | undefined |
+| validatorSet | address | undefined |
+| baseReward | uint256 | undefined |
+
 ### paidRewardPerEpoch
 
 ```solidity
 function paidRewardPerEpoch(uint256) external view returns (uint256)
 ```
 
-
+returns the total reward paid for the given epoch
 
 
 
@@ -208,7 +226,7 @@ function paidRewardPerEpoch(uint256) external view returns (uint256)
 function pendingRewards(address) external view returns (uint256)
 ```
 
-
+returns the pending reward for the given account
 
 
 
@@ -230,11 +248,30 @@ function pendingRewards(address) external view returns (uint256)
 function withdrawReward() external nonpayable
 ```
 
+withdraws pending rewards for the sender (validator)
 
 
 
 
 
+
+## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+*Triggered when the contract has been initialized or reinitialized.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 
 
