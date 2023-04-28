@@ -57,7 +57,7 @@ returns the child chain manager contract for a child chain
 ### registerChildChain
 
 ```solidity
-function registerChildChain(address manager) external nonpayable
+function registerChildChain(address manager) external nonpayable returns (uint256 id)
 ```
 
 registers a new child chain with the staking contract
@@ -69,6 +69,12 @@ registers a new child chain with the staking contract
 | Name | Type | Description |
 |---|---|---|
 | manager | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | of the child chain |
 
 ### releaseStakeOf
 
@@ -107,7 +113,7 @@ called by child manager contract to slash a validator&#39;s stakemanager collect
 ### stakeFor
 
 ```solidity
-function stakeFor(uint256 id, uint256 amount, bytes data) external nonpayable
+function stakeFor(uint256 id, uint256 amount) external nonpayable
 ```
 
 called by a validator to stake for a child chain
@@ -120,7 +126,6 @@ called by a validator to stake for a child chain
 |---|---|---|
 | id | uint256 | undefined |
 | amount | uint256 | undefined |
-| data | bytes | undefined |
 
 ### stakeOf
 
@@ -177,6 +182,28 @@ returns the total amount staked of a validator for all child chains
 | Name | Type | Description |
 |---|---|---|
 | validator | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | undefined |
+
+### totalStakeOfChild
+
+```solidity
+function totalStakeOfChild(uint256 id) external view returns (uint256 amount)
+```
+
+returns the total amount staked for a child chain
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined |
 
 #### Returns
 
@@ -316,27 +343,5 @@ event ValidatorSlashed(uint256 indexed id, address indexed validator, uint256 am
 | validator `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
-
-
-## Errors
-
-### SlashExceedsStake
-
-```solidity
-error SlashExceedsStake(uint256 id, address validator, uint256 amount, uint256 stake)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined |
-| validator | address | undefined |
-| amount | uint256 | undefined |
-| stake | uint256 | undefined |
 
 

@@ -29,7 +29,7 @@ called when a new child chain is registered
 ### onStake
 
 ```solidity
-function onStake(address validator, uint256 amount, bytes data) external nonpayable
+function onStake(address validator, uint256 amount) external nonpayable
 ```
 
 called when a validator stakes
@@ -42,7 +42,6 @@ called when a validator stakes
 |---|---|---|
 | validator | address | undefined |
 | amount | uint256 | undefined |
-| data | bytes | undefined |
 
 
 

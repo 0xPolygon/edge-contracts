@@ -10,6 +10,67 @@
 
 ## Methods
 
+### enableStaking
+
+```solidity
+function enableStaking() external nonpayable
+```
+
+enables staking after successful initialisation of the child chain
+
+*only callable by owner*
+
+
+### finalizeGenesis
+
+```solidity
+function finalizeGenesis() external nonpayable
+```
+
+finalizes initial genesis validator set
+
+*only callable by owner*
+
+
+### genesisSet
+
+```solidity
+function genesisSet() external view returns (struct GenesisValidator[])
+```
+
+returns the genesis validator set with their balances
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | GenesisValidator[] | undefined |
+
+### getValidator
+
+```solidity
+function getValidator(address validator_) external view returns (struct Validator)
+```
+
+returns validator instance based on provided address
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator_ | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | Validator | undefined |
+
 ### onL2StateReceive
 
 ```solidity
@@ -18,7 +79,7 @@ function onL2StateReceive(uint256, address sender, bytes data) external nonpayab
 
 called by the exit helpers to either release the stake of a validator or slash it
 
-
+*can only be synced from child after genesis*
 
 #### Parameters
 
@@ -31,7 +92,7 @@ called by the exit helpers to either release the stake of a validator or slash i
 ### register
 
 ```solidity
-function register(address validator_, uint256[2] signature, uint256[4] pubkey) external nonpayable
+function register(uint256[2] signature, uint256[4] pubkey) external nonpayable
 ```
 
 registers the public key of a validator
@@ -42,7 +103,6 @@ registers the public key of a validator
 
 | Name | Type | Description |
 |---|---|---|
-| validator_ | address | undefined |
 | signature | uint256[2] | undefined |
 | pubkey | uint256[4] | undefined |
 
@@ -98,6 +158,22 @@ event AddedToWhitelist(address indexed validator)
 |---|---|---|
 | validator `indexed` | address | undefined |
 
+### GenesisFinalized
+
+```solidity
+event GenesisFinalized(uint256 amountValidators)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amountValidators  | uint256 | undefined |
+
 ### RemovedFromWhitelist
 
 ```solidity
@@ -113,6 +189,17 @@ event RemovedFromWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
+
+### StakingEnabled
+
+```solidity
+event StakingEnabled()
+```
+
+
+
+
+
 
 ### ValidatorDeactivated
 

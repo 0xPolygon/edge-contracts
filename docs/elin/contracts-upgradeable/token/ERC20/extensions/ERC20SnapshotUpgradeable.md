@@ -1,4 +1,4 @@
-# ERC20Snapshot
+# ERC20SnapshotUpgradeable
 
 
 
@@ -305,6 +305,22 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+*Triggered when the contract has been initialized or reinitialized.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### Snapshot
 

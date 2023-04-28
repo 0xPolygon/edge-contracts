@@ -2,23 +2,29 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
+import "../../lib/WithdrawalQueue.sol";
 import "../../interfaces/child/validator/IValidatorSet.sol";
 import "../../interfaces/IStateSender.sol";
 import "../System.sol";
 
-contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System, CVSWithdrawal {
+contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     using WithdrawalQueueLib for WithdrawalQueue;
 
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
+    uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
 
     IStateSender private STATE_SENDER;
     address private STATE_RECEIVER;
     address private ROOT_CHAIN_MANAGER;
     uint256 private _EPOCH_SIZE;
 
-    event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
+    uint256 public currentEpochId;
+
+    mapping(uint256 => Epoch) public epochs;
+    uint256[] public epochEndBlocks;
+    mapping(address => WithdrawalQueue) internal _withdrawals;
 
     function initialize(
         address stateSender,
@@ -82,8 +88,27 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System, CVSWit
     /**
      * @inheritdoc IValidatorSet
      */
+    function withdrawable(address account) external view returns (uint256 amount) {
+        (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
+    }
+
+    /**
+     * @inheritdoc IValidatorSet
+     */
+    function pendingWithdrawals(address account) external view returns (uint256) {
+        return _withdrawals[account].pending(currentEpochId);
+    }
+
+    /**
+     * @inheritdoc IValidatorSet
+     */
     function totalBlocks(uint256 epochId) external view returns (uint256 length) {
         length = epochs[epochId].endBlock - epochs[epochId].startBlock + 1;
+    }
+
+    function _registerWithdrawal(address account, uint256 amount) internal {
+        _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
+        emit WithdrawalRegistered(account, amount);
     }
 
     function _slash(address validator) internal {
