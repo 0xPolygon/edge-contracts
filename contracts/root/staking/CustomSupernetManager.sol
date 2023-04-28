@@ -156,20 +156,11 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         uint256[2] calldata signature,
         uint256[4] calldata pubkey
     ) internal view {
-        _verifyNotEmpty(signer, signature, pubkey);
+        /// @dev signature verification succeeds if signature and pubkey are empty
+        if (signature[0] == 0 && signature[1] == 0) revert InvalidSignature(signer);
         // slither-disable-next-line calls-loop
         (bool result, bool callSuccess) = BLS.verifySingle(signature, pubkey, _message(signer));
         if (!callSuccess || !result) revert InvalidSignature(signer);
-    }
-
-    /// @dev signature verification succeeds if signature and pubkey are empty
-    function _verifyNotEmpty(address signer, uint256[2] calldata signature, uint256[4] calldata pubkey) internal pure {
-        bytes32 emptySignature = keccak256(abi.encodePacked([uint256(0), uint256(0)]));
-        bytes32 emptyPubkey = keccak256(abi.encodePacked([uint256(0), uint256(0), uint256(0), uint256(0)]));
-        if (
-            keccak256(abi.encodePacked(signature)) == emptySignature &&
-            keccak256(abi.encodePacked(pubkey)) == emptyPubkey
-        ) revert InvalidSignature(signer);
     }
 
     /// @notice Message to sign for registration

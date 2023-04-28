@@ -22,7 +22,6 @@ contract StakeManager is IStakeManager, Initializable {
     /**
      * @inheritdoc IStakeManager
      */
-    // TODO call in initializer from supernet manager?
     function registerChildChain(address manager) external returns (uint256 id) {
         id = _chains.registerChild(manager);
         ISupernetManager(manager).onInit(id);

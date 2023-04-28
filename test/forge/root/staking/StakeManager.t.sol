@@ -3,18 +3,18 @@ pragma solidity 0.8.19;
 
 import "@utils/Test.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
-import {SupernetManager} from "contracts/root/staking/lib/SupernetManager.sol";
+import {MockSupernetManager} from "contracts/mocks/MockSupernetManager.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 
 abstract contract Uninitialized is Test {
     MockERC20 token;
     StakeManager stakeManager;
-    SupernetManager supernetManager;
+    MockSupernetManager supernetManager;
 
     function setUp() public virtual {
         token = new MockERC20();
         stakeManager = new StakeManager();
-        supernetManager = new SupernetManager();
+        supernetManager = new MockSupernetManager();
     }
 }
 
@@ -28,7 +28,7 @@ abstract contract Initialized is Uninitialized {
 
 abstract contract Registered is Initialized {
     uint256 maxAmount = 1000000 ether;
-    SupernetManager supernetManager2;
+    MockSupernetManager supernetManager2;
     uint256 id;
     uint256 id2;
     address alice;
@@ -36,7 +36,7 @@ abstract contract Registered is Initialized {
     function setUp() public virtual override {
         super.setUp();
         alice = makeAddr("alice");
-        supernetManager2 = new SupernetManager();
+        supernetManager2 = new MockSupernetManager();
         supernetManager2.initialize(address(stakeManager));
         id = stakeManager.registerChildChain(address(supernetManager));
         id2 = stakeManager.registerChildChain(address(supernetManager2));
