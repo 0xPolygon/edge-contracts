@@ -10,8 +10,6 @@ interface IStakeManager {
     event StakeWithdrawn(address indexed validator, address indexed recipient, uint256 amount);
     event ValidatorSlashed(uint256 indexed id, address indexed validator, uint256 amount);
 
-    error SlashExceedsStake(uint256 id, address validator, uint256 amount, uint256 stake);
-
     /// @notice registers a new child chain with the staking contract
     /// @return id of the child chain
     function registerChildChain(address manager) external returns (uint256 id);

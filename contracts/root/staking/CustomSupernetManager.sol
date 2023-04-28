@@ -16,7 +16,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
-    uint256 private constant SLASHING_PERCENTAGE = 50;
+    uint256 public constant SLASHING_PERCENTAGE = 50;
 
     IBLS private BLS;
     IStateSender private STATE_SENDER;
@@ -43,13 +43,13 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         address exitHelper,
         string memory domain
     ) public initializer {
+        __SupernetManager_init(stakeManager);
         BLS = IBLS(bls);
         STATE_SENDER = IStateSender(stateSender);
         MATIC = IERC20(matic);
         CHILD_VALIDATOR_SET = childValidatorSet;
         EXIT_HELPER = exitHelper;
         DOMAIN = keccak256(abi.encodePacked(domain));
-        super.initialize(stakeManager);
         __Ownable2Step_init();
     }
 
@@ -66,13 +66,13 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     /**
      * @inheritdoc ICustomSupernetManager
      */
-    function register(address validator_, uint256[2] calldata signature, uint256[4] calldata pubkey) external {
-        Validator storage validator = validators[validator_];
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
+        Validator storage validator = validators[msg.sender];
         if (!validator.isWhitelisted) revert Unauthorized("WHITELIST");
-        _verifyValidatorRegistration(validator_, signature, pubkey);
+        _verifyValidatorRegistration(msg.sender, signature, pubkey);
         validator.blsKey = pubkey;
         validator.isActive = true;
-        _removeFromWhitelist(validator_);
+        _removeFromWhitelist(msg.sender);
         emit ValidatorRegistered(msg.sender, pubkey);
     }
 
@@ -81,6 +81,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
      */
     function finalizeGenesis() external onlyOwner {
         _genesis.finalize();
+        emit GenesisFinalized(_genesis.set().length);
     }
 
     /**
@@ -88,6 +89,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
      */
     function enableStaking() external onlyOwner {
         _genesis.enableStaking();
+        emit StakingEnabled();
     }
 
     /**
@@ -133,7 +135,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         } else if (_genesis.completed()) {
             STATE_SENDER.syncState(CHILD_VALIDATOR_SET, abi.encode(STAKE_SIG, validator, amount));
         } else {
-            revert Unauthorized("wait for genesis");
+            revert Unauthorized("Wait for genesis");
         }
     }
 
@@ -154,15 +156,26 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         uint256[2] calldata signature,
         uint256[4] calldata pubkey
     ) internal view {
+        _verifyNotEmpty(signer, signature, pubkey);
         // slither-disable-next-line calls-loop
         (bool result, bool callSuccess) = BLS.verifySingle(signature, pubkey, _message(signer));
         if (!callSuccess || !result) revert InvalidSignature(signer);
     }
 
+    /// @dev signature verification succeeds if signature and pubkey are empty
+    function _verifyNotEmpty(address signer, uint256[2] calldata signature, uint256[4] calldata pubkey) internal pure {
+        bytes32 emptySignature = keccak256(abi.encodePacked([uint256(0), uint256(0)]));
+        bytes32 emptyPubkey = keccak256(abi.encodePacked([uint256(0), uint256(0), uint256(0), uint256(0)]));
+        if (
+            keccak256(abi.encodePacked(signature)) == emptySignature &&
+            keccak256(abi.encodePacked(pubkey)) == emptyPubkey
+        ) revert InvalidSignature(signer);
+    }
+
     /// @notice Message to sign for registration
     function _message(address signer) internal view returns (uint256[2] memory) {
         // slither-disable-next-line calls-loop
-        return BLS.hashToPoint(DOMAIN, abi.encodePacked(signer));
+        return BLS.hashToPoint(DOMAIN, abi.encodePacked(signer, address(this), block.chainid));
     }
 
     function _addToWhitelist(address validator) internal {

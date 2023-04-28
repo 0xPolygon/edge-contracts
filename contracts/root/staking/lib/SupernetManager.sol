@@ -15,6 +15,10 @@ contract SupernetManager is ISupernetManager, Initializable {
     }
 
     function initialize(address stakeManager) public initializer {
+        __SupernetManager_init(stakeManager);
+    }
+
+    function __SupernetManager_init(address stakeManager) internal onlyInitializing {
         STAKE_MANAGER = IStakeManager(stakeManager);
     }
 

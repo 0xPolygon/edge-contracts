@@ -33,6 +33,7 @@ contract StakeManager is IStakeManager, Initializable {
      * @inheritdoc IStakeManager
      */
     function stakeFor(uint256 id, uint256 amount) external {
+        require(id != 0 && id <= _chains.counter, "INVALID_ID");
         MATIC.safeTransferFrom(msg.sender, address(this), amount);
         _stakes.addStake(msg.sender, id, amount);
         ISupernetManager manager = managerOf(id);
@@ -62,7 +63,7 @@ contract StakeManager is IStakeManager, Initializable {
     function slashStakeOf(address validator, uint256 amount) external {
         uint256 id = idFor(msg.sender);
         uint256 stake = stakeOf(validator, id);
-        if (amount > stake) revert SlashExceedsStake(id, validator, amount, stake);
+        if (amount > stake) amount = stake;
         _stakes.removeStake(validator, id, stake);
         _withdrawStake(validator, msg.sender, amount);
         emit StakeRemoved(id, validator, stake);

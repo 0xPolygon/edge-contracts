@@ -31,7 +31,7 @@ library GenesisLib {
      * @param stake amount to add to the validators genesis stake
      */
     function insert(GenesisSet storage self, address validator, uint256 stake) internal {
-        require(self.status == GenesisStatus.NOT_STARTED, "GenesisLib: already finalized");
+        assert(self.status == GenesisStatus.NOT_STARTED);
         uint256 index = self.indices[validator];
         if (index == 0) {
             // insert into set
@@ -58,7 +58,9 @@ library GenesisLib {
      * @notice enables staking after the genesis set has been finalized
      */
     function enableStaking(GenesisSet storage self) internal {
-        require(self.status == GenesisStatus.IN_PROGRESS, "GenesisLib: not finalized");
+        GenesisStatus status = self.status;
+        if (status == GenesisStatus.NOT_STARTED) revert("GenesisLib: not finalized");
+        if (status == GenesisStatus.COMPLETED) revert("GenesisLib: already enabled");
         self.status = GenesisStatus.COMPLETED;
     }
 
