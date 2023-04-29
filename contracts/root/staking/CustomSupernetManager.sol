@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./lib/SupernetManager.sol";
+import "./SupernetManager.sol";
 import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
@@ -80,7 +80,9 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
      * @inheritdoc ICustomSupernetManager
      */
     function finalizeGenesis() external onlyOwner {
-        _genesis.finalize();
+        // calling the library directly once fixes the coverage issue
+        // https://github.com/foundry-rs/foundry/issues/4854#issuecomment-1528897219
+        GenesisLib.finalize(_genesis);
         emit GenesisFinalized(_genesis.set().length);
     }
 

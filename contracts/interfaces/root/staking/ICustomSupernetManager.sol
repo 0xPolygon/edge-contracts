@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "../../../root/staking/lib/GenesisLib.sol";
+import "../../../lib/GenesisLib.sol";
 
 struct Validator {
     uint256[4] blsKey;

@@ -2,8 +2,8 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../../../interfaces/root/staking/IStakeManager.sol";
-import "../../../interfaces/root/staking/ISupernetManager.sol";
+import "../../interfaces/root/staking/IStakeManager.sol";
+import "../../interfaces/root/staking/ISupernetManager.sol";
 
 abstract contract SupernetManager is ISupernetManager, Initializable {
     IStakeManager internal STAKE_MANAGER;

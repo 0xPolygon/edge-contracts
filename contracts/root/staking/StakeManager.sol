@@ -4,12 +4,13 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./lib/StakeManagerLibs.sol";
+import "../../lib/ChildManagerLib.sol";
+import "../../lib/StakeManagerLib.sol";
 
 contract StakeManager is IStakeManager, Initializable {
-    using ChildManager for ChildChains;
+    using ChildManagerLib for ChildChains;
+    using StakeManagerLib for Stakes;
     using SafeERC20 for IERC20;
-    using StakesManager for Stakes;
 
     IERC20 internal MATIC;
     ChildChains private _chains;
@@ -34,7 +35,9 @@ contract StakeManager is IStakeManager, Initializable {
     function stakeFor(uint256 id, uint256 amount) external {
         require(id != 0 && id <= _chains.counter, "INVALID_ID");
         MATIC.safeTransferFrom(msg.sender, address(this), amount);
-        _stakes.addStake(msg.sender, id, amount);
+        // calling the library directly once fixes the coverage issue
+        // https://github.com/foundry-rs/foundry/issues/4854#issuecomment-1528897219
+        StakeManagerLib.addStake(_stakes, msg.sender, id, amount);
         ISupernetManager manager = managerOf(id);
         manager.onStake(msg.sender, amount);
         emit StakeAdded(id, msg.sender, amount);
@@ -115,7 +118,7 @@ contract StakeManager is IStakeManager, Initializable {
      * @inheritdoc IStakeManager
      */
     function idFor(address manager) public view returns (uint256 id) {
-        id = _chains.idFor(manager);
+        id = ChildManagerLib.idFor(_chains, manager);
     }
 
     function _withdrawStake(address validator, address to, uint256 amount) private {

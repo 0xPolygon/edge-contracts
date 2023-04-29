@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "../root/staking/lib/SupernetManager.sol";
+import "../root/staking/SupernetManager.sol";
 
 contract MockSupernetManager is SupernetManager {
     function initialize(address stakeManager) public initializer {
