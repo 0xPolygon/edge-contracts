@@ -16,3 +16,4 @@ out
 /broadcast/*/31337/
 slither.db.json
 docs/
+lib/
