@@ -38,8 +38,11 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         STATE_RECEIVER = stateReceiver;
         ROOT_CHAIN_MANAGER = rootChainManager;
         EPOCH_SIZE = epochSize_;
-        for (uint256 i = 0; i < initalValidators.length; i++) {
+        for (uint256 i; i < initalValidators.length; ) {
             _stake(initalValidators[i].addr, initalValidators[i].stake);
+            unchecked {
+                ++i;
+            }
         }
         epochEndBlocks.push(0);
         currentEpochId = 1;
