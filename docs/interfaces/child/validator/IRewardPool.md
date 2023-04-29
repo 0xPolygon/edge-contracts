@@ -1,10 +1,10 @@
 # IRewardPool
 
+*Polygon Technology (@gretzke)*
 
+> IRewardPool
 
-
-
-
+Distributes rewards to validators for committed epochs
 
 
 
@@ -13,7 +13,7 @@
 ### distributeRewardFor
 
 ```solidity
-function distributeRewardFor(uint256 epochId, Uptime uptime) external nonpayable
+function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayable
 ```
 
 
@@ -25,7 +25,7 @@ function distributeRewardFor(uint256 epochId, Uptime uptime) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | epochId | uint256 | undefined |
-| uptime | Uptime | undefined |
+| uptime | Uptime[] | undefined |
 
 ### paidRewardPerEpoch
 
@@ -82,6 +82,26 @@ withdraws pending rewards for the sender (validator)
 
 
 
+
+
+## Events
+
+### RewardDistributed
+
+```solidity
+event RewardDistributed(uint256 indexed epochId, uint256 totalReward)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| epochId `indexed` | uint256 | undefined |
+| totalReward  | uint256 | undefined |
 
 
 

@@ -1,4 +1,4 @@
-# SupernetManager
+# MockSupernetManager
 
 
 
@@ -26,6 +26,22 @@ function id() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### initialize
+
+```solidity
+function initialize(address stakeManager) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| stakeManager | address | undefined |
 
 ### onInit
 

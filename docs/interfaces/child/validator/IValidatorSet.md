@@ -1,12 +1,12 @@
 # IValidatorSet
 
+*Polygon Technology (@gretzke)*
 
+> IValidatorSet
 
+Manages voting power for validators and commits epochs for child chains
 
-
-
-
-
+*Voting power is synced between the stake manager on root on stake and unstake actions*
 
 ## Methods
 
@@ -223,10 +223,27 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 | endBlock `indexed` | uint256 | undefined |
 | epochRoot  | bytes32 | undefined |
 
+### Slashed
+
+```solidity
+event Slashed(uint256 indexed validator, uint256 amount)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validator `indexed` | uint256 | undefined |
+| amount  | uint256 | undefined |
+
 ### Withdrawal
 
 ```solidity
-event Withdrawal(address indexed account, address indexed to, uint256 amount)
+event Withdrawal(address indexed account, uint256 amount)
 ```
 
 
@@ -238,7 +255,6 @@ event Withdrawal(address indexed account, address indexed to, uint256 amount)
 | Name | Type | Description |
 |---|---|---|
 | account `indexed` | address | undefined |
-| to `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
 ### WithdrawalRegistered

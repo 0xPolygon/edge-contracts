@@ -14,6 +14,12 @@ struct Epoch {
     bytes32 epochRoot;
 }
 
+/**
+    @title IValidatorSet
+    @author Polygon Technology (@gretzke)
+    @notice Manages voting power for validators and commits epochs for child chains
+    @dev Voting power is synced between the stake manager on root on stake and unstake actions
+ */
 interface IValidatorSet is IStateReceiver {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
     event Slashed(uint256 indexed validator, uint256 amount);

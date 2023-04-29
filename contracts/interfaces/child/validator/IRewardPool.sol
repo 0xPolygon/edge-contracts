@@ -9,6 +9,11 @@ struct Uptime {
     uint256 signedBlocks;
 }
 
+/**
+    @title IRewardPool
+    @author Polygon Technology (@gretzke)
+    @notice Distributes rewards to validators for committed epochs
+ */
 interface IRewardPool {
     event RewardDistributed(uint256 indexed epochId, uint256 totalReward);
 

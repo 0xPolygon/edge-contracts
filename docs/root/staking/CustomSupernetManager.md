@@ -136,22 +136,6 @@ function id() external view returns (uint256)
 ### initialize
 
 ```solidity
-function initialize(address stakeManager) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| stakeManager | address | undefined |
-
-### initialize
-
-```solidity
 function initialize(address stakeManager, address bls, address stateSender, address matic, address childValidatorSet, address exitHelper, string domain) external nonpayable
 ```
 

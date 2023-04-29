@@ -10,6 +10,12 @@ struct Validator {
     bool isActive;
 }
 
+/**
+    @title ICustomSupernetManager
+    @author Polygon Technology (@gretzke)
+    @notice Manages validator access and syncs voting power between the stake manager and validator set on the child chain
+    @dev Implements the base SupernetManager contract
+ */
 interface ICustomSupernetManager {
     event AddedToWhitelist(address indexed validator);
     event RemovedFromWhitelist(address indexed validator);

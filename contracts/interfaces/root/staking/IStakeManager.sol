@@ -3,6 +3,11 @@ pragma solidity 0.8.19;
 
 import "../../../interfaces/root/staking/ISupernetManager.sol";
 
+/**
+    @title IStakeManager
+    @author Polygon Technology (@gretzke)
+    @notice Manages stakes for all child chains
+ */
 interface IStakeManager {
     event ChildManagerRegistered(uint256 indexed id, address indexed manager);
     event StakeAdded(uint256 indexed id, address indexed validator, uint256 amount);

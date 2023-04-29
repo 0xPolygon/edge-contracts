@@ -183,7 +183,7 @@ function VALIDATOR_SET() external view returns (contract IValidatorSet)
 ### distributeRewardFor
 
 ```solidity
-function distributeRewardFor(uint256 epochId, Uptime uptime) external nonpayable
+function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayable
 ```
 
 
@@ -195,7 +195,7 @@ function distributeRewardFor(uint256 epochId, Uptime uptime) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | epochId | uint256 | undefined |
-| uptime | Uptime | undefined |
+| uptime | Uptime[] | undefined |
 
 ### initialize
 
@@ -290,6 +290,23 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### RewardDistributed
+
+```solidity
+event RewardDistributed(uint256 indexed epochId, uint256 totalReward)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| epochId `indexed` | uint256 | undefined |
+| totalReward  | uint256 | undefined |
 
 
 

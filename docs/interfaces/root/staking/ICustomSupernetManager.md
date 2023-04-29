@@ -1,12 +1,12 @@
 # ICustomSupernetManager
 
+*Polygon Technology (@gretzke)*
 
+> ICustomSupernetManager
 
+Manages validator access and syncs voting power between the stake manager and validator set on the child chain
 
-
-
-
-
+*Implements the base SupernetManager contract*
 
 ## Methods
 
