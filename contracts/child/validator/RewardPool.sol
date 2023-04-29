@@ -5,9 +5,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "../System.sol";
-import "../../interfaces/child/validator/IRewardDistributor.sol";
+import "../../interfaces/child/validator/IRewardPool.sol";
 
-contract RewardDistributor is IRewardDistributor, System, Initializable {
+contract RewardPool is IRewardPool, System, Initializable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     IERC20Upgradeable public REWARD_TOKEN;
@@ -31,9 +31,9 @@ contract RewardDistributor is IRewardDistributor, System, Initializable {
     }
 
     /**
-     * @inheritdoc IRewardDistributor
+     * @inheritdoc IRewardPool
      */
-    function distributeRewardFor(uint256 epochId, Uptime calldata uptime) external onlySystemCall {
+    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime) external onlySystemCall {
         require(paidRewardPerEpoch[epochId] == 0, "REWARD_ALREADY_DISTRIBUTED");
         uint256 totalBlocks = VALIDATOR_SET.totalBlocks(epochId);
         require(totalBlocks != 0, "EPOCH_NOT_COMMITTED");
@@ -41,11 +41,11 @@ contract RewardDistributor is IRewardDistributor, System, Initializable {
         uint256 reward = (BASE_REWARD * totalBlocks * 100) / (epochSize * 100);
 
         uint256 totalSupply = VALIDATOR_SET.totalSupplyAt(epochId);
-        uint256 length = uptime.uptimeData.length;
+        uint256 length = uptime.length;
         uint256 totalReward = 0;
         for (uint256 i = 0; i < length; i++) {
-            UptimeData memory data = uptime.uptimeData[i];
-            assert(data.signedBlocks <= totalBlocks);
+            Uptime memory data = uptime[i];
+            require(data.signedBlocks <= totalBlocks, "SIGNED_BLOCKS_EXCEEDS_TOTAL");
             uint256 balance = VALIDATOR_SET.balanceOfAt(data.validator, epochId);
             uint256 validatorReward = (reward * balance * data.signedBlocks) / (totalSupply * totalBlocks);
             pendingRewards[data.validator] += validatorReward;
@@ -53,10 +53,11 @@ contract RewardDistributor is IRewardDistributor, System, Initializable {
         }
         paidRewardPerEpoch[epochId] = totalReward;
         _transferRewards(totalReward);
+        emit RewardDistributed(epochId, totalReward);
     }
 
     /**
-     * @inheritdoc IRewardDistributor
+     * @inheritdoc IRewardPool
      */
     function withdrawReward() external {
         uint256 pendingReward = pendingRewards[msg.sender];

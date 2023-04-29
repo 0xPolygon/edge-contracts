@@ -16,8 +16,9 @@ struct Epoch {
 
 interface IValidatorSet is IStateReceiver {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
+    event Slashed(uint256 indexed validator, uint256 amount);
     event WithdrawalRegistered(address indexed account, uint256 amount);
-    event Withdrawal(address indexed account, address indexed to, uint256 amount);
+    event Withdrawal(address indexed account, uint256 amount);
 
     /// @notice commits a new epoch
     /// @dev system call

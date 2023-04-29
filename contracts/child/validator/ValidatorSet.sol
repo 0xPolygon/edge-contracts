@@ -18,7 +18,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     IStateSender private STATE_SENDER;
     address private STATE_RECEIVER;
     address private ROOT_CHAIN_MANAGER;
-    uint256 private _EPOCH_SIZE;
+    uint256 public EPOCH_SIZE;
 
     uint256 public currentEpochId;
 
@@ -37,10 +37,11 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         STATE_SENDER = IStateSender(stateSender);
         STATE_RECEIVER = stateReceiver;
         ROOT_CHAIN_MANAGER = rootChainManager;
-        _EPOCH_SIZE = epochSize_;
+        EPOCH_SIZE = epochSize_;
         for (uint256 i = 0; i < initalValidators.length; i++) {
             _stake(initalValidators[i].addr, initalValidators[i].stake);
         }
+        epochEndBlocks.push(0);
         currentEpochId = 1;
     }
 
@@ -51,7 +52,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
-        require((epoch.endBlock - epoch.startBlock + 1) % _EPOCH_SIZE == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
+        require((epoch.endBlock - epoch.startBlock + 1) % EPOCH_SIZE == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
         require(epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock, "INVALID_START_BLOCK");
         epochs[newEpochId] = epoch;
         epochEndBlocks.push(epoch.endBlock);
@@ -81,7 +82,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         WithdrawalQueue storage queue = _withdrawals[msg.sender];
         (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
         queue.head = newHead;
-        emit Withdrawal(msg.sender, msg.sender, amount);
+        emit Withdrawal(msg.sender, amount);
         STATE_SENDER.syncState(ROOT_CHAIN_MANAGER, abi.encode(UNSTAKE_SIG, msg.sender, amount));
     }
 
@@ -103,7 +104,8 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
      * @inheritdoc IValidatorSet
      */
     function totalBlocks(uint256 epochId) external view returns (uint256 length) {
-        length = epochs[epochId].endBlock - epochs[epochId].startBlock + 1;
+        uint256 endBlock = epochs[epochId].endBlock;
+        length = endBlock == 0 ? 0 : endBlock - epochs[epochId].startBlock + 1;
     }
 
     function _registerWithdrawal(address account, uint256 amount) internal {
@@ -111,6 +113,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         emit WithdrawalRegistered(account, amount);
     }
 
+    /// @dev no public facing slashing function implemented yet
     function _slash(address validator) internal {
         // unstake validator
         _burn(validator, balanceOf(validator));
@@ -132,10 +135,6 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
         require(from == address(0) || to == address(0), "TRANSFER_FORBIDDEN");
         super._beforeTokenTransfer(from, to, amount);
-    }
-
-    function EPOCH_SIZE() external view override returns (uint256) {
-        return _EPOCH_SIZE;
     }
 
     function balanceOfAt(

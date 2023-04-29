@@ -1,4 +1,4 @@
-# IRewardDistributor
+# IRewardPool
 
 
 

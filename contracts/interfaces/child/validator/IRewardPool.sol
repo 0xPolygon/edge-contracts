@@ -4,23 +4,18 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IValidatorSet.sol";
 
-struct UptimeData {
+struct Uptime {
     address validator;
     uint256 signedBlocks;
 }
 
-struct Uptime {
-    uint256 epochId;
-    UptimeData[] uptimeData;
-    uint256 totalBlocks;
-}
+interface IRewardPool {
+    event RewardDistributed(uint256 indexed epochId, uint256 totalReward);
 
-interface IRewardDistributor {
     /// @notice distributes reward for the given epoch
     /// @dev transfers funds from sender to this contract
-    /// @param epochId epoch id to distribute rewards for
     /// @param uptime uptime data for every validator
-    function distributeRewardFor(uint256 epochId, Uptime calldata uptime) external;
+    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime) external;
 
     /// @notice withdraws pending rewards for the sender (validator)
     function withdrawReward() external;
