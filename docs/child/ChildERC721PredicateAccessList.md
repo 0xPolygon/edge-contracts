@@ -279,7 +279,7 @@ function childTokenTemplate() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, address newOwner) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC721Predicate, address newChildTokenTemplate, bool useAllowList, bool useBlockList, address newOwner) external nonpayable
 ```
 
 
@@ -294,6 +294,8 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 | newStateReceiver | address | undefined |
 | newRootERC721Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
+| useAllowList | bool | undefined |
+| useBlockList | bool | undefined |
 | newOwner | address | undefined |
 
 ### initialize

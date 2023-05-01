@@ -265,7 +265,7 @@ Initilization function for ChildERC20Predicate
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress, address newOwner) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress, bool useAllowList, bool useBlockList, address newOwner) external nonpayable
 ```
 
 
@@ -281,6 +281,8 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 | newRootERC20Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
 | newNativeTokenRootAddress | address | undefined |
+| useAllowList | bool | undefined |
+| useBlockList | bool | undefined |
 | newOwner | address | undefined |
 
 ### l2StateSender

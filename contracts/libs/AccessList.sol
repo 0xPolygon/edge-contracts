@@ -11,8 +11,8 @@ import {System} from "../child/System.sol";
     @notice Checks the access lists to see if an address is allowed and not blocked
  */
 contract AccessList is Ownable2StepUpgradeable, System {
-    bool private useAllowList = true;
-    bool private useBlockList = true;
+    bool private useAllowList;
+    bool private useBlockList;
 
     event AllowListUsageSet(uint256 indexed block, bool indexed status);
     event BlockListUsageSet(uint256 indexed block, bool indexed status);
@@ -41,5 +41,10 @@ contract AccessList is Ownable2StepUpgradeable, System {
             );
             require(blockSuccess && abi.decode(blocklistRes, (uint256)) != 1, "BLOCKED_SENDER");
         }
+    }
+
+    function _initializeAccessList(bool _useAllowList, bool _useBlockList) internal {
+        useAllowList = _useAllowList;
+        useBlockList = _useBlockList;
     }
 }

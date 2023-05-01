@@ -17,6 +17,8 @@ contract ChildERC20PredicateAccessList is AccessList, ChildERC20Predicate {
         address newRootERC20Predicate,
         address newChildTokenTemplate,
         address newNativeTokenRootAddress,
+        bool useAllowList,
+        bool useBlockList,
         address newOwner
     ) public virtual onlySystemCall initializer {
         super.initialize(
@@ -26,6 +28,7 @@ contract ChildERC20PredicateAccessList is AccessList, ChildERC20Predicate {
             newChildTokenTemplate,
             newNativeTokenRootAddress
         );
+        _initializeAccessList(useAllowList, useBlockList);
         _transferOwnership(newOwner);
     }
 
