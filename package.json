@@ -48,7 +48,7 @@
     "@defi-wonderland/smock": "^2.3.4",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
-    "@types/chai": "^4.3.4",
+    "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.3",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
