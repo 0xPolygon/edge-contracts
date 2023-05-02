@@ -21,7 +21,7 @@ contract ChildERC20PredicateAccessList is AccessList, ChildERC20Predicate {
         bool useBlockList,
         address newOwner
     ) public virtual onlySystemCall initializer {
-        super.initialize(
+        super.initializeInternal(
             newL2StateSender,
             newStateReceiver,
             newRootERC20Predicate,

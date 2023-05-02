@@ -75,12 +75,12 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
      */
-    function initialize(
+    function initializeInternal(
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC721Predicate,
         address newChildTokenTemplate
-    ) public virtual onlySystemCall initializer {
+    ) internal {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&
@@ -92,6 +92,28 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         stateReceiver = newStateReceiver;
         rootERC721Predicate = newRootERC721Predicate;
         childTokenTemplate = newChildTokenTemplate;
+    }
+
+    /**
+     * @notice Initilization function for ChildERC721Predicate
+     * @param newL2StateSender Address of L2StateSender to send exit information to
+     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
+     * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
+     */
+    function initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newRootERC721Predicate,
+        address newChildTokenTemplate
+    ) public virtual onlySystemCall initializer {
+        initializeInternal(
+            newL2StateSender,
+            newStateReceiver,
+            rootERC721Predicate,
+            newChildTokenTemplate
+        );
     }
 
     /**
