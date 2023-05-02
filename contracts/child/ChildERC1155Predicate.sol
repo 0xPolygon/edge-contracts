@@ -112,7 +112,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address newRootERC1155Predicate,
         address newChildTokenTemplate
     ) public virtual onlySystemCall initializer {
-        initializeInternal(
+        initializeFunction(
             newL2StateSender,
             newStateReceiver,
             newRootERC1155Predicate,
