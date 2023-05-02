@@ -79,7 +79,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can only be called once.
      */
-    function initializeFunction(
+    function initializeInternal(
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC1155Predicate,
@@ -112,7 +112,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address newRootERC1155Predicate,
         address newChildTokenTemplate
     ) public virtual onlySystemCall initializer {
-        initializeFunction(
+        initializeInternal(
             newL2StateSender,
             newStateReceiver,
             newRootERC1155Predicate,
