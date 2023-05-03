@@ -79,45 +79,13 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can only be called once.
      */
-    function initializeInternal(
-        address newL2StateSender,
-        address newStateReceiver,
-        address newRootERC1155Predicate,
-        address newChildTokenTemplate
-    ) internal {
-        require(
-            newL2StateSender != address(0) &&
-                newStateReceiver != address(0) &&
-                newRootERC1155Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "ChildERC1155Predicate: BAD_INITIALIZATION"
-        );
-        l2StateSender = IStateSender(newL2StateSender);
-        stateReceiver = newStateReceiver;
-        rootERC1155Predicate = newRootERC1155Predicate;
-        childTokenTemplate = newChildTokenTemplate;
-    }
-
-    /**
-     * @notice Initilization function for ChildERC1155Predicate
-     * @param newL2StateSender Address of L2StateSender to send exit information to
-     * @param newStateReceiver Address of StateReceiver to receive deposit information from
-     * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
-     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
-     * @dev Can only be called once.
-     */
     function initialize(
         address newL2StateSender,
         address newStateReceiver,
         address newRootERC1155Predicate,
         address newChildTokenTemplate
     ) public virtual onlySystemCall initializer {
-        initializeInternal(
-            newL2StateSender,
-            newStateReceiver,
-            newRootERC1155Predicate,
-            newChildTokenTemplate
-        );
+        _initialize(newL2StateSender, newStateReceiver, newRootERC1155Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -186,6 +154,33 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         _beforeTokenWithdraw();
         _withdrawBatch(childToken, receivers, tokenIds, amounts);
         _afterTokenWithdraw();
+    }
+
+    /**
+     * @notice Internal initilization function for ChildERC1155Predicate
+     * @param newL2StateSender Address of L2StateSender to send exit information to
+     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
+     * @dev Can be called multiple times.
+     */
+    function _initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newRootERC1155Predicate,
+        address newChildTokenTemplate
+    ) internal {
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newRootERC1155Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "ChildERC1155Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
+        stateReceiver = newStateReceiver;
+        rootERC1155Predicate = newRootERC1155Predicate;
+        childTokenTemplate = newChildTokenTemplate;
     }
 
     // solhint-disable no-empty-blocks

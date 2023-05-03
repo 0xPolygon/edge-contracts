@@ -48,40 +48,6 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         uint256 amount
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
-    
-    /**
-     * @notice Initilization function for ChildERC20Predicate
-     * @param newL2StateSender Address of L2StateSender to send exit information to
-     * @param newStateReceiver Address of StateReceiver to receive deposit information from
-     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
-     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
-     * @param newNativeTokenRootAddress Address of native token on root chain
-     * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
-     */
-    function initializeInternal(
-        address newL2StateSender,
-        address newStateReceiver,
-        address newRootERC20Predicate,
-        address newChildTokenTemplate,
-        address newNativeTokenRootAddress
-    ) internal {
-        require(
-            newL2StateSender != address(0) &&
-                newStateReceiver != address(0) &&
-                newRootERC20Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "ChildERC20Predicate: BAD_INITIALIZATION"
-        );
-        l2StateSender = IStateSender(newL2StateSender);
-        stateReceiver = newStateReceiver;
-        rootERC20Predicate = newRootERC20Predicate;
-        childTokenTemplate = newChildTokenTemplate;
-        if (newNativeTokenRootAddress != address(0)) {
-            rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
-            // slither-disable-next-line reentrancy-events
-            emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CONTRACT);
-        }
-    }
 
     /**
      * @notice Initilization function for ChildERC20Predicate
@@ -99,7 +65,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         address newChildTokenTemplate,
         address newNativeTokenRootAddress
     ) public virtual onlySystemCall initializer {
-        initializeInternal(
+        _initialize(
             newL2StateSender,
             newStateReceiver,
             newRootERC20Predicate,
@@ -150,6 +116,40 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         _beforeTokenWithdraw();
         _withdraw(childToken, receiver, amount);
         _afterTokenWithdraw();
+    }
+
+    /**
+     * @notice Internal initialization function for ChildERC20Predicate
+     * @param newL2StateSender Address of L2StateSender to send exit information to
+     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
+     * @param newNativeTokenRootAddress Address of native token on root chain
+     * @dev Can be called multiple times.
+     */
+    function _initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newRootERC20Predicate,
+        address newChildTokenTemplate,
+        address newNativeTokenRootAddress
+    ) internal {
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newRootERC20Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "ChildERC20Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
+        stateReceiver = newStateReceiver;
+        rootERC20Predicate = newRootERC20Predicate;
+        childTokenTemplate = newChildTokenTemplate;
+        if (newNativeTokenRootAddress != address(0)) {
+            rootTokenToChildToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
+            // slither-disable-next-line reentrancy-events
+            emit L2TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CONTRACT);
+        }
     }
 
     // solhint-disable no-empty-blocks
