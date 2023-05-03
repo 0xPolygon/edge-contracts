@@ -20,7 +20,7 @@ contract ChildERC721PredicateAccessList is AccessList, ChildERC721Predicate {
         bool useBlockList,
         address newOwner
     ) public virtual onlySystemCall initializer {
-        super.initializeInternal(newL2StateSender, newStateReceiver, newRootERC721Predicate, newChildTokenTemplate);
+        _initialize(newL2StateSender, newStateReceiver, newRootERC721Predicate, newChildTokenTemplate);
         _initializeAccessList(useAllowList, useBlockList);
         _transferOwnership(newOwner);
     }
