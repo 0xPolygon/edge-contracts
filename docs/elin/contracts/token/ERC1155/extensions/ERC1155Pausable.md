@@ -6,7 +6,7 @@
 
 
 
-*ERC1155 token with pausable token transfers, minting and burning. Useful for scenarios such as preventing trades until the end of an evaluation period, or having an emergency switch for freezing all token transfers in the event of a large bug. IMPORTANT: This contract does not include public pause and unpause functions. In addition to inheriting this contract, you must define both functions, invoking the {Pausable-_pause} and {Pausable-_unpause} internal functions, with appropriate access control, e.g. using {AccessControl} or {Ownable}. Not doing so will make the contract unpausable. _Available since v3.1._*
+*ERC1155 token with pausable token transfers, minting and burning. Useful for scenarios such as preventing trades until the end of an evaluation period, or having an emergency switch for freezing all token transfers in the event of a large bug. _Available since v3.1._*
 
 ## Methods
 
@@ -209,7 +209,7 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 
 
 
-
+*Emitted when `account` grants or revokes permission to `operator` to transfer their tokens, according to `approved`.*
 
 #### Parameters
 
@@ -227,7 +227,7 @@ event Paused(address account)
 
 
 
-
+*Emitted when the pause is triggered by `account`.*
 
 #### Parameters
 
@@ -243,7 +243,7 @@ event TransferBatch(address indexed operator, address indexed from, address inde
 
 
 
-
+*Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all transfers.*
 
 #### Parameters
 
@@ -263,7 +263,7 @@ event TransferSingle(address indexed operator, address indexed from, address ind
 
 
 
-
+*Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.*
 
 #### Parameters
 
@@ -283,7 +283,7 @@ event URI(string value, uint256 indexed id)
 
 
 
-
+*Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI. If an {URI} event was emitted for `id`, the standard https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value returned by {IERC1155MetadataURI-uri}.*
 
 #### Parameters
 
@@ -300,7 +300,7 @@ event Unpaused(address account)
 
 
 
-
+*Emitted when the pause is lifted by `account`.*
 
 #### Parameters
 

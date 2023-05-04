@@ -6,7 +6,7 @@
 
 
 
-*ERC721 token with pausable token transfers, minting and burning. Useful for scenarios such as preventing trades until the end of an evaluation period, or having an emergency switch for freezing all token transfers in the event of a large bug. IMPORTANT: This contract does not include public pause and unpause functions. In addition to inheriting this contract, you must define both functions, invoking the {Pausable-_pause} and {Pausable-_unpause} internal functions, with appropriate access control, e.g. using {AccessControl} or {Ownable}. Not doing so will make the contract unpausable.*
+*ERC721 token with pausable token transfers, minting and burning. Useful for scenarios such as preventing trades until the end of an evaluation period, or having an emergency switch for freezing all token transfers in the event of a large bug.*
 
 ## Methods
 
@@ -295,7 +295,7 @@ event Approval(address indexed owner, address indexed approved, uint256 indexed 
 
 
 
-
+*Emitted when `owner` enables `approved` to manage the `tokenId` token.*
 
 #### Parameters
 
@@ -313,7 +313,7 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 
 
 
-
+*Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.*
 
 #### Parameters
 
@@ -331,7 +331,7 @@ event Paused(address account)
 
 
 
-
+*Emitted when the pause is triggered by `account`.*
 
 #### Parameters
 
@@ -347,7 +347,7 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 
 
 
-
+*Emitted when `tokenId` token is transferred from `from` to `to`.*
 
 #### Parameters
 
@@ -365,7 +365,7 @@ event Unpaused(address account)
 
 
 
-
+*Emitted when the pause is lifted by `account`.*
 
 #### Parameters
 
