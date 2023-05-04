@@ -1,12 +1,12 @@
 # ISupernetManager
 
+*Polygon Technology (@gretzke)*
 
+> ISupernetManager
 
+Abstract contract for managing supernets
 
-
-
-
-
+*Should be implemented with custom desired functionality*
 
 ## Methods
 

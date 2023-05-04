@@ -5,23 +5,21 @@ import "../interfaces/Errors.sol";
 
 contract System {
     // pre-compiled contracts
-    // slither-disable-next-line too-many-digits
+    // slither-disable too-many-digits
     address public constant NATIVE_TRANSFER_PRECOMPILE = 0x0000000000000000000000000000000000002020;
-    // slither-disable-next-line too-many-digits
     address public constant VALIDATOR_PKCHECK_PRECOMPILE = 0x0000000000000000000000000000000000002030;
+    address public constant ALLOWLIST_PRECOMPILE = 0x0200000000000000000000000000000000000004;
+    address public constant BLOCKLIST_PRECOMPILE = 0x0300000000000000000000000000000000000004;
 
     // internal addrs
-    // slither-disable-next-line too-many-digits
     address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
 
     // pre-compiled gas consumption
-    // slither-disable-next-line too-many-digits
     uint256 public constant NATIVE_TRANSFER_PRECOMPILE_GAS = 21000;
-    // slither-disable-next-line too-many-digits
     uint256 public constant VALIDATOR_PKCHECK_PRECOMPILE_GAS = 150000;
+    uint256 public constant READ_ADDRESSLIST_GAS = 5000;
 
     // genesis contracts
-    // slither-disable-next-line too-many-digits
     address public constant NATIVE_TOKEN_CONTRACT = 0x0000000000000000000000000000000000001010;
 
     modifier onlySystemCall() {

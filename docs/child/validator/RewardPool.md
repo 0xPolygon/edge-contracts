@@ -10,6 +10,23 @@
 
 ## Methods
 
+### ALLOWLIST_PRECOMPILE
+
+```solidity
+function ALLOWLIST_PRECOMPILE() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### BASE_REWARD
 
 ```solidity
@@ -26,6 +43,23 @@ function BASE_REWARD() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### BLOCKLIST_PRECOMPILE
+
+```solidity
+function BLOCKLIST_PRECOMPILE() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### NATIVE_TOKEN_CONTRACT
 
@@ -65,6 +99,23 @@ function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
 
 ```solidity
 function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### READ_ADDRESSLIST_GAS
+
+```solidity
+function READ_ADDRESSLIST_GAS() external view returns (uint256)
 ```
 
 

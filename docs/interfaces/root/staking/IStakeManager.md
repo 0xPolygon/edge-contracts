@@ -1,10 +1,10 @@
 # IStakeManager
 
+*Polygon Technology (@gretzke)*
 
+> IStakeManager
 
-
-
-
+Manages stakes for all child chains
 
 
 
