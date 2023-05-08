@@ -228,7 +228,7 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 
 
 
-
+*Emitted when `account` grants or revokes permission to `operator` to transfer their tokens, according to `approved`.*
 
 #### Parameters
 
@@ -246,7 +246,7 @@ event TransferBatch(address indexed operator, address indexed from, address inde
 
 
 
-
+*Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all transfers.*
 
 #### Parameters
 
@@ -266,7 +266,7 @@ event TransferSingle(address indexed operator, address indexed from, address ind
 
 
 
-
+*Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.*
 
 #### Parameters
 
@@ -286,7 +286,7 @@ event URI(string value, uint256 indexed id)
 
 
 
-
+*Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI. If an {URI} event was emitted for `id`, the standard https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value returned by {IERC1155MetadataURI-uri}.*
 
 #### Parameters
 

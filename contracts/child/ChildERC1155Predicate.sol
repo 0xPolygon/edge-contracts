@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/IChildERC1155Predicate.sol";
+import "../interfaces/child/IChildERC1155Predicate.sol";
+import "../interfaces/child/IChildERC1155.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/IChildERC1155.sol";
 import "./System.sol";
 
 /**
@@ -84,18 +84,8 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         address newStateReceiver,
         address newRootERC1155Predicate,
         address newChildTokenTemplate
-    ) external onlySystemCall initializer {
-        require(
-            newL2StateSender != address(0) &&
-                newStateReceiver != address(0) &&
-                newRootERC1155Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "ChildERC1155Predicate: BAD_INITIALIZATION"
-        );
-        l2StateSender = IStateSender(newL2StateSender);
-        stateReceiver = newStateReceiver;
-        rootERC1155Predicate = newRootERC1155Predicate;
-        childTokenTemplate = newChildTokenTemplate;
+    ) public virtual onlySystemCall initializer {
+        _initialize(newL2StateSender, newStateReceiver, newRootERC1155Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -109,9 +99,13 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         require(sender == rootERC1155Predicate, "ChildERC1155Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
+            _beforeTokenDeposit();
             _deposit(data[32:]);
+            _afterTokenDeposit();
         } else if (bytes32(data[:32]) == DEPOSIT_BATCH_SIG) {
+            _beforeTokenDeposit();
             _depositBatch(data);
+            _afterTokenDeposit();
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
@@ -126,7 +120,9 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
      * @param amount Amount of the NFT to withdraw
      */
     function withdraw(IChildERC1155 childToken, uint256 tokenId, uint256 amount) external {
+        _beforeTokenWithdraw();
         _withdraw(childToken, msg.sender, tokenId, amount);
+        _afterTokenWithdraw();
     }
 
     /**
@@ -137,7 +133,9 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
      * @param amount Amount of NFT to withdraw
      */
     function withdrawTo(IChildERC1155 childToken, address receiver, uint256 tokenId, uint256 amount) external {
+        _beforeTokenWithdraw();
         _withdraw(childToken, receiver, tokenId, amount);
+        _afterTokenWithdraw();
     }
 
     /**
@@ -153,8 +151,46 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
     ) external {
+        _beforeTokenWithdraw();
         _withdrawBatch(childToken, receivers, tokenIds, amounts);
+        _afterTokenWithdraw();
     }
+
+    /**
+     * @notice Internal initilization function for ChildERC1155Predicate
+     * @param newL2StateSender Address of L2StateSender to send exit information to
+     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
+     * @dev Can be called multiple times.
+     */
+    function _initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newRootERC1155Predicate,
+        address newChildTokenTemplate
+    ) internal {
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newRootERC1155Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "ChildERC1155Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
+        stateReceiver = newStateReceiver;
+        rootERC1155Predicate = newRootERC1155Predicate;
+        childTokenTemplate = newChildTokenTemplate;
+    }
+
+    // solhint-disable no-empty-blocks
+    function _beforeTokenDeposit() internal virtual {}
+
+    function _beforeTokenWithdraw() internal virtual {}
+
+    function _afterTokenDeposit() internal virtual {}
+
+    function _afterTokenWithdraw() internal virtual {}
 
     function _withdraw(
         IChildERC1155 childToken,

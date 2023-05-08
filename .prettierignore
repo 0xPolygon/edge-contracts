@@ -8,7 +8,7 @@ typechain-types
 .husky
 .prettierignore
 foundry.toml
-lib
+forge
 forge-cache
 out
 !/broadcast
@@ -16,3 +16,4 @@ out
 /broadcast/*/31337/
 slither.db.json
 docs/
+lib/
