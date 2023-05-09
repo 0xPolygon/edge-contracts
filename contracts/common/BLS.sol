@@ -24,10 +24,10 @@ SOFTWARE.
 
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
-import "../interfaces/IBLS.sol";
-import {ModexpInverse, ModexpSqrt} from "../libs/ModExp.sol";
+import "../interfaces/common/IBLS.sol";
+import {ModexpInverse, ModexpSqrt} from "../lib/ModExp.sol";
 
 /**
     @title  Boneh–Lynn–Shacham (BLS) signature scheme on Barreto-Naehrig 254 bit curve (BN-254)

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Adapted from OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "../libs/EIP712MetaTransaction.sol";
-import "../interfaces/IChildERC20.sol";
+import "../lib/EIP712MetaTransaction.sol";
+import "../interfaces/child/IChildERC20.sol";
 
 /**
     @title ChildERC20
