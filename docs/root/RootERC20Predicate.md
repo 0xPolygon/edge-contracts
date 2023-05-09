@@ -170,7 +170,7 @@ Initilization function for RootERC20Predicate
 ### mapToken
 
 ```solidity
-function mapToken(contract IERC20Metadata rootToken) external nonpayable
+function mapToken(contract IERC20Metadata rootToken) external nonpayable returns (address)
 ```
 
 Function to be used for token mapping
@@ -182,6 +182,12 @@ Function to be used for token mapping
 | Name | Type | Description |
 |---|---|---|
 | rootToken | contract IERC20Metadata | Address of the root token to map |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | address Address of the child token |
 
 ### onL2StateReceive
 
@@ -292,7 +298,7 @@ event Initialized(uint8 version)
 
 
 
-
+*Triggered when the contract has been initialized or reinitialized.*
 
 #### Parameters
 

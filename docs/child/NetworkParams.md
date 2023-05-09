@@ -190,6 +190,70 @@ function transferOwnership(address newOwner) external nonpayable
 
 ## Events
 
+### NewBlockGasLimit
+
+```solidity
+event NewBlockGasLimit(uint256 indexed value)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| value `indexed` | uint256 | undefined |
+
+### NewCheckpointBlockInterval
+
+```solidity
+event NewCheckpointBlockInterval(uint256 indexed value)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| value `indexed` | uint256 | undefined |
+
+### NewMaxValdidatorSetSize
+
+```solidity
+event NewMaxValdidatorSetSize(uint256 indexed value)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| value `indexed` | uint256 | undefined |
+
+### NewMinStake
+
+```solidity
+event NewMinStake(uint256 indexed value)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| value `indexed` | uint256 | undefined |
+
 ### OwnershipTransferred
 
 ```solidity

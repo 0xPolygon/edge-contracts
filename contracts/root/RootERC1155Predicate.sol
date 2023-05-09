@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/IRootERC1155Predicate.sol";
-import "../interfaces/IL2StateReceiver.sol";
+import "../interfaces/root/IRootERC1155Predicate.sol";
+import "../interfaces/root/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
@@ -32,8 +32,7 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
         address newStateSender,
         address newExitHelper,
         address newChildERC1155Predicate,
-        address newChildTokenTemplate,
-        address nativeTokenRootAddress
+        address newChildTokenTemplate
     ) external initializer {
         require(
             newStateSender != address(0) &&
@@ -46,10 +45,6 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
         exitHelper = newExitHelper;
         childERC1155Predicate = newChildERC1155Predicate;
         childTokenTemplate = newChildTokenTemplate;
-        if (nativeTokenRootAddress != address(0)) {
-            rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
-            emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
-        }
     }
 
     /**
@@ -115,7 +110,14 @@ contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initia
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
-        stateSender.syncState(childERC1155Predicate, abi.encode(MAP_TOKEN_SIG, rootToken));
+        string memory uri = "";
+        // slither does not deal well with try-catch: https://github.com/crytic/slither/issues/982
+        // slither-disable-next-line uninitialized-local,unused-return,variable-scope
+        try rootToken.uri(0) returns (string memory tokenUri) {
+            uri = tokenUri;
+        } catch {}
+
+        stateSender.syncState(childERC1155Predicate, abi.encode(MAP_TOKEN_SIG, rootToken, uri));
         // slither-disable-next-line reentrancy-events
         emit TokenMapped(address(rootToken), childToken);
     }

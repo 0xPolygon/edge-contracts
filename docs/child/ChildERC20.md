@@ -231,6 +231,22 @@ function initialize(address rootToken_, string name_, string symbol_, uint8 deci
 | symbol_ | string | undefined |
 | decimals_ | uint8 | undefined |
 
+### invalidateNext
+
+```solidity
+function invalidateNext(uint256 offset) external nonpayable
+```
+
+
+
+*Invalidates next &quot;offset&quot; number of nonces for the calling address*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| offset | uint256 | undefined |
+
 ### mint
 
 ```solidity
@@ -398,7 +414,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 
 
 
-
+*Emitted when the allowance of a `spender` for an `owner` is set by a call to {approve}. `value` is the new allowance.*
 
 #### Parameters
 
@@ -416,7 +432,7 @@ event Initialized(uint8 version)
 
 
 
-
+*Triggered when the contract has been initialized or reinitialized.*
 
 #### Parameters
 
@@ -450,7 +466,7 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 
 
 
-
+*Emitted when `value` tokens are moved from one account (`from`) to another (`to`). Note that `value` may be zero.*
 
 #### Parameters
 

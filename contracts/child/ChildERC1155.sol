@@ -1,11 +1,12 @@
 //SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC1155/ERC1155.sol)
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "../libs/EIP712MetaTransaction.sol";
-import "../interfaces/IChildERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "../lib/EIP712MetaTransaction.sol";
+import "../interfaces/child/IChildERC1155.sol";
 
 /**
     @title ChildERC1155
@@ -14,6 +15,7 @@ import "../interfaces/IChildERC1155.sol";
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
 contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC1155 {
+    using StringsUpgradeable for address;
     address private _predicate;
     address private _rootToken;
 
@@ -25,12 +27,12 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     /**
      * @inheritdoc IChildERC1155
      */
-    function initialize(address rootToken_, string calldata name_, string calldata uri_) external initializer {
+    function initialize(address rootToken_, string calldata uri_) external initializer {
         require(rootToken_ != address(0), "ChildERC1155: BAD_INITIALIZATION");
         _rootToken = rootToken_;
         _predicate = msg.sender;
         __ERC1155_init(uri_);
-        _initializeEIP712(name_, "1");
+        _initializeEIP712(string.concat("ChildERC1155-", rootToken_.toHexString()), "1");
     }
 
     /**

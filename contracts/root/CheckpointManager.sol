@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ArraysUpgradeable.sol";
 import "../common/Merkle.sol";
-import "../interfaces/ICheckpointManager.sol";
-import "../interfaces/IBLS.sol";
-import "../interfaces/IBN256G2.sol";
+import "../interfaces/root/ICheckpointManager.sol";
+import "../interfaces/common/IBLS.sol";
+import "../interfaces/common/IBN256G2.sol";
 
 contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];

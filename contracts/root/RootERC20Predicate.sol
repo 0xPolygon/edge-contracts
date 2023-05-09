@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/IRootERC20Predicate.sol";
-import "../interfaces/IL2StateReceiver.sol";
+import "../interfaces/root/IRootERC20Predicate.sol";
+import "../interfaces/root/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
@@ -85,32 +85,36 @@ contract RootERC20Predicate is IRootERC20Predicate, IL2StateReceiver, Initializa
     /**
      * @inheritdoc IRootERC20Predicate
      */
-    function mapToken(IERC20Metadata rootToken) public {
+    function mapToken(IERC20Metadata rootToken) public returns (address) {
         require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+
+        address childPredicate = childERC20Predicate;
 
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childERC20Predicate
+            childPredicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
         stateSender.syncState(
-            childERC20Predicate,
+            childPredicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
         );
         // slither-disable-next-line reentrancy-events
         emit TokenMapped(address(rootToken), childToken);
+
+        return childToken;
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
-        if (rootTokenToChildToken[address(rootToken)] == address(0)) {
-            mapToken(rootToken);
-        }
-
         address childToken = rootTokenToChildToken[address(rootToken)];
+
+        if (childToken == address(0)) {
+            childToken = mapToken(rootToken);
+        }
 
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
 

@@ -2,7 +2,7 @@
 
 ##### Contracts used by both root and child
 
-This directory contains a number of contracts which are used on both the root and child chains. It may have some overlap with `libs/` - `Merkle.sol` could likely be placed in either. (The other contracts in this directory are not actual library contracts, though.)
+This directory contains a number of contracts which are used on both the root and child chains. It may have some overlap with `lib/` - `Merkle.sol` could likely be placed in either. (The other contracts in this directory are not actual library contracts, though.)
 
 The contracts in this directory are:
 

@@ -286,7 +286,7 @@ describe("ChildERC1155Predicate", () => {
   });
 
   it("batch withdraw tokens from child chain: success", async () => {
-    const batchSize = Math.floor(Math.random() * batchDepositedTokenIds.length + 2);
+    const batchSize = Math.max(1, Math.floor(Math.random() * batchDepositedTokenIds.length));
     const receiverArr = [];
     for (let i = 0; i < batchSize; i++) {
       receiverArr.push(accounts[1].address);
@@ -406,7 +406,7 @@ describe("ChildERC1155Predicate", () => {
   it("fail deposit tokens of unknown child token: unmapped token", async () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
-    await childToken.initialize(rootToken, "TEST", "TEST");
+    await childToken.initialize(rootToken, "TEST");
     let stateSyncData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "address", "address", "address", "uint256", "uint256"],
       [
@@ -440,7 +440,7 @@ describe("ChildERC1155Predicate", () => {
   it("fail withdraw tokens of unknown child token: unmapped token", async () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
-    await childToken.initialize(rootToken, "TEST", "TEST");
+    await childToken.initialize(rootToken, "TEST");
     await expect(stateReceiverChildERC1155Predicate.withdraw(childToken.address, 0, 1)).to.be.revertedWith(
       "ChildERC1155Predicate: UNMAPPED_TOKEN"
     );
@@ -465,6 +465,7 @@ describe("ChildERC1155Predicate", () => {
     const fakeERC1155 = await smock.fake<ChildERC1155>("ChildERC1155", {
       address: childTokenAddr,
     });
+    fakeERC1155.supportsInterface.returns(true);
     fakeERC1155.rootToken.returns(rootToken);
     fakeERC1155.predicate.returns(childERC1155Predicate.address);
     fakeERC1155.mint.returns(false);

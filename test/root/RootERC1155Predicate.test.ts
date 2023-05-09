@@ -61,35 +61,28 @@ describe("RootERC1155Predicate", () => {
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000"
       )
     ).to.be.revertedWith("RootERC1155Predicate: BAD_INITIALIZATION");
   });
 
   it("initialize and validate initialization", async () => {
-    const nativeTokenRootAddress = ethers.Wallet.createRandom().address;
     await rootERC1155Predicate.initialize(
       stateSender.address,
       exitHelper.address,
       childERC1155Predicate,
-      childTokenTemplate.address,
-      nativeTokenRootAddress
+      childTokenTemplate.address
     );
 
     expect(await rootERC1155Predicate.stateSender()).to.equal(stateSender.address);
     expect(await rootERC1155Predicate.exitHelper()).to.equal(exitHelper.address);
     expect(await rootERC1155Predicate.childERC1155Predicate()).to.equal(childERC1155Predicate);
     expect(await rootERC1155Predicate.childTokenTemplate()).to.equal(childTokenTemplate.address);
-    expect(await rootERC1155Predicate.rootTokenToChildToken(nativeTokenRootAddress)).to.equal(
-      "0x0000000000000000000000000000000000001010"
-    );
   });
 
   it("fail reinitialization", async () => {
     await expect(
       rootERC1155Predicate.initialize(
-        "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
