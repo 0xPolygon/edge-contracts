@@ -23,7 +23,7 @@ abstract contract Uninitialized is Test {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(0), address(0), address(0), 64, init);
+        validatorSet.initialize(address(1), address(1), address(1), 64, init);
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch);
@@ -55,10 +55,10 @@ abstract contract Distributed is Initialized {
 contract RewardPool_Initialize is Uninitialized {
     function test_Initialize() public {
         pool.initialize(address(token), rewardWallet, address(validatorSet), baseReward);
-        assertEq(address(pool.REWARD_TOKEN()), address(token));
-        assertEq(pool.REWARD_WALLET(), rewardWallet);
-        assertEq(address(pool.VALIDATOR_SET()), address(validatorSet));
-        assertEq(pool.BASE_REWARD(), baseReward);
+        assertEq(address(pool.rewardToken()), address(token));
+        assertEq(pool.rewardWallet(), rewardWallet);
+        assertEq(address(pool.validatorSet()), address(validatorSet));
+        assertEq(pool.baseReward(), baseReward);
     }
 }
 

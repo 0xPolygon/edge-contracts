@@ -27,23 +27,6 @@ function ALLOWLIST_PRECOMPILE() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### BASE_REWARD
-
-```solidity
-function BASE_REWARD() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### BLOCKLIST_PRECOMPILE
 
 ```solidity
@@ -129,40 +112,6 @@ function READ_ADDRESSLIST_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### REWARD_TOKEN
-
-```solidity
-function REWARD_TOKEN() external view returns (contract IERC20Upgradeable)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20Upgradeable | undefined |
-
-### REWARD_WALLET
-
-```solidity
-function REWARD_WALLET() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### SYSTEM
 
 ```solidity
@@ -214,10 +163,10 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### VALIDATOR_SET
+### baseReward
 
 ```solidity
-function VALIDATOR_SET() external view returns (contract IValidatorSet)
+function baseReward() external view returns (uint256)
 ```
 
 
@@ -229,7 +178,7 @@ function VALIDATOR_SET() external view returns (contract IValidatorSet)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IValidatorSet | undefined |
+| _0 | uint256 | undefined |
 
 ### distributeRewardFor
 
@@ -251,7 +200,7 @@ function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayab
 ### initialize
 
 ```solidity
-function initialize(address rewardToken, address rewardWallet, address validatorSet, uint256 baseReward) external nonpayable
+function initialize(address newRewardToken, address newRewardWallet, address newValidatorSet, uint256 newBaseReward) external nonpayable
 ```
 
 
@@ -262,10 +211,10 @@ function initialize(address rewardToken, address rewardWallet, address validator
 
 | Name | Type | Description |
 |---|---|---|
-| rewardToken | address | undefined |
-| rewardWallet | address | undefined |
-| validatorSet | address | undefined |
-| baseReward | uint256 | undefined |
+| newRewardToken | address | undefined |
+| newRewardWallet | address | undefined |
+| newValidatorSet | address | undefined |
+| newBaseReward | uint256 | undefined |
 
 ### paidRewardPerEpoch
 
@@ -310,6 +259,57 @@ returns the pending reward for the given account
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### rewardToken
+
+```solidity
+function rewardToken() external view returns (contract IERC20Upgradeable)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IERC20Upgradeable | undefined |
+
+### rewardWallet
+
+```solidity
+function rewardWallet() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### validatorSet
+
+```solidity
+function validatorSet() external view returns (contract IValidatorSet)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IValidatorSet | undefined |
 
 ### withdrawReward
 

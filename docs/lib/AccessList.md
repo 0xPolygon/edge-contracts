@@ -222,7 +222,7 @@ function renounceOwnership() external nonpayable
 ### setAllowList
 
 ```solidity
-function setAllowList(bool _useAllowList) external nonpayable
+function setAllowList(bool newUseAllowList) external nonpayable
 ```
 
 
@@ -233,12 +233,12 @@ function setAllowList(bool _useAllowList) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _useAllowList | bool | undefined |
+| newUseAllowList | bool | undefined |
 
 ### setBlockList
 
 ```solidity
-function setBlockList(bool _useBlockList) external nonpayable
+function setBlockList(bool newUseBlockList) external nonpayable
 ```
 
 
@@ -249,7 +249,7 @@ function setBlockList(bool _useBlockList) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _useBlockList | bool | undefined |
+| newUseBlockList | bool | undefined |
 
 ### transferOwnership
 

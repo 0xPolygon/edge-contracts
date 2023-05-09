@@ -16,12 +16,12 @@ contract ChildERC1155PredicateAccessList is AccessList, ChildERC1155Predicate {
         address newStateReceiver,
         address newRootERC1155Predicate,
         address newChildTokenTemplate,
-        bool useAllowList,
-        bool useBlockList,
+        bool newUseAllowList,
+        bool newUseBlockList,
         address newOwner
     ) public virtual onlySystemCall initializer {
         _initialize(newL2StateSender, newStateReceiver, newRootERC1155Predicate, newChildTokenTemplate);
-        _initializeAccessList(useAllowList, useBlockList);
+        _initializeAccessList(newUseAllowList, newUseBlockList);
         _transferOwnership(newOwner);
     }
 

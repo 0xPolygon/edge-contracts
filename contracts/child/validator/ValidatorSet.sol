@@ -15,30 +15,38 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
     uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
 
-    IStateSender private STATE_SENDER;
-    address private STATE_RECEIVER;
-    address private ROOT_CHAIN_MANAGER;
+    IStateSender private stateSender;
+    address private stateReceiver;
+    address private rootChainManager;
+    // slither-disable-next-line naming-convention
     uint256 public EPOCH_SIZE;
 
     uint256 public currentEpochId;
 
     mapping(uint256 => Epoch) public epochs;
     uint256[] public epochEndBlocks;
-    mapping(address => WithdrawalQueue) internal _withdrawals;
+    mapping(address => WithdrawalQueue) internal withdrawals;
 
     function initialize(
-        address stateSender,
-        address stateReceiver,
-        address rootChainManager,
-        uint256 epochSize_,
+        address newStateSender,
+        address newStateReceiver,
+        address newRootChainManager,
+        uint256 newEpochSize,
         ValidatorInit[] memory initalValidators
     ) public initializer {
+        require(
+            newStateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newRootChainManager != address(0) &&
+                newEpochSize != 0,
+            "INVALID_INPUT"
+        );
         __ERC20_init("ValidatorSet", "VSET");
-        STATE_SENDER = IStateSender(stateSender);
-        STATE_RECEIVER = stateReceiver;
-        ROOT_CHAIN_MANAGER = rootChainManager;
-        EPOCH_SIZE = epochSize_;
-        for (uint256 i; i < initalValidators.length; ) {
+        stateSender = IStateSender(newStateSender);
+        stateReceiver = newStateReceiver;
+        rootChainManager = newRootChainManager;
+        EPOCH_SIZE = newEpochSize;
+        for (uint256 i = 0; i < initalValidators.length; ) {
             _stake(initalValidators[i].addr, initalValidators[i].stake);
             unchecked {
                 ++i;
@@ -63,7 +71,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     }
 
     function onStateReceive(uint256 /*counter*/, address sender, bytes calldata data) external override {
-        require(msg.sender == STATE_RECEIVER && sender == ROOT_CHAIN_MANAGER, "INVALID_SENDER");
+        require(msg.sender == stateReceiver && sender == rootChainManager, "INVALID_SENDER");
         if (bytes32(data[:32]) == STAKE_SIG) {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _stake(validator, amount);
@@ -82,25 +90,25 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
      * @inheritdoc IValidatorSet
      */
     function withdraw() external {
-        WithdrawalQueue storage queue = _withdrawals[msg.sender];
+        WithdrawalQueue storage queue = withdrawals[msg.sender];
         (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
         queue.head = newHead;
         emit Withdrawal(msg.sender, amount);
-        STATE_SENDER.syncState(ROOT_CHAIN_MANAGER, abi.encode(UNSTAKE_SIG, msg.sender, amount));
+        stateSender.syncState(rootChainManager, abi.encode(UNSTAKE_SIG, msg.sender, amount));
     }
 
     /**
      * @inheritdoc IValidatorSet
      */
     function withdrawable(address account) external view returns (uint256 amount) {
-        (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
+        (amount, ) = withdrawals[account].withdrawable(currentEpochId);
     }
 
     /**
      * @inheritdoc IValidatorSet
      */
     function pendingWithdrawals(address account) external view returns (uint256) {
-        return _withdrawals[account].pending(currentEpochId);
+        return withdrawals[account].pending(currentEpochId);
     }
 
     /**
@@ -112,18 +120,20 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     }
 
     function _registerWithdrawal(address account, uint256 amount) internal {
-        _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
+        withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
         emit WithdrawalRegistered(account, amount);
     }
 
     /// @dev no public facing slashing function implemented yet
+    // slither-disable-next-line dead-code
     function _slash(address validator) internal {
         // unstake validator
         _burn(validator, balanceOf(validator));
         // remove pending withdrawals
-        delete _withdrawals[validator];
+        // slither-disable-next-line mapping-deletion
+        delete withdrawals[validator];
         // slash validator
-        STATE_SENDER.syncState(ROOT_CHAIN_MANAGER, abi.encode(SLASH_SIG, validator));
+        stateSender.syncState(rootChainManager, abi.encode(SLASH_SIG, validator));
     }
 
     function _stake(address validator, uint256 amount) internal {

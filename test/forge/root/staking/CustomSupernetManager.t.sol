@@ -23,7 +23,7 @@ abstract contract Uninitialized is Test {
         bls = new BLS();
         stateSender = new StateSender();
         childValidatorSet = makeAddr("childValidatorSet");
-        childValidatorSet = makeAddr("exitHelper");
+        exitHelper = makeAddr("exitHelper");
         token = new MockERC20();
         stakeManager = new StakeManager();
         supernetManager = new CustomSupernetManager();
@@ -165,7 +165,7 @@ contract CustomSupernetManager_Initialize is Uninitialized {
             DOMAIN
         );
         assertEq(supernetManager.owner(), address(this), "should set owner");
-        assertEq((supernetManager.DOMAIN()), keccak256(abi.encodePacked(DOMAIN)), "should set and hash DOMAIN");
+        assertEq((supernetManager.domain()), keccak256(abi.encodePacked(DOMAIN)), "should set and hash DOMAIN");
     }
 }
 
@@ -345,12 +345,12 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
     event ValidatorDeactivated(address validator);
 
     function test_RevertNotCalledByExitHelper() public {
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "EXIT_HELPER"));
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "exitHelper"));
         supernetManager.onL2StateReceive(1, childValidatorSet, "");
     }
 
     function test_RevertChildValidatorSetNotSender() public {
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "EXIT_HELPER"));
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "exitHelper"));
         vm.prank(exitHelper);
         supernetManager.onL2StateReceive(1, alice, "");
     }

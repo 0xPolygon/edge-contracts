@@ -10,24 +10,29 @@ import "../../interfaces/child/validator/IRewardPool.sol";
 contract RewardPool is IRewardPool, System, Initializable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    IERC20Upgradeable public REWARD_TOKEN;
-    address public REWARD_WALLET;
-    IValidatorSet public VALIDATOR_SET;
-    uint256 public BASE_REWARD;
+    IERC20Upgradeable public rewardToken;
+    address public rewardWallet;
+    IValidatorSet public validatorSet;
+    uint256 public baseReward;
 
     mapping(uint256 => uint256) public paidRewardPerEpoch;
     mapping(address => uint256) public pendingRewards;
 
     function initialize(
-        address rewardToken,
-        address rewardWallet,
-        address validatorSet,
-        uint256 baseReward
+        address newRewardToken,
+        address newRewardWallet,
+        address newValidatorSet,
+        uint256 newBaseReward
     ) public initializer {
-        REWARD_TOKEN = IERC20Upgradeable(rewardToken);
-        REWARD_WALLET = rewardWallet;
-        VALIDATOR_SET = IValidatorSet(validatorSet);
-        BASE_REWARD = baseReward;
+        require(
+            newRewardToken != address(0) && newRewardWallet != address(0) && newValidatorSet != address(0),
+            "ZERO_ADDRESS"
+        );
+
+        rewardToken = IERC20Upgradeable(newRewardToken);
+        rewardWallet = newRewardWallet;
+        validatorSet = IValidatorSet(newValidatorSet);
+        baseReward = newBaseReward;
     }
 
     /**
@@ -35,18 +40,21 @@ contract RewardPool is IRewardPool, System, Initializable {
      */
     function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime) external onlySystemCall {
         require(paidRewardPerEpoch[epochId] == 0, "REWARD_ALREADY_DISTRIBUTED");
-        uint256 totalBlocks = VALIDATOR_SET.totalBlocks(epochId);
+        uint256 totalBlocks = validatorSet.totalBlocks(epochId);
         require(totalBlocks != 0, "EPOCH_NOT_COMMITTED");
-        uint256 epochSize = VALIDATOR_SET.EPOCH_SIZE();
-        uint256 reward = (BASE_REWARD * totalBlocks * 100) / (epochSize * 100);
+        uint256 epochSize = validatorSet.EPOCH_SIZE();
+        // slither-disable-next-line divide-before-multiply
+        uint256 reward = (baseReward * totalBlocks) / epochSize;
 
-        uint256 totalSupply = VALIDATOR_SET.totalSupplyAt(epochId);
+        uint256 totalSupply = validatorSet.totalSupplyAt(epochId);
         uint256 length = uptime.length;
         uint256 totalReward = 0;
         for (uint256 i = 0; i < length; i++) {
             Uptime memory data = uptime[i];
             require(data.signedBlocks <= totalBlocks, "SIGNED_BLOCKS_EXCEEDS_TOTAL");
-            uint256 balance = VALIDATOR_SET.balanceOfAt(data.validator, epochId);
+            // slither-disable-next-line calls-loop
+            uint256 balance = validatorSet.balanceOfAt(data.validator, epochId);
+            // slither-disable-next-line divide-before-multiply
             uint256 validatorReward = (reward * balance * data.signedBlocks) / (totalSupply * totalBlocks);
             pendingRewards[data.validator] += validatorReward;
             totalReward += validatorReward;
@@ -62,11 +70,12 @@ contract RewardPool is IRewardPool, System, Initializable {
     function withdrawReward() external {
         uint256 pendingReward = pendingRewards[msg.sender];
         pendingRewards[msg.sender] = 0;
-        REWARD_TOKEN.safeTransfer(msg.sender, pendingReward);
+        rewardToken.safeTransfer(msg.sender, pendingReward);
     }
 
     /// @dev this method can be overridden to add logic depending on the reward token
     function _transferRewards(uint256 amount) internal virtual {
-        REWARD_TOKEN.safeTransferFrom(REWARD_WALLET, address(this), amount);
+        // slither-disable-next-line arbitrary-send-erc20
+        rewardToken.safeTransferFrom(rewardWallet, address(this), amount);
     }
 }

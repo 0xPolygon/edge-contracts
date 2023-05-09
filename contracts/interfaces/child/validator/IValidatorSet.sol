@@ -40,6 +40,7 @@ interface IValidatorSet is IStateReceiver {
 
     /// @notice amount of blocks in an epoch
     /// @dev when an epoch is committed a multiple of this number of blocks must be committed
+    // slither-disable-next-line naming-convention
     function EPOCH_SIZE() external view returns (uint256);
 
     /// @notice total amount of blocks in a given epoch

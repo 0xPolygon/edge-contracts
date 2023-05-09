@@ -18,13 +18,13 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
     uint256 public constant SLASHING_PERCENTAGE = 50;
 
-    IBLS private BLS;
-    IStateSender private STATE_SENDER;
-    IERC20 private MATIC;
-    address private CHILD_VALIDATOR_SET;
-    address private EXIT_HELPER;
+    IBLS private bls;
+    IStateSender private stateSender;
+    IERC20 private matic;
+    address private childValidatorSet;
+    address private exitHelper;
 
-    bytes32 public DOMAIN;
+    bytes32 public domain;
 
     GenesisSet private _genesis;
     mapping(address => Validator) public validators;
@@ -35,21 +35,31 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     function initialize(
-        address stakeManager,
-        address bls,
-        address stateSender,
-        address matic,
-        address childValidatorSet,
-        address exitHelper,
-        string memory domain
+        address newStakeManager,
+        address newBls,
+        address newStateSender,
+        address newMatic,
+        address newChildValidatorSet,
+        address newExitHelper,
+        string memory newDomain
     ) public initializer {
-        __SupernetManager_init(stakeManager);
-        BLS = IBLS(bls);
-        STATE_SENDER = IStateSender(stateSender);
-        MATIC = IERC20(matic);
-        CHILD_VALIDATOR_SET = childValidatorSet;
-        EXIT_HELPER = exitHelper;
-        DOMAIN = keccak256(abi.encodePacked(domain));
+        require(
+            newStakeManager != address(0) &&
+                newBls != address(0) &&
+                newStateSender != address(0) &&
+                newMatic != address(0) &&
+                newChildValidatorSet != address(0) &&
+                newExitHelper != address(0) &&
+                bytes(newDomain).length != 0,
+            "INVALID_INPUT"
+        );
+        __SupernetManager_init(newStakeManager);
+        bls = IBLS(newBls);
+        stateSender = IStateSender(newStateSender);
+        matic = IERC20(newMatic);
+        childValidatorSet = newChildValidatorSet;
+        exitHelper = newExitHelper;
+        domain = keccak256(abi.encodePacked(newDomain));
         __Ownable2Step_init();
     }
 
@@ -98,15 +108,15 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
      * @inheritdoc ICustomSupernetManager
      */
     function withdrawSlashedStake(address to) external onlyOwner {
-        uint256 balance = MATIC.balanceOf(address(this));
-        MATIC.safeTransfer(to, balance);
+        uint256 balance = matic.balanceOf(address(this));
+        matic.safeTransfer(to, balance);
     }
 
     /**
      * @inheritdoc ICustomSupernetManager
      */
     function onL2StateReceive(uint256 /*id*/, address sender, bytes calldata data) external {
-        if (msg.sender != EXIT_HELPER || sender != CHILD_VALIDATOR_SET) revert Unauthorized("EXIT_HELPER");
+        if (msg.sender != exitHelper || sender != childValidatorSet) revert Unauthorized("exitHelper");
         if (bytes32(data[:32]) == UNSTAKE_SIG) {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _unstake(validator, amount);
@@ -135,21 +145,23 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         if (_genesis.gatheringGenesisValidators()) {
             _genesis.insert(validator, amount);
         } else if (_genesis.completed()) {
-            STATE_SENDER.syncState(CHILD_VALIDATOR_SET, abi.encode(STAKE_SIG, validator, amount));
+            stateSender.syncState(childValidatorSet, abi.encode(STAKE_SIG, validator, amount));
         } else {
             revert Unauthorized("Wait for genesis");
         }
     }
 
     function _unstake(address validator, uint256 amount) internal {
-        STAKE_MANAGER.releaseStakeOf(validator, amount);
+        // slither-disable-next-line reentrancy-benign,reentrancy-events
+        stakeManager.releaseStakeOf(validator, amount);
         _removeIfValidatorUnstaked(validator);
     }
 
     function _slash(address validator) internal {
-        uint256 stake = STAKE_MANAGER.stakeOf(validator, id);
+        uint256 stake = stakeManager.stakeOf(validator, id);
         uint256 slashedAmount = (stake * SLASHING_PERCENTAGE) / 100;
-        STAKE_MANAGER.slashStakeOf(validator, slashedAmount);
+        // slither-disable-next-line reentrancy-benign,reentrancy-events
+        stakeManager.slashStakeOf(validator, slashedAmount);
         _removeIfValidatorUnstaked(validator);
     }
 
@@ -161,14 +173,14 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         /// @dev signature verification succeeds if signature and pubkey are empty
         if (signature[0] == 0 && signature[1] == 0) revert InvalidSignature(signer);
         // slither-disable-next-line calls-loop
-        (bool result, bool callSuccess) = BLS.verifySingle(signature, pubkey, _message(signer));
+        (bool result, bool callSuccess) = bls.verifySingle(signature, pubkey, _message(signer));
         if (!callSuccess || !result) revert InvalidSignature(signer);
     }
 
     /// @notice Message to sign for registration
     function _message(address signer) internal view returns (uint256[2] memory) {
         // slither-disable-next-line calls-loop
-        return BLS.hashToPoint(DOMAIN, abi.encodePacked(signer, address(this), block.chainid));
+        return bls.hashToPoint(domain, abi.encodePacked(signer, address(this), block.chainid));
     }
 
     function _addToWhitelist(address validator) internal {
@@ -182,7 +194,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     function _removeIfValidatorUnstaked(address validator) internal {
-        if (STAKE_MANAGER.stakeOf(validator, id) == 0) {
+        if (stakeManager.stakeOf(validator, id) == 0) {
             validators[validator].isActive = false;
             emit ValidatorDeactivated(validator);
         }

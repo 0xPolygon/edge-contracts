@@ -12,12 +12,12 @@ contract StakeManager is IStakeManager, Initializable {
     using StakeManagerLib for Stakes;
     using SafeERC20 for IERC20;
 
-    IERC20 internal MATIC;
+    IERC20 internal matic;
     ChildChains private _chains;
     Stakes private _stakes;
 
-    function initialize(address MATIC_) public initializer {
-        MATIC = IERC20(MATIC_);
+    function initialize(address newMatic) public initializer {
+        matic = IERC20(newMatic);
     }
 
     /**
@@ -26,6 +26,7 @@ contract StakeManager is IStakeManager, Initializable {
     function registerChildChain(address manager) external returns (uint256 id) {
         id = _chains.registerChild(manager);
         ISupernetManager(manager).onInit(id);
+        // slither-disable-next-line reentrancy-events
         emit ChildManagerRegistered(id, manager);
     }
 
@@ -34,12 +35,14 @@ contract StakeManager is IStakeManager, Initializable {
      */
     function stakeFor(uint256 id, uint256 amount) external {
         require(id != 0 && id <= _chains.counter, "INVALID_ID");
-        MATIC.safeTransferFrom(msg.sender, address(this), amount);
+        // slither-disable-next-line reentrancy-benign,reentrancy-events
+        matic.safeTransferFrom(msg.sender, address(this), amount);
         // calling the library directly once fixes the coverage issue
         // https://github.com/foundry-rs/foundry/issues/4854#issuecomment-1528897219
         StakeManagerLib.addStake(_stakes, msg.sender, id, amount);
         ISupernetManager manager = managerOf(id);
         manager.onStake(msg.sender, amount);
+        // slither-disable-next-line reentrancy-events
         emit StakeAdded(id, msg.sender, amount);
     }
 
@@ -49,6 +52,7 @@ contract StakeManager is IStakeManager, Initializable {
     function releaseStakeOf(address validator, uint256 amount) external {
         uint256 id = idFor(msg.sender);
         _stakes.removeStake(validator, id, amount);
+        // slither-disable-next-line reentrancy-events
         emit StakeRemoved(id, validator, amount);
     }
 
@@ -123,7 +127,8 @@ contract StakeManager is IStakeManager, Initializable {
 
     function _withdrawStake(address validator, address to, uint256 amount) private {
         _stakes.withdrawStake(validator, amount);
-        MATIC.safeTransfer(to, amount);
+        // slither-disable-next-line reentrancy-events
+        matic.safeTransfer(to, amount);
         emit StakeWithdrawn(validator, to, amount);
     }
 }

@@ -184,6 +184,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     }
 
     // solhint-disable no-empty-blocks
+    // slither-disable-start dead-code
     function _beforeTokenDeposit() internal virtual {}
 
     function _beforeTokenWithdraw() internal virtual {}
@@ -191,6 +192,8 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     function _afterTokenDeposit() internal virtual {}
 
     function _afterTokenWithdraw() internal virtual {}
+
+    // slither-disable-end dead-code
 
     function _withdraw(
         IChildERC1155 childToken,

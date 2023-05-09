@@ -70,8 +70,10 @@ jobs:
         with:
           node-version: "18.x"
           cache: "npm"
+      - run: rm foundry.toml
       - uses: crytic/slither-action@v0.3.0
         with:
+          node-version: 18
           slither-args: "--compile-force-framework hardhat"
   coverage:
     runs-on: ubuntu-latest

@@ -155,6 +155,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     // solhint-disable no-empty-blocks
     function _beforeTokenDeposit() internal virtual {}
 
+    // slither-disable-next-line dead-code
     function _beforeTokenWithdraw() internal virtual {}
 
     function _afterTokenDeposit() internal virtual {}

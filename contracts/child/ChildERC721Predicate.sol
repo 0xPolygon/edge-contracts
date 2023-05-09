@@ -176,6 +176,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     }
 
     // solhint-disable no-empty-blocks
+    // slither-disable-start dead-code
     function _beforeTokenDeposit() internal virtual {}
 
     function _beforeTokenWithdraw() internal virtual {}
@@ -183,6 +184,8 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     function _afterTokenDeposit() internal virtual {}
 
     function _afterTokenWithdraw() internal virtual {}
+
+    // slither-disable-end dead-code
 
     function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
