@@ -1,11 +1,11 @@
-# V3 Contracts
+# Core Contracts
 
 [![Solidity CI](https://github.com/maticnetwork/v3-contracts/actions/workflows/ci.yml/badge.svg)](https://github.com/maticnetwork/v3-contracts/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/maticnetwork/v3-contracts/badge.svg?branch=main&t=ZTUm69)](https://coveralls.io/github/maticnetwork/v3-contracts?branch=main)
 
-This repository contains the smart contract suite used in Polygon's POS v3 blockchain.
+This repository contains the smart contract suite used in Polygon's ecosystems. Recent iterations have focused on features for the Edge project. Edge-specific contracts may be spun off into their own repo in the future.
 
-**_Note: You do not need to clone this repo in order to interact with Polygon POS v3._**
+**_Note: You do not need to clone this repo in order to interact with Polygon POS or any other Polygon ecosystem._**
 
 ## Contents
 
@@ -26,33 +26,55 @@ This repository contains the smart contract suite used in Polygon's POS v3 block
 
 ### Contracts
 
-There are a number of different contracts with different roles in the suite, as such an architecture diagram of the contents of `contracts/` should be useful in understanding where to find what you're looking for:
+There are a number of different contracts with different roles in the suite, as such an architecture diagram of the contents of `contracts/` should be useful in understanding where to find what you're looking for.
+
+One piece of terminology that is useful in understanding the layout and contracts themselves is the references to `root` and `child`. Chains such as POS and Edge assume that there is a base layer chain that data from other chains is committed to. In the case of POS, the root chain is Ethereum mainnet and the child is Polygon POS, while in the case of Edge, the root chain is Edge and the child chains are the various Supernets.
 
 ```ml
-│ child/ "contracts that live on the child chain (POS v3)"
-├─ ChildValidatorSet - "staking, delegating, committing epochs, reward distribution"
+│ child/ "contracts that live on the child chain"
+├─ tokens - "contracts for the bridging/management of native and ERC20/721/1155 assets"
+├─ EIP1559Burn - "allows child native token to be burnt on root"
+├─ ForkParams - "configurable softfork features read by the client each epoch"
+├─ L2StateSender - "arbitrary message bridge (child -> root)"
+├─ NetworkParams - "configurable network parameters read by the client each epoch"
 ├─ StateReceiver — "child chain component of a message bridge"
 ├─ System - "various infra/precompile addresses on the child chain"
+├─ │ validator/ "contracts relating directly to validating"
+   ├─ RewardPool - "reward distribution to validators for committed epochs"
+   ├─ ValidatorSet - "validator voting power management, commits epochs for child chains"
 │ common/ "libraries used on both the child and root chains"
 ├─ BLS - "BLS signature operations"
 ├─ BN256G2 - "elliptic curve operations on G2 for BN256 (used for BLS)"
 ├─ Merkle - "checks membership of a hash in a merkle tree"
 │ interfaces/ "interfaces for all contracts"
-│ libs/ "libraries used for specific applications"
+├─ Errors - "commonly reused errors"
+│ lib/ "libraries used for specific applications"
+├─ AccessList - "checks address membership in protocol-level access controls"
+├─ ChildManagerLib - "library for managing child chains on root"
+├─ EIP712MetaTransaction - "template for process EIP712 structures"
+├─ EIP712Upgradeable - "adapted from OpenZeppelin, allows for upgradeable EIP712 structures"
+├─ GenesisLib - "facilitates generation of the validator set at genesis"
 ├─ ModExp — "modular exponentiation (from Hubble Project, for BLS)"
-├─ ValidatorQueue - "lib of operations for the validator queue"
-├─ ValidatorStorage — "statistical red-black tree lib for ordering validators"
+├─ SafeMathInt - "casts int256 to uint256 and vice versa with over/underflow checks"
+├─ StakeManagerLib - "manages validator stake (deposit, withdrawal, etc)"
 ├─ WithdrawalQueue — "lib of operations for the rewards withdrawal queue"
 │ mocks/ "mocks of various contracts for testing"
 │ root/ "contracts that live on the root chain (Ethereum mainnet)"
+├─ root predicates - "templates for processing asset bridging on root"
+├─ | staking "contracts comprising the hub for staking on any child chain"
+   ├─ CustomSupernetManager - "manages validator access, syncs voting power"
+   ├─ StakeManager - "manages stake for all child chains"
+   ├─ SupernetManager - "abstract template for managing Supernets"
 ├─ CheckpointManager - "receives and executes messages from child"
-├─ RootValidatorSet - "*LIKELY TO CHANGE* stores data from child about validators and epochs"
+├─ ExitHelper - "processes exits from stored event roots in CheckpointManager"
 ├─ StateSender - "sends messages to child"
 ```
 
 ### General Repo Layout
 
-This repo is a hybrid [Hardhat](https://hardhat.org) and [Foundry](https://getfoundry.sh/) environment. There are a number of add-ons, some of which we will detail here. Unlike standard Foundry environments, the contracts are located in `contracts/` (as opposed to `src/`) in order to conform with the general Hardhat project architecture. The Foundry/Solidity tests live in `test/forge/` whereas the Hardhat/Typescript tests are at the root level of `test/`. (For more details on the tests, see [Running Tests](#running-tests) in the [Using This Repo](#using-this-repo) section.)
+This repo is a hybrid [Hardhat](https://hardhat.org) and [Foundry](https://getfoundry.sh/) environment. There are a number of add-ons, some of which we will detail here. Unlike standard Foundry environments, the contracts are located in `contracts/` (as opposed to `src/`) in order to conform with the general Hardhat project architecture. The Foundry/Solidity tests live in `test/forge/` whereas the Hardhat/Typescript tests are at the root level of `test/`. (For more details on the tests, see [Running Tests](#running-tests) in the [Using This Repo](#using-this-repo) section.) This can result in the actual test coverage on the repo being hard to read, as `solidity-coverage` and Foundry's native coverage tools do not natively communicate with each other. (In addition, Foundry's tool does not currently reflect branch coverage in Solidity libraries properly ([source](https://github.com/foundry-rs/foundry/issues/4854)), though this will likely be remediated in the future.)
+
+Part of the rationale is that while Foundry provides a set of options well suited to testing bridges, there are still aspects of the codebase which cannot be tested in native Solidity, particularly
 
 The following is a brief overview of some of the files and directories in the project root:
 

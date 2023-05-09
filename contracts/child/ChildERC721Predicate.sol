@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/IChildERC721Predicate.sol";
+import "../interfaces/child/IChildERC721Predicate.sol";
+import "../interfaces/child/IChildERC721.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/IChildERC721.sol";
 import "./System.sol";
 
 /**
@@ -80,18 +80,8 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         address newStateReceiver,
         address newRootERC721Predicate,
         address newChildTokenTemplate
-    ) external onlySystemCall initializer {
-        require(
-            newL2StateSender != address(0) &&
-                newStateReceiver != address(0) &&
-                newRootERC721Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "ChildERC721Predicate: BAD_INITIALIZATION"
-        );
-        l2StateSender = IStateSender(newL2StateSender);
-        stateReceiver = newStateReceiver;
-        rootERC721Predicate = newRootERC721Predicate;
-        childTokenTemplate = newChildTokenTemplate;
+    ) public virtual onlySystemCall initializer {
+        _initialize(newL2StateSender, newStateReceiver, newRootERC721Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -105,9 +95,13 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         require(sender == rootERC721Predicate, "ChildERC721Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
+            _beforeTokenDeposit();
             _deposit(data[32:]);
+            _afterTokenDeposit();
         } else if (bytes32(data[:32]) == DEPOSIT_BATCH_SIG) {
+            _beforeTokenDeposit();
             _depositBatch(data);
+            _afterTokenDeposit();
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
@@ -121,7 +115,9 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
      * @param tokenId index of the NFT to withdraw
      */
     function withdraw(IChildERC721 childToken, uint256 tokenId) external {
+        _beforeTokenWithdraw();
         _withdraw(childToken, msg.sender, tokenId);
+        _afterTokenWithdraw();
     }
 
     /**
@@ -131,7 +127,9 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
      * @param tokenId index of the NFT to withdraw
      */
     function withdrawTo(IChildERC721 childToken, address receiver, uint256 tokenId) external {
+        _beforeTokenWithdraw();
         _withdraw(childToken, receiver, tokenId);
+        _afterTokenWithdraw();
     }
 
     /**
@@ -145,8 +143,49 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         address[] calldata receivers,
         uint256[] calldata tokenIds
     ) external {
+        _beforeTokenWithdraw();
         _withdrawBatch(childToken, receivers, tokenIds);
+        _afterTokenWithdraw();
     }
+
+    /**
+     * @notice Initilization function for ChildERC721Predicate
+     * @param newL2StateSender Address of L2StateSender to send exit information to
+     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token implementation to deploy clones of
+     * @dev Can be called multiple times.
+     */
+    function _initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newRootERC721Predicate,
+        address newChildTokenTemplate
+    ) internal {
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newRootERC721Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "ChildERC721Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
+        stateReceiver = newStateReceiver;
+        rootERC721Predicate = newRootERC721Predicate;
+        childTokenTemplate = newChildTokenTemplate;
+    }
+
+    // solhint-disable no-empty-blocks
+    // slither-disable-start dead-code
+    function _beforeTokenDeposit() internal virtual {}
+
+    function _beforeTokenWithdraw() internal virtual {}
+
+    function _afterTokenDeposit() internal virtual {}
+
+    function _afterTokenWithdraw() internal virtual {}
+
+    // slither-disable-end dead-code
 
     function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
@@ -158,11 +197,11 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         assert(childToken.predicate() == address(this));
 
         require(childToken.burn(msg.sender, tokenId), "ChildERC721Predicate: BURN_FAILED");
-
         l2StateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId)
         );
+
         // slither-disable-next-line reentrancy-events
         emit L2ERC721Withdraw(rootToken, address(childToken), msg.sender, receiver, tokenId);
     }
@@ -181,13 +220,12 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         assert(childToken.predicate() == address(this));
 
         require(receivers.length == tokenIds.length, "ChildERC721Predicate: INVALID_LENGTH");
-
         require(childToken.burnBatch(msg.sender, tokenIds), "ChildERC721Predicate: BURN_FAILED");
-
         l2StateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
         );
+
         // slither-disable-next-line reentrancy-events
         emit L2ERC721WithdrawBatch(rootToken, address(childToken), msg.sender, receivers, tokenIds);
     }
