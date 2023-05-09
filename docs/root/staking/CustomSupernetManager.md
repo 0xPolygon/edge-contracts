@@ -10,23 +10,6 @@
 
 ## Methods
 
-### DOMAIN
-
-```solidity
-function DOMAIN() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### SLASHING_PERCENTAGE
 
 ```solidity
@@ -54,6 +37,23 @@ function acceptOwnership() external nonpayable
 
 *The new owner accepts the ownership transfer.*
 
+
+### domain
+
+```solidity
+function domain() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### enableStaking
 
@@ -136,7 +136,7 @@ function id() external view returns (uint256)
 ### initialize
 
 ```solidity
-function initialize(address stakeManager, address bls, address stateSender, address matic, address childValidatorSet, address exitHelper, string domain) external nonpayable
+function initialize(address newStakeManager, address newBls, address newStateSender, address newMatic, address newChildValidatorSet, address newExitHelper, string newDomain) external nonpayable
 ```
 
 
@@ -147,13 +147,13 @@ function initialize(address stakeManager, address bls, address stateSender, addr
 
 | Name | Type | Description |
 |---|---|---|
-| stakeManager | address | undefined |
-| bls | address | undefined |
-| stateSender | address | undefined |
-| matic | address | undefined |
-| childValidatorSet | address | undefined |
-| exitHelper | address | undefined |
-| domain | string | undefined |
+| newStakeManager | address | undefined |
+| newBls | address | undefined |
+| newStateSender | address | undefined |
+| newMatic | address | undefined |
+| newChildValidatorSet | address | undefined |
+| newExitHelper | address | undefined |
+| newDomain | string | undefined |
 
 ### onInit
 

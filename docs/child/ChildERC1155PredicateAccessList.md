@@ -279,7 +279,7 @@ function childTokenTemplate() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newRootERC1155Predicate, address newChildTokenTemplate, bool useAllowList, bool useBlockList, address newOwner) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newRootERC1155Predicate, address newChildTokenTemplate, bool newUseAllowList, bool newUseBlockList, address newOwner) external nonpayable
 ```
 
 
@@ -294,8 +294,8 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 | newStateReceiver | address | undefined |
 | newRootERC1155Predicate | address | undefined |
 | newChildTokenTemplate | address | undefined |
-| useAllowList | bool | undefined |
-| useBlockList | bool | undefined |
+| newUseAllowList | bool | undefined |
+| newUseBlockList | bool | undefined |
 | newOwner | address | undefined |
 
 ### initialize
@@ -439,7 +439,7 @@ function rootTokenToChildToken(address) external view returns (address)
 ### setAllowList
 
 ```solidity
-function setAllowList(bool _useAllowList) external nonpayable
+function setAllowList(bool newUseAllowList) external nonpayable
 ```
 
 
@@ -450,12 +450,12 @@ function setAllowList(bool _useAllowList) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _useAllowList | bool | undefined |
+| newUseAllowList | bool | undefined |
 
 ### setBlockList
 
 ```solidity
-function setBlockList(bool _useBlockList) external nonpayable
+function setBlockList(bool newUseBlockList) external nonpayable
 ```
 
 
@@ -466,7 +466,7 @@ function setBlockList(bool _useBlockList) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _useBlockList | bool | undefined |
+| newUseBlockList | bool | undefined |
 
 ### stateReceiver
 

@@ -7,6 +7,7 @@ library SafeMathInt {
      * @param a int256 to convert
      * @return uint256 of the input
      */
+    // slither-disable-next-line dead-code
     function toUint256Safe(int256 a) internal pure returns (uint256) {
         assert(a >= 0);
         return uint256(a);
@@ -19,6 +20,7 @@ library SafeMathUint {
      * @param a the uint256 to convert
      * @return int256 of the input
      */
+    // slither-disable-next-line dead-code
     function toInt256Safe(uint256 a) internal pure returns (int256) {
         int256 b = int256(a);
         assert(b >= 0);

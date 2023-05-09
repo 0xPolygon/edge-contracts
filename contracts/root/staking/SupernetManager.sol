@@ -6,19 +6,21 @@ import "../../interfaces/root/staking/IStakeManager.sol";
 import "../../interfaces/root/staking/ISupernetManager.sol";
 
 abstract contract SupernetManager is ISupernetManager, Initializable {
-    IStakeManager internal STAKE_MANAGER;
+    IStakeManager internal stakeManager;
     uint256 public id;
 
     modifier onlyStakeManager() {
-        require(msg.sender == address(STAKE_MANAGER), "ONLY_STAKE_MANAGER");
+        require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
         _;
     }
 
-    function __SupernetManager_init(address stakeManager) internal onlyInitializing {
-        STAKE_MANAGER = IStakeManager(stakeManager);
+    // slither-disable-next-line naming-convention
+    function __SupernetManager_init(address newStakeManager) internal onlyInitializing {
+        stakeManager = IStakeManager(newStakeManager);
     }
 
     function onInit(uint256 id_) external onlyStakeManager {
+        // slither-disable-next-line events-maths
         id = id_;
     }
 

@@ -17,25 +17,27 @@ contract AccessList is Ownable2StepUpgradeable, System {
     event AllowListUsageSet(uint256 indexed block, bool indexed status);
     event BlockListUsageSet(uint256 indexed block, bool indexed status);
 
-    function setAllowList(bool _useAllowList) external onlyOwner {
-        useAllowList = _useAllowList;
-        emit AllowListUsageSet(block.number, _useAllowList);
+    function setAllowList(bool newUseAllowList) external onlyOwner {
+        useAllowList = newUseAllowList;
+        emit AllowListUsageSet(block.number, newUseAllowList);
     }
 
-    function setBlockList(bool _useBlockList) external onlyOwner {
-        useBlockList = _useBlockList;
-        emit BlockListUsageSet(block.number, _useBlockList);
+    function setBlockList(bool newUseBlockList) external onlyOwner {
+        useBlockList = newUseBlockList;
+        emit BlockListUsageSet(block.number, newUseBlockList);
     }
 
     function _checkAccessList() internal view {
         if (useAllowList) {
             // solhint-disable avoid-low-level-calls
+            // slither-disable-next-line low-level-calls
             (bool allowSuccess, bytes memory allowlistRes) = ALLOWLIST_PRECOMPILE.staticcall{gas: READ_ADDRESSLIST_GAS}(
                 abi.encodeWithSelector(IAddressList.readAddressList.selector, msg.sender)
             );
             require(allowSuccess && abi.decode(allowlistRes, (uint256)) > 0, "DISALLOWED_SENDER");
         }
         if (useBlockList) {
+            // slither-disable-next-line low-level-calls
             (bool blockSuccess, bytes memory blocklistRes) = BLOCKLIST_PRECOMPILE.staticcall{gas: READ_ADDRESSLIST_GAS}(
                 abi.encodeWithSelector(IAddressList.readAddressList.selector, msg.sender)
             );
