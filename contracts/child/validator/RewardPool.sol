@@ -31,7 +31,7 @@ contract RewardPool is IRewardPool, System, Initializable {
 
         rewardToken = IERC20Upgradeable(newRewardToken);
         rewardWallet = newRewardWallet;
-        validatorSet = IValidatorSet(validatorSet);
+        validatorSet = IValidatorSet(newValidatorSet);
         baseReward = newBaseReward;
     }
 

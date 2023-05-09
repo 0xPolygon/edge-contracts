@@ -34,13 +34,6 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        console.log(address(stakeManager),
-            address(bls),
-            address(stateSender),
-            address(token));
-        console.log(childValidatorSet,
-            exitHelper,
-            DOMAIN);
         supernetManager.initialize(
             address(stakeManager),
             address(bls),
@@ -162,14 +155,6 @@ abstract contract Slashed is EnabledStaking {
 
 contract CustomSupernetManager_Initialize is Uninitialized {
     function testInititialize() public {
-        console.log(address(stakeManager),
-            address(bls),
-            address(stateSender),
-            address(token));
-        console.log(
-            childValidatorSet,
-            exitHelper,
-            DOMAIN);
         supernetManager.initialize(
             address(stakeManager),
             address(bls),
@@ -360,12 +345,12 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
     event ValidatorDeactivated(address validator);
 
     function test_RevertNotCalledByExitHelper() public {
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "EXIT_HELPER"));
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "exitHelper"));
         supernetManager.onL2StateReceive(1, childValidatorSet, "");
     }
 
     function test_RevertChildValidatorSetNotSender() public {
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "EXIT_HELPER"));
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "exitHelper"));
         vm.prank(exitHelper);
         supernetManager.onL2StateReceive(1, alice, "");
     }
