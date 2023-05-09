@@ -54,7 +54,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
             "INVALID_INPUT"
         );
         __SupernetManager_init(newStakeManager);
-        bls = IBLS(bls);
+        bls = IBLS(newBls);
         stateSender = IStateSender(newStateSender);
         matic = IERC20(newMatic);
         childValidatorSet = newChildValidatorSet;
