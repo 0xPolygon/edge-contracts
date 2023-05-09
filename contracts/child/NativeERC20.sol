@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "../interfaces/IStateReceiver.sol";
-import "../interfaces/INativeERC20.sol";
+import "../interfaces/child/IStateReceiver.sol";
+import "../interfaces/child/INativeERC20.sol";
 import "./System.sol";
 
 /**
