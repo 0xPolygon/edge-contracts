@@ -42,7 +42,7 @@
     "hardhat": "^2.14.0",
     "keccak256": "^1.0.6",
     "mcl-wasm": "^1.0.2",
-    "merkletreejs": "^0.3.9"
+    "merkletreejs": "^0.3.10"
   },
   "devDependencies": {
     "@defi-wonderland/smock": "^2.3.4",
