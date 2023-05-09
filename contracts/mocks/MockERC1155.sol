@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 
