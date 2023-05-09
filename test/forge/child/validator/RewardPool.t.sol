@@ -37,6 +37,7 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
+        console.log(address(token), rewardWallet, address(validatorSet), baseReward);
         pool.initialize(address(token), rewardWallet, address(validatorSet), baseReward);
     }
 }
@@ -54,11 +55,12 @@ abstract contract Distributed is Initialized {
 
 contract RewardPool_Initialize is Uninitialized {
     function test_Initialize() public {
+        console.log(address(token), rewardWallet, address(validatorSet), baseReward);
         pool.initialize(address(token), rewardWallet, address(validatorSet), baseReward);
-        assertEq(address(pool.REWARD_TOKEN()), address(token));
-        assertEq(pool.REWARD_WALLET(), rewardWallet);
-        assertEq(address(pool.VALIDATOR_SET()), address(validatorSet));
-        assertEq(pool.BASE_REWARD(), baseReward);
+        assertEq(address(pool.rewardToken()), address(token));
+        assertEq(pool.rewardWallet(), rewardWallet);
+        assertEq(address(pool.validatorSet()), address(validatorSet));
+        assertEq(pool.baseReward(), baseReward);
     }
 }
 

@@ -23,7 +23,7 @@ abstract contract Uninitialized is Test {
         bls = new BLS();
         stateSender = new StateSender();
         childValidatorSet = makeAddr("childValidatorSet");
-        childValidatorSet = makeAddr("exitHelper");
+        exitHelper = makeAddr("exitHelper");
         token = new MockERC20();
         stakeManager = new StakeManager();
         supernetManager = new CustomSupernetManager();
@@ -34,6 +34,13 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
+        console.log(address(stakeManager),
+            address(bls),
+            address(stateSender),
+            address(token));
+        console.log(childValidatorSet,
+            exitHelper,
+            DOMAIN);
         supernetManager.initialize(
             address(stakeManager),
             address(bls),
@@ -155,6 +162,14 @@ abstract contract Slashed is EnabledStaking {
 
 contract CustomSupernetManager_Initialize is Uninitialized {
     function testInititialize() public {
+        console.log(address(stakeManager),
+            address(bls),
+            address(stateSender),
+            address(token));
+        console.log(
+            childValidatorSet,
+            exitHelper,
+            DOMAIN);
         supernetManager.initialize(
             address(stakeManager),
             address(bls),
@@ -165,7 +180,7 @@ contract CustomSupernetManager_Initialize is Uninitialized {
             DOMAIN
         );
         assertEq(supernetManager.owner(), address(this), "should set owner");
-        assertEq((supernetManager.DOMAIN()), keccak256(abi.encodePacked(DOMAIN)), "should set and hash DOMAIN");
+        assertEq((supernetManager.domain()), keccak256(abi.encodePacked(DOMAIN)), "should set and hash DOMAIN");
     }
 }
 
