@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "./IChildERC20.sol";
 import "./IStateReceiver.sol";
+import "./IChildERC20.sol";
 
 interface IChildERC20Predicate is IStateReceiver {
     function initialize(

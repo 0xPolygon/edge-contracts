@@ -5,11 +5,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC20Predicate.sol";
-import "../interfaces/root/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
-contract RootERC20Predicate is IRootERC20Predicate, IL2StateReceiver, Initializable {
+contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     using SafeERC20 for IERC20Metadata;
 
     IStateSender public stateSender;

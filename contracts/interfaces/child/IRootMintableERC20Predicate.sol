@@ -2,31 +2,23 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./IL2StateReceiver.sol";
 
-interface IRootERC20Predicate is IL2StateReceiver {
-    struct ERC20BridgeEvent {
-        address rootToken;
-        address childToken;
-        address sender;
-        address receiver;
-    }
-
-    event ERC20Deposit(
+interface IRootMintableERC20Predicate {
+    event L2MintableERC20Deposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,
         address indexed receiver,
         uint256 amount
     );
-    event ERC20Withdraw(
+    event L2MintableERC20Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address withdrawer,
         address indexed receiver,
         uint256 amount
     );
-    event TokenMapped(address indexed rootToken, address indexed childToken);
+    event L2MintableTokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
      * @notice Function to deposit tokens from the depositor to themselves on the child chain

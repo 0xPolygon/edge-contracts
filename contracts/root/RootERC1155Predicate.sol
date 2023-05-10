@@ -5,11 +5,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC1155Predicate.sol";
-import "../interfaces/root/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
-contract RootERC1155Predicate is IRootERC1155Predicate, IL2StateReceiver, Initializable, ERC1155Holder {
+contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predicate {
     IStateSender public stateSender;
     address public exitHelper;
     address public childERC1155Predicate;
