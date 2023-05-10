@@ -41,12 +41,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
         address newChildERC20Predicate,
         address newChildTokenTemplate
     ) public virtual onlySystemCall initializer {
-        _initialize(
-            newL2StateSender,
-            newStateReceiver,
-            newChildERC20Predicate,
-            newChildTokenTemplate
-        );
+        _initialize(newL2StateSender, newStateReceiver, newChildERC20Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -145,6 +140,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
     function _afterTokenDeposit() internal virtual {}
 
     function _afterTokenWithdraw() internal virtual {}
+
     // slither-disable-end dead-code
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {

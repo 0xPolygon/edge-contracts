@@ -1,4 +1,4 @@
-# IRootERC20Predicate
+# IRootMintableERC20Predicate
 
 
 
@@ -67,32 +67,14 @@ Function to be used for token mapping
 |---|---|---|
 | _0 | address | address Address of the child token |
 
-### onL2StateReceive
-
-```solidity
-function onL2StateReceive(uint256 id, address sender, bytes data) external nonpayable
-```
-
-Called by exit helper when state is received from L2
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined |
-| sender | address | Address of the sender on the child chain |
-| data | bytes | Data sent by the sender |
-
 
 
 ## Events
 
-### ERC20Deposit
+### L2MintableERC20Deposit
 
 ```solidity
-event ERC20Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 amount)
+event L2MintableERC20Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 amount)
 ```
 
 
@@ -109,10 +91,10 @@ event ERC20Deposit(address indexed rootToken, address indexed childToken, addres
 | receiver `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
-### ERC20Withdraw
+### L2MintableERC20Withdraw
 
 ```solidity
-event ERC20Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 amount)
+event L2MintableERC20Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 amount)
 ```
 
 
@@ -129,10 +111,10 @@ event ERC20Withdraw(address indexed rootToken, address indexed childToken, addre
 | receiver `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
-### TokenMapped
+### L2MintableTokenMapped
 
 ```solidity
-event TokenMapped(address indexed rootToken, address indexed childToken)
+event L2MintableTokenMapped(address indexed rootToken, address indexed childToken)
 ```
 
 
