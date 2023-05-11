@@ -2,38 +2,38 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "./IL2StateReceiver.sol";
+import "./IStateReceiver.sol";
 
-interface IRootERC721Predicate is IL2StateReceiver {
-    event ERC721Deposit(
+interface IRootMintableERC721Predicate is IStateReceiver {
+    event L2MintableERC721Deposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,
         address indexed receiver,
         uint256 tokenId
     );
-    event ERC721DepositBatch(
+    event L2MintableERC721DepositBatch(
         address indexed rootToken,
         address indexed childToken,
         address indexed depositor,
         address[] receivers,
         uint256[] tokenIds
     );
-    event ERC721Withdraw(
+    event L2MintableERC721Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address withdrawer,
         address indexed receiver,
         uint256 tokenId
     );
-    event ERC721WithdrawBatch(
+    event L2MintableERC721WithdrawBatch(
         address indexed rootToken,
         address indexed childToken,
         address indexed withdrawer,
         address[] receivers,
         uint256[] tokenIds
     );
-    event TokenMapped(address indexed rootToken, address indexed childToken);
+    event L2MintableTokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
      * @notice Function to deposit tokens from the depositor to themselves on the child chain
