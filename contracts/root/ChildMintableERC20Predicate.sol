@@ -20,7 +20,7 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
 
     IStateSender public stateSender;
     address public exitHelper;
-    address public childERC20Predicate;
+    address public rootERC20Predicate;
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
@@ -32,16 +32,16 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
      * @notice Initilization function for RootERC20Predicate
      * @param newStateSender Address of StateSender to send deposit information to
      * @param newExitHelper Address of ExitHelper to receive withdrawal information from
-     * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with
+     * @param newRootERC20Predicate Address of child ERC20 predicate to communicate with
      * @dev Can only be called once.
      */
     function initialize(
         address newStateSender,
         address newExitHelper,
-        address newChildERC20Predicate,
+        address newRootERC20Predicate,
         address newChildTokenTemplate
-    ) external virtual {
-        _initialize(newStateSender, newExitHelper, newChildERC20Predicate, newChildTokenTemplate);
+    ) external virtual initializer {
+        _initialize(newStateSender, newExitHelper, newRootERC20Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -51,8 +51,8 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == exitHelper, "ChildERC20Predicate: ONLY_STATE_RECEIVER");
-        require(sender == childERC20Predicate, "ChildERC20Predicate: ONLY_ROOT_PREDICATE");
+        require(msg.sender == exitHelper, "ChildMintableERC20Predicate: ONLY_STATE_RECEIVER");
+        require(sender == rootERC20Predicate, "ChildMintableERC20Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _beforeTokenDeposit();
@@ -61,7 +61,7 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
-            revert("ChildERC20Predicate: INVALID_SIGNATURE");
+            revert("ChildMintableERC20Predicate: INVALID_SIGNATURE");
         }
     }
 
@@ -92,26 +92,26 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
      * @notice Internal initialization function for ChildERC20Predicate
      * @param newStateSender Address of L2StateSender to send exit information to
      * @param newExitHelper Address of StateReceiver to receive deposit information from
-     * @param newChildERC20Predicate Address of root ERC20 predicate to communicate with
+     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can be called multiple times.
      */
     function _initialize(
         address newStateSender,
         address newExitHelper,
-        address newChildERC20Predicate,
+        address newRootERC20Predicate,
         address newChildTokenTemplate
     ) internal {
         require(
             newStateSender != address(0) &&
                 newExitHelper != address(0) &&
-                newChildERC20Predicate != address(0) &&
+                newRootERC20Predicate != address(0) &&
                 newChildTokenTemplate != address(0),
-            "RootERC20Predicate: BAD_INITIALIZATION"
+            "ChildMintableERC20Predicate: BAD_INITIALIZATION"
         );
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
-        childERC20Predicate = newChildERC20Predicate;
+        rootERC20Predicate = newRootERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
     }
 
@@ -126,18 +126,18 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
     function _afterTokenWithdraw() internal virtual {}
 
     function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
-        require(address(childToken).code.length != 0, "ChildERC20Predicate: NOT_CONTRACT");
+        require(address(childToken).code.length != 0, "ChildMintableERC20Predicate: NOT_CONTRACT");
 
         address rootToken = childToken.rootToken();
 
-        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildMintableERC20Predicate: UNMAPPED_TOKEN");
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burn(msg.sender, amount), "ChildERC20Predicate: BURN_FAILED");
-        stateSender.syncState(childERC20Predicate, abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount));
+        require(childToken.burn(msg.sender, amount), "ChildMintableERC20Predicate: BURN_FAILED");
+        stateSender.syncState(rootERC20Predicate, abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount));
 
         // slither-disable-next-line reentrancy-events
         emit MintableERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
@@ -151,7 +151,7 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
 
         IChildERC20 childToken = IChildERC20(rootTokenToChildToken[depositToken]);
 
-        require(address(childToken) != address(0), "ChildERC20Predicate: UNMAPPED_TOKEN");
+        require(address(childToken) != address(0), "ChildMintableERC20Predicate: UNMAPPED_TOKEN");
         assert(address(childToken).code.length != 0);
 
         address rootToken = IChildERC20(childToken).rootToken();
@@ -163,7 +163,7 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
         // a mapped token should never have predicate unset
         assert(IChildERC20(childToken).predicate() == address(this));
 
-        require(IChildERC20(childToken).mint(receiver, amount), "ChildERC20Predicate: MINT_FAILED");
+        require(IChildERC20(childToken).mint(receiver, amount), "ChildMintableERC20Predicate: MINT_FAILED");
 
         // slither-disable-next-line reentrancy-events
         emit MintableERC20Deposit(depositToken, address(childToken), depositor, receiver, amount);
