@@ -61,23 +61,6 @@ function WITHDRAW_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### childERC20Predicate
-
-```solidity
-function childERC20Predicate() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### childTokenTemplate
 
 ```solidity
@@ -115,7 +98,7 @@ function exitHelper() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate, address newChildTokenTemplate) external nonpayable
+function initialize(address newStateSender, address newExitHelper, address newRootERC20Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
 Initilization function for RootERC20Predicate
@@ -128,7 +111,7 @@ Initilization function for RootERC20Predicate
 |---|---|---|
 | newStateSender | address | Address of StateSender to send deposit information to |
 | newExitHelper | address | Address of ExitHelper to receive withdrawal information from |
-| newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
+| newRootERC20Predicate | address | Address of child ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | undefined |
 
 ### onL2StateReceive
@@ -148,6 +131,23 @@ Function to be used for token deposits
 | _0 | uint256 | undefined |
 | sender | address | Address of the sender on the root chain |
 | data | bytes | Data sent by the sender |
+
+### rootERC20Predicate
+
+```solidity
+function rootERC20Predicate() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### rootTokenToChildToken
 
