@@ -19,7 +19,7 @@ import {
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { smock } from "@defi-wonderland/smock";
 
-describe("ChildERC721Predicate", () => {
+describe("ChildMintableERC721Predicate", () => {
   let childMintableERC721Predicate: ChildMintableERC721Predicate,
     exitHelperChildMintableERC721Predicate: ChildMintableERC721Predicate,
     stateSender: StateSender,

@@ -44,7 +44,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
      * @dev Can be extended to include other signatures for more functionality
      */
     function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == stateReceiver, "RootMintableERC721Predicate: ONLY_EXIT_HELPER");
+        require(msg.sender == stateReceiver, "RootMintableERC721Predicate: ONLY_STATE_RECEIVER");
         require(sender == childERC721Predicate, "RootMintableERC721Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
