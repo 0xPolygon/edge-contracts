@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/child/IRootMintableERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
+import "./System.sol";
 
 // solhint-disable reason-string
-contract RootMintableERC721Predicate is Initializable, ERC721Holder, IRootMintableERC721Predicate {
+contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRootMintableERC721Predicate {
     IStateSender public l2StateSender;
     address public stateReceiver;
     address public childERC721Predicate;
@@ -33,7 +34,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, IRootMintab
         address newStateReceiver,
         address newChildERC721Predicate,
         address newChildTokenTemplate
-    ) external virtual initializer {
+    ) external virtual onlySystemCall initializer {
         _initialize(newL2StateSender, newStateReceiver, newChildERC721Predicate, newChildTokenTemplate);
     }
 
