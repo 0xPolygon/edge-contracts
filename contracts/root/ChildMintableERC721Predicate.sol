@@ -56,7 +56,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == exitHelper, "ChildMintableERC721Predicate: ONLY_STATE_RECEIVER");
+        require(msg.sender == exitHelper, "ChildMintableERC721Predicate: ONLY_EXIT_HELPER");
         require(sender == rootERC721Predicate, "ChildMintableERC721Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
@@ -126,7 +126,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
         address newExitHelper,
         address newRootERC721Predicate,
         address newChildTokenTemplate
-    ) internal {
+    ) internal virtual {
         require(
             newStateSender != address(0) &&
                 newExitHelper != address(0) &&
@@ -155,13 +155,16 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
     function _withdraw(IChildERC721 childToken, address receiver, uint256 tokenId) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
-        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
+        require(
+            rootTokenToChildToken[rootToken] == address(childToken),
+            "ChildMintableERC721Predicate: UNMAPPED_TOKEN"
+        );
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(childToken.burn(msg.sender, tokenId), "ChildERC721Predicate: BURN_FAILED");
+        require(childToken.burn(msg.sender, tokenId), "ChildMintableERC721Predicate: BURN_FAILED");
         stateSender.syncState(rootERC721Predicate, abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId));
 
         // slither-disable-next-line reentrancy-events
@@ -175,14 +178,17 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
     ) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
-        require(rootTokenToChildToken[rootToken] == address(childToken), "ChildERC721Predicate: UNMAPPED_TOKEN");
+        require(
+            rootTokenToChildToken[rootToken] == address(childToken),
+            "ChildMintableERC721Predicate: UNMAPPED_TOKEN"
+        );
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        require(receivers.length == tokenIds.length, "ChildERC721Predicate: INVALID_LENGTH");
-        require(childToken.burnBatch(msg.sender, tokenIds), "ChildERC721Predicate: BURN_FAILED");
+        require(receivers.length == tokenIds.length, "ChildMintableERC721Predicate: INVALID_LENGTH");
+        require(childToken.burnBatch(msg.sender, tokenIds), "ChildMintableERC721Predicate: BURN_FAILED");
         stateSender.syncState(
             rootERC721Predicate,
             abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
@@ -200,7 +206,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
 
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
 
-        require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
+        require(address(childToken) != address(0), "ChildMintableERC721Predicate: UNMAPPED_TOKEN");
         // a mapped token should always pass specifications
         assert(_verifyContract(childToken));
 
@@ -212,7 +218,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC721(childToken).predicate() == address(this));
-        require(IChildERC721(childToken).mint(receiver, tokenId), "ChildERC721Predicate: MINT_FAILED");
+        require(IChildERC721(childToken).mint(receiver, tokenId), "ChildMintableERC721Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
         emit MintableERC721Deposit(depositToken, address(childToken), depositor, receiver, tokenId);
     }
@@ -225,7 +231,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
 
         IChildERC721 childToken = IChildERC721(rootTokenToChildToken[depositToken]);
 
-        require(address(childToken) != address(0), "ChildERC721Predicate: UNMAPPED_TOKEN");
+        require(address(childToken) != address(0), "ChildMintableERC721Predicate: UNMAPPED_TOKEN");
         // a mapped token should always pass specifications
         assert(_verifyContract(childToken));
 
@@ -237,7 +243,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC721(childToken).predicate() == address(this));
-        require(IChildERC721(childToken).mintBatch(receivers, tokenIds), "ChildERC721Predicate: MINT_FAILED");
+        require(IChildERC721(childToken).mintBatch(receivers, tokenIds), "ChildMintableERC721Predicate: MINT_FAILED");
         // slither-disable-next-line reentrancy-events
         emit MintableERC721DepositBatch(depositToken, address(childToken), depositor, receivers, tokenIds);
     }
