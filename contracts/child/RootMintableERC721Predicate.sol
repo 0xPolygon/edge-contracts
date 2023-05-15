@@ -4,13 +4,14 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../interfaces/root/IRootERC721Predicate.sol";
+import "../interfaces/child/IRootMintableERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
+import "./System.sol";
 
 // solhint-disable reason-string
-contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicate {
-    IStateSender public stateSender;
-    address public exitHelper;
+contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRootMintableERC721Predicate {
+    IStateSender public l2StateSender;
+    address public stateReceiver;
     address public childERC721Predicate;
     address public childTokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -21,81 +22,72 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootERC721Predicate
-     * @param newStateSender Address of StateSender to send deposit information to
-     * @param newExitHelper Address of ExitHelper to receive withdrawal information from
+     * @notice Initilization function for RootMintableERC721Predicate
+     * @param newL2StateSender Address of L2StateSender to send deposit information to
+     * @param newStateReceiver Address of StateReceiver to receive withdrawal information from
      * @param newChildERC721Predicate Address of child ERC721 predicate to communicate with
+     * @param newChildTokenTemplate Address of child token template to calculate child token addresses
      * @dev Can only be called once.
      */
     function initialize(
-        address newStateSender,
-        address newExitHelper,
+        address newL2StateSender,
+        address newStateReceiver,
         address newChildERC721Predicate,
         address newChildTokenTemplate
-    ) external initializer {
-        require(
-            newStateSender != address(0) &&
-                newExitHelper != address(0) &&
-                newChildERC721Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "RootERC721Predicate: BAD_INITIALIZATION"
-        );
-        stateSender = IStateSender(newStateSender);
-        exitHelper = newExitHelper;
-        childERC721Predicate = newChildERC721Predicate;
-        childTokenTemplate = newChildTokenTemplate;
+    ) external virtual onlySystemCall initializer {
+        _initialize(newL2StateSender, newStateReceiver, newChildERC721Predicate, newChildTokenTemplate);
     }
 
     /**
-     * @inheritdoc IL2StateReceiver
+     * @inheritdoc IStateReceiver
      * @notice Function to be used for token withdrawals
      * @dev Can be extended to include other signatures for more functionality
      */
-    function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == exitHelper, "RootERC721Predicate: ONLY_EXIT_HELPER");
-        require(sender == childERC721Predicate, "RootERC721Predicate: ONLY_CHILD_PREDICATE");
+    function onStateReceive(uint256 /* id */, address sender, bytes calldata data) external {
+        require(msg.sender == stateReceiver, "RootMintableERC721Predicate: ONLY_STATE_RECEIVER");
+        require(sender == childERC721Predicate, "RootMintableERC721Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
         } else if (bytes32(data[:32]) == WITHDRAW_BATCH_SIG) {
             _withdrawBatch(data);
         } else {
-            revert("RootERC721Predicate: INVALID_SIGNATURE");
+            revert("RootMintableERC721Predicate: INVALID_SIGNATURE");
         }
     }
 
     /**
-     * @inheritdoc IRootERC721Predicate
+     * @inheritdoc IRootMintableERC721Predicate
      */
     function deposit(IERC721Metadata rootToken, uint256 tokenId) external {
         _deposit(rootToken, msg.sender, tokenId);
     }
 
     /**
-     * @inheritdoc IRootERC721Predicate
+     * @inheritdoc IRootMintableERC721Predicate
      */
     function depositTo(IERC721Metadata rootToken, address receiver, uint256 tokenId) external {
         _deposit(rootToken, receiver, tokenId);
     }
 
     /**
-     * @inheritdoc IRootERC721Predicate
+     * @inheritdoc IRootMintableERC721Predicate
      */
     function depositBatch(
         IERC721Metadata rootToken,
         address[] calldata receivers,
         uint256[] calldata tokenIds
     ) external {
-        require(receivers.length == tokenIds.length, "RootERC721Predicate: INVALID_LENGTH");
+        require(receivers.length == tokenIds.length, "RootMintableERC721Predicate: INVALID_LENGTH");
         _depositBatch(rootToken, receivers, tokenIds);
     }
 
     /**
-     * @inheritdoc IRootERC721Predicate
+     * @inheritdoc IRootMintableERC721Predicate
      */
     function mapToken(IERC721Metadata rootToken) public returns (address) {
-        require(address(rootToken) != address(0), "RootERC721Predicate: INVALID_TOKEN");
-        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC721Predicate: ALREADY_MAPPED");
+        require(address(rootToken) != address(0), "RootMintableERC721Predicate: INVALID_TOKEN");
+        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootMintableERC721Predicate: ALREADY_MAPPED");
 
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
@@ -105,13 +97,32 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
-        stateSender.syncState(
+        l2StateSender.syncState(
             childERC721Predicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol())
         );
         // slither-disable-next-line reentrancy-events
-        emit TokenMapped(address(rootToken), childToken);
+        emit L2MintableTokenMapped(address(rootToken), childToken);
         return childToken;
+    }
+
+    function _initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newChildERC721Predicate,
+        address newChildTokenTemplate
+    ) internal {
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newChildERC721Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "RootMintableERC721Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
+        stateReceiver = newStateReceiver;
+        childERC721Predicate = newChildERC721Predicate;
+        childTokenTemplate = newChildTokenTemplate;
     }
 
     function _deposit(IERC721Metadata rootToken, address receiver, uint256 tokenId) private {
@@ -119,9 +130,12 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
 
         rootToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
-        stateSender.syncState(childERC721Predicate, abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, tokenId));
+        l2StateSender.syncState(
+            childERC721Predicate,
+            abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, tokenId)
+        );
         // slither-disable-next-line reentrancy-events
-        emit ERC721Deposit(address(rootToken), childToken, msg.sender, receiver, tokenId);
+        emit L2MintableERC721Deposit(address(rootToken), childToken, msg.sender, receiver, tokenId);
     }
 
     function _depositBatch(
@@ -138,12 +152,12 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
             }
         }
 
-        stateSender.syncState(
+        l2StateSender.syncState(
             childERC721Predicate,
             abi.encode(DEPOSIT_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds)
         );
         // slither-disable-next-line reentrancy-events
-        emit ERC721DepositBatch(address(rootToken), childToken, msg.sender, receivers, tokenIds);
+        emit L2MintableERC721DepositBatch(address(rootToken), childToken, msg.sender, receivers, tokenIds);
     }
 
     function _withdraw(bytes calldata data) private {
@@ -156,7 +170,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
 
         IERC721Metadata(rootToken).safeTransferFrom(address(this), receiver, tokenId);
         // slither-disable-next-line reentrancy-events
-        emit ERC721Withdraw(address(rootToken), childToken, withdrawer, receiver, tokenId);
+        emit L2MintableERC721Withdraw(address(rootToken), childToken, withdrawer, receiver, tokenId);
     }
 
     function _withdrawBatch(bytes calldata data) private {
@@ -173,7 +187,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
             }
         }
         // slither-disable-next-line reentrancy-events
-        emit ERC721WithdrawBatch(address(rootToken), childToken, withdrawer, receivers, tokenIds);
+        emit L2MintableERC721WithdrawBatch(address(rootToken), childToken, withdrawer, receivers, tokenIds);
     }
 
     function _getChildToken(IERC721Metadata rootToken) private returns (address childToken) {

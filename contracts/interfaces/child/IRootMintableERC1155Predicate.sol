@@ -2,17 +2,17 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
-import "./IL2StateReceiver.sol";
+import "./IStateReceiver.sol";
 
-interface IRootERC1155Predicate is IL2StateReceiver {
-    struct ERC1155BridgeEvent {
+interface IRootMintableERC1155Predicate is IStateReceiver {
+    struct L2MintableERC1155BridgeEvent {
         address rootToken;
         address childToken;
         address sender;
         address receiver;
     }
 
-    event ERC1155Deposit(
+    event L2MintableERC1155Deposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,
@@ -20,7 +20,7 @@ interface IRootERC1155Predicate is IL2StateReceiver {
         uint256 tokenId,
         uint256 amount
     );
-    event ERC1155DepositBatch(
+    event L2MintableERC1155DepositBatch(
         address indexed rootToken,
         address indexed childToken,
         address indexed depositor,
@@ -28,7 +28,7 @@ interface IRootERC1155Predicate is IL2StateReceiver {
         uint256[] tokenIds,
         uint256[] amounts
     );
-    event ERC1155Withdraw(
+    event L2MintableERC1155Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address withdrawer,
@@ -36,7 +36,7 @@ interface IRootERC1155Predicate is IL2StateReceiver {
         uint256 tokenId,
         uint256 amount
     );
-    event ERC1155WithdrawBatch(
+    event L2MintableERC1155WithdrawBatch(
         address indexed rootToken,
         address indexed childToken,
         address indexed withdrawer,
@@ -44,7 +44,7 @@ interface IRootERC1155Predicate is IL2StateReceiver {
         uint256[] tokenIds,
         uint256[] amounts
     );
-    event TokenMapped(address indexed rootToken, address indexed childToken);
+    event L2MintableTokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
      * @notice Function to deposit tokens from the depositor to themselves on the child chain
