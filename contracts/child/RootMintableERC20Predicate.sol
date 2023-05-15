@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/child/IRootMintableERC20Predicate.sol";
-import "../interfaces/root/IL2StateReceiver.sol";
 import "../interfaces/IStateSender.sol";
 import "./System.sol";
 
@@ -31,7 +30,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
      * @notice Initilization function for RootMintableERC20Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
-     * @param newChildERC20Predicate Address of root ERC20 predicate to communicate with
+     * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can only be called once.
      */

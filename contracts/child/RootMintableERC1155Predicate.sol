@@ -21,9 +21,9 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootERC1155Predicate
-     * @param newL2StateSender Address of StateSender to send deposit information to
-     * @param newStateReceiver Address of ExitHelper to receive withdrawal information from
+     * @notice Initilization function for RootMintableERC1155Predicate
+     * @param newL2StateSender Address of L2StateSender to send deposit information to
+     * @param newStateReceiver Address of StateReceiver to receive withdrawal information from
      * @param newChildERC1155Predicate Address of child ERC1155 predicate to communicate with
      * @dev Can only be called once.
      */

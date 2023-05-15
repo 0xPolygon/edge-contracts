@@ -23,8 +23,8 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
 
     /**
      * @notice Initilization function for RootMintableERC721Predicate
-     * @param newL2StateSender Address of StateSender to send deposit information to
-     * @param newStateReceiver Address of ExitHelper to receive withdrawal information from
+     * @param newL2StateSender Address of L2StateSender to send deposit information to
+     * @param newStateReceiver Address of StateReceiver to receive withdrawal information from
      * @param newChildERC721Predicate Address of child ERC721 predicate to communicate with
      * @param newChildTokenTemplate Address of child token template to calculate child token addresses
      * @dev Can only be called once.

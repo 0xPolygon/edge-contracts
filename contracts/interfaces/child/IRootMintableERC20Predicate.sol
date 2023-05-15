@@ -2,8 +2,9 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "./IStateReceiver.sol";
 
-interface IRootMintableERC20Predicate {
+interface IRootMintableERC20Predicate is IStateReceiver {
     event L2MintableERC20Deposit(
         address indexed rootToken,
         address indexed childToken,

@@ -33,9 +33,9 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
     }
 
     /**
-     * @notice Initilization function for ChildERC721Predicate
+     * @notice Initilization function for ChildMintableERC721Predicate
      * @param newStateSender Address of StateSender to send exit information to
-     * @param newExitHelper Address of StateReceiver to receive deposit information from
+     * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
@@ -114,9 +114,9 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
     }
 
     /**
-     * @notice Initilization function for ChildERC721Predicate
-     * @param newStateSender Address of L2StateSender to send exit information to
-     * @param newExitHelper Address of StateReceiver to receive deposit information from
+     * @notice Initilization function for ChildMintableERC721Predicate
+     * @param newStateSender Address of StateSender to send exit information to
+     * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can be called multiple times.

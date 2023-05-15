@@ -33,9 +33,9 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     }
 
     /**
-     * @notice Initilization function for ChildERC1155Predicate
-     * @param newStateSender Address of L2StateSender to send exit information to
-     * @param newExitHelper Address of StateReceiver to receive deposit information from
+     * @notice Initilization function for ChildMintableERC1155Predicate
+     * @param newStateSender Address of StateSender to send exit information to
+     * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can only be called once.
@@ -118,9 +118,9 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     }
 
     /**
-     * @notice Internal initilization function for ChildERC1155Predicate
-     * @param newStateSender Address of L2StateSender to send exit information to
-     * @param newExitHelper Address of StateReceiver to receive deposit information from
+     * @notice Internal initilization function for ChildMintableERC1155Predicate
+     * @param newStateSender Address of StateSender to send exit information to
+     * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
      * @param newChildTokenTemplate Address of child token implementation to deploy clones of
      * @dev Can be called multiple times.
