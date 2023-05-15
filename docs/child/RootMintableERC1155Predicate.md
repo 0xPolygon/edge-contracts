@@ -1,4 +1,4 @@
-# RootERC1155Predicate
+# RootMintableERC1155Predicate
 
 
 

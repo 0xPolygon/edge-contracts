@@ -28,7 +28,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     mapping(address => address) public rootTokenToChildToken;
 
     modifier onlyValidToken(IChildERC1155 childToken) {
-        require(_verifyContract(childToken), "ChildERC1155Predicate: NOT_CONTRACT");
+        require(_verifyContract(childToken), "ChildMintableERC1155Predicate: NOT_CONTRACT");
         _;
     }
 
@@ -179,7 +179,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId, amount)
         );
         // slither-disable-next-line reentrancy-events
-        emit L2ERC1155Withdraw(rootToken, address(childToken), msg.sender, receiver, tokenId, amount);
+        emit MintableERC1155Withdraw(rootToken, address(childToken), msg.sender, receiver, tokenId, amount);
     }
 
     function _withdrawBatch(
@@ -211,7 +211,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
             abi.encode(WITHDRAW_BATCH_SIG, rootToken, msg.sender, receivers, tokenIds, amounts)
         );
         // slither-disable-next-line reentrancy-events
-        emit L2ERC1155WithdrawBatch(rootToken, address(childToken), msg.sender, receivers, tokenIds, amounts);
+        emit MintableERC1155WithdrawBatch(rootToken, address(childToken), msg.sender, receivers, tokenIds, amounts);
     }
 
     function _deposit(bytes calldata data) private {
@@ -239,7 +239,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
             "ChildMintableERC1155Predicate: MINT_FAILED"
         );
         // slither-disable-next-line reentrancy-events
-        emit L2ERC1155Deposit(depositToken, address(childToken), depositor, receiver, tokenId, amount);
+        emit MintableERC1155Deposit(depositToken, address(childToken), depositor, receiver, tokenId, amount);
     }
 
     function _depositBatch(bytes calldata data) private {
@@ -271,7 +271,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
             "ChildMintableERC1155Predicate: MINT_FAILED"
         );
         // slither-disable-next-line reentrancy-events
-        emit L2ERC1155DepositBatch(depositToken, address(childToken), depositor, receivers, tokenIds, amounts);
+        emit MintableERC1155DepositBatch(depositToken, address(childToken), depositor, receivers, tokenIds, amounts);
     }
 
     /**
@@ -289,7 +289,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
         childToken.initialize(rootToken, uri_);
 
         // slither-disable-next-line reentrancy-events
-        emit L2TokenMapped(rootToken, address(childToken));
+        emit MintableTokenMapped(rootToken, address(childToken));
     }
 
     // slither does not handle try-catch blocks correctly

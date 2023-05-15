@@ -8,7 +8,7 @@ import "../interfaces/child/IRootMintableERC1155Predicate.sol";
 import "../interfaces/IStateSender.sol";
 
 // solhint-disable reason-string
-contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootMintableERC1155Predicate {
+contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMintableERC1155Predicate {
     IStateSender public l2StateSender;
     address public stateReceiver;
     address public childERC1155Predicate;

@@ -88,10 +88,10 @@ function withdrawTo(contract IChildERC1155 childToken, address receiver, uint256
 
 ## Events
 
-### L2ERC1155Deposit
+### MintableERC1155Deposit
 
 ```solidity
-event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
+event MintableERC1155Deposit(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -109,10 +109,10 @@ event L2ERC1155Deposit(address indexed rootToken, address indexed childToken, ad
 | tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
-### L2ERC1155DepositBatch
+### MintableERC1155DepositBatch
 
 ```solidity
-event L2ERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+event MintableERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
 ```
 
 
@@ -130,10 +130,10 @@ event L2ERC1155DepositBatch(address indexed rootToken, address indexed childToke
 | tokenIds  | uint256[] | undefined |
 | amounts  | uint256[] | undefined |
 
-### L2ERC1155Withdraw
+### MintableERC1155Withdraw
 
 ```solidity
-event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
+event MintableERC1155Withdraw(address indexed rootToken, address indexed childToken, address sender, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -151,10 +151,10 @@ event L2ERC1155Withdraw(address indexed rootToken, address indexed childToken, a
 | tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
-### L2ERC1155WithdrawBatch
+### MintableERC1155WithdrawBatch
 
 ```solidity
-event L2ERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+event MintableERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed sender, address[] receivers, uint256[] tokenIds, uint256[] amounts)
 ```
 
 
@@ -172,10 +172,10 @@ event L2ERC1155WithdrawBatch(address indexed rootToken, address indexed childTok
 | tokenIds  | uint256[] | undefined |
 | amounts  | uint256[] | undefined |
 
-### L2TokenMapped
+### MintableTokenMapped
 
 ```solidity
-event L2TokenMapped(address indexed rootToken, address indexed childToken)
+event MintableTokenMapped(address indexed rootToken, address indexed childToken)
 ```
 
 

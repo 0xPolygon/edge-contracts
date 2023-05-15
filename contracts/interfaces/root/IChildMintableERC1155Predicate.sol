@@ -5,7 +5,7 @@ import "../child/IChildERC1155.sol";
 import "./IL2StateReceiver.sol";
 
 interface IChildMintableERC1155Predicate is IL2StateReceiver {
-    event L2ERC1155Deposit(
+    event MintableERC1155Deposit(
         address indexed rootToken,
         address indexed childToken,
         address sender,
@@ -13,7 +13,7 @@ interface IChildMintableERC1155Predicate is IL2StateReceiver {
         uint256 tokenId,
         uint256 amount
     );
-    event L2ERC1155DepositBatch(
+    event MintableERC1155DepositBatch(
         address indexed rootToken,
         address indexed childToken,
         address indexed sender,
@@ -21,7 +21,7 @@ interface IChildMintableERC1155Predicate is IL2StateReceiver {
         uint256[] tokenIds,
         uint256[] amounts
     );
-    event L2ERC1155Withdraw(
+    event MintableERC1155Withdraw(
         address indexed rootToken,
         address indexed childToken,
         address sender,
@@ -29,7 +29,7 @@ interface IChildMintableERC1155Predicate is IL2StateReceiver {
         uint256 tokenId,
         uint256 amount
     );
-    event L2ERC1155WithdrawBatch(
+    event MintableERC1155WithdrawBatch(
         address indexed rootToken,
         address indexed childToken,
         address indexed sender,
@@ -37,7 +37,7 @@ interface IChildMintableERC1155Predicate is IL2StateReceiver {
         uint256[] tokenIds,
         uint256[] amounts
     );
-    event L2TokenMapped(address indexed rootToken, address indexed childToken);
+    event MintableTokenMapped(address indexed rootToken, address indexed childToken);
 
     function initialize(
         address newStateSender,
