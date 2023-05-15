@@ -1,0 +1,495 @@
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { BigNumber } from "ethers";
+import {
+  ChildMintableERC1155Predicate,
+  ChildMintableERC1155Predicate__factory,
+  StateSender,
+  StateSender__factory,
+  ExitHelper,
+  ExitHelper__factory,
+  ChildERC1155,
+  ChildERC1155__factory,
+} from "../../typechain-types";
+import { setBalance, impersonateAccount, stopImpersonatingAccount } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { smock } from "@defi-wonderland/smock";
+
+describe("ChildMintableERC1155Predicate", () => {
+  let childMintableERC1155Predicate: ChildMintableERC1155Predicate,
+    exitHelperChildERC1155Predicate: ChildMintableERC1155Predicate,
+    stateSender: StateSender,
+    exitHelper: ExitHelper,
+    rootERC1155Predicate: string,
+    childERC1155: ChildERC1155,
+    rootToken: string,
+    childTokenAddr: string,
+    depositedTokenIds: number[] = [],
+    batchDepositedTokenIds: number[] = [],
+    batchDepositedTokenAmounts: BigNumber[] = [],
+    accounts: SignerWithAddress[];
+  before(async () => {
+    accounts = await ethers.getSigners();
+
+    const StateSender: StateSender__factory = await ethers.getContractFactory("StateSender");
+    stateSender = await StateSender.deploy();
+
+    await stateSender.deployed();
+
+    const ExitHelper: ExitHelper__factory = await ethers.getContractFactory("ExitHelper");
+    exitHelper = await ExitHelper.deploy();
+
+    await exitHelper.deployed();
+
+    rootERC1155Predicate = ethers.Wallet.createRandom().address;
+
+    const ChildERC1155: ChildERC1155__factory = await ethers.getContractFactory("ChildERC1155");
+    childERC1155 = await ChildERC1155.deploy();
+
+    await childERC1155.deployed();
+
+    const ChildMintableERC1155Predicate: ChildMintableERC1155Predicate__factory = await ethers.getContractFactory(
+      "ChildMintableERC1155Predicate"
+    );
+    childMintableERC1155Predicate = await ChildMintableERC1155Predicate.deploy();
+
+    await childMintableERC1155Predicate.deployed();
+
+    impersonateAccount(exitHelper.address);
+    setBalance(exitHelper.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    exitHelperChildERC1155Predicate = childMintableERC1155Predicate.connect(await ethers.getSigner(exitHelper.address));
+  });
+
+  it("fail bad initialization", async () => {
+    await expect(
+      childMintableERC1155Predicate.initialize(
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000"
+      )
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: BAD_INITIALIZATION");
+  });
+
+  it("initialize and validate initialization", async () => {
+    await childMintableERC1155Predicate.initialize(
+      stateSender.address,
+      exitHelper.address,
+      rootERC1155Predicate,
+      childERC1155.address
+    );
+    expect(await childMintableERC1155Predicate.stateSender()).to.equal(stateSender.address);
+    expect(await childMintableERC1155Predicate.exitHelper()).to.equal(exitHelper.address);
+    expect(await childMintableERC1155Predicate.rootERC1155Predicate()).to.equal(rootERC1155Predicate);
+    expect(await childMintableERC1155Predicate.childTokenTemplate()).to.equal(childERC1155.address);
+  });
+
+  it("fail reinitialization", async () => {
+    await expect(
+      childMintableERC1155Predicate.initialize(
+        stateSender.address,
+        exitHelper.address,
+        rootERC1155Predicate,
+        childERC1155.address
+      )
+    ).to.be.revertedWith("Initializable: contract is already initialized");
+  });
+
+  it("map token success", async () => {
+    rootToken = ethers.Wallet.createRandom().address;
+    const clonesContract = await (await ethers.getContractFactory("MockClones")).deploy();
+    childTokenAddr = await clonesContract.predictDeterministicAddress(
+      childERC1155.address,
+      ethers.utils.solidityKeccak256(["address"], [rootToken]),
+      childMintableERC1155Predicate.address
+    );
+    const childToken = childERC1155.attach(childTokenAddr);
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "string", "string", "uint8"],
+      [ethers.utils.solidityKeccak256(["string"], ["MAP_TOKEN"]), rootToken, "TEST1", "TEST1", 18]
+    );
+    const mapTx = await exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData);
+    const mapReceipt = await mapTx.wait();
+    const mapEvent = mapReceipt?.events?.find((log) => log.event === "MintableTokenMapped");
+    expect(mapEvent?.args?.rootToken).to.equal(rootToken);
+    expect(mapEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(await childToken.predicate()).to.equal(childMintableERC1155Predicate.address);
+    expect(await childToken.rootToken()).to.equal(rootToken);
+  });
+
+  it("map token fail: invalid root token", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "string", "string", "uint8"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["MAP_TOKEN"]),
+        "0x0000000000000000000000000000000000000000",
+        "TEST1",
+        "TEST1",
+        18,
+      ]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWithPanic();
+  });
+
+  it("map token fail: already mapped", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "string", "string", "uint8"],
+      [ethers.utils.solidityKeccak256(["string"], ["MAP_TOKEN"]), rootToken, "TEST1", "TEST1", 18]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWithPanic();
+  });
+
+  it("deposit tokens from root chain with same address", async () => {
+    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
+    depositedTokenIds.push(randomAmount);
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        rootToken,
+        accounts[0].address,
+        accounts[0].address,
+        randomAmount,
+        ethers.utils.parseUnits(String(randomAmount)),
+      ]
+    );
+    const depositTx = await exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData);
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt.events?.find((log) => log.event === "MintableERC1155Deposit");
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
+    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.tokenId).to.equal(randomAmount);
+    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+  });
+
+  it("deposit tokens from root chain with different address", async () => {
+    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
+    depositedTokenIds.push(randomAmount);
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        rootToken,
+        accounts[0].address,
+        accounts[1].address,
+        randomAmount,
+        ethers.utils.parseUnits(String(randomAmount)),
+      ]
+    );
+    const depositTx = await exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData);
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt.events?.find((log) => log.event === "MintableERC1155Deposit");
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
+    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.receiver).to.equal(accounts[1].address);
+    expect(depositEvent?.args?.tokenId).to.equal(randomAmount);
+    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+  });
+
+  it("batch deposit tokens from root chain: success", async () => {
+    const batchSize = Math.floor(Math.random() * 10 + 2);
+    const receiverArr = [];
+    for (let i = 0; i < batchSize; i++) {
+      const randomAmount = Math.floor(Math.random() * 1000000 + 1);
+      batchDepositedTokenIds.push(randomAmount);
+      receiverArr.push(accounts[2].address);
+    }
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address[]", "uint256[]", "uint256[]"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT_BATCH"]),
+        rootToken,
+        accounts[0].address,
+        receiverArr,
+        batchDepositedTokenIds,
+        batchDepositedTokenIds.map((tokenId) => ethers.utils.parseUnits(String(tokenId))),
+      ]
+    );
+    const depositTx = await exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData);
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt.events?.find((log) => log.event === "MintableERC1155DepositBatch");
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
+    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.receivers).to.deep.equal(receiverArr);
+    expect(depositEvent?.args?.tokenIds).to.deep.equal(batchDepositedTokenIds);
+    expect(depositEvent?.args?.amounts).to.deep.equal(
+      batchDepositedTokenIds.map((tokenId) => ethers.utils.parseUnits(String(tokenId)))
+    );
+  });
+
+  it("withdraw tokens from child chain with same address", async () => {
+    const randomAmount = Math.floor(Math.random() * depositedTokenIds[0] + 1);
+    const depositTx = await childMintableERC1155Predicate.withdraw(
+      childTokenAddr,
+      depositedTokenIds[0],
+      ethers.utils.parseUnits(String(randomAmount))
+    );
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt.events?.find((log: any) => log.event === "MintableERC1155Withdraw");
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
+    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.tokenId).to.equal(depositedTokenIds[0]);
+    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+  });
+
+  it("withdraw tokens from child chain with different address", async () => {
+    const randomAmount = Math.floor(Math.random() * depositedTokenIds[1] + 1);
+    const depositTx = await childMintableERC1155Predicate
+      .connect(accounts[1])
+      .withdrawTo(
+        childTokenAddr,
+        accounts[0].address,
+        depositedTokenIds[1],
+        ethers.utils.parseUnits(String(randomAmount))
+      );
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt.events?.find((log: any) => log.event === "MintableERC1155Withdraw");
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
+    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(depositEvent?.args?.sender).to.equal(accounts[1].address);
+    expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.tokenId).to.equal(depositedTokenIds[1]);
+    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+  });
+
+  it("batch withdraw tokens from child chain: success", async () => {
+    const batchSize = Math.max(1, Math.floor(Math.random() * batchDepositedTokenIds.length));
+    const receiverArr = [];
+    for (let i = 0; i < batchSize; i++) {
+      receiverArr.push(accounts[1].address);
+    }
+    batchDepositedTokenAmounts = batchDepositedTokenIds.map((tokenId) => ethers.utils.parseUnits(String(tokenId)));
+    const depositTx = await childMintableERC1155Predicate.connect(accounts[2]).withdrawBatch(
+      childTokenAddr,
+      receiverArr,
+      batchDepositedTokenIds.slice(0, batchSize),
+      batchDepositedTokenIds.slice(0, batchSize).map((tokenId) => ethers.utils.parseUnits(String(tokenId)))
+    );
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt.events?.find((log: any) => log.event === "MintableERC1155WithdrawBatch");
+    expect(depositEvent?.args?.rootToken).to.equal(rootToken);
+    expect(depositEvent?.args?.childToken).to.equal(childTokenAddr);
+    expect(depositEvent?.args?.sender).to.equal(accounts[2].address);
+    expect(depositEvent?.args?.receivers).to.deep.equal(receiverArr);
+    expect(depositEvent?.args?.tokenIds).to.deep.equal(batchDepositedTokenIds.slice(0, batchSize));
+    expect(depositEvent?.args?.amounts).to.deep.equal(
+      batchDepositedTokenIds.slice(0, batchSize).map((tokenId) => ethers.utils.parseUnits(String(tokenId)))
+    );
+  });
+
+  it("fail deposit tokens: only exit helper", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        "0x0000000000000000000000000000000000000000",
+        accounts[0].address,
+        accounts[0].address,
+        0,
+        0,
+      ]
+    );
+    await expect(
+      childMintableERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: ONLY_EXIT_HELPER");
+  });
+
+  it("fail deposit tokens: only root predicate", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "address", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        "0x0000000000000000000000000000000000000000",
+        accounts[0].address,
+        accounts[0].address,
+        accounts[0].address,
+        0,
+      ]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, ethers.Wallet.createRandom().address, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: ONLY_ROOT_PREDICATE");
+  });
+
+  it("fail deposit tokens: invalid signature", async () => {
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [ethers.utils.randomBytes(32), ethers.constants.AddressZero, accounts[0].address, accounts[0].address, 0, 0]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: INVALID_SIGNATURE");
+  });
+
+  it("fail deposit tokens of unknown child token: unmapped token", async () => {
+    let stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        "0x0000000000000000000000000000000000000000",
+        accounts[0].address,
+        accounts[0].address,
+        0,
+        0,
+      ]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
+  });
+
+  it("fail withdraw tokens of unknown child token: not a contract", async () => {
+    await expect(childMintableERC1155Predicate.withdraw(ethers.Wallet.createRandom().address, 0, 1)).to.be.revertedWith(
+      "ChildMintableERC1155Predicate: NOT_CONTRACT"
+    );
+    await expect(
+      childMintableERC1155Predicate.withdrawBatch(
+        ethers.Wallet.createRandom().address,
+        [ethers.constants.AddressZero],
+        [0],
+        [1]
+      )
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: NOT_CONTRACT");
+  });
+
+  it("fail deposit tokens of unknown child token: wrong deposit token", async () => {
+    childMintableERC1155Predicate.connect(await ethers.getSigner(exitHelper.address));
+    const stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        "0x0000000000000000000000000000000000000000",
+        accounts[0].address,
+        accounts[0].address,
+        0,
+        0,
+      ]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
+  });
+
+  it("fail deposit tokens of unknown child token: unmapped token", async () => {
+    const rootToken = ethers.Wallet.createRandom().address;
+    const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
+    await childToken.initialize(rootToken, "TEST");
+    let stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        ethers.Wallet.createRandom().address,
+        accounts[0].address,
+        accounts[0].address,
+        0,
+        0,
+      ]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
+    stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address[]", "uint256[]", "uint256[]"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT_BATCH"]),
+        ethers.Wallet.createRandom().address,
+        accounts[0].address,
+        [accounts[0].address],
+        [0],
+        [0],
+      ]
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
+  });
+
+  it("fail withdraw tokens of unknown child token: unmapped token", async () => {
+    const rootToken = ethers.Wallet.createRandom().address;
+    const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
+    await childToken.initialize(rootToken, "TEST");
+    await expect(childMintableERC1155Predicate.withdraw(childToken.address, 0, 1)).to.be.revertedWith(
+      "ChildMintableERC1155Predicate: UNMAPPED_TOKEN"
+    );
+    await expect(
+      exitHelperChildERC1155Predicate.withdrawBatch(childToken.address, [ethers.constants.AddressZero], [0], [1])
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
+  });
+
+  // since we fake NativeERC20 here, keep this function last:
+  it("fail deposit tokens: mint failed", async () => {
+    let stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address", "uint256", "uint256"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT"]),
+        rootToken,
+        accounts[0].address,
+        accounts[0].address,
+        1,
+        1,
+      ]
+    );
+    const fakeERC1155 = await smock.fake<ChildERC1155>("ChildERC1155", {
+      address: childTokenAddr,
+    });
+    fakeERC1155.supportsInterface.returns(true);
+    fakeERC1155.rootToken.returns(rootToken);
+    fakeERC1155.predicate.returns(childMintableERC1155Predicate.address);
+    fakeERC1155.mint.returns(false);
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: MINT_FAILED");
+    stateSyncData = ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "address", "address[]", "uint256[]", "uint256[]"],
+      [
+        ethers.utils.solidityKeccak256(["string"], ["DEPOSIT_BATCH"]),
+        rootToken,
+        accounts[0].address,
+        [accounts[0].address],
+        [1],
+        [1],
+      ]
+    );
+    fakeERC1155.mintBatch.returns(false);
+    await expect(
+      exitHelperChildERC1155Predicate.onL2StateReceive(0, rootERC1155Predicate, stateSyncData)
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: MINT_FAILED");
+  });
+
+  it("fail withdraw tokens: burn failed", async () => {
+    const fakeERC1155 = await smock.fake<ChildERC1155>("ChildERC1155", {
+      address: childTokenAddr,
+    });
+    fakeERC1155.supportsInterface.returns(true);
+    fakeERC1155.rootToken.returns(rootToken);
+    fakeERC1155.predicate.returns(childMintableERC1155Predicate.address);
+    fakeERC1155.burn.returns(false);
+    await expect(childMintableERC1155Predicate.withdraw(childTokenAddr, 0, 1)).to.be.revertedWith(
+      "ChildMintableERC1155Predicate: BURN_FAILED"
+    );
+    fakeERC1155.burnBatch.returns(false);
+    await expect(
+      childMintableERC1155Predicate.withdrawBatch(childTokenAddr, [ethers.constants.AddressZero], [0], [1])
+    ).to.be.revertedWith("ChildMintableERC1155Predicate: BURN_FAILED");
+  });
+
+  it("fail withdraw tokens: bad interface", async () => {
+    const fakeERC1155 = await smock.fake<ChildERC1155>("ChildERC1155", {
+      address: childTokenAddr,
+    });
+    fakeERC1155.supportsInterface.reverts();
+    await expect(childMintableERC1155Predicate.withdraw(childTokenAddr, 0, 1)).to.be.revertedWith(
+      "ChildMintableERC1155Predicate: NOT_CONTRACT"
+    );
+  });
+});

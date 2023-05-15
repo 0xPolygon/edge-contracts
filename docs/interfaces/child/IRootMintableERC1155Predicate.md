@@ -1,4 +1,4 @@
-# IRootERC1155Predicate
+# IRootMintableERC1155Predicate
 
 
 
@@ -88,13 +88,13 @@ Function to be used for token mapping
 |---|---|---|
 | childToken | address | Address of the mapped child token |
 
-### onL2StateReceive
+### onStateReceive
 
 ```solidity
-function onL2StateReceive(uint256 id, address sender, bytes data) external nonpayable
+function onStateReceive(uint256 counter, address sender, bytes data) external nonpayable
 ```
 
-Called by exit helper when state is received from L2
+
 
 
 
@@ -102,18 +102,18 @@ Called by exit helper when state is received from L2
 
 | Name | Type | Description |
 |---|---|---|
-| id | uint256 | undefined |
-| sender | address | Address of the sender on the child chain |
-| data | bytes | Data sent by the sender |
+| counter | uint256 | undefined |
+| sender | address | undefined |
+| data | bytes | undefined |
 
 
 
 ## Events
 
-### ERC1155Deposit
+### L2MintableERC1155Deposit
 
 ```solidity
-event ERC1155Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 tokenId, uint256 amount)
+event L2MintableERC1155Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -131,10 +131,10 @@ event ERC1155Deposit(address indexed rootToken, address indexed childToken, addr
 | tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
-### ERC1155DepositBatch
+### L2MintableERC1155DepositBatch
 
 ```solidity
-event ERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed depositor, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+event L2MintableERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed depositor, address[] receivers, uint256[] tokenIds, uint256[] amounts)
 ```
 
 
@@ -152,10 +152,10 @@ event ERC1155DepositBatch(address indexed rootToken, address indexed childToken,
 | tokenIds  | uint256[] | undefined |
 | amounts  | uint256[] | undefined |
 
-### ERC1155Withdraw
+### L2MintableERC1155Withdraw
 
 ```solidity
-event ERC1155Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 tokenId, uint256 amount)
+event L2MintableERC1155Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -173,10 +173,10 @@ event ERC1155Withdraw(address indexed rootToken, address indexed childToken, add
 | tokenId  | uint256 | undefined |
 | amount  | uint256 | undefined |
 
-### ERC1155WithdrawBatch
+### L2MintableERC1155WithdrawBatch
 
 ```solidity
-event ERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed withdrawer, address[] receivers, uint256[] tokenIds, uint256[] amounts)
+event L2MintableERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed withdrawer, address[] receivers, uint256[] tokenIds, uint256[] amounts)
 ```
 
 
@@ -194,10 +194,10 @@ event ERC1155WithdrawBatch(address indexed rootToken, address indexed childToken
 | tokenIds  | uint256[] | undefined |
 | amounts  | uint256[] | undefined |
 
-### TokenMapped
+### L2MintableTokenMapped
 
 ```solidity
-event TokenMapped(address indexed rootToken, address indexed childToken)
+event L2MintableTokenMapped(address indexed rootToken, address indexed childToken)
 ```
 
 
