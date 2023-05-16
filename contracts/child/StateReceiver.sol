@@ -74,10 +74,15 @@ contract StateReceiver is System {
     function execute(bytes32[] calldata proof, StateSync calldata obj) external {
         StateSyncCommitment memory commitment = getCommitmentByStateSyncId(obj.id);
 
+        uint256 numOfLeaves = commitment.endId - commitment.startId + 1;
+        if (commitment.startId == commitment.endId) {
+            numOfLeaves++;
+        }
+
         require(
             keccak256(abi.encode(obj)).checkMembershipWithHeight(
                 obj.id - commitment.startId,
-                commitment.endId - commitment.startId + 1,
+                numOfLeaves,
                 commitment.root,
                 proof
             ),
