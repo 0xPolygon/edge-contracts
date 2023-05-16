@@ -69,7 +69,7 @@ library Merkle {
         require(proofHeight == numLeaves.log2(Math.Rounding.Up), "INVALID_PROOF_LENGTH");
         // if the proof is of size n, the tree height will be n+1
         // in a tree of height n+1, max possible leaves are 2^n
-        require(index < numLeaves, "INVALID_LEAF_INDEX");
+        require(index <= numLeaves, "INVALID_LEAF_INDEX");
         // refuse to accept padded leaves as proof
         require(leaf != bytes32(0), "INVALID_LEAF");
 
