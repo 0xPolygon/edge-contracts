@@ -41,9 +41,13 @@ abstract contract Committed is Initialized {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch);
+        vm.roll(block.number + 1);
+        _afterCommit();
     }
 
-    function _beforeCommit() internal virtual;
+    function _beforeCommit() internal virtual {}
+
+    function _afterCommit() internal virtual {}
 }
 
 contract ValidatorSet_Initialize is Uninitialized {
@@ -136,7 +140,7 @@ contract ValidatorSet_Stake is Initialized {
     }
 
     function test_Stake(uint256 amount) public {
-        vm.assume(amount < type(uint256).max - validatorSet.balanceOf(alice));
+        vm.assume(amount < type(uint224).max - validatorSet.balanceOf(alice));
         bytes memory callData = abi.encode(STAKE_SIG, alice, amount);
         vm.prank(stateReceiver);
         vm.expectEmit(true, true, true, true);
@@ -161,7 +165,7 @@ contract ValidatorSet_Unstake is Initialized {
 }
 
 contract ValidatorSet_StakeChanges is Committed {
-    function _beforeCommit() internal override {
+    function _afterCommit() internal override {
         bytes memory callData = abi.encode(STAKE_SIG, alice, 100);
         vm.prank(stateReceiver);
         validatorSet.onStateReceive(1, rootChainManager, callData);
