@@ -27,6 +27,7 @@ abstract contract Uninitialized is Test {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch);
+        vm.roll(block.number + 1);
         pool = new RewardPool();
         token.mint(rewardWallet, 1000 ether);
         vm.prank(rewardWallet);
