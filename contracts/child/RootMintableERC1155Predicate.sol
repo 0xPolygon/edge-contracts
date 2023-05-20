@@ -33,17 +33,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         address newChildERC1155Predicate,
         address newChildTokenTemplate
     ) external initializer {
-        require(
-            newL2StateSender != address(0) &&
-                newStateReceiver != address(0) &&
-                newChildERC1155Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "RootMintableERC1155Predicate: BAD_INITIALIZATION"
-        );
-        l2StateSender = IStateSender(newL2StateSender);
-        stateReceiver = newStateReceiver;
-        childERC1155Predicate = newChildERC1155Predicate;
-        childTokenTemplate = newChildTokenTemplate;
+        _initialize(newL2StateSender, newStateReceiver, newChildERC1155Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -56,9 +46,13 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         require(sender == childERC1155Predicate, "RootMintableERC1155Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
+            _beforeTokenWithdraw();
             _withdraw(data[32:]);
+            _afterTokenWithdraw();
         } else if (bytes32(data[:32]) == WITHDRAW_BATCH_SIG) {
+            _beforeTokenWithdraw();
             _withdrawBatch(data);
+            _afterTokenWithdraw();
         } else {
             revert("RootMintableERC1155Predicate: INVALID_SIGNATURE");
         }
@@ -124,7 +118,39 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         emit L2MintableTokenMapped(address(rootToken), childToken);
     }
 
+    function _initialize(
+        address newL2StateSender,
+        address newStateReceiver,
+        address newChildERC1155Predicate,
+        address newChildTokenTemplate
+    ) internal {
+        require(
+            newL2StateSender != address(0) &&
+                newStateReceiver != address(0) &&
+                newChildERC1155Predicate != address(0) &&
+                newChildTokenTemplate != address(0),
+            "RootMintableERC1155Predicate: BAD_INITIALIZATION"
+        );
+        l2StateSender = IStateSender(newL2StateSender);
+        stateReceiver = newStateReceiver;
+        childERC1155Predicate = newChildERC1155Predicate;
+        childTokenTemplate = newChildTokenTemplate;
+    }
+
+    // solhint-disable no-empty-blocks
+    // slither-disable-start dead-code
+    function _beforeTokenDeposit() internal virtual {}
+
+    function _beforeTokenWithdraw() internal virtual {}
+
+    function _afterTokenDeposit() internal virtual {}
+
+    function _afterTokenWithdraw() internal virtual {}
+
+    // slither-disable-end dead-code
+
     function _deposit(IERC1155MetadataURI rootToken, address receiver, uint256 tokenId, uint256 amount) private {
+        _beforeTokenDeposit();
         address childToken = _getChildToken(rootToken);
 
         rootToken.safeTransferFrom(msg.sender, address(this), tokenId, amount, "");
@@ -135,6 +161,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         );
         // slither-disable-next-line reentrancy-events
         emit L2MintableERC1155Deposit(address(rootToken), childToken, msg.sender, receiver, tokenId, amount);
+        _afterTokenDeposit();
     }
 
     function _depositBatch(
@@ -143,6 +170,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
     ) private {
+        _beforeTokenDeposit();
         address childToken = _getChildToken(rootToken);
 
         for (uint256 i = 0; i < tokenIds.length; ) {
@@ -158,6 +186,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         );
         // slither-disable-next-line reentrancy-events
         emit L2MintableERC1155DepositBatch(address(rootToken), childToken, msg.sender, receivers, tokenIds, amounts);
+        _afterTokenDeposit();
     }
 
     function _withdraw(bytes calldata data) private {
