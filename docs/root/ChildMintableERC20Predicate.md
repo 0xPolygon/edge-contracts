@@ -101,7 +101,7 @@ function exitHelper() external view returns (address)
 function initialize(address newStateSender, address newExitHelper, address newRootERC20Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
-Initilization function for RootERC20Predicate
+Initilization function for ChildMintableERC20Predicate
 
 *Can only be called once.*
 
@@ -111,7 +111,7 @@ Initilization function for RootERC20Predicate
 |---|---|---|
 | newStateSender | address | Address of StateSender to send deposit information to |
 | newExitHelper | address | Address of ExitHelper to receive withdrawal information from |
-| newRootERC20Predicate | address | Address of child ERC20 predicate to communicate with |
+| newRootERC20Predicate | address | Address of root ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | undefined |
 
 ### onL2StateReceive

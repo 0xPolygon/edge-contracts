@@ -1,10 +1,10 @@
-# RootMintableERC721Predicate
+# RootMintableERC1155PredicateAccessList
 
+*Polygon Technology (@QEDK)*
 
+> RootMintableERC1155PredicateAccessList
 
-
-
-
+Enables child-chain origin ERC1155 token deposits and withdrawals (only from allowlisted address, and not from blocklisted addresses) across an arbitrary root chain and child chain
 
 
 
@@ -248,10 +248,21 @@ function WITHDRAW_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### childERC721Predicate
+### acceptOwnership
 
 ```solidity
-function childERC721Predicate() external view returns (address)
+function acceptOwnership() external nonpayable
+```
+
+
+
+*The new owner accepts the ownership transfer.*
+
+
+### childERC1155Predicate
+
+```solidity
+function childERC1155Predicate() external view returns (address)
 ```
 
 
@@ -285,7 +296,7 @@ function childTokenTemplate() external view returns (address)
 ### deposit
 
 ```solidity
-function deposit(contract IERC721Metadata rootToken, uint256 tokenId) external nonpayable
+function deposit(contract IERC1155MetadataURI rootToken, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to themselves on the child chain
@@ -296,13 +307,14 @@ Function to deposit tokens from the depositor to themselves on the child chain
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC721Metadata | Address of the root token being deposited |
+| rootToken | contract IERC1155MetadataURI | Address of the root token being deposited |
 | tokenId | uint256 | Index of the NFT to deposit |
+| amount | uint256 | Amount to deposit |
 
 ### depositBatch
 
 ```solidity
-function depositBatch(contract IERC721Metadata rootToken, address[] receivers, uint256[] tokenIds) external nonpayable
+function depositBatch(contract IERC1155MetadataURI rootToken, address[] receivers, uint256[] tokenIds, uint256[] amounts) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to other addresses on the child chain
@@ -313,14 +325,15 @@ Function to deposit tokens from the depositor to other addresses on the child ch
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC721Metadata | Address of the root token being deposited |
+| rootToken | contract IERC1155MetadataURI | Address of the root token being deposited |
 | receivers | address[] | Addresses of the receivers on the child chain |
 | tokenIds | uint256[] | Indeices of the NFTs to deposit |
+| amounts | uint256[] | Amounts to deposit |
 
 ### depositTo
 
 ```solidity
-function depositTo(contract IERC721Metadata rootToken, address receiver, uint256 tokenId) external nonpayable
+function depositTo(contract IERC1155MetadataURI rootToken, address receiver, uint256 tokenId, uint256 amount) external nonpayable
 ```
 
 Function to deposit tokens from the depositor to another address on the child chain
@@ -331,17 +344,40 @@ Function to deposit tokens from the depositor to another address on the child ch
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC721Metadata | Address of the root token being deposited |
+| rootToken | contract IERC1155MetadataURI | Address of the root token being deposited |
 | receiver | address | undefined |
 | tokenId | uint256 | Index of the NFT to deposit |
+| amount | uint256 | Amount to deposit |
 
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newChildERC721Predicate, address newChildTokenTemplate) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newChildERC1155Predicate, address newChildTokenTemplate, bool newUseAllowList, bool newUseBlockList, address newOwner) external nonpayable
 ```
 
-Initilization function for RootMintableERC721Predicate
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newL2StateSender | address | undefined |
+| newStateReceiver | address | undefined |
+| newChildERC1155Predicate | address | undefined |
+| newChildTokenTemplate | address | undefined |
+| newUseAllowList | bool | undefined |
+| newUseBlockList | bool | undefined |
+| newOwner | address | undefined |
+
+### initialize
+
+```solidity
+function initialize(address newL2StateSender, address newStateReceiver, address newChildERC1155Predicate, address newChildTokenTemplate) external nonpayable
+```
+
+Initilization function for RootMintableERC1155Predicate
 
 *Can only be called once.*
 
@@ -351,8 +387,8 @@ Initilization function for RootMintableERC721Predicate
 |---|---|---|
 | newL2StateSender | address | Address of L2StateSender to send deposit information to |
 | newStateReceiver | address | Address of StateReceiver to receive withdrawal information from |
-| newChildERC721Predicate | address | Address of child ERC721 predicate to communicate with |
-| newChildTokenTemplate | address | Address of child token template to calculate child token addresses |
+| newChildERC1155Predicate | address | Address of child ERC1155 predicate to communicate with |
+| newChildTokenTemplate | address | undefined |
 
 ### l2StateSender
 
@@ -374,7 +410,7 @@ function l2StateSender() external view returns (contract IStateSender)
 ### mapToken
 
 ```solidity
-function mapToken(contract IERC721Metadata rootToken) external nonpayable returns (address)
+function mapToken(contract IERC1155MetadataURI rootToken) external nonpayable returns (address childToken)
 ```
 
 Function to be used for token mapping
@@ -385,23 +421,49 @@ Function to be used for token mapping
 
 | Name | Type | Description |
 |---|---|---|
-| rootToken | contract IERC721Metadata | Address of the root token to map |
+| rootToken | contract IERC1155MetadataURI | Address of the root token to map |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | Address of the mapped child token |
+| childToken | address | Address of the mapped child token |
 
-### onERC721Received
+### onERC1155BatchReceived
 
 ```solidity
-function onERC721Received(address, address, uint256, bytes) external nonpayable returns (bytes4)
+function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
 ```
 
 
 
-*See {IERC721Receiver-onERC721Received}. Always returns `IERC721Receiver.onERC721Received.selector`.*
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256[] | undefined |
+| _3 | uint256[] | undefined |
+| _4 | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined |
+
+### onERC1155Received
+
+```solidity
+function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
 
 #### Parameters
 
@@ -410,7 +472,8 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 | _0 | address | undefined |
 | _1 | address | undefined |
 | _2 | uint256 | undefined |
-| _3 | bytes | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
 
 #### Returns
 
@@ -436,6 +499,51 @@ Function to be used for token withdrawals
 | sender | address | undefined |
 | data | bytes | undefined |
 
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+
+
+*Returns the address of the current owner.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### pendingOwner
+
+```solidity
+function pendingOwner() external view returns (address)
+```
+
+
+
+*Returns the address of the pending owner.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### renounceOwnership
+
+```solidity
+function renounceOwnership() external nonpayable
+```
+
+
+
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+
+
 ### rootTokenToChildToken
 
 ```solidity
@@ -458,6 +566,38 @@ function rootTokenToChildToken(address) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### setAllowList
+
+```solidity
+function setAllowList(bool newUseAllowList) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newUseAllowList | bool | undefined |
+
+### setBlockList
+
+```solidity
+function setBlockList(bool newUseBlockList) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newUseBlockList | bool | undefined |
+
 ### stateReceiver
 
 ```solidity
@@ -475,9 +615,81 @@ function stateReceiver() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*See {IERC165-supportsInterface}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### transferOwnership
+
+```solidity
+function transferOwnership(address newOwner) external nonpayable
+```
+
+
+
+*Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one. Can only be called by the current owner.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address | undefined |
+
 
 
 ## Events
+
+### AllowListUsageSet
+
+```solidity
+event AllowListUsageSet(uint256 indexed block, bool indexed status)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| block `indexed` | uint256 | undefined |
+| status `indexed` | bool | undefined |
+
+### BlockListUsageSet
+
+```solidity
+event BlockListUsageSet(uint256 indexed block, bool indexed status)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| block `indexed` | uint256 | undefined |
+| status `indexed` | bool | undefined |
 
 ### Initialized
 
@@ -495,10 +707,10 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### L2MintableERC721Deposit
+### L2MintableERC1155Deposit
 
 ```solidity
-event L2MintableERC721Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 tokenId)
+event L2MintableERC1155Deposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -514,11 +726,12 @@ event L2MintableERC721Deposit(address indexed rootToken, address indexed childTo
 | depositor  | address | undefined |
 | receiver `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
+| amount  | uint256 | undefined |
 
-### L2MintableERC721DepositBatch
+### L2MintableERC1155DepositBatch
 
 ```solidity
-event L2MintableERC721DepositBatch(address indexed rootToken, address indexed childToken, address indexed depositor, address[] receivers, uint256[] tokenIds)
+event L2MintableERC1155DepositBatch(address indexed rootToken, address indexed childToken, address indexed depositor, address[] receivers, uint256[] tokenIds, uint256[] amounts)
 ```
 
 
@@ -534,11 +747,12 @@ event L2MintableERC721DepositBatch(address indexed rootToken, address indexed ch
 | depositor `indexed` | address | undefined |
 | receivers  | address[] | undefined |
 | tokenIds  | uint256[] | undefined |
+| amounts  | uint256[] | undefined |
 
-### L2MintableERC721Withdraw
+### L2MintableERC1155Withdraw
 
 ```solidity
-event L2MintableERC721Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 tokenId)
+event L2MintableERC1155Withdraw(address indexed rootToken, address indexed childToken, address withdrawer, address indexed receiver, uint256 tokenId, uint256 amount)
 ```
 
 
@@ -554,11 +768,12 @@ event L2MintableERC721Withdraw(address indexed rootToken, address indexed childT
 | withdrawer  | address | undefined |
 | receiver `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
+| amount  | uint256 | undefined |
 
-### L2MintableERC721WithdrawBatch
+### L2MintableERC1155WithdrawBatch
 
 ```solidity
-event L2MintableERC721WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed withdrawer, address[] receivers, uint256[] tokenIds)
+event L2MintableERC1155WithdrawBatch(address indexed rootToken, address indexed childToken, address indexed withdrawer, address[] receivers, uint256[] tokenIds, uint256[] amounts)
 ```
 
 
@@ -574,6 +789,7 @@ event L2MintableERC721WithdrawBatch(address indexed rootToken, address indexed c
 | withdrawer `indexed` | address | undefined |
 | receivers  | address[] | undefined |
 | tokenIds  | uint256[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### L2MintableTokenMapped
 
@@ -591,6 +807,40 @@ event L2MintableTokenMapped(address indexed rootToken, address indexed childToke
 |---|---|---|
 | rootToken `indexed` | address | undefined |
 | childToken `indexed` | address | undefined |
+
+### OwnershipTransferStarted
+
+```solidity
+event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
+
+### OwnershipTransferred
+
+```solidity
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 
 
