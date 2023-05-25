@@ -39,8 +39,8 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
         address newStateReceiver,
         address newChildERC20Predicate,
         address newChildTokenTemplate
-    ) public virtual onlySystemCall initializer {
-        _initialize(newL2StateSender, newStateReceiver, newChildERC20Predicate, newChildTokenTemplate);
+    ) public virtual onlySystemCall initializer returns (address) {
+        return _initialize(newL2StateSender, newStateReceiver, newChildERC20Predicate, newChildTokenTemplate);
     }
 
     /**
@@ -116,7 +116,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
         address newStateReceiver,
         address newChildERC20Predicate,
         address newChildTokenTemplate
-    ) internal {
+    ) internal returns (address) {
         require(
             newL2StateSender != address(0) &&
                 newStateReceiver != address(0) &&
@@ -128,6 +128,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
         stateReceiver = newStateReceiver;
         childERC20Predicate = newChildERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
+        return mapToken(IERC20Metadata(NATIVE_TOKEN_CONTRACT));
     }
 
     // solhint-disable no-empty-blocks
