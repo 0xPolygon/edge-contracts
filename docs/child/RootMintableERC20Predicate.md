@@ -286,7 +286,7 @@ Function to deposit tokens from the depositor to another address on the child ch
 ### initialize
 
 ```solidity
-function initialize(address newL2StateSender, address newStateReceiver, address newChildERC20Predicate, address newChildTokenTemplate) external nonpayable
+function initialize(address newL2StateSender, address newStateReceiver, address newChildERC20Predicate, address newChildTokenTemplate) external nonpayable returns (address)
 ```
 
 Initilization function for RootMintableERC20Predicate
@@ -301,6 +301,12 @@ Initilization function for RootMintableERC20Predicate
 | newStateReceiver | address | Address of StateReceiver to receive deposit information from |
 | newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### l2StateSender
 
