@@ -47,7 +47,7 @@
   "devDependencies": {
     "@defi-wonderland/smock": "^2.3.4",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
-    "@openzeppelin/hardhat-upgrades": "^1.26.0",
+    "@openzeppelin/hardhat-upgrades": "^1.27.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.2.3",
