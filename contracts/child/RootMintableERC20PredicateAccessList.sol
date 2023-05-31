@@ -19,10 +19,10 @@ contract RootMintableERC20PredicateAccessList is AccessList, RootMintableERC20Pr
         bool newUseAllowList,
         bool newUseBlockList,
         address newOwner
-    ) public virtual onlySystemCall initializer returns (address) {
+    ) public virtual onlySystemCall initializer {
+        _initialize(newL2StateSender, newStateReceiver, newChildERC20Predicate, newChildTokenTemplate);
         _initializeAccessList(newUseAllowList, newUseBlockList);
         _transferOwnership(newOwner);
-        return _initialize(newL2StateSender, newStateReceiver, newChildERC20Predicate, newChildTokenTemplate);
     }
 
     function _beforeTokenWithdraw() internal virtual override {
