@@ -91,12 +91,12 @@ contract StakeManager_Register is Initialized, StakeManager {
 
 contract StakeManager_StakeFor is Registered, StakeManager {
     function test_RevertIdZero() public {
-        vm.expectRevert("INVALID_ID");
+        vm.expectRevert("StakeManager: INVALID_ID");
         stakeManager.stakeFor(0, 1);
     }
 
     function test_RevertChainDoesNotExist() public {
-        vm.expectRevert("INVALID_ID");
+        vm.expectRevert("StakeManager: INVALID_ID");
         stakeManager.stakeFor(id2 + 1, 1);
     }
 
