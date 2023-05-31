@@ -19,7 +19,7 @@ library WithdrawalQueueLib {
      * @param epoch the epoch to withdraw
      */
     function append(WithdrawalQueue storage self, uint256 amount, uint256 epoch) internal {
-        assert(amount != 0);
+        require(amount != 0, "INVALID_AMOUNT");
         uint256 head = self.head;
         uint256 tail = self.tail;
 

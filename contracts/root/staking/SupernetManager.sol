@@ -20,6 +20,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     }
 
     function onInit(uint256 id_) external onlyStakeManager {
+        require(id == 0, "ID_ALREADY_SET");
         // slither-disable-next-line events-maths
         id = id_;
     }
