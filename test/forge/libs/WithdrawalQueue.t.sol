@@ -18,7 +18,7 @@ abstract contract EmptyState is Test {
 
 contract WithdrawalQueueTest_EmptyState is EmptyState {
     function testCannotAppend_ZeroAmount() public {
-        vm.expectRevert("INVALID_AMOUNT");
+        vm.expectRevert("WithdrawalQueueLib: INVALID_AMOUNT");
         withdrawalQueueLibUser.append(0, 0);
     }
 
