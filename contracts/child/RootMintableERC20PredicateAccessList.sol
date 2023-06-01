@@ -25,7 +25,7 @@ contract RootMintableERC20PredicateAccessList is AccessList, RootMintableERC20Pr
         _transferOwnership(newOwner);
     }
 
-    function _beforeTokenWithdraw() internal virtual override {
+    function _beforeTokenDeposit() internal virtual override {
         _checkAccessList();
     }
 }
