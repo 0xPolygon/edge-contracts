@@ -24,6 +24,7 @@ contract StakeManager is IStakeManager, Initializable {
      * @inheritdoc IStakeManager
      */
     function registerChildChain(address manager) external returns (uint256 id) {
+        require(_chains.ids[manager] == 0, "StakeManager: ID_ALREADY_SET");
         id = _chains.registerChild(manager);
         ISupernetManager(manager).onInit(id);
         // slither-disable-next-line reentrancy-events
