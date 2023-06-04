@@ -93,16 +93,18 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         require(address(rootToken) != address(0), "RootMintableERC721Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootMintableERC721Predicate: ALREADY_MAPPED");
 
+        address childPredicate = childERC721Predicate;
+
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childERC721Predicate
+            childPredicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
         l2StateSender.syncState(
-            childERC721Predicate,
+            childPredicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol())
         );
         // slither-disable-next-line reentrancy-events
