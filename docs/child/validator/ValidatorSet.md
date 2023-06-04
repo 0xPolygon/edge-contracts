@@ -434,7 +434,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, uint256 newEpochSize, ValidatorInit[] initalValidators) external nonpayable
+function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, uint256 newEpochSize, ValidatorInit[] initialValidators) external nonpayable
 ```
 
 
@@ -449,7 +449,7 @@ function initialize(address newStateSender, address newStateReceiver, address ne
 | newStateReceiver | address | undefined |
 | newRootChainManager | address | undefined |
 | newEpochSize | uint256 | undefined |
-| initalValidators | ValidatorInit[] | undefined |
+| initialValidators | ValidatorInit[] | undefined |
 
 ### name
 
