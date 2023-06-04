@@ -243,8 +243,8 @@ contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IE
     }
 
     /**
-     * @notice Returns predicate address controlling the child token
-     * @return address Returns the address of the predicate
+     * @notice Returns corresponding root token address for the child native token
+     * @return address Returns the root token address
      */
     function rootToken() public view virtual returns (address) {
         return _rootToken;
