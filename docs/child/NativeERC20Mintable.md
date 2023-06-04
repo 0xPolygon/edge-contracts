@@ -457,7 +457,7 @@ function renounceOwnership() external nonpayable
 function rootToken() external view returns (address)
 ```
 
-Returns predicate address controlling the child token
+Returns corresponding root token address for the child native token
 
 
 
@@ -466,7 +466,7 @@ Returns predicate address controlling the child token
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | address Returns the address of the predicate |
+| _0 | address | address Returns the root token address |
 
 ### symbol
 

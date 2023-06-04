@@ -98,10 +98,12 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
             "RootMintableERC1155Predicate: ALREADY_MAPPED"
         );
 
+        address childPredicate = childERC1155Predicate;
+
         childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childERC1155Predicate
+            childPredicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
@@ -113,7 +115,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
             uri = tokenUri;
         } catch {}
 
-        l2StateSender.syncState(childERC1155Predicate, abi.encode(MAP_TOKEN_SIG, rootToken, uri));
+        l2StateSender.syncState(childPredicate, abi.encode(MAP_TOKEN_SIG, rootToken, uri));
         // slither-disable-next-line reentrancy-events
         emit L2MintableTokenMapped(address(rootToken), childToken);
     }
