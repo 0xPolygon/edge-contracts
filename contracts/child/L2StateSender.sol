@@ -29,4 +29,7 @@ contract L2StateSender is IStateSender {
 
         emit L2StateSynced(++counter, msg.sender, receiver, data);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -217,4 +217,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         if (childToken == address(0)) childToken = mapToken(IERC721Metadata(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
