@@ -110,4 +110,7 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
             outBytes4 := mload(add(inBytes, 32))
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

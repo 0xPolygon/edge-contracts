@@ -28,4 +28,7 @@ contract RootMintableERC20PredicateAccessList is AccessList, RootMintableERC20Pr
     function _beforeTokenDeposit() internal virtual override {
         _checkAccessList();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -28,4 +28,7 @@ contract RootMintableERC1155PredicateAccessList is AccessList, RootMintableERC11
     function _beforeTokenDeposit() internal virtual override {
         _checkAccessList();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

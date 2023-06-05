@@ -132,4 +132,7 @@ contract StakeManager is IStakeManager, Initializable {
         matic.safeTransfer(to, amount);
         emit StakeWithdrawn(validator, to, amount);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -102,4 +102,7 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
     function _msgSender() internal view virtual override(EIP712MetaTransaction, ContextUpgradeable) returns (address) {
         return EIP712MetaTransaction._msgSender();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

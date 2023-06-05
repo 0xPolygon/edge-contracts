@@ -30,4 +30,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     }
 
     function _onStake(address validator, uint256 amount) internal virtual;
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

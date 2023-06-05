@@ -198,4 +198,7 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         if (childToken == address(0)) childToken = mapToken(IERC1155MetadataURI(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

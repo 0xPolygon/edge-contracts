@@ -27,4 +27,7 @@ contract StateSender is IStateSender {
         // State sync id will start with 1
         emit StateSynced(++counter, msg.sender, receiver, data);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
