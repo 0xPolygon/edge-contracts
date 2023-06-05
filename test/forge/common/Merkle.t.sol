@@ -18,12 +18,17 @@ contract MerkleTest is Test, MurkyBase {
         _hash = keccak256(abi.encode(left, right));
     }
 
-    function testCannotCheckMembership_InvalidIndex(uint256 index, uint8 proofSize) public {
-        index = bound(index, 2 ** proofSize, type(uint256).max);
-        bytes32[] memory proof = new bytes32[](proofSize);
+    function testCheckMembershipSingleLeaf(bytes32[] memory leaves, uint256 index) public {
+        vm.assume(leaves.length == 1);
+        // bound index
+        bytes32 root = leaves[0];
+        vm.assume(root != bytes32(0));
+        bytes32 randomDataHash = keccak256(abi.encode(leaves[0]));
+        bytes32[] memory proof = new bytes32[](0);
 
-        vm.expectRevert("INVALID_LEAF_INDEX");
-        merkleUser.checkMembership("", index, "", proof);
+        // should return true for leaf and false for random hash
+        assertTrue(merkleUser.checkMembership(leaves[0], index, root, proof));
+        assertFalse(merkleUser.checkMembership(randomDataHash, index, root, proof));
     }
 
     function testCheckMembership(bytes32[] memory leaves, uint256 index) public {

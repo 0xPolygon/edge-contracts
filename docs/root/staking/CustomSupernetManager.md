@@ -456,7 +456,7 @@ event StakingEnabled()
 ### ValidatorDeactivated
 
 ```solidity
-event ValidatorDeactivated(address validator)
+event ValidatorDeactivated(address indexed validator)
 ```
 
 
@@ -467,7 +467,7 @@ event ValidatorDeactivated(address validator)
 
 | Name | Type | Description |
 |---|---|---|
-| validator  | address | undefined |
+| validator `indexed` | address | undefined |
 
 ### ValidatorRegistered
 

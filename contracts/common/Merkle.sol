@@ -17,36 +17,37 @@ library Merkle {
      * @param index position of the hash in the tree
      * @param rootHash root hash of the merkle tree
      * @param proof an array of hashes needed to prove the membership of the leaf
-     * @return a boolean value indicating if the leaf is in the tree or not
+     * @return isMember boolean value indicating if the leaf is in the tree or not
      */
     function checkMembership(
         bytes32 leaf,
         uint256 index,
         bytes32 rootHash,
         bytes32[] calldata proof
-    ) internal pure returns (bool) {
-        uint256 proofHeight = proof.length;
-        // if the proof is of size n, the tree height will be n+1
-        // in a tree of height n+1, max possible leaves are 2^n
-        require(index < 2 ** proofHeight, "INVALID_LEAF_INDEX");
-        // refuse to accept padded leaves as proof
-        require(leaf != bytes32(0), "INVALID_LEAF");
+    ) internal pure returns (bool isMember) {
+        assembly ("memory-safe") {
+            if proof.length {
+                let end := add(proof.offset, shl(5, proof.length))
+                let i := proof.offset
+                for {
 
-        bytes32 computedHash = leaf;
+                } 1 {
 
-        for (uint256 i = 0; i < proofHeight; ++i) {
-            bytes32 proofElement = proof[i];
-
-            if (index % 2 == 0) {
-                // if index is even, proof must be to the right
-                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
-            } else {
-                // if index is odd, proof is to the left
-                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+                } {
+                    let leafSlot := shl(5, mod(index, 2))
+                    mstore(leafSlot, leaf)
+                    // store proof element in whichever slot is not occupied by the leaf
+                    mstore(xor(leafSlot, 32), calldataload(i))
+                    leaf := keccak256(0, 64)
+                    index := shr(1, index)
+                    i := add(i, 0x20)
+                    if iszero(lt(i, end)) {
+                        break
+                    }
+                }
             }
-            index /= 2;
+            isMember := eq(leaf, rootHash)
         }
-        return computedHash == rootHash;
     }
 
     /**
