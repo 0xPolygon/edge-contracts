@@ -19,6 +19,7 @@ contract MerkleTest is Test, MurkyBase {
     }
 
     function testCheckMembershipSingleLeaf(bytes32[] memory leaves, uint256 index) public {
+        // separate func because murky does not generate single leaf proofs / roots
         vm.assume(leaves.length == 1);
         // bound index
         bytes32 root = leaves[0];
