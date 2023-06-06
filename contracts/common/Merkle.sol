@@ -32,11 +32,8 @@ library Merkle {
                 let end := add(proof.offset, shl(5, proof.length))
                 // set iterator to the start of the proof array
                 let i := proof.offset
-                for {
-
-                } 1 {
-
-                } {
+                // prettier-ignore
+                for {} 1 {} {
                     // if index is odd, leaf slot is at 0x20, else 0x0
                     let leafSlot := shl(5, and(0x1, index))
                     mstore(leafSlot, leaf)
