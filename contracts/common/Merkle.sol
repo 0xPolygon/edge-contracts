@@ -26,21 +26,25 @@ library Merkle {
         bytes32[] calldata proof
     ) internal pure returns (bool isMember) {
         assembly ("memory-safe") {
+            // if proof is empty, check if the leaf is the root
             if proof.length {
+                // set end to be the end of the proof array, shl(5, proof.length) is equivalent to proof.length * 32
                 let end := add(proof.offset, shl(5, proof.length))
+                // set iterator to the start of the proof array
                 let i := proof.offset
                 for {
 
                 } 1 {
 
                 } {
-                    let leafSlot := shl(5, mod(index, 2))
+                    // if index is odd, leaf slot is at 0x20, else 0x0
+                    let leafSlot := shl(5, and(0x1, index))
                     mstore(leafSlot, leaf)
                     // store proof element in whichever slot is not occupied by the leaf
                     mstore(xor(leafSlot, 32), calldataload(i))
                     leaf := keccak256(0, 64)
                     index := shr(1, index)
-                    i := add(i, 0x20)
+                    i := add(i, 32)
                     if iszero(lt(i, end)) {
                         break
                     }
