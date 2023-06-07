@@ -18,24 +18,21 @@ contract MerkleTest is Test, MurkyBase {
         _hash = keccak256(abi.encode(left, right));
     }
 
-    function testCheckMembershipSingleLeaf(bytes32[] memory leaves, uint256 index) public {
-        // separate func because murky does not generate single leaf proofs / roots
-        vm.assume(leaves.length == 1);
-        // bound index
-        bytes32 root = leaves[0];
-        vm.assume(root != bytes32(0));
-        bytes32 randomDataHash = keccak256(abi.encode(leaves[0]));
+    function testCheckMembershipSingleLeaf(bytes32 leaf, uint256 index) public {
+        vm.assume(index != 0);
+        bytes32 randomDataHash = keccak256(abi.encode(leaf));
         bytes32[] memory proof = new bytes32[](0);
 
         // should return true for leaf and false for random hash
-        assertTrue(merkleUser.checkMembership(leaves[0], index, root, proof));
-        assertFalse(merkleUser.checkMembership(randomDataHash, index, root, proof));
+        assertTrue(merkleUser.checkMembership(leaf, 0, leaf, proof));
+        assertFalse(merkleUser.checkMembership(randomDataHash, 0, leaf, proof));
+        assertFalse(merkleUser.checkMembership(leaf, index, leaf, proof));
     }
 
     function testCheckMembership(bytes32[] memory leaves, uint256 index) public {
         vm.assume(leaves.length > 1);
         // bound index
-        index %= leaves.length - 1;
+        vm.assume(index < leaves.length);
         // get merkle root and proof
         bytes32 root = getRoot(leaves);
         bytes32[] memory proof = getProof(leaves, index);
@@ -46,6 +43,7 @@ contract MerkleTest is Test, MurkyBase {
         // should return true for leaf and false for random hash
         assertTrue(merkleUser.checkMembership(leaf, index, root, proof));
         assertFalse(merkleUser.checkMembership(randomDataHash, index, root, proof));
+        assertFalse(merkleUser.checkMembership(leaf, leaves.length, root, proof));
     }
 }
 

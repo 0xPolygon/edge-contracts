@@ -47,7 +47,8 @@ library Merkle {
                     }
                 }
             }
-            isMember := eq(leaf, rootHash)
+            // if index was invalid, or computed root does not match, return false
+            isMember := and(eq(leaf, rootHash), iszero(index))
         }
     }
 
