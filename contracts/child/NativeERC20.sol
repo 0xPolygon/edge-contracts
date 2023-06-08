@@ -154,7 +154,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     /**
      * @inheritdoc INativeERC20
      */
-    function mint(address account, uint256 amount) external onlyPredicate returns (bool) {
+    function mint(address account, uint256 amount) external virtual onlyPredicate returns (bool) {
         _mint(account, amount);
 
         return true;
@@ -163,7 +163,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     /**
      * @inheritdoc INativeERC20
      */
-    function burn(address account, uint256 amount) external onlyPredicate returns (bool) {
+    function burn(address account, uint256 amount) external virtual onlyPredicate returns (bool) {
         _burn(account, amount);
 
         return true;
