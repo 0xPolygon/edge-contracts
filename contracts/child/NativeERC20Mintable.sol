@@ -162,7 +162,7 @@ contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IE
      * @param amount Amount of tokens to mint to the account
      * @return bool Returns true if function call is succesful
      */
-    function mint(address account, uint256 amount) external onlyPredicateOrMinter returns (bool) {
+    function mint(address account, uint256 amount) external virtual onlyPredicateOrMinter returns (bool) {
         _mint(account, amount);
 
         return true;
@@ -175,7 +175,7 @@ contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IE
      * @param amount Amount of tokens to burn from the account
      * @return bool Returns true if function call is succesful
      */
-    function burn(address account, uint256 amount) external onlyPredicateOrMinter returns (bool) {
+    function burn(address account, uint256 amount) external virtual onlyPredicateOrMinter returns (bool) {
         _burn(account, amount);
 
         return true;
