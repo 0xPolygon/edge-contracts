@@ -320,7 +320,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address predicate_, address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
+function initialize(address predicate_, address rootToken_, string name_, string symbol_, uint8 decimals_, uint256 tokenSupply_) external nonpayable
 ```
 
 
@@ -336,6 +336,7 @@ function initialize(address predicate_, address rootToken_, string name_, string
 | name_ | string | undefined |
 | symbol_ | string | undefined |
 | decimals_ | uint8 | undefined |
+| tokenSupply_ | uint256 | undefined |
 
 ### mint
 
