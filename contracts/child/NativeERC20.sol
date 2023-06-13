@@ -44,7 +44,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_
-    ) external initializer onlySystemCall {
+    ) external virtual initializer onlySystemCall {
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
@@ -63,7 +63,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address to, uint256 amount) external returns (bool) {
+    function transfer(address to, uint256 amount) external virtual returns (bool) {
         address owner = _msgSender();
         _transfer(owner, to, amount);
         return true;
@@ -79,7 +79,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) external returns (bool) {
+    function approve(address spender, uint256 amount) external virtual returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, amount);
         return true;
@@ -101,7 +101,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external virtual returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
@@ -120,7 +120,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, allowance(owner, spender) + addedValue);
         return true;
@@ -140,7 +140,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
@@ -218,7 +218,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view returns (uint256) {
+    function allowance(address owner, address spender) public view virtual returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -250,7 +250,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      * - `to` cannot be the zero address.
      * - `from` must have a balance of at least `amount`.
      */
-    function _transfer(address from, address to, uint256 amount) internal {
+    function _transfer(address from, address to, uint256 amount) internal virtual {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
@@ -270,7 +270,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      *
      * - `account` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount) internal {
+    function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
 
         _totalSupply += amount;
@@ -293,7 +293,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount) internal {
+    function _burn(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: burn from the zero address");
 
         _totalSupply -= amount;
@@ -318,7 +318,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(address owner, address spender, uint256 amount) internal {
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -334,7 +334,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      *
      * Might emit an {Approval} event.
      */
-    function _spendAllowance(address owner, address spender, uint256 amount) internal {
+    function _spendAllowance(address owner, address spender, uint256 amount) internal virtual {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");
