@@ -20,7 +20,8 @@ interface INativeERC20 is IERC20MetadataUpgradeable {
         address rootToken_,
         string calldata name_,
         string calldata symbol_,
-        uint8 decimals_
+        uint8 decimals_,
+        uint256 tokenSupply_
     ) external;
 
     /**
