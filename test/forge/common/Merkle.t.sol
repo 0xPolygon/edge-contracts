@@ -30,7 +30,21 @@ contract MerkleTest is Test, MurkyBase {
     }
 
     function testCheckMembership(bytes32[] memory leaves, uint256 index) public {
-        vm.assume(leaves.length >= 128);
+        vm.assume(leaves.length > 1);
+        vm.assume(index < leaves.length);
+        bytes32 root = getRoot(leaves);
+        bytes32[] memory proof = getProof(leaves, index);
+        bytes32 leaf = leaves[index];
+        bytes32 randomDataHash = keccak256(abi.encode(leaf));
+
+        // should return true for leaf and false for random hash
+        assertTrue(merkleUser.checkMembership(leaf, index, root, proof));
+        assertFalse(merkleUser.checkMembership(randomDataHash, index, root, proof));
+        assertFalse(merkleUser.checkMembership(leaf, leaves.length, root, proof));
+    }
+
+    function testCheckMembershiLargeTree(bytes32[] memory leaves, uint256 index) public {
+        vm.assume(leaves.length > 128);
         vm.assume(index < leaves.length);
         bytes32 root = getRoot(leaves);
         bytes32[] memory proof = getProof(leaves, index);
@@ -44,7 +58,7 @@ contract MerkleTest is Test, MurkyBase {
     }
 
     function testCheckMembershipWithHeight(bytes32[] memory leaves, uint256 index) public {
-        vm.assume(leaves.length >= 128);
+        vm.assume(leaves.length > 1);
         vm.assume(index < leaves.length);
         bytes32 root = getRoot(leaves);
         bytes32[] memory proof = getProof(leaves, index);
@@ -57,6 +71,24 @@ contract MerkleTest is Test, MurkyBase {
         assertFalse(merkleUser.checkMembershipWithHeight(leaf, leaves.length, leaves.length, root, proof));
         assertFalse(merkleUser.checkMembershipWithHeight(leaf, index, (2 ** proof.length) + 1, root, proof));
         assertFalse(merkleUser.checkMembershipWithHeight(leaf, index, (2 ** (proof.length - 1)), root, proof));
+        assertFalse(merkleUser.checkMembershipWithHeight(leaf, leaves.length, (2 ** (proof.length - 1)), root, proof));
+    }
+
+    function testCheckMembershipWithHeightLargeTree(bytes32[] memory leaves, uint256 index) public {
+        vm.assume(leaves.length > 128);
+        vm.assume(index < leaves.length);
+        bytes32 root = getRoot(leaves);
+        bytes32[] memory proof = getProof(leaves, index);
+        bytes32 leaf = leaves[index];
+        bytes32 randomDataHash = keccak256(abi.encode(leaf));
+
+        // should return true for leaf and false for random hash
+        assertTrue(merkleUser.checkMembershipWithHeight(leaf, index, leaves.length, root, proof));
+        assertFalse(merkleUser.checkMembershipWithHeight(randomDataHash, index, leaves.length, root, proof));
+        assertFalse(merkleUser.checkMembershipWithHeight(leaf, leaves.length, leaves.length, root, proof));
+        assertFalse(merkleUser.checkMembershipWithHeight(leaf, index, (2 ** proof.length) + 1, root, proof));
+        assertFalse(merkleUser.checkMembershipWithHeight(leaf, index, (2 ** (proof.length - 1)), root, proof));
+        assertFalse(merkleUser.checkMembershipWithHeight(leaf, leaves.length, (2 ** (proof.length - 1)), root, proof));
     }
 }
 
