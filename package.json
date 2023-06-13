@@ -41,7 +41,7 @@
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "hardhat": "^2.14.1",
     "keccak256": "^1.0.6",
-    "mcl-wasm": "^1.0.2",
+    "mcl-wasm": "^1.1.0",
     "merkletreejs": "^0.3.10"
   },
   "devDependencies": {
