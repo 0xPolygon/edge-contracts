@@ -227,7 +227,7 @@ contract BN256G2 is IBN256G2 {
 
     /**
      * @notice Calculates the modular inverse of a over n
-     * @param a The operand to calcualte the inverse of
+     * @param a The operand to calculate the inverse of
      * @param n The modulus
      * @return result Inv(a)modn
      **/
