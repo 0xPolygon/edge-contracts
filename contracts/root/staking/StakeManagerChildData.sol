@@ -14,10 +14,6 @@ abstract contract StakeManagerChildData {
     // child chain manager contract address to child chain id.
     mapping(address => uint256) private ids;
 
-    // Storage gap 
-    // solhint-disable-next-line var-name-mixedcase
-    uint256[1000] private __StorageGapStakeManagerChildData;
-
     /**
      * @notice Register a child chain manager contract and allocate a child chain id.
      * @param manager Child chain manager contract address.
@@ -25,7 +21,9 @@ abstract contract StakeManagerChildData {
      */
     function _registerChild(address manager) internal returns (uint256 id) {
         assert(manager != address(0));
-        id = ++counter;
+        unchecked {
+            id = ++counter;
+        }
         managers[id] = manager;
         ids[manager] = id;
     }
@@ -49,4 +47,8 @@ abstract contract StakeManagerChildData {
         id = ids[manager];
         require(id != 0, "Invalid manager");
     }
+
+    // Storage gap 
+    // solhint-disable-next-line var-name-mixedcase
+    uint256[50] private __StorageGapStakeManagerChildData;
 }

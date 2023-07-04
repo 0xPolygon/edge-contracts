@@ -11,10 +11,10 @@ import "./StakeManagerStakingData.sol";
 contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, StakeManagerStakingData {
     using SafeERC20 for IERC20;
 
-    IERC20 internal matic;
+    IERC20 internal stakingToken;
 
-    function initialize(address newMatic) public initializer {
-        matic = IERC20(newMatic);
+    function initialize(address newStakingToken) public initializer {
+        stakingToken = IERC20(newStakingToken);
     }
 
     /**
@@ -33,7 +33,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
     function stakeFor(uint256 id, uint256 amount) external {
         require(id != 0 && id <= counter, "INVALID_ID");
         // slither-disable-next-line reentrancy-benign,reentrancy-events
-        matic.safeTransferFrom(msg.sender, address(this), amount);
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         // calling the library directly once fixes the coverage issue
         // https://github.com/foundry-rs/foundry/issues/4854#issuecomment-1528897219
         _addStake(msg.sender, id, amount);
@@ -125,7 +125,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
     function _withdrawStake(address validator, address to, uint256 amount) private {
         _withdrawStake(validator, amount);
         // slither-disable-next-line reentrancy-events
-        matic.safeTransfer(to, amount);
+        stakingToken.safeTransfer(to, amount);
         emit StakeWithdrawn(validator, to, amount);
     }
 }

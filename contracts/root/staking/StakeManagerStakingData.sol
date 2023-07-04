@@ -18,11 +18,6 @@ abstract contract StakeManagerStakingData {
     // validator address => withdrawable stake.
     mapping(address => uint256) private withdrawableStakes;
 
-    // Storage gap 
-    // solhint-disable-next-line var-name-mixedcase
-    uint256[1000] private __StorageGapStakeManagerStakingData;
-
-
     function _addStake(address validator, uint256 id, uint256 amount) internal {
         stakes[validator][id] += amount;
         totalStakePerChild[id] += amount;
@@ -57,4 +52,8 @@ abstract contract StakeManagerStakingData {
     function _totalStakeOf(address validator) internal view returns (uint256 amount) {
         amount = totalStakes[validator];
     }
+
+    // Storage gap 
+    // solhint-disable-next-line var-name-mixedcase
+    uint256[50] private __StorageGapStakeManagerStakingData;
 }
