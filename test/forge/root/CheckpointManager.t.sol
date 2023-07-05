@@ -83,10 +83,7 @@ abstract contract FirstSubmitted is Initialized {
             currentValidatorSet: validatorSet
         });
 
-        uint256 start = gasleft();
         checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[3], validatorSetHash, bitmaps[3]);
-        uint256 end = gasleft();
-        emit log_uint(start - end);
     }
 }
 
