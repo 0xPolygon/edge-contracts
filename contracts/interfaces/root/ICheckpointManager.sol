@@ -17,7 +17,7 @@ interface ICheckpointManager {
     struct CheckpointMetadata {
         bytes32 blockHash;
         uint256 blockRound;
-        bytes32 currentValidatorSetHash;
+        Validator[] currentValidatorSet;
     }
 
     struct Validator {
@@ -28,18 +28,19 @@ interface ICheckpointManager {
 
     /**
      * @notice Function to submit a single checkpoint for an epoch to CheckpointManager
-     * @dev Contract internally verifies provided signature against stored validator set
+     * @dev Contract internally verifies provided signature against the validator set. The validator
+     *      set is checked against the validator set hash.
      * @param checkpointMetadata The checkpoint metadata to verify with the signature
      * @param checkpoint The checkpoint to store
      * @param signature The aggregated signature submitted by the proposer
-     * @param newValidatorSet The new validator set to store
+     * @param newValidatorSetHash The new validator set hash to store
      * @param bitmap The bitmap of the old valdiator set that signed the message
      */
     function submit(
         CheckpointMetadata calldata checkpointMetadata,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,
-        Validator[] calldata newValidatorSet,
+        bytes32 newValidatorSetHash,
         bytes calldata bitmap
     ) external;
 
