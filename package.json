@@ -45,7 +45,7 @@
     "merkletreejs": "^0.3.10"
   },
   "devDependencies": {
-    "@defi-wonderland/smock": "^2.3.4",
+    "@defi-wonderland/smock": "^2.3.5",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/hardhat-upgrades": "^1.27.0",
     "@types/chai": "^4.3.5",
