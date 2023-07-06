@@ -8,52 +8,52 @@ pragma solidity 0.8.19;
  * Note that this is contract is designed to be included in StakeManager. It is upgradeable.
  */
 abstract contract StakeManagerStakingData {
-    uint256 internal theTotalStake;
+    uint256 internal _totalStake;
     // validator => child => amount
-    mapping(address => mapping(uint256 => uint256)) private stakes;
+    mapping(address => mapping(uint256 => uint256)) private _stakes;
     // child chain id => total stake
-    mapping(uint256 => uint256) private totalStakePerChild;
+    mapping(uint256 => uint256) private _totalStakePerChild;
     // validator address => stake across all child chains.
-    mapping(address => uint256) private totalStakes;
+    mapping(address => uint256) private _totalStakes;
     // validator address => withdrawable stake.
-    mapping(address => uint256) private withdrawableStakes;
+    mapping(address => uint256) private _withdrawableStakes;
 
     function _addStake(address validator, uint256 id, uint256 amount) internal {
-        stakes[validator][id] += amount;
-        totalStakePerChild[id] += amount;
-        totalStakes[validator] += amount;
-        theTotalStake += amount;
+        _stakes[validator][id] += amount;
+        _totalStakePerChild[id] += amount;
+        _totalStakes[validator] += amount;
+        _totalStake += amount;
     }
 
     function _removeStake(address validator, uint256 id, uint256 amount) internal {
-        stakes[validator][id] -= amount;
-        totalStakePerChild[id] -= amount;
-        totalStakes[validator] -= amount;
-        theTotalStake -= amount;
-        withdrawableStakes[validator] += amount;
+        _stakes[validator][id] -= amount;
+        _totalStakePerChild[id] -= amount;
+        _totalStakes[validator] -= amount;
+        _totalStake -= amount;
+        _withdrawableStakes[validator] += amount;
     }
 
     function _withdrawStake(address validator, uint256 amount) internal {
-        withdrawableStakes[validator] -= amount;
+        _withdrawableStakes[validator] -= amount;
     }
 
     function _withdrawableStakeOf(address validator) internal view returns (uint256 amount) {
-        amount = withdrawableStakes[validator];
+        amount = _withdrawableStakes[validator];
     }
 
     function _totalStakeOfChild(uint256 id) internal view returns (uint256 amount) {
-        amount = totalStakePerChild[id];
+        amount = _totalStakePerChild[id];
     }
 
     function _stakeOf(address validator, uint256 id) internal view returns (uint256 amount) {
-        amount = stakes[validator][id];
+        amount = _stakes[validator][id];
     }
 
     function _totalStakeOf(address validator) internal view returns (uint256 amount) {
-        amount = totalStakes[validator];
+        amount = _totalStakes[validator];
     }
 
     // Storage gap 
     // solhint-disable-next-line var-name-mixedcase
-    uint256[50] private __StorageGapStakeManagerStakingData;
+    uint256[50] private __gap;
 }

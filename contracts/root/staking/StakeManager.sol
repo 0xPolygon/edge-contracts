@@ -84,7 +84,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
      * @inheritdoc IStakeManager
      */
     function totalStake() external view returns (uint256 amount) {
-        amount = theTotalStake;
+        amount = _totalStake;
     }
 
     /**

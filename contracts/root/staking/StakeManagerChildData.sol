@@ -10,9 +10,9 @@ abstract contract StakeManagerChildData {
     // Highest child chain id allocated thus far. Child chain id 0x00 is an invalid id.
     uint256 internal counter;
     // child chain id to child chain manager contract address.
-    mapping(uint256 => address) private managers;
+    mapping(uint256 => address) private _managers;
     // child chain manager contract address to child chain id.
-    mapping(address => uint256) private ids;
+    mapping(address => uint256) private _ids;
 
     /**
      * @notice Register a child chain manager contract and allocate a child chain id.
@@ -24,8 +24,8 @@ abstract contract StakeManagerChildData {
         unchecked {
             id = ++counter;
         }
-        managers[id] = manager;
-        ids[manager] = id;
+        _managers[id] = manager;
+        _ids[manager] = id;
     }
 
     /** 
@@ -34,7 +34,7 @@ abstract contract StakeManagerChildData {
      * @return manager Child chain manager contract address.
      */
     function _managerOf(uint256 id) internal view returns (address manager) {
-        manager = managers[id];
+        manager = _managers[id];
         require(manager != address(0), "Invalid id");
     }
 
@@ -44,11 +44,11 @@ abstract contract StakeManagerChildData {
      * @return id Child chain id.
      */
     function _idFor(address manager) internal view returns (uint256 id) {
-        id = ids[manager];
+        id = _ids[manager];
         require(id != 0, "Invalid manager");
     }
 
     // Storage gap 
     // solhint-disable-next-line var-name-mixedcase
-    uint256[50] private __StorageGapStakeManagerChildData;
+    uint256[50] private __gap;
 }
