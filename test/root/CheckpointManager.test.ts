@@ -779,7 +779,7 @@ describe("CheckpointManager", () => {
   });
 
   it("Change validator keys plus deterministic gas measurement for submit", async () => {
-    let newValidatorSetSize = 1
+    let newValidatorSetSize = 10
 
     let newValidatorSecretKeys = [];
     let newValidatorSet = [];
@@ -789,7 +789,7 @@ describe("CheckpointManager", () => {
       const pubkey = mcl.getPubkey(secret);
       newValidatorSecretKeys.push(secret);
       newValidatorSet.push({
-        _address: accounts[i].address,
+        _address: accounts[0].address,
         blsKey: mcl.g2ToHex(pubkey),
         votingPower: ethers.utils.parseEther(((i + 1) * 2).toString()),
       });
@@ -871,7 +871,7 @@ describe("CheckpointManager", () => {
       currentValidatorSet: newValidatorSet,
     };
 
-    bitmap = "0xffff";
+    bitmap = "0xffffffff";
 
     message = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
