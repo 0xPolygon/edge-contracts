@@ -779,7 +779,7 @@ describe("CheckpointManager", () => {
   });
 
   it("Change validator keys plus deterministic gas measurement for submit", async () => {
-    let newValidatorSetSize = 9
+    let newValidatorSetSize = 1
 
     let newValidatorSecretKeys = [];
     let newValidatorSet = [];
@@ -862,11 +862,11 @@ describe("CheckpointManager", () => {
     checkpoint = {
       epoch: 3,
       blockNumber: 200,
-      eventRoot: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      eventRoot: ethers.utils.keccak256("0x0ABC"),
     };
 
     checkpointMetadata = {
-      blockHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      blockHash: ethers.utils.keccak256("0x0123"),
       blockRound: 0,
       currentValidatorSet: newValidatorSet,
     };
