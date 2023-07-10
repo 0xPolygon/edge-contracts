@@ -88,4 +88,7 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
     function _msgSender() internal view virtual override(EIP712MetaTransaction, ContextUpgradeable) returns (address) {
         return EIP712MetaTransaction._msgSender();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

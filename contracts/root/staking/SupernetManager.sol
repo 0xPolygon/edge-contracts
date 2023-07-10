@@ -10,7 +10,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     uint256 public id;
 
     modifier onlyStakeManager() {
-        require(msg.sender == address(stakeManager), "ONLY_STAKE_MANAGER");
+        require(msg.sender == address(stakeManager), "SupernetManager: ONLY_STAKE_MANAGER");
         _;
     }
 
@@ -20,6 +20,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     }
 
     function onInit(uint256 id_) external onlyStakeManager {
+        require(id == 0, "SupernetManager: ID_ALREADY_SET");
         // slither-disable-next-line events-maths
         id = id_;
     }
@@ -29,4 +30,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     }
 
     function _onStake(address validator, uint256 amount) internal virtual;
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -342,7 +342,7 @@ contract CustomSupernetManager_StakingPostGenesis is EnabledStaking {
 
 contract CustomSupernetManager_Unstake is EnabledStaking {
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
-    event ValidatorDeactivated(address validator);
+    event ValidatorDeactivated(address indexed validator);
 
     function test_RevertNotCalledByExitHelper() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "exitHelper"));
@@ -377,7 +377,7 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
 
 contract CustomSupernetManager_Slash is EnabledStaking {
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
-    event ValidatorDeactivated(address validator);
+    event ValidatorDeactivated(address indexed validator);
 
     function test_SuccessfulFullWithdrawal() public {
         uint256 slashingPercentage = supernetManager.SLASHING_PERCENTAGE();

@@ -32,7 +32,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         address newStateReceiver,
         address newRootChainManager,
         uint256 newEpochSize,
-        ValidatorInit[] memory initalValidators
+        ValidatorInit[] memory initialValidators
     ) public initializer {
         require(
             newStateSender != address(0) &&
@@ -46,8 +46,8 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         stateReceiver = newStateReceiver;
         rootChainManager = newRootChainManager;
         EPOCH_SIZE = newEpochSize;
-        for (uint256 i = 0; i < initalValidators.length; ) {
-            _stake(initalValidators[i].addr, initalValidators[i].stake);
+        for (uint256 i = 0; i < initialValidators.length; ) {
+            _stake(initialValidators[i].addr, initialValidators[i].stake);
             unchecked {
                 ++i;
             }

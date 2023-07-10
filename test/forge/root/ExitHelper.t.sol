@@ -20,7 +20,6 @@ abstract contract Uninitialized is Test {
     uint256 submitCounter;
     uint256 validatorSetSize;
     ICheckpointManager.Validator[] public validatorSet;
-    bytes32 validatorSetHash;
     IExitHelper.BatchExitInput[] public batchExitInput;
 
     address public admin;
@@ -80,10 +79,9 @@ abstract contract Uninitialized is Test {
         for (uint256 i = 0; i < validatorSetSize; i++) {
             validatorSet.push(validatorSetTmp[i]);
         }
-        validatorSetHash = keccak256(abi.encode(validatorSet));
         submitCounter = 1;
 
-        checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSetHash);
+        checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
     }
 }
 
@@ -107,10 +105,10 @@ abstract contract CheckpointSubmitted is Initialized {
         ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
             blockHash: hashes[1],
             blockRound: 0,
-            currentValidatorSet: validatorSet
+            currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSetHash, bitmaps[0]);
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSet, bitmaps[0]);
 
         assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
         assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -190,10 +188,10 @@ contract ExitHelper_Exit is Initialized {
         ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
             blockHash: hashes[1],
             blockRound: 0,
-            currentValidatorSet: validatorSet
+            currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSetHash, bitmaps[0]);
+        checkpointManager.submit(checkpointMetadata, checkpoint, aggMessagePoints[0], validatorSet, bitmaps[0]);
 
         assertEq(checkpointManager.getEventRootByBlock(checkpoint.blockNumber), checkpoint.eventRoot);
         assertEq(checkpointManager.checkpointBlockNumbers(0), checkpoint.blockNumber);
@@ -255,12 +253,12 @@ contract ExitHelper_BatchExit is ExitHelperExitted {
         ICheckpointManager.CheckpointMetadata memory checkpointMetadata = ICheckpointManager.CheckpointMetadata({
             blockHash: hashes[1],
             blockRound: 0,
-            currentValidatorSet: validatorSet
+            currentValidatorSetHash: hashes[2]
         });
 
-        checkpointManager.submit(checkpointMetadata, checkpoint1, aggMessagePoints[1], validatorSetHash, bitmaps[1]);
+        checkpointManager.submit(checkpointMetadata, checkpoint1, aggMessagePoints[1], validatorSet, bitmaps[1]);
 
-        checkpointManager.submit(checkpointMetadata, checkpoint2, aggMessagePoints[2], validatorSetHash, bitmaps[1]);
+        checkpointManager.submit(checkpointMetadata, checkpoint2, aggMessagePoints[2], validatorSet, bitmaps[1]);
 
         uint256 leafIndex1 = 0;
         uint256 leafIndex2 = 1;

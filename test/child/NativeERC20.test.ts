@@ -73,7 +73,7 @@ describe("NativeERC20", () => {
       await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
     await expect(
-      systemNativeERC20.initialize(childERC20Predicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18)
+      systemNativeERC20.initialize(childERC20Predicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
     ).to.not.be.reverted;
     expect(await nativeERC20.name()).to.equal("TEST");
     expect(await nativeERC20.symbol()).to.equal("TEST");
@@ -85,7 +85,7 @@ describe("NativeERC20", () => {
 
   it("reinitialization fail", async () => {
     await expect(
-      nativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "", "", 0)
+      nativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "", "", 0, 0)
     ).to.be.revertedWith("Initializable: contract is already initialized");
   });
 
