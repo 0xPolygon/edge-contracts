@@ -28,4 +28,7 @@ contract ChildERC721PredicateAccessList is AccessList, ChildERC721Predicate {
     function _beforeTokenWithdraw() internal virtual override {
         _checkAccessList();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

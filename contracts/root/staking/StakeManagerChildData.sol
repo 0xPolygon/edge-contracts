@@ -12,7 +12,7 @@ abstract contract StakeManagerChildData {
     // child chain id to child chain manager contract address.
     mapping(uint256 => address) private _managers;
     // child chain manager contract address to child chain id.
-    mapping(address => uint256) private _ids;
+    mapping(address => uint256) internal _ids;
 
     /**
      * @notice Register a child chain manager contract and allocate a child chain id.
@@ -20,7 +20,7 @@ abstract contract StakeManagerChildData {
      * @return id Child chain id allocated for the child chain.
      */
     function _registerChild(address manager) internal returns (uint256 id) {
-        assert(manager != address(0));
+        require(manager != address(0), "StakeManagerChildData: INVALID_ADDRESS");
         unchecked {
             id = ++counter;
         }
@@ -35,7 +35,7 @@ abstract contract StakeManagerChildData {
      */
     function _managerOf(uint256 id) internal view returns (address manager) {
         manager = _managers[id];
-        require(manager != address(0), "Invalid id");
+        require(manager != address(0), "StakeManagerChildData: INVALID_ID");
     }
 
     /** 
@@ -45,7 +45,7 @@ abstract contract StakeManagerChildData {
      */
     function _idFor(address manager) internal view returns (uint256 id) {
         id = _ids[manager];
-        require(id != 0, "Invalid manager");
+        require(id != 0, "StakeManagerChildData: INVALID_MANAGER");
     }
 
     // Storage gap 

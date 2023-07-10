@@ -49,4 +49,7 @@ contract AccessList is Ownable2StepUpgradeable, System {
         useAllowList = _useAllowList;
         useBlockList = _useBlockList;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

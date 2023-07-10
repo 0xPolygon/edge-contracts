@@ -226,4 +226,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

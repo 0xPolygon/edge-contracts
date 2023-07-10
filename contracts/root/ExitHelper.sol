@@ -93,4 +93,7 @@ contract ExitHelper is IExitHelper, Initializable {
 
         emit ExitProcessed(id, success, returnData);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

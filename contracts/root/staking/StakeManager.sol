@@ -21,6 +21,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
      * @inheritdoc IStakeManager
      */
     function registerChildChain(address manager) external returns (uint256 id) {
+        require(_ids[manager] == 0, "StakeManager: ID_ALREADY_SET");
         id = _registerChild(manager);
         ISupernetManager(manager).onInit(id);
         // slither-disable-next-line reentrancy-events
@@ -31,7 +32,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
      * @inheritdoc IStakeManager
      */
     function stakeFor(uint256 id, uint256 amount) external {
-        require(id != 0 && id <= counter, "INVALID_ID");
+        require(id != 0 && id <= counter, "StakeManager: INVALID_ID");
         // slither-disable-next-line reentrancy-benign,reentrancy-events
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         // calling the library directly once fixes the coverage issue
@@ -128,4 +129,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
         stakingToken.safeTransfer(to, amount);
         emit StakeWithdrawn(validator, to, amount);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -101,10 +101,12 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         require(address(rootToken) != address(0), "RootERC1155Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC1155Predicate: ALREADY_MAPPED");
 
+        address childPredicate = childERC1155Predicate;
+
         childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childERC1155Predicate
+            childPredicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
@@ -116,7 +118,7 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
             uri = tokenUri;
         } catch {}
 
-        stateSender.syncState(childERC1155Predicate, abi.encode(MAP_TOKEN_SIG, rootToken, uri));
+        stateSender.syncState(childPredicate, abi.encode(MAP_TOKEN_SIG, rootToken, uri));
         // slither-disable-next-line reentrancy-events
         emit TokenMapped(address(rootToken), childToken);
     }
@@ -196,4 +198,7 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         if (childToken == address(0)) childToken = mapToken(IERC1155MetadataURI(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
