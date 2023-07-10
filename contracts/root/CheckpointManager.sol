@@ -14,15 +14,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
     uint256 public chainId;
     uint256 public currentEpoch;
-    uint256 public currentValidatorSetLength;
     uint256 public currentCheckpointBlockNumber;
-    uint256 public totalVotingPower;
     bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
     IBLS public bls;
     IBN256G2 public bn256G2;
 
     mapping(uint256 => Checkpoint) public checkpoints; // epochId -> root
-    mapping(uint256 => Validator) public currentValidatorSet;
     uint256[] public checkpointBlockNumbers;
     bytes32 public currentValidatorSetHash;
 
@@ -37,13 +34,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         IBLS newBls,
         IBN256G2 newBn256G2,
         uint256 chainId_,
-        Validator[] calldata newValidatorSet
+        bytes32 newValidatorSetHash
     ) external initializer {
         chainId = chainId_;
         bls = newBls;
         bn256G2 = newBn256G2;
-        currentValidatorSetLength = newValidatorSet.length;
-        _setNewValidatorSet(newValidatorSet);
+        currentValidatorSetHash = newValidatorSetHash;
     }
 
     /**
@@ -53,10 +49,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         CheckpointMetadata calldata checkpointMetadata,
         Checkpoint calldata checkpoint,
         uint256[2] calldata signature,
-        Validator[] calldata newValidatorSet,
+        bytes32 newValidatorSetHash,
         bytes calldata bitmap
     ) external {
-        require(currentValidatorSetHash == checkpointMetadata.currentValidatorSetHash, "INVALID_VALIDATOR_SET_HASH");
+        Validator[] calldata currentValidatorSet = checkpointMetadata.currentValidatorSet;
+        bytes32 calculatedCurrentValidatorSetHash = keccak256(abi.encode(currentValidatorSet));
+        require(currentValidatorSetHash == calculatedCurrentValidatorSetHash, "INVALID_VALIDATOR_SET_HASH");
         bytes memory hash = abi.encode(
             keccak256(
                 abi.encode(
@@ -66,13 +64,13 @@ contract CheckpointManager is ICheckpointManager, Initializable {
                     checkpointMetadata.blockRound,
                     checkpoint.epoch,
                     checkpoint.eventRoot,
-                    checkpointMetadata.currentValidatorSetHash,
-                    keccak256(abi.encode(newValidatorSet))
+                    calculatedCurrentValidatorSetHash,
+                    newValidatorSetHash
                 )
             )
         );
 
-        _verifySignature(bls.hashToPoint(DOMAIN, hash), signature, bitmap);
+        _verifySignature(bls.hashToPoint(DOMAIN, hash), signature, currentValidatorSet, bitmap);
 
         uint256 prevEpoch = currentEpoch;
 
@@ -91,7 +89,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
         currentCheckpointBlockNumber = checkpoint.blockNumber;
 
-        _setNewValidatorSet(newValidatorSet);
+        currentValidatorSetHash = newValidatorSetHash;
     }
 
     /**
@@ -140,20 +138,6 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         return checkpoints[checkpointBlockNumbers.findUpperBound(blockNumber) + 1].eventRoot;
     }
 
-    function _setNewValidatorSet(Validator[] calldata newValidatorSet) private {
-        uint256 length = newValidatorSet.length;
-        currentValidatorSetLength = length;
-        currentValidatorSetHash = keccak256(abi.encode(newValidatorSet));
-        uint256 totalPower = 0;
-        for (uint256 i = 0; i < length; ++i) {
-            uint256 votingPower = newValidatorSet[i].votingPower;
-            require(votingPower > 0, "VOTING_POWER_ZERO");
-            totalPower += votingPower;
-            currentValidatorSet[i] = newValidatorSet[i];
-        }
-        totalVotingPower = totalPower;
-    }
-
     /**
      * @notice Internal function that asserts that the signature is valid and that the required threshold is met
      * @param message The message that was signed by validators (i.e. checkpoint hash)
@@ -162,18 +146,20 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     function _verifySignature(
         uint256[2] memory message,
         uint256[2] calldata signature,
+        Validator[] calldata validatorSet,
         bytes calldata bitmap
     ) private view {
-        uint256 length = currentValidatorSetLength;
         // slither-disable-next-line uninitialized-local
         uint256[4] memory aggPubkey;
+        uint256 totalVotingPower = 0;
         uint256 aggVotingPower = 0;
-        for (uint256 i = 0; i < length; ) {
+        for (uint256 i = 0; i < validatorSet.length; ) {
+            uint256 votingPower = validatorSet[i].votingPower;
             if (_getValueFromBitmap(bitmap, i)) {
                 if (aggVotingPower == 0) {
-                    aggPubkey = currentValidatorSet[i].blsKey;
+                    aggPubkey = validatorSet[i].blsKey;
                 } else {
-                    uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
+                    uint256[4] memory blsKey = validatorSet[i].blsKey;
                     // slither-disable-next-line calls-loop
                     (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
                         aggPubkey[0],
@@ -186,8 +172,10 @@ contract CheckpointManager is ICheckpointManager, Initializable {
                         blsKey[3]
                     );
                 }
-                aggVotingPower += currentValidatorSet[i].votingPower;
+                aggVotingPower += votingPower;
             }
+            totalVotingPower += votingPower;
+
             unchecked {
                 ++i;
             }
@@ -226,7 +214,4 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         // Get the value of the bit at the given 'index' in a byte.
         return uint8(bitmap[byteNumber]) & (1 << bitNumber) > 0;
     }
-
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
 }
