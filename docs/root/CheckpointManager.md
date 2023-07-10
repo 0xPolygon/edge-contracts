@@ -158,29 +158,6 @@ function currentEpoch() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### currentValidatorSet
-
-```solidity
-function currentValidatorSet(uint256) external view returns (address _address, uint256 votingPower)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _address | address | undefined |
-| votingPower | uint256 | undefined |
-
 ### currentValidatorSetHash
 
 ```solidity
@@ -197,23 +174,6 @@ function currentValidatorSetHash() external view returns (bytes32)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined |
-
-### currentValidatorSetLength
-
-```solidity
-function currentValidatorSetLength() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### getCheckpointBlock
 
@@ -313,26 +273,26 @@ Function to get the event root for a block number
 ### initialize
 
 ```solidity
-function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, uint256 chainId_, ICheckpointManager.Validator[] newValidatorSet) external nonpayable
+function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, uint256 chainId_, bytes32 newValidatorSetHash) external nonpayable
 ```
 
+Initialization function for CheckpointManager
 
-
-
+*Contract can only be initialized once*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| newBls | contract IBLS | undefined |
-| newBn256G2 | contract IBN256G2 | undefined |
-| chainId_ | uint256 | undefined |
-| newValidatorSet | ICheckpointManager.Validator[] | undefined |
+| newBls | contract IBLS | Address of the BLS library contract |
+| newBn256G2 | contract IBN256G2 | Address of the BLS library contract |
+| chainId_ | uint256 | Chain ID of the child chain |
+| newValidatorSetHash | bytes32 | undefined |
 
 ### submit
 
 ```solidity
-function submit(ICheckpointManager.CheckpointMetadata checkpointMetadata, ICheckpointManager.Checkpoint checkpoint, uint256[2] signature, ICheckpointManager.Validator[] newValidatorSet, bytes bitmap) external nonpayable
+function submit(ICheckpointManager.CheckpointMetadata checkpointMetadata, ICheckpointManager.Checkpoint checkpoint, uint256[2] signature, bytes32 newValidatorSetHash, bytes bitmap) external nonpayable
 ```
 
 
@@ -346,25 +306,8 @@ function submit(ICheckpointManager.CheckpointMetadata checkpointMetadata, ICheck
 | checkpointMetadata | ICheckpointManager.CheckpointMetadata | undefined |
 | checkpoint | ICheckpointManager.Checkpoint | undefined |
 | signature | uint256[2] | undefined |
-| newValidatorSet | ICheckpointManager.Validator[] | undefined |
+| newValidatorSetHash | bytes32 | undefined |
 | bitmap | bytes | undefined |
-
-### totalVotingPower
-
-```solidity
-function totalVotingPower() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 
 
