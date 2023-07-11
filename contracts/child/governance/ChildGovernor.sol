@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesU
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelockControlUpgradeable.sol";
 
+import {NetworkParams} from "contracts/child/NetworkParams.sol";
+
 contract ChildGovernor is
     GovernorUpgradeable,
     GovernorCompatibilityBravoUpgradeable,
@@ -14,27 +16,35 @@ contract ChildGovernor is
     GovernorVotesQuorumFractionUpgradeable,
     GovernorTimelockControlUpgradeable
 {
-    function initialize(IVotesUpgradeable token_, TimelockControllerUpgradeable timelock_) public initializer {
+    NetworkParams internal networkParams;
+
+    function initialize(
+        IVotesUpgradeable token_,
+        TimelockControllerUpgradeable timelock_,
+        address networkParamsAddr
+    ) public initializer {
         __Governor_init("ChildGovernor");
         __GovernorTimelockControl_init(timelock_);
         __GovernorVotes_init(token_);
         __GovernorVotesQuorumFraction_init(4);
+
+        networkParams = NetworkParams(networkParamsAddr);
     }
 
     // TODO: adjust values for block time of child chain
 
-    function votingDelay() public pure override returns (uint256) {
-        return 6575; // 1 day
+    function votingDelay() public view override returns (uint256) {
+        return networkParams.votingDelay();
     }
 
-    function votingPeriod() public pure override returns (uint256) {
-        return 46027; // 1 week
+    function votingPeriod() public view override returns (uint256) {
+        return networkParams.votingPeriod();
     }
 
     // END TODO
 
-    function proposalThreshold() public pure override returns (uint256) {
-        return 0;
+    function proposalThreshold() public view override returns (uint256) {
+        return networkParams.proposalThreshold();
     }
 
     // The functions below are overrides required by Solidity.
@@ -95,5 +105,18 @@ contract ChildGovernor is
         bytes4 interfaceId
     ) public view override(GovernorUpgradeable, IERC165Upgradeable, GovernorTimelockControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
+    }
+
+    function cancel(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    )
+        public
+        override(IGovernorUpgradeable, GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable)
+        returns (uint256)
+    {
+        return super.cancel(targets, values, calldatas, descriptionHash);
     }
 }

@@ -7,6 +7,8 @@ import {ValidatorSet, ValidatorInit, Epoch} from "contracts/child/validator/Vali
 import {RewardPool, IRewardPool, Uptime} from "contracts/child/validator/RewardPool.sol";
 import "contracts/interfaces/Errors.sol";
 
+import {NetworkParams} from "contracts/child/NetworkParams.sol";
+
 abstract contract Uninitialized is Test {
     address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
 
@@ -15,7 +17,8 @@ abstract contract Uninitialized is Test {
     RewardPool pool;
     address rewardWallet = makeAddr("rewardWallet");
     address alice = makeAddr("alice");
-    uint256 baseReward = 1 ether;
+
+    NetworkParams networkParams;
 
     function setUp() public virtual {
         token = new MockERC20();
@@ -32,13 +35,15 @@ abstract contract Uninitialized is Test {
         token.mint(rewardWallet, 1000 ether);
         vm.prank(rewardWallet);
         token.approve(address(pool), type(uint256).max);
+
+        networkParams = new NetworkParams(NetworkParams.Params(address(1), 1, 1, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1));
     }
 }
 
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        pool.initialize(address(token), rewardWallet, address(validatorSet), baseReward);
+        pool.initialize(address(token), rewardWallet, address(validatorSet), address(networkParams));
     }
 }
 
@@ -55,11 +60,10 @@ abstract contract Distributed is Initialized {
 
 contract RewardPool_Initialize is Uninitialized {
     function test_Initialize() public {
-        pool.initialize(address(token), rewardWallet, address(validatorSet), baseReward);
+        pool.initialize(address(token), rewardWallet, address(validatorSet), address(networkParams));
         assertEq(address(pool.rewardToken()), address(token));
         assertEq(pool.rewardWallet(), rewardWallet);
         assertEq(address(pool.validatorSet()), address(validatorSet));
-        assertEq(pool.baseReward(), baseReward);
     }
 }
 
@@ -97,8 +101,8 @@ contract RewardPool_Distribute is Initialized {
         Uptime[] memory uptime = new Uptime[](2);
         uptime[0] = Uptime({validator: address(this), signedBlocks: 60});
         uptime[1] = Uptime({validator: alice, signedBlocks: 50});
-        uint256 reward1 = (baseReward * 3 * 60) / (4 * 64);
-        uint256 reward2 = (baseReward * 1 * 50) / (4 * 64);
+        uint256 reward1 = (networkParams.epochReward() * 3 * 60) / (4 * 64);
+        uint256 reward2 = (networkParams.epochReward() * 1 * 50) / (4 * 64);
         uint256 totalReward = reward1 + reward2;
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
@@ -113,7 +117,7 @@ contract RewardPool_Distribute is Initialized {
 contract RewardPool_DuplicateDistribution is Distributed {
     function test_RevertEpochAlreadyDistributed() public {
         Uptime[] memory uptime = new Uptime[](0);
-        vm.prank(SYSTEM);
+        vm.startPrank(SYSTEM);
         vm.expectRevert("REWARD_ALREADY_DISTRIBUTED");
         pool.distributeRewardFor(1, uptime);
     }
