@@ -21,12 +21,13 @@ contract ChildGovernor is
     function initialize(
         IVotesUpgradeable token_,
         TimelockControllerUpgradeable timelock_,
+        uint256 quorumNumerator_,
         address networkParams_
     ) public initializer {
         __Governor_init("ChildGovernor");
         __GovernorTimelockControl_init(timelock_);
         __GovernorVotes_init(token_);
-        __GovernorVotesQuorumFraction_init(4);
+        __GovernorVotesQuorumFraction_init(quorumNumerator_);
 
         networkParams = NetworkParams(networkParams_);
     }
