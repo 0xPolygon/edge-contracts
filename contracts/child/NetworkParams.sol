@@ -14,43 +14,43 @@ contract NetworkParams is Ownable2Step {
         address newOwner;
         uint256 newBlockGasLimit;
         uint256 newCheckpointBlockInterval; // in blocks
-        uint256 newEpochReward;
+        uint256 newEpochReward; // in wei
         uint256 newMinValidatorSetSize;
         uint256 newMaxValidatorSetSize;
         uint256 newMinStake; // in wei
-        uint256 newWithdrawalWaitPeriod;
-        uint256 newBlockTime;
-        uint256 newBlockTimeDrift;
-        uint256 newVotingDelay;
-        uint256 newVotingPeriod;
-        uint256 newProposalThreshold;
+        uint256 newWithdrawalWaitPeriod; // in blocks
+        uint256 newBlockTime; // in seconds
+        uint256 newBlockTimeDrift; // in seconds
+        uint256 newVotingDelay; // in blocks
+        uint256 newVotingPeriod; // in blocks
+        uint256 newProposalThreshold; // in percent
     }
 
     uint256 public blockGasLimit;
     uint256 public checkpointBlockInterval; // in blocks
-    uint256 public epochReward;
+    uint256 public epochReward; // in wei
     uint256 public minValidatorSetSize;
     uint256 public maxValidatorSetSize;
     uint256 public minStake; // in wei
-    uint256 public withdrawalWaitPeriod;
-    uint256 public blockTime;
-    uint256 public blockTimeDrift;
-    uint256 public votingDelay;
-    uint256 public votingPeriod;
-    uint256 public proposalThreshold;
+    uint256 public withdrawalWaitPeriod; // in blocks
+    uint256 public blockTime; // in seconds
+    uint256 public blockTimeDrift; // in seconds
+    uint256 public votingDelay; // in blocks
+    uint256 public votingPeriod; // in blocks
+    uint256 public proposalThreshold; // in percent
 
-    event NewBlockGasLimit(uint256 indexed value);
-    event NewCheckpointBlockInterval(uint256 indexed value);
-    event NewEpochReward(uint256 indexed value);
-    event NewMinValidatorSetSize(uint256 indexed value);
-    event NewMaxValdidatorSetSize(uint256 indexed value);
-    event NewMinStake(uint256 indexed value);
-    event NewWithdrawalWaitPeriod(uint256 indexed value);
-    event NewBlockTime(uint256 indexed value);
-    event NewBlockTimeDrift(uint256 indexed value);
-    event NewVotingDelay(uint256 indexed value);
-    event NewVotingPeriod(uint256 indexed value);
-    event NewProposalThreshold(uint256 indexed value);
+    event NewBlockGasLimit(uint256 indexed gasLimit);
+    event NewCheckpointBlockInterval(uint256 indexed checkpointInterval);
+    event NewEpochReward(uint256 indexed reward);
+    event NewMinValidatorSetSize(uint256 indexed minValidatorSet);
+    event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet);
+    event NewMinStake(uint256 indexed minStake);
+    event NewWithdrawalWaitPeriod(uint256 indexed withdrawalPeriod);
+    event NewBlockTime(uint256 indexed blockTime);
+    event NewBlockTimeDrift(uint256 indexed blockTimeDrift);
+    event NewVotingDelay(uint256 indexed votingDelay);
+    event NewVotingPeriod(uint256 indexed votingPeriod);
+    event NewProposalThreshold(uint256 indexed proposalThreshold);
 
     /**
      * @notice initializer for NetworkParams, sets the initial set of values for the network
