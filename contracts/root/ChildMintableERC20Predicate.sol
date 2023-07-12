@@ -189,4 +189,7 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
         // slither-disable-next-line reentrancy-events
         emit MintableTokenMapped(rootToken, address(childToken));
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -305,4 +305,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
             return false;
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

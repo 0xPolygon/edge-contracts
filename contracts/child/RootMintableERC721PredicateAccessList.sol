@@ -25,7 +25,10 @@ contract RootMintableERC721PredicateAccessList is AccessList, RootMintableERC721
         _transferOwnership(newOwner);
     }
 
-    function _beforeTokenWithdraw() internal virtual override {
+    function _beforeTokenDeposit() internal virtual override {
         _checkAccessList();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
