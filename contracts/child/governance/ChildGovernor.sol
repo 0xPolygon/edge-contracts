@@ -21,14 +21,14 @@ contract ChildGovernor is
     function initialize(
         IVotesUpgradeable token_,
         TimelockControllerUpgradeable timelock_,
-        address networkParamsAddr
+        address networkParams_
     ) public initializer {
         __Governor_init("ChildGovernor");
         __GovernorTimelockControl_init(timelock_);
         __GovernorVotes_init(token_);
         __GovernorVotesQuorumFraction_init(4);
 
-        networkParams = NetworkParams(networkParamsAddr);
+        networkParams = NetworkParams(networkParams_);
     }
 
     // TODO: adjust values for block time of child chain

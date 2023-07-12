@@ -49,6 +49,7 @@ contract RewardPool is IRewardPool, System, Initializable {
         uint256 epochSize = validatorSet.EPOCH_SIZE();
         // slither-disable-next-line divide-before-multiply
         uint256 reward = (networkParams.epochReward() * totalBlocks) / epochSize;
+        // TODO disincentivize long epoch times
 
         uint256 totalSupply = validatorSet.totalSupplyAt(epochId);
         uint256 length = uptime.length;

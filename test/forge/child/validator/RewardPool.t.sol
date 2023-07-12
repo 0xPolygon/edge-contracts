@@ -21,6 +21,13 @@ abstract contract Uninitialized is Test {
     NetworkParams networkParams;
 
     function setUp() public virtual {
+        networkParams = NetworkParams(makeAddr("networkParams"));
+        vm.mockCall(
+            address(networkParams),
+            abi.encodeCall(networkParams.epochReward, ()),
+            abi.encode(uint256(1 ether))
+        );
+
         token = new MockERC20();
         validatorSet = new ValidatorSet();
         ValidatorInit[] memory init = new ValidatorInit[](2);
@@ -35,8 +42,6 @@ abstract contract Uninitialized is Test {
         token.mint(rewardWallet, 1000 ether);
         vm.prank(rewardWallet);
         token.approve(address(pool), type(uint256).max);
-
-        networkParams = new NetworkParams(NetworkParams.Params(address(1), 1, 1, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1));
     }
 }
 
@@ -97,7 +102,10 @@ contract RewardPool_Distribute is Initialized {
         pool.distributeRewardFor(1, uptime);
     }
 
-    function test_DistributeRewards() public {
+    function test_DistributeRewards(uint256 epochReward) public {
+        vm.assume(epochReward <= pool.rewardToken().balanceOf(rewardWallet));
+        vm.mockCall(address(networkParams), abi.encodeCall(networkParams.epochReward, ()), abi.encode(epochReward));
+
         Uptime[] memory uptime = new Uptime[](2);
         uptime[0] = Uptime({validator: address(this), signedBlocks: 60});
         uptime[1] = Uptime({validator: alice, signedBlocks: 50});

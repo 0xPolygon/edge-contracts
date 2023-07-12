@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 /**
     @title NetworkParams
@@ -9,8 +9,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     @notice Configurable network parameters that are read by the client on each epoch
     @dev The contract allows for configurable network parameters without the need for a hardfork
  */
-contract NetworkParams is Ownable {
-    struct Params {
+contract NetworkParams is Ownable2Step {
+    struct InitParams {
         address newOwner;
         uint256 newBlockGasLimit;
         uint256 newCheckpointBlockInterval; // in blocks
@@ -55,38 +55,38 @@ contract NetworkParams is Ownable {
     /**
      * @notice initializer for NetworkParams, sets the initial set of values for the network
      * @dev disallows setting of zero values for sanity check purposes
-     * @param _params initial set of values for the network
+     * @param initParams initial set of values for the network
      */
-    constructor(Params memory _params) {
+    constructor(InitParams memory initParams) {
         require(
-            _params.newOwner != address(0) &&
-                _params.newBlockGasLimit != 0 &&
-                _params.newCheckpointBlockInterval != 0 &&
-                _params.newEpochReward != 0 &&
-                _params.newMinValidatorSetSize != 0 &&
-                _params.newMaxValidatorSetSize != 0 &&
-                _params.newMinStake != 0 &&
-                _params.newWithdrawalWaitPeriod != 0 &&
-                _params.newBlockTime != 0 &&
-                _params.newBlockTimeDrift != 0 &&
-                _params.newVotingDelay != 0 &&
-                _params.newVotingPeriod != 0 &&
-                _params.newProposalThreshold != 0,
+            initParams.newOwner != address(0) &&
+                initParams.newBlockGasLimit != 0 &&
+                initParams.newCheckpointBlockInterval != 0 &&
+                initParams.newEpochReward != 0 &&
+                initParams.newMinValidatorSetSize != 0 &&
+                initParams.newMaxValidatorSetSize != 0 &&
+                initParams.newMinStake != 0 &&
+                initParams.newWithdrawalWaitPeriod != 0 &&
+                initParams.newBlockTime != 0 &&
+                initParams.newBlockTimeDrift != 0 &&
+                initParams.newVotingDelay != 0 &&
+                initParams.newVotingPeriod != 0 &&
+                initParams.newProposalThreshold != 0,
             "NetworkParams: INVALID_INPUT"
         );
-        blockGasLimit = _params.newBlockGasLimit;
-        checkpointBlockInterval = _params.newCheckpointBlockInterval;
-        epochReward = _params.newEpochReward;
-        minValidatorSetSize = _params.newMinValidatorSetSize;
-        maxValidatorSetSize = _params.newMaxValidatorSetSize;
-        minStake = _params.newMinStake;
-        withdrawalWaitPeriod = _params.newWithdrawalWaitPeriod;
-        blockTime = _params.newBlockTime;
-        blockTimeDrift = _params.newBlockTimeDrift;
-        votingDelay = _params.newVotingDelay;
-        votingPeriod = _params.newVotingPeriod;
-        proposalThreshold = _params.newProposalThreshold;
-        _transferOwnership(_params.newOwner);
+        blockGasLimit = initParams.newBlockGasLimit;
+        checkpointBlockInterval = initParams.newCheckpointBlockInterval;
+        epochReward = initParams.newEpochReward;
+        minValidatorSetSize = initParams.newMinValidatorSetSize;
+        maxValidatorSetSize = initParams.newMaxValidatorSetSize;
+        minStake = initParams.newMinStake;
+        withdrawalWaitPeriod = initParams.newWithdrawalWaitPeriod;
+        blockTime = initParams.newBlockTime;
+        blockTimeDrift = initParams.newBlockTimeDrift;
+        votingDelay = initParams.newVotingDelay;
+        votingPeriod = initParams.newVotingPeriod;
+        proposalThreshold = initParams.newProposalThreshold;
+        _transferOwnership(initParams.newOwner);
     }
 
     /**
