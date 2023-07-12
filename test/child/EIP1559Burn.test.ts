@@ -134,8 +134,8 @@ describe("EIP1559Burn", () => {
     const systemNativeERC20: NativeERC20 = nativeERC20.connect(
       await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
-    await expect(systemNativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18)).to
-      .not.be.reverted;
+    await expect(systemNativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18, 0))
+      .to.not.be.reverted;
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(

@@ -226,4 +226,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         // Get the value of the bit at the given 'index' in a byte.
         return uint8(bitmap[byteNumber]) & (1 << bitNumber) > 0;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
