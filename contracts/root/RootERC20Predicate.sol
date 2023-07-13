@@ -33,7 +33,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address newChildERC20Predicate,
         address newChildTokenTemplate,
         address nativeTokenRootAddress
-    ) external initializer {
+    ) public initializer {
         require(
             newStateSender != address(0) &&
                 newExitHelper != address(0) &&
@@ -124,7 +124,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
     }
 
-    function _withdraw(bytes calldata data) private {
+    function _withdraw(bytes calldata data) internal virtual {
         (address rootToken, address withdrawer, address receiver, uint256 amount) = abi.decode(
             data,
             (address, address, address, uint256)
