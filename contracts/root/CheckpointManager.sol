@@ -18,11 +18,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     uint256 public currentCheckpointBlockNumber;
     uint256 public totalVotingPower;
     bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
+    bytes32 public constant DOMAIN_VALIDATOR = keccak256("DOMAIN_VALIDATOR_CHANGE");
     IBLS public bls;
     IBN256G2 public bn256G2;
 
     mapping(uint256 => Checkpoint) public checkpoints; // epochId -> root
-    mapping(uint256 => Validator) public currentValidatorSet;
+    mapping(uint256 => Validator)[] public validatorSets;
     uint256[] public checkpointBlockNumbers;
     bytes32 public currentValidatorSetHash;
 
@@ -95,6 +96,23 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     }
 
     /**
+     * Update the validator set
+     // TODO add to interface
+     */
+    function updateValidatorCheck(
+        uint256[2] calldata signature,
+        Validator[] calldata newValidatorSet,
+        bytes calldata bitmap
+    ) external {
+        bytes memory hash = abi.encode(
+            keccak256(abi.encode(currentValidatorSetHash, keccak256(abi.encode(newValidatorSet))))
+        );
+        _verifySignature(bls.hashToPoint(DOMAIN_VALIDATOR, hash), signature, bitmap);
+
+        _setNewValidatorSet(newValidatorSet);
+    }
+
+    /**
      * @inheritdoc ICheckpointManager
      */
     function getEventMembershipByBlockNumber(
@@ -145,11 +163,15 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         currentValidatorSetLength = length;
         currentValidatorSetHash = keccak256(abi.encode(newValidatorSet));
         uint256 totalPower = 0;
+
+        uint256 curValSet = validatorSets.length;
+        validatorSets.push();
+
         for (uint256 i = 0; i < length; ++i) {
             uint256 votingPower = newValidatorSet[i].votingPower;
             require(votingPower > 0, "VOTING_POWER_ZERO");
             totalPower += votingPower;
-            currentValidatorSet[i] = newValidatorSet[i];
+            validatorSets[curValSet][i] = newValidatorSet[i];
         }
         totalVotingPower = totalPower;
     }
@@ -164,6 +186,8 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256[2] calldata signature,
         bytes calldata bitmap
     ) private view {
+        uint256 curValSet = validatorSets.length - 1;
+
         uint256 length = currentValidatorSetLength;
         // slither-disable-next-line uninitialized-local
         uint256[4] memory aggPubkey;
@@ -171,9 +195,9 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         for (uint256 i = 0; i < length; ) {
             if (_getValueFromBitmap(bitmap, i)) {
                 if (aggVotingPower == 0) {
-                    aggPubkey = currentValidatorSet[i].blsKey;
+                    aggPubkey = validatorSets[curValSet][i].blsKey;
                 } else {
-                    uint256[4] memory blsKey = currentValidatorSet[i].blsKey;
+                    uint256[4] memory blsKey = validatorSets[curValSet][i].blsKey;
                     // slither-disable-next-line calls-loop
                     (aggPubkey[0], aggPubkey[1], aggPubkey[2], aggPubkey[3]) = bn256G2.ecTwistAdd(
                         aggPubkey[0],
@@ -186,7 +210,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
                         blsKey[3]
                     );
                 }
-                aggVotingPower += currentValidatorSet[i].votingPower;
+                aggVotingPower += validatorSets[curValSet][i].votingPower;
             }
             unchecked {
                 ++i;

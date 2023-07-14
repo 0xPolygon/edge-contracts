@@ -93,7 +93,7 @@ contract CheckpointManager_Initialize is Uninitialized {
         assertEq(keccak256(abi.encode(checkpointManager.bn256G2())), keccak256(abi.encode(address(bn256G2))));
         assertEq(checkpointManager.currentValidatorSetLength(), validatorSetSize);
         for (uint256 i = 0; i < validatorSetSize; i++) {
-            (address _address, uint256 votingPower) = checkpointManager.currentValidatorSet(i);
+            (address _address, uint256 votingPower) = checkpointManager.validatorSets(0, i);
             assertEq(_address, validatorSet[i]._address);
             assertEq(votingPower, validatorSet[i].votingPower);
         }
