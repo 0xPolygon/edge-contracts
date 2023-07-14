@@ -1,4 +1,4 @@
-# ERC20SnapshotUpgradeable
+# ERC20PermitUpgradeable
 
 
 
@@ -6,9 +6,26 @@
 
 
 
-*This contract extends an ERC20 token with a snapshot mechanism. When a snapshot is created, the balances and total supply at the time are recorded for later access. This can be used to safely create mechanisms based on token balances such as trustless dividends or weighted voting. In naive implementations it&#39;s possible to perform a &quot;double spend&quot; attack by reusing the same balance from different accounts. By using snapshots to calculate dividends or voting power, those attacks no longer apply. It can also be used to create an efficient ERC20 forking mechanism. Snapshots are created by the internal {_snapshot} function, which will emit the {Snapshot} event and return a snapshot id. To get the total supply at the time of a snapshot, call the function {totalSupplyAt} with the snapshot id. To get the balance of an account at the time of a snapshot, call the {balanceOfAt} function with the snapshot id and the account address. NOTE: Snapshot policy can be customized by overriding the {_getCurrentSnapshotId} method. For example, having it return `block.number` will trigger the creation of snapshot at the beginning of each new block. When overriding this function, be careful about the monotonicity of its result. Non-monotonic snapshot ids will break the contract. Implementing snapshots for every block using this method will incur significant gas costs. For a gas-efficient alternative consider {ERC20Votes}. ==== Gas Costs Snapshots are efficient. Snapshot creation is _O(1)_. Retrieval of balances or total supply from a snapshot is _O(log n)_ in the number of snapshots that have been created, although _n_ for a specific account will generally be much smaller since identical balances in subsequent snapshots are stored as a single entry. There is a constant overhead for normal ERC20 transfers due to the additional snapshot bookkeeping. This overhead is only significant for the first transfer that immediately follows a snapshot for a particular account. Subsequent transfers will have normal cost until the next snapshot, and so on.*
+*Implementation of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in https://eips.ethereum.org/EIPS/eip-2612[EIP-2612]. Adds the {permit} method, which can be used to change an account&#39;s ERC20 allowance (see {IERC20-allowance}) by presenting a message signed by the account. By not relying on `{IERC20-approve}`, the token holder account doesn&#39;t need to send a transaction, and thus is not required to hold Ether at all. _Available since v3.4._*
 
 ## Methods
+
+### DOMAIN_SEPARATOR
+
+```solidity
+function DOMAIN_SEPARATOR() external view returns (bytes32)
+```
+
+
+
+*See {IERC20Permit-DOMAIN_SEPARATOR}.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
 
 ### allowance
 
@@ -78,29 +95,6 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### balanceOfAt
-
-```solidity
-function balanceOfAt(address account, uint256 snapshotId) external view returns (uint256)
-```
-
-
-
-*Retrieves the balance of `account` at the time `snapshotId` was created.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-| snapshotId | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### decimals
 
 ```solidity
@@ -109,7 +103,7 @@ function decimals() external view returns (uint8)
 
 
 
-*Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the value {ERC20} uses, unless this function is overridden; NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}.*
+*Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it&#39;s overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}.*
 
 
 #### Returns
@@ -140,6 +134,29 @@ function decreaseAllowance(address spender, uint256 subtractedValue) external no
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### eip712Domain
+
+```solidity
+function eip712Domain() external view returns (bytes1 fields, string name, string version, uint256 chainId, address verifyingContract, bytes32 salt, uint256[] extensions)
+```
+
+
+
+*See {EIP-5267}. _Available since v4.9._*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| fields | bytes1 | undefined |
+| name | string | undefined |
+| version | string | undefined |
+| chainId | uint256 | undefined |
+| verifyingContract | address | undefined |
+| salt | bytes32 | undefined |
+| extensions | uint256[] | undefined |
 
 ### increaseAllowance
 
@@ -181,6 +198,50 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### nonces
+
+```solidity
+function nonces(address owner) external view returns (uint256)
+```
+
+
+
+*See {IERC20Permit-nonces}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### permit
+
+```solidity
+function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonpayable
+```
+
+
+
+*See {IERC20Permit-permit}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined |
+| spender | address | undefined |
+| value | uint256 | undefined |
+| deadline | uint256 | undefined |
+| v | uint8 | undefined |
+| r | bytes32 | undefined |
+| s | bytes32 | undefined |
+
 ### symbol
 
 ```solidity
@@ -208,28 +269,6 @@ function totalSupply() external view returns (uint256)
 
 *See {IERC20-totalSupply}.*
 
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### totalSupplyAt
-
-```solidity
-function totalSupplyAt(uint256 snapshotId) external view returns (uint256)
-```
-
-
-
-*Retrieves the total supply at the time `snapshotId` was created.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| snapshotId | uint256 | undefined |
 
 #### Returns
 
@@ -306,6 +345,17 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
 
+### EIP712DomainChanged
+
+```solidity
+event EIP712DomainChanged()
+```
+
+
+
+*MAY be emitted to signal that the domain could have changed.*
+
+
 ### Initialized
 
 ```solidity
@@ -321,22 +371,6 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
-
-### Snapshot
-
-```solidity
-event Snapshot(uint256 id)
-```
-
-
-
-*Emitted by {_snapshot} when a snapshot identified by `id` is created.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id  | uint256 | undefined |
 
 ### Transfer
 

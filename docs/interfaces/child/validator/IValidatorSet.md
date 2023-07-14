@@ -10,23 +10,6 @@ Manages voting power for validators and commits epochs for child chains
 
 ## Methods
 
-### EPOCH_SIZE
-
-```solidity
-function EPOCH_SIZE() external view returns (uint256)
-```
-
-amount of blocks in an epoch
-
-*when an epoch is committed a multiple of this number of blocks must be committed*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### balanceOfAt
 
 ```solidity
