@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import "../interfaces/IStateSender.sol";
-import "../common/MerkeRootAggregator.sol";
+import {IStateSender, IL2StateSender} from "../interfaces/IStateSender.sol";
 
 /**
     @title L2StateSender
@@ -10,11 +10,15 @@ import "../common/MerkeRootAggregator.sol";
     @notice Arbitrary message passing contract from L2 -> L1
     @dev There is no transaction execution on L1, only a commitment of the emitted events are stored
  */
-contract L2StateSender is IStateSender, MerkleRootAggregator {
+contract L2StateSender is IStateSender, IL2StateSender {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
+    Validator[] public validators;
+    IL2StateSender.SignedMerkleRoot _latestSignedMerkleRoot;
 
     event L2StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
+    event ValidatorAdded(uint256[4] indexed validator);
+    event ValidatorRemoved(uint256[4] indexed validator);
 
     /**
      * @notice Emits an event which is indexed by v3 validators and submitted as a commitment on L1
@@ -28,10 +32,7 @@ contract L2StateSender is IStateSender, MerkleRootAggregator {
         // check data length
         require(data.length <= MAX_LENGTH, "EXCEEDS_MAX_LENGTH");
 
-        uint256 newCounter = ++counter;
-        emit L2StateSynced(newCounter, msg.sender, receiver, data);
-
-        addLeaf(keccak256(abi.encodePacked(newCounter, msg.sender, receiver, data)));
+        emit L2StateSynced(++counter, msg.sender, receiver, data);
     }
 
     // slither-disable-next-line unused-state,naming-convention
@@ -105,5 +106,60 @@ contract L2StateSender is IStateSender, MerkleRootAggregator {
         ret[5] = bytesValue[2];
         ret[6] = bytesValue[1];
         ret[7] = bytesValue[0];
+    }
+
+    function updateValidators(Validator[] memory _validators) external {
+        // TODO: Verify signatures
+
+        for (uint256 i = 0; i < _validators.length; i++) {
+            Validator memory validator = _validators[i];
+            if (validator.pubkey[0] == 0) {
+                emit ValidatorRemoved(validator.pubkey);
+            } else {
+                emit ValidatorAdded(validator.pubkey);
+            }
+        }
+
+        validators = _validators;
+    }
+
+    /**
+     * @inheritdoc IBLS
+     * TODO: Move to library
+     */
+    function verifyMultipleSameMsg(
+        uint256[2] calldata signature,
+        uint256[4][] calldata pubkeys,
+        uint256[2] calldata message
+    ) external view returns (bool checkResult, bool callSuccess) {
+        uint256 size = pubkeys.length;
+        // solhint-disable-next-line reason-string
+        require(size > 0, "BLS: number of public key is zero");
+        uint256 inputSize = (size + 1) * 6;
+        uint256[] memory input = new uint256[](inputSize);
+        input[0] = signature[0];
+        input[1] = signature[1];
+        input[2] = N_G2_X1;
+        input[3] = N_G2_X0;
+        input[4] = N_G2_Y1;
+        input[5] = N_G2_Y0;
+        for (uint256 i = 0; i < size; i++) {
+            input[i * 6 + 6] = message[0];
+            input[i * 6 + 7] = message[1];
+            input[i * 6 + 8] = pubkeys[i][1];
+            input[i * 6 + 9] = pubkeys[i][0];
+            input[i * 6 + 10] = pubkeys[i][3];
+            input[i * 6 + 11] = pubkeys[i][2];
+        }
+        uint256[1] memory out;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            callSuccess := staticcall(gas(), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+        }
+        if (!callSuccess) {
+            return (false, false);
+        }
+        return (out[0] != 0, true);
     }
 }
