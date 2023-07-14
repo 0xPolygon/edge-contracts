@@ -19,6 +19,24 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
 
     bytes32 public constant PAUSER_ADMIN_ROLE = keccak256("PAUSER");
     bytes32 public constant RATE_CONTROL_ROLE = keccak256("RATE");
+    bool isBridgeRateLimited = false;
+
+    Event LargeTransferHeld(address token, address receiver, uint256 amount)
+
+    struct Bucket {
+        uint256 remainingTokens;
+        uint256 lastRefillTime;
+        uint256 maxTokenCapacity;
+        uint256 refillRate;
+        uint256 refillSize;
+    }
+
+    struct PendingLargeWithdrawal {
+        address token;
+        uint256 withdrawalAmount;
+        uint256 withdrawalTimestamp;
+        address receiver;
+    }
 
     // Threshold for large transfers
     // Map ERC 20 token address to threshold
@@ -26,7 +44,9 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
 
     // Threshold for large flow rate
     // Map ERC 20 token address to threshold
-    mapping(address => uint256) public flowRateThresholds;
+    mapping(address => Bucket) public flowRateThresholds;
+
+    mapping(address => PendingLargeWithdrawal) public pendingLargeWithdrawals;
 
     /**
      * @notice Initilization function for RootERC20Predicate
@@ -70,14 +90,23 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         _unpause();
     }
 
+    function unrateLimit() external onlyRole(RATE_CONTROL_ROLE) {
+        isBridgeRateLimited = false;
+    }
+
     // TODO doc
     function setRateControlThreshold(
         address token,
-        uint256 largeTransfer,
-        uint256 flowRate
+        uint256 maxCapacity,
+        uint256 refillRate,
+        uint256 maxTransferLimit,
+        uint256 refillSize
     ) external onlyRole(RATE_CONTROL_ROLE) {
-        largeTransferThresholds[token] = largeTransfer;
-        flowRateThresholds[token] = flowRate;
+        Bucket storage bucket = flowRateThresholds[token];
+        bucket.maxTokenCapacity = maxCapacity;
+        bucket.refillRate = refillRate;
+        bucket.refillSize = refillSize;
+        largeTransferThresholds[token] = maxTransferLimit;
     }
 
     function _withdraw(bytes calldata data) internal override whenNotPaused {
@@ -89,11 +118,60 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
         // TODO call to function to check for large transfer or flow rate
-        // TODO if a transfer is being held, then return and emit an event
+        if amount >= largeTransferThresholds[rootToken] {
+            isBridgeRateLimited = true;
+        }
 
-        IERC20Metadata(rootToken).safeTransfer(receiver, amount);
-        // slither-disable-next-line reentrancy-events
-        emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
+        bucket = flowRateThresholds[rootToken];
+
+        assert(bucket.maxCapacity != 0)
+
+        if bucket.lastRefillTime == 0 {
+            bucket.lastRefillTime = block.timestamp;
+            bucket.remainingTokens = bucket.maxTokenCapacity;
+        } else {
+            bucket.remainingTokens = (block.timestamp - bucket.lastRefillTime) * bucket.refillSize / bucket.refillRate;
+            if bucket.remainingTokens > bucket.maxTokenCapacity {
+                bucket.remainingTokens = bucket.maxTokenCapacity;
+            }
+        }
+
+        if amount > bucket.remainingTokens {
+            isBridgeRateLimited = true;
+            bucket.remainingTokens = 0;
+        } else {
+            bucket.remainingTokens -= amount;
+        }
+
+        if isBridgeRateLimited {
+            PendingLargeWithdrawal storage withdrawal = pendingLargeWithdrawals[receiver];
+            if withdrawal.withdrawalTimestamp != 0 {
+                revert("Large transfer already pending");
+            }
+            withdrawal.token = rootToken;
+            withdrawal.withdrawalAmount = amount;
+            withdrawal.withdrawalTimestamp = block.timestamp;
+            withdrawal.receiver = receiver;
+            emit LargeTransferHeld(rootToken, receiver, amount);
+        } else {
+            IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+            emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
+        }
+        
+    }
+
+    function finaliseHeldTransfers(address receiver) external {
+        pendingTransfer = pendingLargeWithdrawals[receiver];
+        if pendingTransfer.withdrawalTimestamp == 0 {
+            revert("No pending transfer");
+        }
+        if (block.timestamp - pendingTransfer.withdrawalTimestamp) < 86400 {
+            revert("Transfer not held for long enough");
+        }
+        IERC20Metadata(rootToken).safeTransfer(pendingTransfer.receiver, pendingTransfer.amount);
+        pendingTransfer.withdrawalTimestamp = 0;
+        address childToken = rootTokenToChildToken[pendingTransfer.token];
+        emit ERC20Withdraw(address(pendingTransfer.token), childToken, msg.sender, pendingTransfer.receiver, pendingTransfer.amount);
     }
 
     // TODO for rate control, optionally allow for automatic pause
