@@ -18,6 +18,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     uint256 public currentCheckpointBlockNumber;
     uint256 public totalVotingPower;
     bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
+    bytes32 public constant DOMAIN_VALIDATOR = keccak256("DOMAIN_VALIDATOR_CHANGE");
     IBLS public bls;
     IBN256G2 public bn256G2;
 
@@ -90,6 +91,22 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         }
 
         currentCheckpointBlockNumber = checkpoint.blockNumber;
+
+        _setNewValidatorSet(newValidatorSet);
+    }
+
+    /**
+     * Update the validator set
+     */
+    function updateValidatorCheck(
+        uint256[2] calldata signature,
+        Validator[] calldata newValidatorSet,
+        bytes calldata bitmap
+    ) external {
+        bytes memory hash = abi.encode(
+            keccak256(abi.encode(currentValidatorSetHash, keccak256(abi.encode(newValidatorSet))))
+        );
+        _verifySignature(bls.hashToPoint(DOMAIN_VALIDATOR, hash), signature, bitmap);
 
         _setNewValidatorSet(newValidatorSet);
     }
