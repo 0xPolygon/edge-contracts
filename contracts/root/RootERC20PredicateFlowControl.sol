@@ -17,6 +17,9 @@ import "./RootERC20Predicate.sol";
 contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeable, AccessControlUpgradeable {
     using SafeERC20 for IERC20Metadata;
 
+    // One day
+    uint256 private constant DEFAULT_WITHDRAW_DELAY = 60 * 60 * 24;
+
     bytes32 public constant PAUSER_ADMIN_ROLE = keccak256("PAUSER");
     bytes32 public constant RATE_CONTROL_ROLE = keccak256("RATE");
     bool public isBridgeRateLimited = false;
@@ -28,7 +31,6 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         uint256 lastRefillTime;
         uint256 maxTokenCapacity;
         uint256 refillRate;
-        uint256 refillSize;
     }
 
     struct PendingLargeWithdrawal {
@@ -47,6 +49,8 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
     mapping(address => Bucket) public flowRateThresholds;
 
     mapping(address => PendingLargeWithdrawal) public pendingLargeWithdrawals;
+
+    uint256 withdrawDelay;
 
     /**
      * @notice Initilization function for RootERC20Predicate
@@ -78,6 +82,8 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         _setupRole(DEFAULT_ADMIN_ROLE, superAdmin);
         _setupRole(PAUSER_ADMIN_ROLE, pauseAdmin);
         _setupRole(RATE_CONTROL_ROLE, rateAdmin);
+
+        withdrawDelay = DEFAULT_WITHDRAW_DELAY;
     }
 
     // TODO doc
@@ -94,18 +100,20 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         isBridgeRateLimited = false;
     }
 
+    function setWithdrawDelay(uint256 delay) external onlyRole(RATE_CONTROL_ROLE) {
+        withdrawDelay = delay;
+    }
+
     // TODO doc
     function setRateControlThreshold(
         address token,
         uint256 maxCapacity,
         uint256 refillRate,
-        uint256 maxTransferLimit,
-        uint256 refillSize
+        uint256 maxTransferLimit
     ) external onlyRole(RATE_CONTROL_ROLE) {
         Bucket storage bucket = flowRateThresholds[token];
         bucket.maxTokenCapacity = maxCapacity;
         bucket.refillRate = refillRate;
-        bucket.refillSize = refillSize;
         largeTransferThresholds[token] = maxTransferLimit;
     }
 
@@ -119,20 +127,20 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
 
         // TODO call to function to check for large transfer or flow rate
         if (amount >= largeTransferThresholds[rootToken]) {
+            // TODO this needs to delay just this withdraw, not all
             isBridgeRateLimited = true;
         }
 
         Bucket storage bucket = flowRateThresholds[rootToken];
 
+        // TODO if this token isn't known about, maybe have all withdraws for this token delayed plus emit event
         assert(bucket.maxTokenCapacity != 0);
 
         if (bucket.lastRefillTime == 0) {
             bucket.lastRefillTime = block.timestamp;
             bucket.remainingTokens = bucket.maxTokenCapacity;
         } else {
-            bucket.remainingTokens =
-                ((block.timestamp - bucket.lastRefillTime) * bucket.refillSize) /
-                bucket.refillRate;
+            bucket.remainingTokens += (block.timestamp - bucket.lastRefillTime) * bucket.refillRate;
             if (bucket.remainingTokens > bucket.maxTokenCapacity) {
                 bucket.remainingTokens = bucket.maxTokenCapacity;
             }
@@ -161,12 +169,13 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         }
     }
 
-    function finaliseHeldTransfers(address receiver) external {
-        PendingLargeWithdrawal storage pendingTransfer = pendingLargeWithdrawals[receiver];
+    // TODO withdraw to msg.sender only
+    function finaliseHeldTransfers() external {
+        PendingLargeWithdrawal storage pendingTransfer = pendingLargeWithdrawals[msg.sender];
         if (pendingTransfer.withdrawalTimestamp == 0) {
             revert("No pending transfer");
         }
-        if (block.timestamp - pendingTransfer.withdrawalTimestamp < 86400) {
+        if (block.timestamp - pendingTransfer.withdrawalTimestamp < withdrawDelay) {
             revert("Transfer not held for long enough");
         }
         IERC20Metadata(pendingTransfer.token).safeTransfer(pendingTransfer.receiver, pendingTransfer.withdrawalAmount);
