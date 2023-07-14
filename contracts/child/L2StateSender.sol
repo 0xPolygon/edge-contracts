@@ -2,8 +2,7 @@
 pragma solidity 0.8.19;
 
 import "../interfaces/IStateSender.sol";
-import "../common/MerkeRootAggregator.sol";
-import {IStateSender, Validator} from "../interfaces/IStateSender.sol";
+import {IStateSender, IL2StateSender} from "../interfaces/IStateSender.sol";
 
 /**
     @title L2StateSender
@@ -11,10 +10,11 @@ import {IStateSender, Validator} from "../interfaces/IStateSender.sol";
     @notice Arbitrary message passing contract from L2 -> L1
     @dev There is no transaction execution on L1, only a commitment of the emitted events are stored
  */
-contract L2StateSender is IStateSender, MerkleRootAggregator {
+contract L2StateSender is IStateSender, IL2StateSender {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
     Validator[] public validators;
+    IL2StateSender.SignedMerkleRoot _latestSignedMerkleRoot;
 
     event L2StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
     event ValidatorAdded(uint256[4] indexed validator);
@@ -32,10 +32,7 @@ contract L2StateSender is IStateSender, MerkleRootAggregator {
         // check data length
         require(data.length <= MAX_LENGTH, "EXCEEDS_MAX_LENGTH");
 
-        uint256 newCounter = ++counter;
-        emit L2StateSynced(newCounter, msg.sender, receiver, data);
-
-        addLeaf(keccak256(abi.encodePacked(newCounter, msg.sender, receiver, data)));
+        emit L2StateSynced(++counter, msg.sender, receiver, data);
     }
 
     // slither-disable-next-line unused-state,naming-convention
