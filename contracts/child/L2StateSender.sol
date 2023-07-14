@@ -111,7 +111,7 @@ contract L2StateSender is IStateSender, MerkleRootAggregator {
         ret[7] = bytesValue[0];
     }
 
-    function updateValidators (Validator[] memory _validators) external {
+    function updateValidators(Validator[] memory _validators) external {
         // TODO: Verify signatures
 
         for (uint256 i = 0; i < _validators.length; i++) {
@@ -122,7 +122,7 @@ contract L2StateSender is IStateSender, MerkleRootAggregator {
                 emit ValidatorAdded(validator.pubkey);
             }
         }
-        
+
         validators = _validators;
     }
 

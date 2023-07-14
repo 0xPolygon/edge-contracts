@@ -8,6 +8,6 @@ interface IStateSender {
         uint256[4] blsKey;
         uint256 votingPower;
     }
-    
+
     function syncState(address receiver, bytes calldata data) external;
 }
