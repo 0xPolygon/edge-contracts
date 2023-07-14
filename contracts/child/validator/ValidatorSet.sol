@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpg
 import "../../lib/WithdrawalQueue.sol";
 import "../../interfaces/child/validator/IValidatorSet.sol";
 import "../../interfaces/IStateSender.sol";
+import "../../child/NetworkParams.sol";
 import "../System.sol";
 
 contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
@@ -13,13 +14,11 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
-    uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
 
     IStateSender private stateSender;
     address private stateReceiver;
     address private rootChainManager;
-    // slither-disable-next-line naming-convention
-    uint256 public EPOCH_SIZE;
+    NetworkParams private networkParams;
 
     uint256 public currentEpochId;
 
@@ -32,21 +31,18 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         address newStateSender,
         address newStateReceiver,
         address newRootChainManager,
-        uint256 newEpochSize,
+        address newNetworkParams,
         ValidatorInit[] memory initialValidators
     ) public initializer {
         require(
-            newStateSender != address(0) &&
-                newStateReceiver != address(0) &&
-                newRootChainManager != address(0) &&
-                newEpochSize != 0,
+            newStateSender != address(0) && newStateReceiver != address(0) && newRootChainManager != address(0),
             "INVALID_INPUT"
         );
         __ERC20_init("ValidatorSet", "VSET");
         stateSender = IStateSender(newStateSender);
         stateReceiver = newStateReceiver;
         rootChainManager = newRootChainManager;
-        EPOCH_SIZE = newEpochSize;
+        networkParams = NetworkParams(newNetworkParams);
         for (uint256 i = 0; i < initialValidators.length; ) {
             _stake(initialValidators[i].addr, initialValidators[i].stake);
             unchecked {
@@ -64,7 +60,10 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         uint256 newEpochId = currentEpochId++;
         require(id == newEpochId, "UNEXPECTED_EPOCH_ID");
         require(epoch.endBlock > epoch.startBlock, "NO_BLOCKS_COMMITTED");
-        require((epoch.endBlock - epoch.startBlock + 1) % EPOCH_SIZE == 0, "EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
+        require(
+            (epoch.endBlock - epoch.startBlock + 1) % networkParams.epochSize() == 0,
+            "EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE"
+        );
         require(epochs[newEpochId - 1].endBlock + 1 == epoch.startBlock, "INVALID_START_BLOCK");
         epochs[newEpochId] = epoch;
         _commitBlockNumbers[newEpochId] = block.number;
@@ -130,7 +129,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     }
 
     function _registerWithdrawal(address account, uint256 amount) internal {
-        withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
+        withdrawals[account].append(amount, currentEpochId + networkParams.withdrawalWaitPeriod());
         emit WithdrawalRegistered(account, amount);
     }
 
