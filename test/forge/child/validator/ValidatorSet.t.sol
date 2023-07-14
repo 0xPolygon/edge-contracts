@@ -6,6 +6,8 @@ import {ValidatorSet, ValidatorInit, Epoch} from "contracts/child/validator/Vali
 import {L2StateSender} from "contracts/child/L2StateSender.sol";
 import "contracts/interfaces/Errors.sol";
 
+import {NetworkParams} from "contracts/child/NetworkParams.sol";
+
 abstract contract Uninitialized is Test {
     address internal constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     bytes32 internal constant STAKE_SIG = keccak256("STAKE");
@@ -18,7 +20,14 @@ abstract contract Uninitialized is Test {
     address bob = makeAddr("bob");
     uint256 epochSize = 64;
 
+    NetworkParams networkParams;
+
     function setUp() public virtual {
+        networkParams = new NetworkParams();
+        networkParams.initialize(
+            NetworkParams.InitParams(address(1), 1, 1, epochSize, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+        );
+
         stateSender = new L2StateSender();
         validatorSet = new ValidatorSet();
     }
@@ -30,7 +39,7 @@ abstract contract Initialized is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
     }
 }
 
@@ -55,8 +64,7 @@ contract ValidatorSet_Initialize is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
-        assertEq(validatorSet.EPOCH_SIZE(), epochSize);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
         assertEq(validatorSet.balanceOf(address(this)), 300);
         assertEq(validatorSet.balanceOf(alice), 100);
         assertEq(validatorSet.totalSupply(), 400);

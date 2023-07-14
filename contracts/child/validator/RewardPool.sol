@@ -46,7 +46,7 @@ contract RewardPool is IRewardPool, System, Initializable {
         require(paidRewardPerEpoch[epochId] == 0, "REWARD_ALREADY_DISTRIBUTED");
         uint256 totalBlocks = validatorSet.totalBlocks(epochId);
         require(totalBlocks != 0, "EPOCH_NOT_COMMITTED");
-        uint256 epochSize = validatorSet.EPOCH_SIZE();
+        uint256 epochSize = networkParams.epochSize();
         // slither-disable-next-line divide-before-multiply
         uint256 reward = (networkParams.epochReward() * totalBlocks) / epochSize;
         // TODO disincentivize long epoch times

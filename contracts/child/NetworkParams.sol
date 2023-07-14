@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
     @title NetworkParams
@@ -9,11 +10,12 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
     @notice Configurable network parameters that are read by the client on each epoch
     @dev The contract allows for configurable network parameters without the need for a hardfork
  */
-contract NetworkParams is Ownable2Step {
+contract NetworkParams is Ownable2Step, Initializable {
     struct InitParams {
         address newOwner;
         uint256 newBlockGasLimit;
         uint256 newCheckpointBlockInterval; // in blocks
+        uint256 newEpochSize; // in blocks
         uint256 newEpochReward; // in wei
         uint256 newMinValidatorSetSize;
         uint256 newMaxValidatorSetSize;
@@ -28,6 +30,7 @@ contract NetworkParams is Ownable2Step {
 
     uint256 public blockGasLimit;
     uint256 public checkpointBlockInterval; // in blocks
+    uint256 public epochSize; // in blocks
     uint256 public epochReward; // in wei
     uint256 public minValidatorSetSize;
     uint256 public maxValidatorSetSize;
@@ -41,6 +44,7 @@ contract NetworkParams is Ownable2Step {
 
     event NewBlockGasLimit(uint256 indexed gasLimit);
     event NewCheckpointBlockInterval(uint256 indexed checkpointInterval);
+    event NewEpochSize(uint256 indexed size);
     event NewEpochReward(uint256 indexed reward);
     event NewMinValidatorSetSize(uint256 indexed minValidatorSet);
     event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet);
@@ -57,11 +61,12 @@ contract NetworkParams is Ownable2Step {
      * @dev disallows setting of zero values for sanity check purposes
      * @param initParams initial set of values for the network
      */
-    constructor(InitParams memory initParams) {
+    function initialize(InitParams memory initParams) public initializer {
         require(
             initParams.newOwner != address(0) &&
                 initParams.newBlockGasLimit != 0 &&
                 initParams.newCheckpointBlockInterval != 0 &&
+                initParams.newEpochSize != 0 &&
                 initParams.newEpochReward != 0 &&
                 initParams.newMinValidatorSetSize != 0 &&
                 initParams.newMaxValidatorSetSize != 0 &&
@@ -76,6 +81,7 @@ contract NetworkParams is Ownable2Step {
         );
         blockGasLimit = initParams.newBlockGasLimit;
         checkpointBlockInterval = initParams.newCheckpointBlockInterval;
+        epochSize = initParams.newEpochSize;
         epochReward = initParams.newEpochReward;
         minValidatorSetSize = initParams.newMinValidatorSetSize;
         maxValidatorSetSize = initParams.newMaxValidatorSetSize;
@@ -111,6 +117,18 @@ contract NetworkParams is Ownable2Step {
         checkpointBlockInterval = newCheckpointBlockInterval;
 
         emit NewCheckpointBlockInterval(newCheckpointBlockInterval);
+    }
+
+    /**
+     * @notice function to set new epoch size
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newEpochSize new epoch reward
+     */
+    function setNewEpochSize(uint256 newEpochSize) external onlyOwner {
+        require(newEpochSize != 0, "NetworkParams: INVALID_EPOCH_SIZE");
+        epochSize = newEpochSize;
+
+        emit NewEpochSize(newEpochSize);
     }
 
     /**

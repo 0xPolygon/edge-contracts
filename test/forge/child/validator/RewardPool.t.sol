@@ -21,19 +21,15 @@ abstract contract Uninitialized is Test {
     NetworkParams networkParams;
 
     function setUp() public virtual {
-        networkParams = NetworkParams(makeAddr("networkParams"));
-        vm.mockCall(
-            address(networkParams),
-            abi.encodeCall(networkParams.epochReward, ()),
-            abi.encode(uint256(1 ether))
-        );
+        networkParams = new NetworkParams();
+        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 1, 64, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1));
 
         token = new MockERC20();
         validatorSet = new ValidatorSet();
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(1), address(1), address(1), 64, init);
+        validatorSet.initialize(address(1), address(1), address(1), address(networkParams), init);
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch);
