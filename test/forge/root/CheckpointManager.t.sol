@@ -7,6 +7,7 @@ import {CheckpointManager} from "contracts/root/CheckpointManager.sol";
 import {BLS} from "contracts/common/BLS.sol";
 import {BN256G2} from "contracts/common/BN256G2.sol";
 import "contracts/interfaces/Errors.sol";
+import "contracts/interfaces/common/IValidatorSets.sol";
 import "contracts/interfaces/root/ICheckpointManager.sol";
 
 abstract contract Uninitialized is Test {
@@ -16,7 +17,7 @@ abstract contract Uninitialized is Test {
 
     uint256 submitCounter;
     uint256 validatorSetSize;
-    ICheckpointManager.Validator[] public validatorSet;
+    IValidatorSets.Validator[] public validatorSet;
 
     address public admin;
     address public alice;
@@ -48,7 +49,7 @@ abstract contract Uninitialized is Test {
 
         (validatorSetSize, validatorSetTmp, aggMessagePoints, hashes, bitmaps, aggVotingPowers) = abi.decode(
             out,
-            (uint256, ICheckpointManager.Validator[], uint256[2][], bytes32[], bytes[], uint256[])
+            (uint256, IValidatorSets.Validator[], uint256[2][], bytes32[], bytes[], uint256[])
         );
 
         for (uint256 i = 0; i < validatorSetSize; i++) {

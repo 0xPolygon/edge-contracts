@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "../common/IValidatorSets.sol";
+
 /**
     @title CheckpointManager
     @author Polygon Technology
     @notice Checkpoint manager contract used by validators to submit signed checkpoints as proof of canonical chain.
     @dev The contract is used to submit checkpoints and verify that they have been signed as expected.
     */
-interface ICheckpointManager {
+interface ICheckpointManager is IValidatorSets {
     struct Checkpoint {
         uint256 epoch;
         uint256 blockNumber;
@@ -18,12 +20,6 @@ interface ICheckpointManager {
         bytes32 blockHash;
         uint256 blockRound;
         bytes32 currentValidatorSetHash;
-    }
-
-    struct Validator {
-        address _address;
-        uint256[4] blsKey;
-        uint256 votingPower;
     }
 
     /**
