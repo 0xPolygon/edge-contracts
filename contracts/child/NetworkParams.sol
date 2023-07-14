@@ -148,6 +148,7 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @dev disallows setting of a zero value for sanity check purposes
      * @param newMinValidatorSetSize new minimum validator set size
      */
+    // slither-disable-next-line similar-names
     function setNewMinValidatorSetSize(uint256 newMinValidatorSetSize) external onlyOwner {
         require(newMinValidatorSetSize != 0, "NetworkParams: INVALID_MIN_VALIDATOR_SET_SIZE");
         minValidatorSetSize = newMinValidatorSetSize;
@@ -160,6 +161,7 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @dev disallows setting of a zero value for sanity check purposes
      * @param newMaxValidatorSetSize new maximum validator set size
      */
+    // slither-disable-next-line similar-names
     function setNewMaxValidatorSetSize(uint256 newMaxValidatorSetSize) external onlyOwner {
         require(newMaxValidatorSetSize != 0, "NetworkParams: INVALID_MAX_VALIDATOR_SET_SIZE");
         maxValidatorSetSize = newMaxValidatorSetSize;
