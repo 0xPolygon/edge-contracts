@@ -19,9 +19,9 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
 
     bytes32 public constant PAUSER_ADMIN_ROLE = keccak256("PAUSER");
     bytes32 public constant RATE_CONTROL_ROLE = keccak256("RATE");
-    bool isBridgeRateLimited = false;
+    bool public isBridgeRateLimited = false;
 
-    Event LargeTransferHeld(address token, address receiver, uint256 amount)
+    event LargeTransferHeld(address token, address receiver, uint256 amount);
 
     struct Bucket {
         uint256 remainingTokens;
@@ -118,34 +118,36 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
         // TODO call to function to check for large transfer or flow rate
-        if amount >= largeTransferThresholds[rootToken] {
+        if (amount >= largeTransferThresholds[rootToken]) {
             isBridgeRateLimited = true;
         }
 
-        bucket = flowRateThresholds[rootToken];
+        Bucket storage bucket = flowRateThresholds[rootToken];
 
-        assert(bucket.maxCapacity != 0)
+        assert(bucket.maxTokenCapacity != 0);
 
-        if bucket.lastRefillTime == 0 {
+        if (bucket.lastRefillTime == 0) {
             bucket.lastRefillTime = block.timestamp;
             bucket.remainingTokens = bucket.maxTokenCapacity;
         } else {
-            bucket.remainingTokens = (block.timestamp - bucket.lastRefillTime) * bucket.refillSize / bucket.refillRate;
-            if bucket.remainingTokens > bucket.maxTokenCapacity {
+            bucket.remainingTokens =
+                ((block.timestamp - bucket.lastRefillTime) * bucket.refillSize) /
+                bucket.refillRate;
+            if (bucket.remainingTokens > bucket.maxTokenCapacity) {
                 bucket.remainingTokens = bucket.maxTokenCapacity;
             }
         }
 
-        if amount > bucket.remainingTokens {
+        if (amount > bucket.remainingTokens) {
             isBridgeRateLimited = true;
             bucket.remainingTokens = 0;
         } else {
             bucket.remainingTokens -= amount;
         }
 
-        if isBridgeRateLimited {
+        if (isBridgeRateLimited) {
             PendingLargeWithdrawal storage withdrawal = pendingLargeWithdrawals[receiver];
-            if withdrawal.withdrawalTimestamp != 0 {
+            if (withdrawal.withdrawalTimestamp != 0) {
                 revert("Large transfer already pending");
             }
             withdrawal.token = rootToken;
@@ -157,21 +159,26 @@ contract RootERC20PredicateFlowControl is RootERC20Predicate, PausableUpgradeabl
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
         }
-        
     }
 
     function finaliseHeldTransfers(address receiver) external {
-        pendingTransfer = pendingLargeWithdrawals[receiver];
-        if pendingTransfer.withdrawalTimestamp == 0 {
+        PendingLargeWithdrawal storage pendingTransfer = pendingLargeWithdrawals[receiver];
+        if (pendingTransfer.withdrawalTimestamp == 0) {
             revert("No pending transfer");
         }
-        if (block.timestamp - pendingTransfer.withdrawalTimestamp) < 86400 {
+        if (block.timestamp - pendingTransfer.withdrawalTimestamp < 86400) {
             revert("Transfer not held for long enough");
         }
-        IERC20Metadata(rootToken).safeTransfer(pendingTransfer.receiver, pendingTransfer.amount);
+        IERC20Metadata(pendingTransfer.token).safeTransfer(pendingTransfer.receiver, pendingTransfer.withdrawalAmount);
         pendingTransfer.withdrawalTimestamp = 0;
         address childToken = rootTokenToChildToken[pendingTransfer.token];
-        emit ERC20Withdraw(address(pendingTransfer.token), childToken, msg.sender, pendingTransfer.receiver, pendingTransfer.amount);
+        emit ERC20Withdraw(
+            address(pendingTransfer.token),
+            childToken,
+            msg.sender,
+            pendingTransfer.receiver,
+            pendingTransfer.withdrawalAmount
+        );
     }
 
     // TODO for rate control, optionally allow for automatic pause
