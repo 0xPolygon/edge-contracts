@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "../interfaces/IStateSender.sol";
+import "../common/MerkeRootAggregator.sol";
 
 /**
     @title L2StateSender
@@ -9,7 +10,7 @@ import "../interfaces/IStateSender.sol";
     @notice Arbitrary message passing contract from L2 -> L1
     @dev There is no transaction execution on L1, only a commitment of the emitted events are stored
  */
-contract L2StateSender is IStateSender {
+contract L2StateSender is IStateSender, MerkleRootAggregator {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
 
