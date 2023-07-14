@@ -14,4 +14,8 @@ contract MerkleRootAggregator {
     function _storeNewMerkleRoot(MerkeRootNode storage newRoot) internal {
         _submittedMerkleRoots.push(newRoot);
     }
+
+    function _getLatestMerkleRoot() internal view returns (MerkeRootNode memory) {
+        return _submittedMerkleRoots[_submittedMerkleRoots.length - 1];
+    }
 }
