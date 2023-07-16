@@ -10,13 +10,20 @@ describe("ForkParams", () => {
   before(async () => {
     accounts = await ethers.getSigners();
     const forkParamsFactory = await ethers.getContractFactory("ForkParams");
-    forkParams = (await forkParamsFactory.deploy(accounts[0].address)) as ForkParams;
+    forkParams = (await forkParamsFactory.deploy()) as ForkParams;
 
     await forkParams.deployed();
+    await forkParams.initialize(accounts[0].address);
   });
 
   it("validate deployment", async () => {
     expect(await forkParams.owner()).to.equal(accounts[0].address);
+  });
+
+  it("should throw error on reinitialization", async () => {
+    await expect(forkParams.initialize(accounts[1].address)).to.be.revertedWith(
+      "Initializable: contract is already initialized"
+    );
   });
 
   it("add new feature from wrong account", async () => {

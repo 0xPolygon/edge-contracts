@@ -6,6 +6,8 @@ import {ValidatorSet, ValidatorInit, Epoch} from "contracts/child/validator/Vali
 import {L2StateSender} from "contracts/child/L2StateSender.sol";
 import "contracts/interfaces/Errors.sol";
 
+import {NetworkParams} from "contracts/child/NetworkParams.sol";
+
 abstract contract Uninitialized is Test {
     address internal constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     bytes32 internal constant STAKE_SIG = keccak256("STAKE");
@@ -18,7 +20,14 @@ abstract contract Uninitialized is Test {
     address bob = makeAddr("bob");
     uint256 epochSize = 64;
 
+    NetworkParams networkParams;
+
     function setUp() public virtual {
+        networkParams = new NetworkParams();
+        networkParams.initialize(
+            NetworkParams.InitParams(address(1), 1, 1, epochSize, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+        );
+
         stateSender = new L2StateSender();
         validatorSet = new ValidatorSet();
     }
@@ -30,7 +39,7 @@ abstract contract Initialized is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
     }
 }
 
@@ -41,9 +50,13 @@ abstract contract Committed is Initialized {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch);
+        vm.roll(block.number + 1);
+        _afterCommit();
     }
 
-    function _beforeCommit() internal virtual;
+    function _beforeCommit() internal virtual {}
+
+    function _afterCommit() internal virtual {}
 }
 
 contract ValidatorSet_Initialize is Uninitialized {
@@ -51,8 +64,7 @@ contract ValidatorSet_Initialize is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
-        assertEq(validatorSet.EPOCH_SIZE(), epochSize);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
         assertEq(validatorSet.balanceOf(address(this)), 300);
         assertEq(validatorSet.balanceOf(alice), 100);
         assertEq(validatorSet.totalSupply(), 400);
@@ -136,7 +148,7 @@ contract ValidatorSet_Stake is Initialized {
     }
 
     function test_Stake(uint256 amount) public {
-        vm.assume(amount < type(uint256).max - validatorSet.balanceOf(alice));
+        vm.assume(amount < type(uint224).max - validatorSet.balanceOf(alice));
         bytes memory callData = abi.encode(STAKE_SIG, alice, amount);
         vm.prank(stateReceiver);
         vm.expectEmit(true, true, true, true);
@@ -161,7 +173,7 @@ contract ValidatorSet_Unstake is Initialized {
 }
 
 contract ValidatorSet_StakeChanges is Committed {
-    function _beforeCommit() internal override {
+    function _afterCommit() internal override {
         bytes memory callData = abi.encode(STAKE_SIG, alice, 100);
         vm.prank(stateReceiver);
         validatorSet.onStateReceive(1, rootChainManager, callData);

@@ -1,4 +1,4 @@
-# ValidatorSet
+# ERC20VotesUpgradeable
 
 
 
@@ -6,43 +6,9 @@
 
 
 
-
+*Extension of ERC20 to support Compound-like voting and delegation. This version is more generic than Compound&#39;s, and supports token supply up to 2^224^ - 1, while COMP is limited to 2^96^ - 1. NOTE: If exact COMP compatibility is required, use the {ERC20VotesComp} variant of this module. This extension keeps a history (checkpoints) of each account&#39;s vote power. Vote power can be delegated either by calling the {delegate} function directly, or by providing a signature to be used with {delegateBySig}. Voting power can be queried through the public accessors {getVotes} and {getPastVotes}. By default, token balance does not account for voting power. This makes transfers cheaper. The downside is that it requires users to delegate to themselves in order to activate checkpoints and have their voting power tracked. _Available since v4.2._*
 
 ## Methods
-
-### ALLOWLIST_PRECOMPILE
-
-```solidity
-function ALLOWLIST_PRECOMPILE() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### BLOCKLIST_PRECOMPILE
-
-```solidity
-function BLOCKLIST_PRECOMPILE() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### CLOCK_MODE
 
@@ -77,125 +43,6 @@ function DOMAIN_SEPARATOR() external view returns (bytes32)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined |
-
-### NATIVE_TOKEN_CONTRACT
-
-```solidity
-function NATIVE_TOKEN_CONTRACT() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### NATIVE_TRANSFER_PRECOMPILE
-
-```solidity
-function NATIVE_TRANSFER_PRECOMPILE() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### NATIVE_TRANSFER_PRECOMPILE_GAS
-
-```solidity
-function NATIVE_TRANSFER_PRECOMPILE_GAS() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### READ_ADDRESSLIST_GAS
-
-```solidity
-function READ_ADDRESSLIST_GAS() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### SYSTEM
-
-```solidity
-function SYSTEM() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### VALIDATOR_PKCHECK_PRECOMPILE
-
-```solidity
-function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### VALIDATOR_PKCHECK_PRECOMPILE_GAS
-
-```solidity
-function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### allowance
 
@@ -265,29 +112,6 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### balanceOfAt
-
-```solidity
-function balanceOfAt(address account, uint256 epochNumber) external view returns (uint256)
-```
-
-returns a validator balance for a given epoch
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-| epochNumber | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### checkpoints
 
 ```solidity
@@ -327,40 +151,6 @@ function clock() external view returns (uint48)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint48 | undefined |
-
-### commitEpoch
-
-```solidity
-function commitEpoch(uint256 id, Epoch epoch) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id | uint256 | undefined |
-| epoch | Epoch | undefined |
-
-### currentEpochId
-
-```solidity
-function currentEpochId() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### decimals
 
@@ -484,52 +274,6 @@ function eip712Domain() external view returns (bytes1 fields, string name, strin
 | salt | bytes32 | undefined |
 | extensions | uint256[] | undefined |
 
-### epochEndBlocks
-
-```solidity
-function epochEndBlocks(uint256) external view returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### epochs
-
-```solidity
-function epochs(uint256) external view returns (uint256 startBlock, uint256 endBlock, bytes32 epochRoot)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| startBlock | uint256 | undefined |
-| endBlock | uint256 | undefined |
-| epochRoot | bytes32 | undefined |
-
 ### getPastTotalSupply
 
 ```solidity
@@ -620,26 +364,6 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### initialize
-
-```solidity
-function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, address newNetworkParams, ValidatorInit[] initialValidators) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newStateSender | address | undefined |
-| newStateReceiver | address | undefined |
-| newRootChainManager | address | undefined |
-| newNetworkParams | address | undefined |
-| initialValidators | ValidatorInit[] | undefined |
-
 ### name
 
 ```solidity
@@ -701,46 +425,6 @@ function numCheckpoints(address account) external view returns (uint32)
 |---|---|---|
 | _0 | uint32 | undefined |
 
-### onStateReceive
-
-```solidity
-function onStateReceive(uint256, address sender, bytes data) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-| sender | address | undefined |
-| data | bytes | undefined |
-
-### pendingWithdrawals
-
-```solidity
-function pendingWithdrawals(address account) external view returns (uint256)
-```
-
-Calculates how much is yet to become withdrawable for account.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | The account to calculate amount for |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
-
 ### permit
 
 ```solidity
@@ -780,28 +464,6 @@ function symbol() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
-### totalBlocks
-
-```solidity
-function totalBlocks(uint256 epochId) external view returns (uint256 length)
-```
-
-total amount of blocks in a given epoch
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| epochId | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| length | uint256 | undefined |
-
 ### totalSupply
 
 ```solidity
@@ -812,28 +474,6 @@ function totalSupply() external view returns (uint256)
 
 *See {IERC20-totalSupply}.*
 
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### totalSupplyAt
-
-```solidity
-function totalSupplyAt(uint256 epochNumber) external view returns (uint256)
-```
-
-returns the total supply for a given epoch
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| epochNumber | uint256 | undefined |
 
 #### Returns
 
@@ -887,55 +527,6 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
-
-### unstake
-
-```solidity
-function unstake(uint256 amount) external nonpayable
-```
-
-allows a validator to announce their intention to withdraw a given amount of tokens
-
-*initializes a waiting period before the tokens can be withdrawn*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | undefined |
-
-### withdraw
-
-```solidity
-function withdraw() external nonpayable
-```
-
-allows a validator to complete a withdrawal
-
-*calls the bridge to release the funds on root*
-
-
-### withdrawable
-
-```solidity
-function withdrawable(address account) external view returns (uint256 amount)
-```
-
-Calculates how much can be withdrawn for account in this epoch.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | The account to calculate amount for |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | Amount withdrawable (in MATIC wei) |
 
 
 
@@ -1022,42 +613,6 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### NewEpoch
-
-```solidity
-event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id `indexed` | uint256 | undefined |
-| startBlock `indexed` | uint256 | undefined |
-| endBlock `indexed` | uint256 | undefined |
-| epochRoot  | bytes32 | undefined |
-
-### Slashed
-
-```solidity
-event Slashed(uint256 indexed validator, uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| validator `indexed` | uint256 | undefined |
-| amount  | uint256 | undefined |
-
 ### Transfer
 
 ```solidity
@@ -1076,58 +631,5 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 | to `indexed` | address | undefined |
 | value  | uint256 | undefined |
 
-### Withdrawal
-
-```solidity
-event Withdrawal(address indexed account, uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
-### WithdrawalRegistered
-
-```solidity
-event WithdrawalRegistered(address indexed account, uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
-
-
-## Errors
-
-### Unauthorized
-
-```solidity
-error Unauthorized(string only)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| only | string | undefined |
 
 

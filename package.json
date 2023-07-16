@@ -36,8 +36,8 @@
     "husky:pre-commit": "npm run prettier && git add ."
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.1",
-    "@openzeppelin/contracts-upgradeable": "^4.9.1",
+    "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/contracts-upgradeable": "^4.9.2",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "hardhat": "^2.16.1",
     "keccak256": "^1.0.6",
@@ -45,7 +45,7 @@
     "merkletreejs": "^0.3.10"
   },
   "devDependencies": {
-    "@defi-wonderland/smock": "^2.3.4",
+    "@defi-wonderland/smock": "^2.3.5",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/hardhat-upgrades": "^1.27.0",
     "@types/chai": "^4.3.5",
@@ -67,6 +67,6 @@
     "prettier-plugin-solidity": "^1.1.3",
     "solhint": "^3.4.1",
     "ts-node": "^10.7.0",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.6"
   }
 }
