@@ -13,13 +13,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 contract NetworkParams is Ownable2Step, Initializable {
     struct InitParams {
         address newOwner;
-        uint256 newBlockGasLimit;
         uint256 newCheckpointBlockInterval; // in blocks
         uint256 newEpochSize; // in blocks
         uint256 newEpochReward; // in wei
         uint256 newMinValidatorSetSize;
         uint256 newMaxValidatorSetSize;
-        uint256 newMinStake; // in wei
         uint256 newWithdrawalWaitPeriod; // in blocks
         uint256 newBlockTime; // in seconds
         uint256 newBlockTimeDrift; // in seconds
@@ -28,13 +26,11 @@ contract NetworkParams is Ownable2Step, Initializable {
         uint256 newProposalThreshold; // in percent
     }
 
-    uint256 public blockGasLimit;
     uint256 public checkpointBlockInterval; // in blocks
     uint256 public epochSize; // in blocks
     uint256 public epochReward; // in wei
     uint256 public minValidatorSetSize;
     uint256 public maxValidatorSetSize;
-    uint256 public minStake; // in wei
     uint256 public withdrawalWaitPeriod; // in blocks
     uint256 public blockTime; // in seconds
     uint256 public blockTimeDrift; // in seconds
@@ -42,13 +38,11 @@ contract NetworkParams is Ownable2Step, Initializable {
     uint256 public votingPeriod; // in blocks
     uint256 public proposalThreshold; // in percent
 
-    event NewBlockGasLimit(uint256 indexed gasLimit);
     event NewCheckpointBlockInterval(uint256 indexed checkpointInterval);
     event NewEpochSize(uint256 indexed size);
     event NewEpochReward(uint256 indexed reward);
     event NewMinValidatorSetSize(uint256 indexed minValidatorSet);
     event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet);
-    event NewMinStake(uint256 indexed minStake);
     event NewWithdrawalWaitPeriod(uint256 indexed withdrawalPeriod);
     event NewBlockTime(uint256 indexed blockTime);
     event NewBlockTimeDrift(uint256 indexed blockTimeDrift);
@@ -64,13 +58,11 @@ contract NetworkParams is Ownable2Step, Initializable {
     function initialize(InitParams memory initParams) public initializer {
         require(
             initParams.newOwner != address(0) &&
-                initParams.newBlockGasLimit != 0 &&
                 initParams.newCheckpointBlockInterval != 0 &&
                 initParams.newEpochSize != 0 &&
                 initParams.newEpochReward != 0 &&
                 initParams.newMinValidatorSetSize != 0 &&
                 initParams.newMaxValidatorSetSize != 0 &&
-                initParams.newMinStake != 0 &&
                 initParams.newWithdrawalWaitPeriod != 0 &&
                 initParams.newBlockTime != 0 &&
                 initParams.newBlockTimeDrift != 0 &&
@@ -79,13 +71,11 @@ contract NetworkParams is Ownable2Step, Initializable {
                 initParams.newProposalThreshold != 0,
             "NetworkParams: INVALID_INPUT"
         );
-        blockGasLimit = initParams.newBlockGasLimit;
         checkpointBlockInterval = initParams.newCheckpointBlockInterval;
         epochSize = initParams.newEpochSize;
         epochReward = initParams.newEpochReward;
         minValidatorSetSize = initParams.newMinValidatorSetSize;
         maxValidatorSetSize = initParams.newMaxValidatorSetSize;
-        minStake = initParams.newMinStake;
         withdrawalWaitPeriod = initParams.newWithdrawalWaitPeriod;
         blockTime = initParams.newBlockTime;
         blockTimeDrift = initParams.newBlockTimeDrift;
@@ -93,18 +83,6 @@ contract NetworkParams is Ownable2Step, Initializable {
         votingPeriod = initParams.newVotingPeriod;
         proposalThreshold = initParams.newProposalThreshold;
         _transferOwnership(initParams.newOwner);
-    }
-
-    /**
-     * @notice function to set new block gas limit
-     * @dev disallows setting of a zero value for sanity check purposes
-     * @param newBlockGasLimit new block gas limit
-     */
-    function setNewBlockGasLimit(uint256 newBlockGasLimit) external onlyOwner {
-        require(newBlockGasLimit != 0, "NetworkParams: INVALID_BLOCK_GAS_LIMIT");
-        blockGasLimit = newBlockGasLimit;
-
-        emit NewBlockGasLimit(newBlockGasLimit);
     }
 
     /**
@@ -167,18 +145,6 @@ contract NetworkParams is Ownable2Step, Initializable {
         maxValidatorSetSize = newMaxValidatorSetSize;
 
         emit NewMaxValdidatorSetSize(newMaxValidatorSetSize);
-    }
-
-    /**
-     * @notice function to set new minimum stake
-     * @dev disallows setting of a zero value for sanity check purposes
-     * @param newMinStake new minimum stake
-     */
-    function setNewMinStake(uint256 newMinStake) external onlyOwner {
-        require(newMinStake != 0, "NetworkParams: INVALID_MIN_STAKE");
-        minStake = newMinStake;
-
-        emit NewMinStake(newMinStake);
     }
 
     /**

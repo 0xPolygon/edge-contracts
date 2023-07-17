@@ -13,13 +13,11 @@ describe("NetworkParams", () => {
 
     initParams = {
       newOwner: ethers.constants.AddressZero,
-      newBlockGasLimit: 0,
       newCheckpointBlockInterval: 0,
       newEpochSize: 0,
       newEpochReward: 0,
       newMinValidatorSetSize: 0,
       newMaxValidatorSetSize: 0,
-      newMinStake: 0,
       newWithdrawalWaitPeriod: 0,
       newBlockTime: 0,
       newBlockTimeDrift: 0,
@@ -38,13 +36,11 @@ describe("NetworkParams", () => {
 
   it("initialization success", async () => {
     initParams.newOwner = accounts[0].address;
-    initParams.newBlockGasLimit = 10 ** Math.floor(Math.random() + 6);
     initParams.newCheckpointBlockInterval = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newEpochSize = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newEpochReward = ethers.utils.parseUnits(String(Math.floor(Math.random() * 20 + 1)));
     initParams.newMinValidatorSetSize = Math.floor(Math.random() * 20 + 5);
     initParams.newMaxValidatorSetSize = Math.floor(Math.random() * 20 + 5);
-    initParams.newMinStake = ethers.utils.parseUnits(String(Math.floor(Math.random() * 20 + 1)));
     initParams.newWithdrawalWaitPeriod = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newBlockTime = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newBlockTimeDrift = 2 ** Math.floor(Math.random() * 5 + 10);
@@ -55,13 +51,11 @@ describe("NetworkParams", () => {
     await networkParams.initialize(initParams);
 
     expect(await networkParams.owner()).to.equal(initParams.newOwner);
-    expect(await networkParams.blockGasLimit()).to.equal(initParams.newBlockGasLimit);
     expect(await networkParams.checkpointBlockInterval()).to.equal(initParams.newCheckpointBlockInterval);
     expect(await networkParams.epochSize()).to.equal(initParams.newEpochSize);
     expect(await networkParams.epochReward()).to.equal(initParams.newEpochReward);
     expect(await networkParams.minValidatorSetSize()).to.equal(initParams.newMinValidatorSetSize);
     expect(await networkParams.maxValidatorSetSize()).to.equal(initParams.newMaxValidatorSetSize);
-    expect(await networkParams.minStake()).to.equal(initParams.newMinStake);
     expect(await networkParams.withdrawalWaitPeriod()).to.equal(initParams.newWithdrawalWaitPeriod);
     expect(await networkParams.blockTime()).to.equal(initParams.newBlockTime);
     expect(await networkParams.blockTimeDrift()).to.equal(initParams.newBlockTimeDrift);
@@ -74,26 +68,6 @@ describe("NetworkParams", () => {
     await expect(networkParams.initialize(initParams)).to.be.revertedWith(
       "Initializable: contract is already initialized"
     );
-  });
-
-  it("set new block gas limit fail: only owner", async () => {
-    await impersonateAccount(accounts[1].address);
-    await setBalance(accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-    const newNetworkParams = networkParams.connect(accounts[1]);
-
-    await expect(newNetworkParams.setNewBlockGasLimit(1)).to.be.revertedWith("Ownable: caller is not the owner");
-    await stopImpersonatingAccount(accounts[1].address);
-  });
-
-  it("set new block gas limit fail: invalid input", async () => {
-    await expect(networkParams.setNewBlockGasLimit(0)).to.be.revertedWith("NetworkParams: INVALID_BLOCK_GAS_LIMIT");
-  });
-
-  it("set new block gas limit success", async () => {
-    initParams.newBlockGasLimit = 10 ** Math.floor(Math.random() + 6);
-    await networkParams.setNewBlockGasLimit(initParams.newBlockGasLimit);
-
-    expect(await networkParams.blockGasLimit()).to.equal(initParams.newBlockGasLimit);
   });
 
   it("set new checkpoint block interval fail: only owner", async () => {
@@ -202,26 +176,6 @@ describe("NetworkParams", () => {
     await networkParams.setNewMaxValidatorSetSize(initParams.newMaxValidatorSetSize);
 
     expect(await networkParams.maxValidatorSetSize()).to.equal(initParams.newMaxValidatorSetSize);
-  });
-
-  it("set new min stake fail: only owner", async () => {
-    await impersonateAccount(accounts[1].address);
-    await setBalance(accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-    const newNetworkParams = networkParams.connect(accounts[1]);
-
-    await expect(newNetworkParams.setNewMinStake(1)).to.be.revertedWith("Ownable: caller is not the owner");
-    await stopImpersonatingAccount(accounts[1].address);
-  });
-
-  it("set new min stake fail: invalid input", async () => {
-    await expect(networkParams.setNewMinStake(0)).to.be.revertedWith("NetworkParams: INVALID_MIN_STAKE");
-  });
-
-  it("set new min stake success", async () => {
-    initParams.newMinStake = 10 ** Math.floor(Math.random() + 6);
-    await networkParams.setNewMinStake(initParams.newMinStake);
-
-    expect(await networkParams.minStake()).to.equal(initParams.newMinStake);
   });
 
   it("set new withdrawal wait period fail: only owner", async () => {
