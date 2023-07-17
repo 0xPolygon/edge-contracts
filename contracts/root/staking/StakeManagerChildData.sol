@@ -28,7 +28,7 @@ abstract contract StakeManagerChildData {
         _ids[manager] = id;
     }
 
-    /** 
+    /**
      * @notice Get the child chain manager contract that corresponds to a child chain id.
      * @param id Child chain id.
      * @return manager Child chain manager contract address.
@@ -38,7 +38,7 @@ abstract contract StakeManagerChildData {
         require(manager != address(0), "StakeManagerChildData: INVALID_ID");
     }
 
-    /** 
+    /**
      * @notice Get the child chain id that corresponds to a child chain manager contract.
      * @param manager Child chain manager contract address.
      * @return id Child chain id.
@@ -48,7 +48,7 @@ abstract contract StakeManagerChildData {
         require(id != 0, "StakeManagerChildData: INVALID_MANAGER");
     }
 
-    // Storage gap 
+    // Storage gap
     // solhint-disable-next-line var-name-mixedcase
     uint256[50] private __gap;
 }

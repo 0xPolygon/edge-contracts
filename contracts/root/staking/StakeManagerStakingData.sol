@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-
 /**
  * @title StakeManagerStakingData
  * @notice Holds all staking related data.
@@ -53,7 +52,7 @@ abstract contract StakeManagerStakingData {
         amount = _totalStakes[validator];
     }
 
-    // Storage gap 
+    // Storage gap
     // solhint-disable-next-line var-name-mixedcase
     uint256[50] private __gap;
 }
