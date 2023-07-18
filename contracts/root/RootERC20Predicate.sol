@@ -88,18 +88,16 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
-        address childPredicate = childERC20Predicate;
-
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childPredicate
+            childERC20Predicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
         stateSender.syncState(
-            childPredicate,
+            childERC20Predicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
         );
         // slither-disable-next-line reentrancy-events
