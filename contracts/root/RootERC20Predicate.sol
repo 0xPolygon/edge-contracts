@@ -125,13 +125,36 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     }
 
     function _withdraw(bytes calldata data) internal virtual {
-        (address rootToken, address withdrawer, address receiver, uint256 amount) = abi.decode(
-            data,
-            (address, address, address, uint256)
-        );
-        address childToken = rootTokenToChildToken[rootToken];
-        assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
+        (
+            address rootToken,
+            address childToken,
+            address withdrawer,
+            address receiver,
+            uint256 amount
+        ) = _decodeCrosschainMessage(data);
+        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
+    }
 
+    function _decodeCrosschainMessage(
+        bytes calldata data
+    )
+        internal
+        view
+        returns (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount)
+    {
+        (rootToken, withdrawer, receiver, amount) = abi.decode(data, (address, address, address, uint256));
+        childToken = rootTokenToChildToken[rootToken];
+        // invariant because child predicate should have already mapped tokens
+        require(childToken != address(0), "Root token not mapped to child");
+    }
+
+    function _executeTransfer(
+        address rootToken,
+        address childToken,
+        address withdrawer,
+        address receiver,
+        uint256 amount
+    ) internal {
         IERC20Metadata(rootToken).safeTransfer(receiver, amount);
         // slither-disable-next-line reentrancy-events
         emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
