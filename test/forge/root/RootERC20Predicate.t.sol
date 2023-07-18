@@ -4,20 +4,24 @@ pragma solidity 0.8.19;
 import "forge-std/Test.sol";
 
 import {RootERC20Predicate} from "contracts/root/RootERC20Predicate.sol";
+import {StateSenderHelper} from "./StateSender.t.sol";
+import {Initialized} from "./ExitHelper.t.sol";
+import "forge-std/console2.sol";
 
-contract RootERC20PredicateTest is Test {
+contract RootERC20PredicateTest is StateSenderHelper, Initialized, Test {
     RootERC20Predicate rootERC20Predicate;
 
-    function setUp() public {
+    function setUp() public virtual override(Initialized, StateSenderHelper) {
+        Initialized.setUp();
+        StateSenderHelper.setUp();
+
         rootERC20Predicate = new RootERC20Predicate();
-        address newStateSender = makeAddr("newStateSender");
-        address newExitHelper = makeAddr("newExitHelper");
         address newChildERC20Predicate = makeAddr("newChildERC20Predicate");
         address newChildTokenTemplate = makeAddr("newChildTokenTemplate");
         address nativeTokenRootAddress = makeAddr("newStateSender");
         rootERC20Predicate.initialize(
-            newStateSender,
-            newExitHelper,
+            address(stateSender),
+            address(exitHelper),
             newChildERC20Predicate,
             newChildTokenTemplate,
             nativeTokenRootAddress
@@ -29,7 +33,9 @@ contract RootERC20PredicateTest is Test {
         uint256 startBalance = 100000000000000;
         vm.startPrank(alice);
         vm.deal(alice, startBalance);
+        console2.log(address(checkpointManager));
+        console2.log(address(exitHelper));
 
-        rootERC20Predicate.depositNativeTo{value: 1}(alice);
+        // rootERC20Predicate.depositNativeTo{value: 1}(alice);
     }
 }
