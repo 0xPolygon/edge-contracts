@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC20Predicate.sol";
 import "../interfaces/IStateSender.sol";
+import "forge-std/console2.sol";
 
 // solhint-disable reason-string
 contract RootERC20Predicate is Initializable, IRootERC20Predicate {
@@ -74,6 +75,10 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         _deposit(rootToken, msg.sender, amount);
     }
 
+    function depositNativeTo(address receiver) external payable {
+        _deposit(IERC20Metadata(address(0)), receiver, msg.value);
+    }
+
     /**
      * @inheritdoc IRootERC20Predicate
      */
@@ -108,17 +113,24 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         return childToken;
     }
 
+    function mapNativeToken() private returns (address) {
+        require(rootTokenToChildToken[address(0)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+    }
+
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        // We track if the deposit is for the native token
+        bool isNativeToken = (address(rootToken) == address(0));
+        console2.log("isNativeToken: ", isNativeToken);
+
         address childToken = rootTokenToChildToken[address(rootToken)];
-
-        if (childToken == address(0)) {
-            childToken = mapToken(rootToken);
+        if (!isNativeToken) {
+            if (childToken == address(0)) {
+                childToken = mapToken(rootToken);
+            }
+            // ERC20 must be transferred explicitly
+            rootToken.safeTransferFrom(msg.sender, address(this), amount);
         }
-
-        assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
-
-        rootToken.safeTransferFrom(msg.sender, address(this), amount);
-
+        assert(childToken != address(0));
         stateSender.syncState(childERC20Predicate, abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount));
         // slither-disable-next-line reentrancy-events
         emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
