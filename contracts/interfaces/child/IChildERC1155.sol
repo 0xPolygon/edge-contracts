@@ -35,7 +35,7 @@ interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
      * @param account Account of the user to mint the tokens to
      * @param id Index of NFT to mint to the account
      * @param amount Amount of NFT to mint
-     * @return bool Returns true if function call is succesful
+     * @return bool Returns true if function call is successful
      */
     function mint(address account, uint256 id, uint256 amount) external returns (bool);
 
@@ -59,7 +59,7 @@ interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
      * @param from Address to burn the NFTs from
      * @param id Index of NFT to burn from the account
      * @param amount Amount of NFT to burn
-     * @return bool Returns true if function call is succesful
+     * @return bool Returns true if function call is successful
      */
     function burn(address from, uint256 id, uint256 amount) external returns (bool);
 
