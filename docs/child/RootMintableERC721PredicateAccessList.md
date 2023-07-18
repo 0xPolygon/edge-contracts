@@ -374,7 +374,7 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 function initialize(address newL2StateSender, address newStateReceiver, address newChildERC721Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
-Initilization function for RootMintableERC721Predicate
+Initialization function for RootMintableERC721Predicate
 
 *Can only be called once.*
 

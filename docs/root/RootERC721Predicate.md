@@ -205,7 +205,7 @@ function exitHelper() external view returns (address)
 function initialize(address newStateSender, address newExitHelper, address newChildERC721Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
-Initilization function for RootERC721Predicate
+Initialization function for RootERC721Predicate
 
 *Can only be called once.*
 
