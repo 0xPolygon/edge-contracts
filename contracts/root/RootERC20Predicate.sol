@@ -95,33 +95,33 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     }
 
     function _mapNative() private {
-        _map(address(0), "Ether", "ETH", 18);
+        _map(NATIVE_TOKEN, "Ether", "ETH", 18);
     }
 
     function _map(
-        address tokenAddress,
+        address rootToken,
         string memory tokenName,
         string memory tokenSymbol,
         uint8 tokenDecimals
     ) internal returns (address) {
-        require(rootTokenToChildToken[tokenAddress] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+        require(rootTokenToChildToken[rootToken] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC20Predicate;
 
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
-            keccak256(abi.encodePacked(tokenAddress)),
+            keccak256(abi.encodePacked(rootToken)),
             childPredicate
         );
 
-        rootTokenToChildToken[address(tokenAddress)] = childToken;
+        rootTokenToChildToken[address(rootToken)] = childToken;
 
         stateSender.syncState(
             childPredicate,
-            abi.encode(MAP_TOKEN_SIG, tokenAddress, tokenName, tokenSymbol, tokenDecimals)
+            abi.encode(MAP_TOKEN_SIG, rootToken, tokenName, tokenSymbol, tokenDecimals)
         );
         // slither-disable-next-line reentrancy-events
-        emit TokenMapped(tokenAddress, childToken);
+        emit TokenMapped(rootToken, childToken);
 
         return childToken;
     }
