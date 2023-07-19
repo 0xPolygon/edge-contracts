@@ -129,7 +129,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         address childToken = rootTokenToChildToken[address(rootToken)];
 
-        if ((address(rootToken) != NATIVE_TOKEN)) {
+        if (address(rootToken) != NATIVE_TOKEN) {
             if (childToken == address(0)) {
                 childToken = mapToken(rootToken);
             }
