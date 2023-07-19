@@ -49,6 +49,22 @@ function featureToBlockNumber(bytes32) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### initialize
+
+```solidity
+function initialize(address newOwner) external nonpayable
+```
+
+initialize function to set the owner
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address | address to transfer the ownership to |
+
 ### isFeatureActivated
 
 ```solidity
@@ -96,7 +112,7 @@ function renounceOwnership() external nonpayable
 
 
 
-*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
 
 
 ### transferOwnership
@@ -135,6 +151,22 @@ function to update the block number for a feature
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+*Triggered when the contract has been initialized or reinitialized.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### NewFeature
 

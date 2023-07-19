@@ -199,4 +199,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
             emit ValidatorDeactivated(validator);
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

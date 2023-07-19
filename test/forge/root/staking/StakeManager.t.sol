@@ -91,12 +91,12 @@ contract StakeManager_Register is Initialized, StakeManager {
 
 contract StakeManager_StakeFor is Registered, StakeManager {
     function test_RevertIdZero() public {
-        vm.expectRevert("INVALID_ID");
+        vm.expectRevert("StakeManager: INVALID_ID");
         stakeManager.stakeFor(0, 1);
     }
 
     function test_RevertChainDoesNotExist() public {
-        vm.expectRevert("INVALID_ID");
+        vm.expectRevert("StakeManager: INVALID_ID");
         stakeManager.stakeFor(id2 + 1, 1);
     }
 
@@ -132,7 +132,7 @@ contract StakeManager_StakeFor is Registered, StakeManager {
 
 contract StakeManager_ReleaseStake is Staked, StakeManager {
     function test_RevertNotSupernetManager() public {
-        vm.expectRevert("Invalid manager");
+        vm.expectRevert("ChildManagerLib: INVALID_MANAGER");
         stakeManager.releaseStakeOf(address(this), 1);
     }
 
@@ -152,7 +152,7 @@ contract StakeManager_ReleaseStake is Staked, StakeManager {
 
 contract StakeManager_SlashStake is Staked, StakeManager {
     function test_RevertNotSupernetManager() public {
-        vm.expectRevert("Invalid manager");
+        vm.expectRevert("ChildManagerLib: INVALID_MANAGER");
         stakeManager.slashStakeOf(address(this), 1);
     }
 

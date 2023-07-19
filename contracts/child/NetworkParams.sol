@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
     @title NetworkParams
@@ -9,58 +10,79 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     @notice Configurable network parameters that are read by the client on each epoch
     @dev The contract allows for configurable network parameters without the need for a hardfork
  */
-contract NetworkParams is Ownable {
-    uint256 public blockGasLimit;
-    uint256 public checkpointBlockInterval; // in blocks
-    uint256 public minStake; // in wei
-    uint256 public maxValidatorSetSize;
+contract NetworkParams is Ownable2Step, Initializable {
+    struct InitParams {
+        address newOwner;
+        uint256 newCheckpointBlockInterval; // in blocks
+        uint256 newEpochSize; // in blocks
+        uint256 newEpochReward; // in wei
+        uint256 newMinValidatorSetSize;
+        uint256 newMaxValidatorSetSize;
+        uint256 newWithdrawalWaitPeriod; // in blocks
+        uint256 newBlockTime; // in seconds
+        uint256 newBlockTimeDrift; // in seconds
+        uint256 newVotingDelay; // in blocks
+        uint256 newVotingPeriod; // in blocks
+        uint256 newProposalThreshold; // in percent
+    }
 
-    event NewBlockGasLimit(uint256 indexed value);
-    event NewCheckpointBlockInterval(uint256 indexed value);
-    event NewMinStake(uint256 indexed value);
-    event NewMaxValdidatorSetSize(uint256 indexed value);
+    uint256 public checkpointBlockInterval; // in blocks
+    uint256 public epochSize; // in blocks
+    uint256 public epochReward; // in wei
+    uint256 public minValidatorSetSize;
+    uint256 public maxValidatorSetSize;
+    uint256 public withdrawalWaitPeriod; // in blocks
+    uint256 public blockTime; // in seconds
+    uint256 public blockTimeDrift; // in seconds
+    uint256 public votingDelay; // in blocks
+    uint256 public votingPeriod; // in blocks
+    uint256 public proposalThreshold; // in percent
+
+    event NewCheckpointBlockInterval(uint256 indexed checkpointInterval);
+    event NewEpochSize(uint256 indexed size);
+    event NewEpochReward(uint256 indexed reward);
+    event NewMinValidatorSetSize(uint256 indexed minValidatorSet);
+    event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet);
+    event NewWithdrawalWaitPeriod(uint256 indexed withdrawalPeriod);
+    event NewBlockTime(uint256 indexed blockTime);
+    event NewBlockTimeDrift(uint256 indexed blockTimeDrift);
+    event NewVotingDelay(uint256 indexed votingDelay);
+    event NewVotingPeriod(uint256 indexed votingPeriod);
+    event NewProposalThreshold(uint256 indexed proposalThreshold);
 
     /**
      * @notice initializer for NetworkParams, sets the initial set of values for the network
      * @dev disallows setting of zero values for sanity check purposes
-     * @param newOwner address of the contract controller to be set at deployment
-     * @param newBlockGasLimit initial block gas limit
-     * @param newCheckpointBlockInterval initial checkpoint interval
-     * @param newMinStake initial minimum stake
-     * @param newMaxValidatorSetSize initial max validator set size
+     * @param initParams initial set of values for the network
      */
-    constructor(
-        address newOwner,
-        uint256 newBlockGasLimit,
-        uint256 newCheckpointBlockInterval,
-        uint256 newMinStake,
-        uint256 newMaxValidatorSetSize
-    ) {
+    function initialize(InitParams memory initParams) public initializer {
         require(
-            newOwner != address(0) &&
-                newBlockGasLimit != 0 &&
-                newMinStake != 0 &&
-                newCheckpointBlockInterval != 0 &&
-                newMaxValidatorSetSize != 0,
+            initParams.newOwner != address(0) &&
+                initParams.newCheckpointBlockInterval != 0 &&
+                initParams.newEpochSize != 0 &&
+                initParams.newEpochReward != 0 &&
+                initParams.newMinValidatorSetSize != 0 &&
+                initParams.newMaxValidatorSetSize != 0 &&
+                initParams.newWithdrawalWaitPeriod != 0 &&
+                initParams.newBlockTime != 0 &&
+                initParams.newBlockTimeDrift != 0 &&
+                initParams.newVotingDelay != 0 &&
+                initParams.newVotingPeriod != 0 &&
+                initParams.newProposalThreshold != 0,
             "NetworkParams: INVALID_INPUT"
         );
-        blockGasLimit = newBlockGasLimit;
-        checkpointBlockInterval = newCheckpointBlockInterval;
-        minStake = newMinStake;
-        maxValidatorSetSize = newMaxValidatorSetSize;
-        _transferOwnership(newOwner);
-    }
-
-    /**
-     * @notice function to set new block gas limit
-     * @dev disallows setting of a zero value for sanity check purposes
-     * @param newBlockGasLimit new block gas limit
-     */
-    function setNewBlockGasLimit(uint256 newBlockGasLimit) external onlyOwner {
-        require(newBlockGasLimit != 0, "NetworkParams: INVALID_BLOCK_GAS_LIMIT");
-        blockGasLimit = newBlockGasLimit;
-
-        emit NewBlockGasLimit(newBlockGasLimit);
+        checkpointBlockInterval = initParams.newCheckpointBlockInterval;
+        epochSize = initParams.newEpochSize;
+        epochReward = initParams.newEpochReward;
+        minValidatorSetSize = initParams.newMinValidatorSetSize;
+        maxValidatorSetSize = initParams.newMaxValidatorSetSize;
+        withdrawalWaitPeriod = initParams.newWithdrawalWaitPeriod;
+        blockTime = initParams.newBlockTime;
+        blockTimeDrift = initParams.newBlockTimeDrift;
+        votingDelay = initParams.newVotingDelay;
+        votingPeriod = initParams.newVotingPeriod;
+        proposalThreshold = initParams.newProposalThreshold;
+        _transferOwnership(initParams.newOwner);
     }
 
     /**
@@ -76,15 +98,40 @@ contract NetworkParams is Ownable {
     }
 
     /**
-     * @notice function to set new minimum stake
+     * @notice function to set new epoch size
      * @dev disallows setting of a zero value for sanity check purposes
-     * @param newMinStake new minimum stake
+     * @param newEpochSize new epoch reward
      */
-    function setNewMinStake(uint256 newMinStake) external onlyOwner {
-        require(newMinStake != 0, "NetworkParams: INVALID_MIN_STAKE");
-        minStake = newMinStake;
+    function setNewEpochSize(uint256 newEpochSize) external onlyOwner {
+        require(newEpochSize != 0, "NetworkParams: INVALID_EPOCH_SIZE");
+        epochSize = newEpochSize;
 
-        emit NewMinStake(newMinStake);
+        emit NewEpochSize(newEpochSize);
+    }
+
+    /**
+     * @notice function to set new epoch reward
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newEpochReward new epoch reward
+     */
+    function setNewEpochReward(uint256 newEpochReward) external onlyOwner {
+        require(newEpochReward != 0, "NetworkParams: INVALID_EPOCH_REWARD");
+        epochReward = newEpochReward;
+
+        emit NewEpochReward(newEpochReward);
+    }
+
+    /**
+     * @notice function to set new minimum validator set size
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newMinValidatorSetSize new minimum validator set size
+     */
+    // slither-disable-next-line similar-names
+    function setNewMinValidatorSetSize(uint256 newMinValidatorSetSize) external onlyOwner {
+        require(newMinValidatorSetSize != 0, "NetworkParams: INVALID_MIN_VALIDATOR_SET_SIZE");
+        minValidatorSetSize = newMinValidatorSetSize;
+
+        emit NewMinValidatorSetSize(newMinValidatorSetSize);
     }
 
     /**
@@ -92,10 +139,83 @@ contract NetworkParams is Ownable {
      * @dev disallows setting of a zero value for sanity check purposes
      * @param newMaxValidatorSetSize new maximum validator set size
      */
+    // slither-disable-next-line similar-names
     function setNewMaxValidatorSetSize(uint256 newMaxValidatorSetSize) external onlyOwner {
         require(newMaxValidatorSetSize != 0, "NetworkParams: INVALID_MAX_VALIDATOR_SET_SIZE");
         maxValidatorSetSize = newMaxValidatorSetSize;
 
         emit NewMaxValdidatorSetSize(newMaxValidatorSetSize);
+    }
+
+    /**
+     * @notice function to set new withdrawal wait period
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newWithdrawalWaitPeriod new withdrawal wait period
+     */
+    function setNewWithdrawalWaitPeriod(uint256 newWithdrawalWaitPeriod) external onlyOwner {
+        require(newWithdrawalWaitPeriod != 0, "NetworkParams: INVALID_WITHDRAWAL_WAIT_PERIOD");
+        withdrawalWaitPeriod = newWithdrawalWaitPeriod;
+
+        emit NewWithdrawalWaitPeriod(newWithdrawalWaitPeriod);
+    }
+
+    /**
+     * @notice function to set new block time
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newBlockTime new block time
+     */
+    function setNewBlockTime(uint256 newBlockTime) external onlyOwner {
+        require(newBlockTime != 0, "NetworkParams: INVALID_BLOCK_TIME");
+        blockTime = newBlockTime;
+
+        emit NewBlockTime(newBlockTime);
+    }
+
+    /**
+     * @notice function to set new block time drift
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newBlockTimeDrift new block time drift
+     */
+    function setNewBlockTimeDrift(uint256 newBlockTimeDrift) external onlyOwner {
+        require(newBlockTimeDrift != 0, "NetworkParams: INVALID_BLOCK_TIME_DRIFT");
+        blockTimeDrift = newBlockTimeDrift;
+
+        emit NewBlockTimeDrift(newBlockTimeDrift);
+    }
+
+    /**
+     * @notice function to set new voting delay
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newVotingDelay new voting delay
+     */
+    function setNewVotingDelay(uint256 newVotingDelay) external onlyOwner {
+        require(newVotingDelay != 0, "NetworkParams: INVALID_VOTING_DELAY");
+        votingDelay = newVotingDelay;
+
+        emit NewVotingDelay(newVotingDelay);
+    }
+
+    /**
+     * @notice function to set new voting period
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newVotingPeriod new voting period
+     */
+    function setNewVotingPeriod(uint256 newVotingPeriod) external onlyOwner {
+        require(newVotingPeriod != 0, "NetworkParams: INVALID_VOTING_PERIOD");
+        votingPeriod = newVotingPeriod;
+
+        emit NewVotingPeriod(newVotingPeriod);
+    }
+
+    /**
+     * @notice function to set new proposal threshold
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newProposalThreshold new proposal threshold
+     */
+    function setNewProposalThreshold(uint256 newProposalThreshold) external onlyOwner {
+        require(newProposalThreshold != 0, "NetworkParams: INVALID_PROPOSAL_THRESHOLD");
+        proposalThreshold = newProposalThreshold;
+
+        emit NewProposalThreshold(newProposalThreshold);
     }
 }

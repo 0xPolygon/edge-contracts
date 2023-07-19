@@ -97,16 +97,18 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
         require(address(rootToken) != address(0), "RootERC721Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC721Predicate: ALREADY_MAPPED");
 
+        address childPredicate = childERC721Predicate;
+
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childERC721Predicate
+            childPredicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
         stateSender.syncState(
-            childERC721Predicate,
+            childPredicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol())
         );
         // slither-disable-next-line reentrancy-events
@@ -181,4 +183,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
         if (childToken == address(0)) childToken = mapToken(IERC721Metadata(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

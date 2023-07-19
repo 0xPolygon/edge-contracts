@@ -172,4 +172,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
         // slither-disable-next-line reentrancy-events
         emit L2MintableERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

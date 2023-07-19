@@ -161,4 +161,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         // slither-disable-next-line reentrancy-events
         emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
