@@ -596,7 +596,7 @@ function propose(address[] targets, uint256[] values, bytes[] calldatas, string 
 
 
 
-*See {IGovernor-propose}. This function has opt-in frontrunning protection, described in {_isValidDescriptionForProposer}.*
+*See {IGovernor-propose}.*
 
 #### Parameters
 
