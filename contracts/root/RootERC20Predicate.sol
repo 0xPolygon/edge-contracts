@@ -51,7 +51,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
             rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
             emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
         }
-        // mapNative();
+        mapNative();
     }
 
     /**
@@ -135,7 +135,6 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         // We track if the deposit is for the native token
         bool isNativeToken = (address(rootToken) == address(0));
-        console2.log("isNativeToken: ", isNativeToken);
 
         address childToken = rootTokenToChildToken[address(rootToken)];
         if (!isNativeToken) {

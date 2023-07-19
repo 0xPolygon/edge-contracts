@@ -30,6 +30,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    bytes32 public constant MAP_NATIVE_SIG = keccak256("MAP_NATIVE");
 
     mapping(address => address) public rootTokenToChildToken;
 
@@ -90,6 +91,8 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
             _afterTokenDeposit();
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
+        } else if (bytes32(data[:32]) == MAP_NATIVE_SIG) {
+            _mapNativeToken(data);
         } else {
             revert("ChildERC20Predicate: INVALID_SIGNATURE");
         }
@@ -204,6 +207,20 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
 
         // slither-disable-next-line reentrancy-events
         emit L2ERC20Deposit(depositToken, address(childToken), depositor, receiver, amount);
+    }
+
+    function _mapNativeToken(bytes calldata data) private {
+        (, address rootToken, string memory name, string memory symbol, uint8 decimals) = abi.decode(
+            data,
+            (bytes32, address, string, string, uint8)
+        );
+        assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
+        IChildERC20 childToken = IChildERC20(
+            Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))
+        );
+        rootTokenToChildToken[rootToken] = address(childToken);
+        childToken.initialize(rootToken, name, symbol, decimals);
+        emit L2TokenMapped(rootToken, address(childToken));
     }
 
     /**

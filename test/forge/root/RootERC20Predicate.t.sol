@@ -8,48 +8,53 @@ import {ChildERC20} from "contracts/child/ChildERC20.sol";
 import {StateSenderHelper} from "./StateSender.t.sol";
 import {Initialized} from "./ExitHelper.t.sol";
 import {PredicateHelper} from "./PredicateHelper.t.sol";
+import {MockERC20} from "contracts/mocks/MockERC20.sol";
+
 import "forge-std/console2.sol";
-
-abstract contract ChildERC20Helper {
-    ChildERC20 childERC20;
-
-    function setUp() public virtual {
-        childERC20 = new ChildERC20();
-        // address rootToken_,
-        // string calldata name_,
-        // string calldata symbol_,
-        // uint8 decimals_
-        // childERC20.initialize(address(0), )
-    }
-}
 
 contract RootERC20PredicateTest is PredicateHelper, Test {
     RootERC20Predicate rootERC20Predicate;
+    MockERC20 rootNativeToken;
+    address charlie;
 
     function setUp() public virtual override {
         super.setUp();
 
+        rootNativeToken = new MockERC20();
+
+        charlie = makeAddr("charlie");
+
         rootERC20Predicate = new RootERC20Predicate();
-        address newChildERC20Predicate = makeAddr("newChildERC20Predicate");
-        address newChildTokenTemplate = makeAddr("newChildTokenTemplate");
-        address nativeTokenRootAddress = makeAddr("newStateSender");
+        address newChildERC20Predicate = address(0x1004);
+        address newChildTokenTemplate = address(0x1003);
         rootERC20Predicate.initialize(
             address(stateSender),
             address(exitHelper),
             newChildERC20Predicate,
             newChildTokenTemplate,
-            nativeTokenRootAddress
+            address(rootNativeToken)
         );
     }
 
-    function testDepositToNative() public {
-        address alice = makeAddr("alice");
-        uint256 startBalance = 100000000000000;
-        vm.startPrank(alice);
-        vm.deal(alice, startBalance);
-        console2.log(address(checkpointManager));
-        console2.log(address(exitHelper));
+    function testDeposit() public {
+        rootNativeToken.mint(charlie, 100);
 
-        // rootERC20Predicate.depositNativeTo{value: 1}(alice);
+        vm.startPrank(charlie);
+        rootNativeToken.approve(address(rootERC20Predicate), 1);
+        rootERC20Predicate.deposit(rootNativeToken, 1);
+        vm.stopPrank();
+
+        assertEq(rootNativeToken.balanceOf(address(rootERC20Predicate)), 1);
+        assertEq(rootNativeToken.balanceOf(address(charlie)), 99);
+    }
+
+    function testDepositNativeToken() public {
+        uint256 startBalance = 100000000000000;
+        vm.deal(charlie, startBalance);
+
+        vm.startPrank(charlie);
+        rootERC20Predicate.depositNativeTo{value: 1}(charlie);
+
+        vm.stopPrank();
     }
 }
