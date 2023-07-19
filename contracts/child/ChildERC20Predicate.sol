@@ -215,6 +215,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
             data,
             (bytes32, address, string, string, uint8)
         );
+        assert(rootToken != address(0)); // invariant since root predicate performs the same check
         assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
         IChildERC20 childToken = IChildERC20(
             Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))

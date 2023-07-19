@@ -106,6 +106,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         string memory tokenSymbol,
         uint8 tokenDecimals
     ) internal returns (address) {
+        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[rootToken] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC20Predicate;
