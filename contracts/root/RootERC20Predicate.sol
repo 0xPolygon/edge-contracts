@@ -18,7 +18,9 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    address public constant NATIVE_TOKEN = address(0);
+
+    // assign arbitrary unaccessable address of 1 to native token
+    address public constant NATIVE_TOKEN = address(1);
     mapping(address => address) public rootTokenToChildToken;
 
     /**
