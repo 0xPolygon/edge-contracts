@@ -41,6 +41,7 @@ contract RootERC20PredicateFlowRate is
 
     // Constants used for access control
     bytes32 public constant PAUSER_ADMIN_ROLE = keccak256("PAUSER");
+    bytes32 public constant UNPAUSER_ADMIN_ROLE = keccak256("UNPAUSER");
     bytes32 public constant RATE_CONTROL_ROLE = keccak256("RATE");
 
     // Threshold for large transfers
@@ -87,6 +88,7 @@ contract RootERC20PredicateFlowRate is
     function initialize(
         address superAdmin,
         address pauseAdmin,
+        address unpauseAdmin,
         address rateAdmin,
         address newStateSender,
         address newExitHelper,
@@ -106,6 +108,7 @@ contract RootERC20PredicateFlowRate is
 
         _setupRole(DEFAULT_ADMIN_ROLE, superAdmin);
         _setupRole(PAUSER_ADMIN_ROLE, pauseAdmin);
+        _setupRole(UNPAUSER_ADMIN_ROLE, unpauseAdmin);
         _setupRole(RATE_CONTROL_ROLE, rateAdmin);
     }
 
@@ -121,7 +124,7 @@ contract RootERC20PredicateFlowRate is
      * @notice Unpause all withdrawals.
      * @dev Only PAUSER role.
      */
-    function unpause() external onlyRole(PAUSER_ADMIN_ROLE) {
+    function unpause() external onlyRole(UNPAUSER_ADMIN_ROLE) {
         _unpause();
     }
 
