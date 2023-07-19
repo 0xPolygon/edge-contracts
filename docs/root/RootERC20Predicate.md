@@ -44,6 +44,23 @@ function MAP_TOKEN_SIG() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### NATIVE_TOKEN
+
+```solidity
+function NATIVE_TOKEN() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### WITHDRAW_SIG
 
 ```solidity
@@ -111,6 +128,22 @@ Function to deposit tokens from the depositor to themselves on the child chain
 |---|---|---|
 | rootToken | contract IERC20Metadata | Address of the root token being deposited |
 | amount | uint256 | Amount to deposit |
+
+### depositNativeTo
+
+```solidity
+function depositNativeTo(address receiver) external payable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| receiver | address | undefined |
 
 ### depositTo
 
