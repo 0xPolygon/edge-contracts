@@ -157,7 +157,12 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address childToken = rootTokenToChildToken[rootToken];
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
-        IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+        if (rootToken == address(0)) {
+            (bool success, ) = receiver.call{value: amount}("");
+            require(success, "RootERC20Predicate: ETH_TRANSFER_FAILED");
+        } else {
+            IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+        }
         // slither-disable-next-line reentrancy-events
         emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
