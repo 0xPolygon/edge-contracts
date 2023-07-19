@@ -18,7 +18,6 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    bytes32 public constant MAP_NATIVE_SIG = keccak256("MAP_NATIVE");
     mapping(address => address) public rootTokenToChildToken;
 
     /**
@@ -91,44 +90,40 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function mapToken(IERC20Metadata rootToken) public returns (address) {
-        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
-        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
-
-        address childPredicate = childERC20Predicate;
-
-        address childToken = Clones.predictDeterministicAddress(
-            childTokenTemplate,
-            keccak256(abi.encodePacked(rootToken)),
-            childPredicate
-        );
-
-        rootTokenToChildToken[address(rootToken)] = childToken;
-
-        stateSender.syncState(
-            childPredicate,
-            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
-        );
-        // slither-disable-next-line reentrancy-events
-        emit TokenMapped(address(rootToken), childToken);
-
-        return childToken;
+        return _map(address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals());
     }
 
     function _mapNative() private {
-        require(rootTokenToChildToken[address(0)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+        _map(address(0), "Ether", "ETH", 18);
+    }
+
+    function _map(
+        address tokenAddress,
+        string memory tokenName,
+        string memory tokenSymbol,
+        uint8 tokenDecimals
+    ) internal returns (address) {
+        // require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
+        require(rootTokenToChildToken[address(tokenAddress)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC20Predicate;
 
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
-            keccak256(abi.encodePacked(address(0))),
+            keccak256(abi.encodePacked(tokenAddress)),
             childPredicate
         );
-        rootTokenToChildToken[address(address(0))] = childToken;
 
-        stateSender.syncState(childPredicate, abi.encode(MAP_NATIVE_SIG, address(0), "Ether", "ETH", 18));
+        rootTokenToChildToken[address(tokenAddress)] = childToken;
+
+        stateSender.syncState(
+            childPredicate,
+            abi.encode(MAP_TOKEN_SIG, tokenAddress, tokenName, tokenSymbol, tokenDecimals)
+        );
         // slither-disable-next-line reentrancy-events
-        emit TokenMapped(address(0), childToken);
+        emit TokenMapped(tokenAddress, childToken);
+
+        return childToken;
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
