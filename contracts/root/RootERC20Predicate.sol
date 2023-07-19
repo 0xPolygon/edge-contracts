@@ -50,7 +50,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
             rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
             emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
         }
-        mapNative();
+        _mapNative();
     }
 
     /**
@@ -114,7 +114,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         return childToken;
     }
 
-    function mapNative() private {
+    function _mapNative() private {
         require(rootTokenToChildToken[address(0)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC20Predicate;
