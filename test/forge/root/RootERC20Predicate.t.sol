@@ -9,7 +9,6 @@ import {StateSenderHelper} from "./StateSender.t.sol";
 import {Initialized} from "./ExitHelper.t.sol";
 import {PredicateHelper} from "./PredicateHelper.t.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
-
 import "forge-std/console2.sol";
 
 contract RootERC20PredicateTest is PredicateHelper, Test {
@@ -54,7 +53,6 @@ contract RootERC20PredicateTest is PredicateHelper, Test {
 
         vm.startPrank(charlie);
         rootERC20Predicate.depositNativeTo{value: 1}(charlie);
-
         vm.stopPrank();
     }
 }
