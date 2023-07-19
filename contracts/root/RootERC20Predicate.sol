@@ -18,6 +18,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    address public constant NATIVE_TOKEN = address(0);
     mapping(address => address) public rootTokenToChildToken;
 
     /**
@@ -76,7 +77,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     }
 
     function depositNativeTo(address receiver) external payable {
-        _deposit(IERC20Metadata(address(0)), receiver, msg.value);
+        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, msg.value);
     }
 
     /**
@@ -126,11 +127,9 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
-        // We track if the deposit is for the native token
-        bool isNativeToken = (address(rootToken) == address(0));
-
         address childToken = rootTokenToChildToken[address(rootToken)];
-        if (!isNativeToken) {
+
+        if ((address(rootToken) != NATIVE_TOKEN)) {
             if (childToken == address(0)) {
                 childToken = mapToken(rootToken);
             }
@@ -151,7 +150,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address childToken = rootTokenToChildToken[rootToken];
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
-        if (rootToken == address(0)) {
+        if (rootToken == NATIVE_TOKEN) {
             (bool success, ) = receiver.call{value: amount}("");
             require(success, "RootERC20Predicate: ETH_TRANSFER_FAILED");
         } else {
