@@ -78,6 +78,9 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         _deposit(rootToken, msg.sender, amount);
     }
 
+    /**
+     * @inheritdoc IRootERC20Predicate
+     */
     function depositNativeTo(address receiver) external payable {
         _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, msg.value);
     }

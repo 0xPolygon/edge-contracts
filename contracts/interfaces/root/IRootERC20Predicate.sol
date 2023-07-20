@@ -38,9 +38,16 @@ interface IRootERC20Predicate is IL2StateReceiver {
     /**
      * @notice Function to deposit tokens from the depositor to another address on the child chain
      * @param rootToken Address of the root token being deposited
+     * @param receiver Address of the receiver on the child chain
      * @param amount Amount to deposit
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external;
+
+    /**
+     * @notice Function to deposit native token (Ether) from the depositor to another address on the child chain
+     * @param receiver Address of the receiver on the child chain
+     */
+    function depositNativeTo(address receiver) external payable;
 
     /**
      * @notice Function to be used for token mapping
