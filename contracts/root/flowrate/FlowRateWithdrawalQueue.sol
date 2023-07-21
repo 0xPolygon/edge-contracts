@@ -38,7 +38,7 @@ abstract contract FlowRateWithdrawalQueue {
         mapping(uint256 => PendingWithdrawal) items;
     }
     // Mapping of user addresses to withdrawal queue.
-    mapping(address => PendingWithdrawalQueue) public pendingWithdrawals;
+    mapping(address => PendingWithdrawalQueue) private pendingWithdrawals;
 
     // The amount of time between a withdrawal request and a user being allowed to withdraw.
     uint256 public withdrawalDelay;
