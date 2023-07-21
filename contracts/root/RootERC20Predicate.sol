@@ -78,7 +78,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, msg.sender, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
-        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED BALANCE");
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
     }
 
     /**
@@ -88,7 +88,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, receiver, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
-        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED BALANCE");
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
     }
 
     /**
