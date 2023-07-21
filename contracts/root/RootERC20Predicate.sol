@@ -75,7 +75,20 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external {
+        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, msg.sender, amount);
+        // invariant check to ensure that the root token balance has increased by the amount deposited
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED BALANCE");
+    }
+
+    /**
+     * @inheritdoc IRootERC20Predicate
+     */
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
+        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
+        _deposit(rootToken, receiver, amount);
+        // invariant check to ensure that the root token balance has increased by the amount deposited
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED BALANCE");
     }
 
     /**
@@ -84,13 +97,6 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     function depositNativeTo(address receiver) external payable {
         require(msg.value > 0, "RootERC20Predicate: INVALID_AMOUNT");
         _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, msg.value);
-    }
-
-    /**
-     * @inheritdoc IRootERC20Predicate
-     */
-    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
-        _deposit(rootToken, receiver, amount);
     }
 
     /**

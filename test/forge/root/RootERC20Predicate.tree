@@ -1,8 +1,13 @@
 RootERC20Predicate.t.sol
 ├── When the contract is not initialized
-│   ├── deposits cannot be done
-│   ├── mappings cannot be done
-│   └── withdrawals cannot be done
+│   ├── when "onL2StateReceive" is called
+│   │   └── it should revert
+│   ├── when "depositTo" is called
+│   │   └── it should revert
+│   ├── when "mapToken" is called
+│   │   └── it should revert
+│   └── when "deposit" is called
+│       └── it should revert
 ├── When the contract being initialized
 │   ├── when the state sender address is set to 0
 │   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
@@ -18,6 +23,14 @@ RootERC20Predicate.t.sol
 │       ├── it should emit a "TokenMapped" event for the native token (ether) [integration]
 │       └── it should correctly map the native token (ether) on the child chain [integration]
 └── When the contract is initialized
+    ├── When "depositTo" is called
+    │   ├── When the token is not mapped
+    │   │   ├── it should emit a "TokenMapped" event
+    │   │   ├── it should increase the balance of the bridge by `amount`
+    │   │   └── it should emit an "ERC20Deposit" event
+    │   └── When the token is mapped
+    │       ├── it should increase the balance of the bridge by `amount`
+    │       └── it should emit an "ERC20Deposit" event      
     ├── When "depositNativeTo" is called
     │   ├── When the message value is 0
     │   │   └── it should revert with error "RootERC20Predicate: INVALID_AMOUNT"
@@ -27,15 +40,37 @@ RootERC20Predicate.t.sol
     │       ├── it should never revert
     │       ├── it should never emit a "TokenMapped" event
     │       └── it should emit an "ERC20Deposit" event with the correct fields
-    └── When "mapToken" is called
-        ├── When the rootToken address is 0
-        │   └── it should revert with "RootERC20Predicate: INVALID_TOKEN"
-        └── When the root token address is not 0  
-            ├── When the rootToken has invalid name, symbol or decimals
-            │   └── it should revert
-            └── When the rootToken has valid name, symbol and decimals
-                ├── When the token is already mapped
-                │   └── it should revert with "RootERC20Predicate: ALREADY_MAPPED"
-                └── When the token is not mapped
-                    ├── it should never revert
-                    └── it should emit a token "TokenMapped" event
+    ├── When "mapToken" is called
+    │   ├── When the rootToken address is 0
+    │   │   └── it should revert with "RootERC20Predicate: INVALID_TOKEN"
+    │   └── When the root token address is not 0  
+    │       ├── When the rootToken has invalid name, symbol or decimals
+    │       │   └── it should revert
+    │       └── When the rootToken has valid name, symbol and decimals
+    │           ├── When the token is already mapped
+    │           │   └── it should revert with "RootERC20Predicate: ALREADY_MAPPED"
+    │           └── When the token is not mapped
+    │               ├── it should never revert
+    │               └── it should emit a token "TokenMapped" event
+    └── When "onL2StateReceive" is called
+        ├── When msg.sender is not exit helper
+        │   └── it should revert with "RootERC20Predicate: ONLY_EXIT_HELPER"
+        └── When msg.sender is exit helper          
+            ├── When sender is not childERC20Predicate
+            │   └── it should revert with "RootERC20Predicate: ONLY_CHILD_PREDICATE"
+            └── When sender is childERC20Predicate
+                ├── When withdraw signature is not keccak256("WITHDRAW")
+                │   └── it should revert with "RootERC20Predicate: INVALID_SIGNATURE"
+                └── When withdraw signature is keccak256("WITHDRAW")
+                    ├── When abi encoded payload is invalid
+                    │   └── it should revert
+                    └── When abi encoded payload is valid
+                        ├── When root token mapping doesn't exist
+                        │   └── it should fail assertion
+                        ├── When root token is native token
+                        │   ├── it should increase balance of receiver
+                        │   ├── it should decrease balance of bridge
+                        │   └── it should emit "ERC20Withdraw" event
+                        └── when root token is not native token
+                            ├── it should decrease balance of bridge
+                            └── it should emit "ERC20Withdraw" event
