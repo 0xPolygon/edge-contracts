@@ -75,10 +75,3 @@ contract RootERC20PredicateFlowRateTest is PredicateHelper, Test {
 
 
 }
-
-   address superAdmin,
-        address pauseAdmin,
-        address unpauseAdmin,
-        address rateAdmin,
-
-

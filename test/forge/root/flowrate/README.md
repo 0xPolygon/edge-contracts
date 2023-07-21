@@ -8,10 +8,10 @@ This section defines tests for contracts/root/flowrate/FlowRateDetection.sol
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
-|           | flowRateBuckets(address) returns an empty bucket. | NA | No |
-|           | withdrawalQueueActivated returns false | NA | No |
+| Test name                 | Description                                       | Happy Case | Implemented |
+|---------------------------| --------------------------------------------------|------------|-------------|
+| testUninitFlowRateBuckets | flowRateBuckets(address) returns an empty bucket. | NA         | Yes         |
+|                           | withdrawalQueueActivated returns false.           | NA         | No          |
 
 
 
