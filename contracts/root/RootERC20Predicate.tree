@@ -11,13 +11,31 @@ RootERC20Predicate.t.sol
 │   ├── when the child erc20 predicate is set to 0
 │   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
 │   ├── when the native token root address is set to 0
-│   │   └── it should not emit a token mapped event
+│   │   └── it should not emit a "TokenMapped" event
 │   └── when the initializer has valid inputs with a non-zero native token root
-│       ├── it should emit a token mapped event for the native token root address
+│       ├── it should emit a "TokenMapped" event for the native token root address
 │       ├── it should correctly map the native token root address on the child chain
-│       ├── it should emit a token mapped event for the native token (ether) [integration]
+│       ├── it should emit a "TokenMapped" event for the native token (ether) [integration]
 │       └── it should correctly map the native token (ether) on the child chain [integration]
 └── When the contract is initialized
-    └── When depositNative is called
-        └── When the message value is 0
-            └── it should revert with error "RootERC20Predicate: INVALID_AMOUNT"
+    ├── When "depositNativeTo" is called
+    │   ├── When the message value is 0
+    │   │   └── it should revert with error "RootERC20Predicate: INVALID_AMOUNT"
+    │   └── When the message value is greater than 0
+    │       ├── it should reduce the depositors native token balance
+    │       ├── it should increase the predicate contract's balance
+    │       ├── it should never revert
+    │       ├── it should never emit a "TokenMapped" event
+    │       └── it should emit an "ERC20Deposit" event with the correct fields
+    └── When "mapToken" is called
+        ├── When the rootToken address is 0
+        │   └── it should revert with "RootERC20Predicate: INVALID_TOKEN"
+        └── When the root token address is not 0  
+            ├── When the rootToken has invalid name, symbol or decimals
+            │   └── it should revert
+            └── When the rootToken has valid name, symbol and decimals
+                ├── When the token is already mapped
+                │   └── it should revert with "RootERC20Predicate: ALREADY_MAPPED"
+                └── When the token is not mapped
+                    ├── it should never revert
+                    └── it should emit a token "TokenMapped" event
