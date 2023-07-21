@@ -82,6 +82,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function depositNativeTo(address receiver) external payable {
+        require(msg.value > 0, "RootERC20Predicate: INVALID_AMOUNT");
         _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, msg.value);
     }
 

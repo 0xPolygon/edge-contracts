@@ -1,0 +1,23 @@
+RootERC20Predicate.t.sol
+├── When the contract is not initialized
+│   ├── deposits cannot be done
+│   ├── mappings cannot be done
+│   └── withdrawals cannot be done
+├── When the contract being initialized
+│   ├── when the state sender address is set to 0
+│   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│   ├── when the exit helper address is set to 0
+│   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│   ├── when the child erc20 predicate is set to 0
+│   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│   ├── when the native token root address is set to 0
+│   │   └── it should not emit a token mapped event
+│   └── when the initializer has valid inputs with a non-zero native token root
+│       ├── it should emit a token mapped event for the native token root address
+│       ├── it should correctly map the native token root address on the child chain
+│       ├── it should emit a token mapped event for the native token (ether) [integration]
+│       └── it should correctly map the native token (ether) on the child chain [integration]
+└── When the contract is initialized
+    └── When depositNative is called
+        └── When the message value is 0
+            └── it should revert with error "RootERC20Predicate: INVALID_AMOUNT"
