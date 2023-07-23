@@ -1,27 +1,31 @@
 RootERC20Predicate.t.sol
 ├── When the contract is not initialized
-│   ├── when "onL2StateReceive" is called
+│   ├── When "onL2StateReceive" is called
 │   │   └── it should revert
-│   ├── when "depositTo" is called
+│   ├── When "deposit" is called
 │   │   └── it should revert
-│   ├── when "mapToken" is called
+│   ├── When "depositTo" is called
 │   │   └── it should revert
-│   └── when "deposit" is called
-│       └── it should revert
-├── When the contract being initialized
-│   ├── when the state sender address is set to 0
-│   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
-│   ├── when the exit helper address is set to 0
-│   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
-│   ├── when the child erc20 predicate is set to 0
-│   │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
-│   ├── when the native token root address is set to 0
-│   │   └── it should not emit a "TokenMapped" event
-│   └── when the initializer has valid inputs with a non-zero native token root
-│       ├── it should emit a "TokenMapped" event for the native token root address
-│       ├── it should correctly map the native token root address on the child chain
-│       ├── it should emit a "TokenMapped" event for the native token (ether) [integration]
-│       └── it should correctly map the native token (ether) on the child chain [integration]
+│   ├── When "depositNativeTo" is called
+│   │   └── it should revert
+│   └── When "mapToken" is called
+│   │   └── it should revert
+│   └── When "initialize" is called
+│       ├── When the state sender address is set to 0
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the exit helper address is set to 0
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the child erc20 predicate is set to 0
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the child erc20 template is set to 0
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the native token root address is set to 0
+│       │   └── it should not emit a "TokenMapped" event
+│       └── When the initializer has valid inputs with a non-zero native token root
+│           ├── it should emit a "TokenMapped" event for the native token root address
+│           ├── it should correctly map the native token root address on the child chain
+│           ├── it should emit a "TokenMapped" event for the native token (ether) [integration]
+│           └── it should correctly map the native token (ether) on the child chain [integration]
 └── When the contract is initialized
     ├── When "depositTo" is called
     │   ├── When the token is not mapped
@@ -71,6 +75,6 @@ RootERC20Predicate.t.sol
                         │   ├── it should increase balance of receiver
                         │   ├── it should decrease balance of bridge
                         │   └── it should emit "ERC20Withdraw" event
-                        └── when root token is not native token
+                        └── When root token is not native token
                             ├── it should decrease balance of bridge
                             └── it should emit "ERC20Withdraw" event
