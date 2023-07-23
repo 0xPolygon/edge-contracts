@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC20Predicate.sol";
 import "../interfaces/IStateSender.sol";
-import "forge-std/console2.sol";
 
 // solhint-disable reason-string
 contract RootERC20Predicate is Initializable, IRootERC20Predicate {
@@ -133,7 +132,6 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
             childPredicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, tokenName, tokenSymbol, tokenDecimals)
         );
-        console2.log("made it here 2");
         // slither-disable-next-line reentrancy-events
         emit TokenMapped(rootToken, childToken);
 
