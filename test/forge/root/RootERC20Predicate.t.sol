@@ -6,14 +6,18 @@ import "forge-std/Test.sol";
 import {RootERC20Predicate} from "contracts/root/RootERC20Predicate.sol";
 import {ChildERC20} from "contracts/child/ChildERC20.sol";
 import {StateSenderHelper} from "./StateSender.t.sol";
-import {Initialized} from "./ExitHelper.t.sol";
 import {PredicateHelper} from "./PredicateHelper.t.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
-contract RootERC20Predicate_Uninitialized is PredicateHelper, Test {
+abstract contract UninitializedSetup is PredicateHelper, Test {
+    event TokenMapped(address indexed rootToken, address indexed childToken);
+    event Initialized(uint8 version);
+    event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
+
     RootERC20Predicate rootERC20Predicate;
     MockERC20 erc20;
-    address charlie;
+    address charlie = makeAddr("charlie");
     address childERC20Predicate = address(0x1004);
     address childTokenTemplate = address(0x1003);
     address ZERO_ADDRESS = address(0);
@@ -23,9 +27,27 @@ contract RootERC20Predicate_Uninitialized is PredicateHelper, Test {
 
         rootERC20Predicate = new RootERC20Predicate();
         erc20 = new MockERC20();
-        charlie = makeAddr("charlie");
     }
+}
 
+abstract contract InitializedSetup is UninitializedSetup {
+    MockERC20 rootNativeToken;
+
+    function setUp() public virtual override {
+        super.setUp();
+        rootNativeToken = new MockERC20();
+
+        rootERC20Predicate.initialize(
+            address(stateSender),
+            address(exitHelper),
+            childERC20Predicate,
+            childTokenTemplate,
+            address(rootNativeToken)
+        );
+    }
+}
+
+contract RootERC20Predicate_Uninitialized is UninitializedSetup {
     function test_UnititializedValues() public {
         assertEq(address(rootERC20Predicate.stateSender()), address(0));
         assertEq(rootERC20Predicate.exitHelper(), address(0));
@@ -114,58 +136,58 @@ contract RootERC20Predicate_Uninitialized is PredicateHelper, Test {
         );
     }
 
-    function test_initializeNativeTokenRootZero_NoMapping() public {
+    function test_initializeNativeTokenRootZero_NoMapping() public skipTest {
+        // TODO: Implement once foundry supports negative assertions
+        // https://github.com/foundry-rs/foundry/issues/509
+    }
+
+    function test_initializeNoZeroNativeToken() public {
+        address childTokenForEther = Clones.predictDeterministicAddress(
+            childTokenTemplate,
+            keccak256(abi.encodePacked(rootERC20Predicate.NATIVE_TOKEN())),
+            childERC20Predicate
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit TokenMapped(address(erc20), address(0x1010));
+        vm.expectEmit(true, true, true, false);
+        emit StateSynced(1, address(rootERC20Predicate), childERC20Predicate, "");
+        vm.expectEmit(true, true, true, true);
+        emit TokenMapped(rootERC20Predicate.NATIVE_TOKEN(), childTokenForEther);
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(1);
+
         rootERC20Predicate.initialize(
             address(stateSender),
             address(exitHelper),
             childERC20Predicate,
             childTokenTemplate,
-            ZERO_ADDRESS
+            address(erc20)
         );
     }
 }
 
-// contract RootERC20Predicate_Initialized is RootERC20Predicate_Uninitialized {
-//     MockERC20 rootNativeToken;
-//     address charlie;
+contract RootERC20Predicate_Initialized is InitializedSetup {
+    function testDeposit() public {
+        rootNativeToken.mint(charlie, 100);
 
-//     function setUp() public virtual override {
-//         super.setUp();
+        vm.startPrank(charlie);
+        rootNativeToken.approve(address(rootERC20Predicate), 1);
+        rootERC20Predicate.deposit(rootNativeToken, 1);
+        vm.stopPrank();
 
-//         rootNativeToken = new MockERC20();
+        assertEq(rootNativeToken.balanceOf(address(rootERC20Predicate)), 1);
+        assertEq(rootNativeToken.balanceOf(address(charlie)), 99);
+    }
 
-//         charlie = makeAddr("charlie");
-//         address newChildERC20Predicate = address(0x1004);
-//         address newChildTokenTemplate = address(0x1003);
-//         rootERC20Predicate.initialize(
-//             address(stateSender),
-//             address(exitHelper),
-//             newChildERC20Predicate,
-//             newChildTokenTemplate,
-//             address(rootNativeToken)
-//         );
-//     }
+    function testDepositNativeToken() public {
+        uint256 startBalance = 100;
+        vm.deal(charlie, startBalance);
 
-//     function testDeposit() public {
-//         rootNativeToken.mint(charlie, 100);
-
-//         vm.startPrank(charlie);
-//         rootNativeToken.approve(address(rootERC20Predicate), 1);
-//         rootERC20Predicate.deposit(rootNativeToken, 1);
-//         vm.stopPrank();
-
-//         assertEq(rootNativeToken.balanceOf(address(rootERC20Predicate)), 1);
-//         assertEq(rootNativeToken.balanceOf(address(charlie)), 99);
-//     }
-
-//     function testDepositNativeToken() public {
-//         uint256 startBalance = 100;
-//         vm.deal(charlie, startBalance);
-
-//         vm.startPrank(charlie);
-//         rootERC20Predicate.depositNativeTo{value: 1}(charlie);
-//         assertEq(charlie.balance, 99);
-//         assertEq(address(rootERC20Predicate).balance, 1);
-//         vm.stopPrank();
-//     }
-// }
+        vm.startPrank(charlie);
+        rootERC20Predicate.depositNativeTo{value: 1}(charlie);
+        assertEq(charlie.balance, 99);
+        assertEq(address(rootERC20Predicate).balance, 1);
+        vm.stopPrank();
+    }
+}
