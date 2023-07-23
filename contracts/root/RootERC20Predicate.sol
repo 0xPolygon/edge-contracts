@@ -75,20 +75,14 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external {
-        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
-        _deposit(rootToken, msg.sender, amount);
-        // invariant check to ensure that the root token balance has increased by the amount deposited
-        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
+        _depositERC20(rootToken, msg.sender, amount);
     }
 
     /**
      * @inheritdoc IRootERC20Predicate
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
-        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
-        _deposit(rootToken, receiver, amount);
-        // invariant check to ensure that the root token balance has increased by the amount deposited
-        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
+        _depositERC20(rootToken, receiver, amount);
     }
 
     /**
@@ -136,6 +130,13 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         emit TokenMapped(rootToken, childToken);
 
         return childToken;
+    }
+
+    function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
+        _deposit(rootToken, receiver, amount);
+        // invariant check to ensure that the root token balance has increased by the amount deposited
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
