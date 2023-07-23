@@ -27,6 +27,8 @@ RootERC20Predicate.t.sol
 │           ├── it should emit a "TokenMapped" event for the native token (ether) [integration]
 │           └── it should correctly map the native token (ether) on the child chain [integration]
 └── When the contract is initialized
+    ├── When "initialize" is called
+│   │   └── it should revert with "Initializable: contract is already initialized"
     ├── When "depositTo" is called
     │   ├── When the token is not mapped
     │   │   ├── it should emit a "TokenMapped" event
