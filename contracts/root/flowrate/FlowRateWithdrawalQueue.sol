@@ -44,6 +44,9 @@ abstract contract FlowRateWithdrawalQueue {
     uint256 public withdrawalDelay;
 
     // Indicates that the user must wait until *time* before calling withdraw
+    event WithdrawalDelayUpdated(uint256 delay);
+
+    // Indicates that the user must wait until *time* before calling withdraw
     event PleaseWait(uint256 time);
 
     /**
@@ -52,7 +55,7 @@ abstract contract FlowRateWithdrawalQueue {
      */
     // solhint-disable-next-line func-name-mixedcase
     function __FlowRateWithdrawalQueue_init() internal {
-        withdrawalDelay = DEFAULT_WITHDRAW_DELAY;
+        _setWithdrawalDelay(DEFAULT_WITHDRAW_DELAY);
     }
 
     /**
@@ -62,6 +65,7 @@ abstract contract FlowRateWithdrawalQueue {
      */
     function _setWithdrawalDelay(uint256 delay) internal {
         withdrawalDelay = delay;
+        emit WithdrawalDelayUpdated(delay);
     }
 
     /**

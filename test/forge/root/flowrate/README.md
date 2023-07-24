@@ -31,11 +31,13 @@ Operational functions tests:
 
 | Test name                       |Description                                        | Happy Case | Implemented |
 |---------------------------------| --------------------------------------------------|------------|-------------|
-|           | _updateFlowRateBucket() with a single call for a configured token | Yes | No |
-|           | _updateFlowRateBucket() with a multiple calls for a configured token | Yes | No |
-|           | _updateFlowRateBucket() with a two calls, after the bucket has been refilled | Yes | No |
-|           | _updateFlowRateBucket() with one call to empty the bucket | Yes | No |
-|           | _updateFlowRateBucket() unconfigured bucket | No | No |
+| testUpdateFlowRateBucketSingle  | _updateFlowRateBucket() with a single call for a configured token | Yes | No |
+| testUpdateFlowRateBucketMultiple | _updateFlowRateBucket() with a multiple calls for a configured token | Yes | No |
+| testUpdateFlowRateBucketOverflow | _updateFlowRateBucket() when the bucket overflows | Yes | No |
+| testUpdateFlowRateBucketJustEmpty | _updateFlowRateBucket() when the bucket is exactly empty. | Yes | No |
+| testUpdateFlowRateBucketEmpty | _updateFlowRateBucket() when the bucket has underflowed. | Yes | No |
+| testUpdateFlowRateBucketAfterEmpty | _updateFlowRateBucket() after the bucket was empty. | Yes | No |
+| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket | No | No |
 
 
 ## Flow Rate Withdrawal Queue

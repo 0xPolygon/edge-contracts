@@ -33,7 +33,7 @@ abstract contract FlowRateDetection {
     bool public withdrawalQueueActivated;
 
     // Emitted when there is a withdrawal request for a token for which there is no bucket.
-    event WithdrawalForNonFlowRatedToken(address token, uint256 amount);
+    event WithdrawalForNonFlowRatedToken(address indexed token, uint256 amount);
     // Emitted when queue activated or deactivated
     event AutoActivatedWithdrawalQueue();
     event ActivatedWithdrawalQueue(address who);
@@ -89,7 +89,9 @@ abstract contract FlowRateDetection {
         // being 0, as it is when a token is first rate controlled, with result in the
         // depth being set to the capacity of the bucket.
         // solhint-disable-next-line not-rely-on-time
-        uint256 depth = (block.timestamp - bucket.refillTime) * bucket.refillRate;
+        uint256 depth = bucket.depth + (block.timestamp - bucket.refillTime) * bucket.refillRate;
+        // solhint-disable-next-line not-rely-on-time
+        bucket.refillTime = block.timestamp;
         if (depth > capacity) {
             depth = capacity;
         }
