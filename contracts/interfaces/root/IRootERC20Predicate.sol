@@ -56,4 +56,11 @@ interface IRootERC20Predicate is IL2StateReceiver {
      * @return address Address of the child token
      */
     function mapToken(IERC20Metadata rootToken) external returns (address);
+
+    /**
+     * @notice Function to be used for native token mapping
+     * @dev can be called by any actor post initialization
+     * @return address Address of the child token
+     */
+    function mapNative() external returns (address);
 }

@@ -52,7 +52,6 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
             rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
             emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
         }
-        _mapNative();
     }
 
     /**
@@ -90,6 +89,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      */
     function depositNativeTo(address receiver) external payable {
         require(msg.value > 0, "RootERC20Predicate: INVALID_AMOUNT");
+        require(rootTokenToChildToken[NATIVE_TOKEN] != address(0), "RootERC20Predicate: NOT_MAPPED");
         _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, msg.value);
     }
 
@@ -101,8 +101,11 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         return _map(address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals());
     }
 
-    function _mapNative() private {
-        _map(NATIVE_TOKEN, "Ether", "ETH", 18);
+    /**
+     * @inheritdoc IRootERC20Predicate
+     */
+    function mapNative() external returns (address) {
+        return _map(NATIVE_TOKEN, "Ether", "ETH", 18);
     }
 
     function _map(
