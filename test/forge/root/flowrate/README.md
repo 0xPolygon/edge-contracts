@@ -4,32 +4,33 @@ The following are unit tests for the flow rate control code.
 
 
 ## Flow Rate Detection
-This section defines tests for contracts/root/flowrate/FlowRateDetection.sol
+This section defines tests for contracts/root/flowrate/FlowRateDetection.sol. 
+All of these tests are in test/forge/root/flowrate/FlowRateDetection.t.sol.
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name                 | Description                                       | Happy Case | Implemented |
-|---------------------------| --------------------------------------------------|------------|-------------|
-| testUninitFlowRateBuckets | flowRateBuckets(address) returns an empty bucket. | NA         | Yes         |
-|                           | withdrawalQueueActivated returns false.           | NA         | No          |
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
+| testUninitFlowRateBuckets       | flowRateBuckets(address) returns an empty bucket. | NA         | Yes         |
+| testUnWithdrawalQueueActivated  | withdrawalQueueActivated returns false.           | NA         | No          |
 
 
 
 Control functions tests:
 
-| Test name | Description | Happy Case | Implemented | 
-|-----------|-------------|-------------|-----|
-|          | _activateWithdrawalQueue() | Yes | No |
-|            | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true | Yes | No |
-|           | _setFlowRateThreshold() with valid values | Yes | No |
-|           | _setFlowRateThreshold() with token address = 0 | No | No |
-|           | _setFlowRateThreshold() with capacity = 0 | No | No |
-|           | _setFlowRateThreshold() with refill rate = 0 | No | No |
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
+| testActivateWithdrawalQueue     | _activateWithdrawalQueue().                       | Yes        | No          |
+| testDeactivateWithdrawalQueue   | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true. | Yes | No |
+| testSetFlowRateThreshold        | _setFlowRateThreshold() with valid values         | Yes        | No          |
+| testSetFlowRateThresholdBadToken | _setFlowRateThreshold() with token address = 0   | No         | No          |
+| testSetFlowRateThresholdBadCapacity | _setFlowRateThreshold() with capacity = 0     | No         | No          |
+| testSetFlowRateThresholdBadFillRate | _setFlowRateThreshold() with refill rate = 0  | No         | No          |
 
 Operational functions tests:
 
-| Test name | Description | Happy Case | Implemented | 
-|-----------|-------------|-------------|-----|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | _updateFlowRateBucket() with a single call for a configured token | Yes | No |
 |           | _updateFlowRateBucket() with a multiple calls for a configured token | Yes | No |
 |           | _updateFlowRateBucket() with a two calls, after the bucket has been refilled | Yes | No |
@@ -43,16 +44,16 @@ This section defines tests for contracts/root/flowrate/FlowRateWithdrawalQueue.s
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | withdrawalDelay() returns zero. | NA | No |
 |           | getPendingWithdrawals returns a zero length array | NA | No |
 
 
 Control function tests: 
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | __FlowRateWithdrawalQueue_init() configures the default withdrawal delay. | Yes | No |
 |           | _setWithdrawalDelay can confugre a withdrawal delay | Yes | No |
 
@@ -60,8 +61,8 @@ Control function tests:
 
 Operational function tests: 
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | _enqueueWithdrawal | Yes | No |
 |           | _enqueueWithdrawal with two different tokens. | Yes | No |
 |           | _dequeueWithdrawal with no elements in the queue | Yes | No |
@@ -79,16 +80,16 @@ This section defines tests for contracts/root/flowrate/RootERC20PredicateFlowRat
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | paused() returns false. | NA | No |
 |           | largeTransferThresholds returns 0 for a  returns a zero length array | NA | No |
 
 
 Control functions testing: 
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | pause() | Yes | No |
 |           | pause() bad auth. | No | No |
 |           | unpause() | Yes | No |
@@ -105,8 +106,8 @@ Control functions testing:
 
 Operational functions testing: 
 
-| Test name | Description | Happy Case | Implemented |
-|-----------| -----------|-------------|-------------|
+| Test name                       |Description                                        | Happy Case | Implemented |
+|---------------------------------| --------------------------------------------------|------------|-------------|
 |           | _withdraw() small amount, no quue | Yes | No |
 |           | _withdraw() with data parameter too small | No | No |
 |           | _withdraw() with unconfigured child / root token | No | No |
@@ -119,3 +120,4 @@ Operational functions testing:
 |           | finaliseQueueWithdrawal() with three queued withdrawals that are available | Yes | No |
 |           | finaliseQueueWithdrawal() with one queued withdrawals that is not available | Yes | No |
 |           | finaliseQueueWithdrawal() with four queued withdrawals, three of which are available | Yes | No |
+
