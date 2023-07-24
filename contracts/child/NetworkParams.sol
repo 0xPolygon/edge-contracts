@@ -42,7 +42,7 @@ contract NetworkParams is Ownable2Step, Initializable {
     event NewEpochSize(uint256 indexed size);
     event NewEpochReward(uint256 indexed reward);
     event NewMinValidatorSetSize(uint256 indexed minValidatorSet);
-    event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet);
+    event NewMaxValidatorSetSize(uint256 indexed maxValidatorSet);
     event NewWithdrawalWaitPeriod(uint256 indexed withdrawalPeriod);
     event NewBlockTime(uint256 indexed blockTime);
     event NewBlockTimeDrift(uint256 indexed blockTimeDrift);
@@ -144,7 +144,7 @@ contract NetworkParams is Ownable2Step, Initializable {
         require(newMaxValidatorSetSize != 0, "NetworkParams: INVALID_MAX_VALIDATOR_SET_SIZE");
         maxValidatorSetSize = newMaxValidatorSetSize;
 
-        emit NewMaxValdidatorSetSize(newMaxValidatorSetSize);
+        emit NewMaxValidatorSetSize(newMaxValidatorSetSize);
     }
 
     /**
