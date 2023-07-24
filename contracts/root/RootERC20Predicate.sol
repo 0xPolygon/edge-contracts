@@ -142,7 +142,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         address childToken = rootTokenToChildToken[address(rootToken)];
 
-        // The native token does not need to be mapped here since it would have failed in the depositNativeTo function
+        // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
         if (address(rootToken) != NATIVE_TOKEN) {
             if (childToken == address(0)) {
