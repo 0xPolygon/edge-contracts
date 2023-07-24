@@ -79,7 +79,7 @@ abstract contract FlowRateWithdrawalQueue {
         PendingWithdrawalQueue storage queue = pendingWithdrawals[receiver];
         uint256 tail = queue.tail;
         // solhint-disable-next-line not-rely-on-time
-        queue.items[tail] = PendingWithdrawal(token, withdrawer, amount, block.timestamp);
+        queue.items[tail] = PendingWithdrawal(withdrawer, token, amount, block.timestamp);
         queue.tail = tail + 1;
     }
 
@@ -89,8 +89,11 @@ abstract contract FlowRateWithdrawalQueue {
      * @return more true if there are more queued withdrawals after the one being returned with
      *               this function call.
      * @return withdrawer The account on the child chain that initiated the crosschain transfer.
+     *               Is address(0) if there is no item available to dequeue.
      * @return token The token to transfer to the receiver.
+     *               Is address(0) if there is no item available to dequeue.
      * @return amount The number of tokens to transfer to the receiver.
+     *               Is 0 if there is no item available to dequeue.
      */
     function _dequeueWithdrawal(
         address receiver

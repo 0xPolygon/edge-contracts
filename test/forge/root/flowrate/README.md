@@ -33,11 +33,11 @@ Operational functions tests:
 |---------------------------------| --------------------------------------------------|------------|-------------|
 | testUpdateFlowRateBucketSingle  | _updateFlowRateBucket() with a single call for a configured token | Yes | No |
 | testUpdateFlowRateBucketMultiple | _updateFlowRateBucket() with a multiple calls for a configured token | Yes | No |
-| testUpdateFlowRateBucketOverflow | _updateFlowRateBucket() when the bucket overflows | Yes | No |
-| testUpdateFlowRateBucketJustEmpty | _updateFlowRateBucket() when the bucket is exactly empty. | Yes | No |
-| testUpdateFlowRateBucketEmpty | _updateFlowRateBucket() when the bucket has underflowed. | Yes | No |
-| testUpdateFlowRateBucketAfterEmpty | _updateFlowRateBucket() after the bucket was empty. | Yes | No |
-| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket | No | No |
+| testUpdateFlowRateBucketOverflow | _updateFlowRateBucket() when the bucket overflows | Yes       | No          |
+| testUpdateFlowRateBucketJustEmpty | _updateFlowRateBucket() when the bucket is exactly empty. | Yes | No       |
+| testUpdateFlowRateBucketEmpty | _updateFlowRateBucket() when the bucket has underflowed. | Yes  | No           |
+| testUpdateFlowRateBucketAfterEmpty | _updateFlowRateBucket() after the bucket was empty. | Yes  | No           |
+| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket. | No         | No          |
 
 
 ## Flow Rate Withdrawal Queue
@@ -48,16 +48,17 @@ Uninitialized testing: Check that default values are returned by view calls:
 
 | Test name                       |Description                                        | Happy Case | Implemented |
 |---------------------------------| --------------------------------------------------|------------|-------------|
-|           | withdrawalDelay() returns zero. | NA | No |
-|           | getPendingWithdrawals returns a zero length array | NA | No |
+| testUninitWithdrawalQueue       | withdrawalDelay() returns zero.                   | NA         | No          |
+| testUninitPendingWithdrawals    | getPendingWithdrawals returns a zero length array.| NA         | No          |
+| testDequeueEmpty                | _dequeueWithdrawal with no elements in the queue. | Yes        | No          |
 
 
 Control function tests: 
 
 | Test name                       |Description                                        | Happy Case | Implemented |
 |---------------------------------| --------------------------------------------------|------------|-------------|
-|           | __FlowRateWithdrawalQueue_init() configures the default withdrawal delay. | Yes | No |
-|           | _setWithdrawalDelay can confugre a withdrawal delay | Yes | No |
+| testInitWithdrawalQueue         | __FlowRateWithdrawalQueue_init().                 | Yes        | No          |
+| testSetWithdrawalDelay          | _setWithdrawalDelay can confugre a withdrawal delay | Yes      | No          |
 
 
 
@@ -65,11 +66,10 @@ Operational function tests:
 
 | Test name                       |Description                                        | Happy Case | Implemented |
 |---------------------------------| --------------------------------------------------|------------|-------------|
-|           | _enqueueWithdrawal | Yes | No |
-|           | _enqueueWithdrawal with two different tokens. | Yes | No |
-|           | _dequeueWithdrawal with no elements in the queue | Yes | No |
-|           | _dequeueWithdrawal with one available element in the queue | Yes | No |
-|           | _dequeueWithdrawal with two available elements in the queue | Yes | No |
+| testEnqueueWithdrawal           | _enqueueWithdrawal                                | Yes        | No           |
+| testEnqueueTwoWithdrawals       | _enqueueWithdrawal with two different tokens.     | Yes        | No           |
+| testDequeueSingle               | _dequeueWithdrawal with one available element in the queue | Yes | No     |
+| testDequeueDouble               | _dequeueWithdrawal with two available elements in the queue | Yes | No     |
 |           | _dequeueWithdrawal with one element in the queue, but not available | Yes | No |
 |           | _dequeueWithdrawal with two elements in the queue, but only one is available | Yes | No |
 |           | _dequeueWithdrawal with three elements in the queue, but only two are available | Yes | No |
