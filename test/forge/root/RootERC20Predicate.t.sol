@@ -14,6 +14,13 @@ abstract contract UninitializedSetup is PredicateHelper, Test {
     event TokenMapped(address indexed rootToken, address indexed childToken);
     event Initialized(uint8 version);
     event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
+    event ERC20Deposit(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
 
     RootERC20Predicate rootERC20Predicate;
     MockERC20 erc20;
@@ -56,7 +63,7 @@ contract RootERC20Predicate_Uninitialized is UninitializedSetup {
         assertEq(rootERC20Predicate.NATIVE_TOKEN(), address(1));
     }
 
-    function test_onL2StateReceive_Reverts() public {
+    function test_onL2StateReceive_reverts() public {
         bytes memory exitData = abi.encode(
             keccak256("WITHDRAW"),
             makeAddr("rootToken"),
@@ -68,7 +75,7 @@ contract RootERC20Predicate_Uninitialized is UninitializedSetup {
         rootERC20Predicate.onL2StateReceive(1, address(0), exitData);
     }
 
-    function test_deposit_Reverts() public {
+    function test_deposit_reverts() public {
         erc20.mint(charlie, 100);
         vm.prank(charlie);
         erc20.approve(address(rootERC20Predicate), 100);
@@ -77,7 +84,7 @@ contract RootERC20Predicate_Uninitialized is UninitializedSetup {
         rootERC20Predicate.deposit(erc20, 100);
     }
 
-    function test_depositTo_Reverts() public {
+    function test_depositTo_reverts() public {
         erc20.mint(charlie, 100);
         vm.prank(charlie);
         erc20.approve(address(rootERC20Predicate), 100);
@@ -86,7 +93,7 @@ contract RootERC20Predicate_Uninitialized is UninitializedSetup {
         rootERC20Predicate.depositTo(erc20, charlie, 100);
     }
 
-    function test_depositNativeTo_Reverts() public {
+    function test_depositNativeTo_reverts() public {
         vm.deal(charlie, 100);
         vm.prank(charlie);
         // fails due to mapping assertion violation
@@ -94,13 +101,13 @@ contract RootERC20Predicate_Uninitialized is UninitializedSetup {
         rootERC20Predicate.depositNativeTo{value: 100}(charlie);
     }
 
-    function test_mapToken_Reverts() public {
+    function test_mapToken_reverts() public {
         vm.expectRevert();
         // reverts `syncState` call on 0 address
         rootERC20Predicate.mapToken(erc20);
     }
 
-    function test_initializeZeroAddress_Reverts() public {
+    function test_initializeZeroAddress_reverts() public {
         bytes memory initErr = "RootERC20Predicate: BAD_INITIALIZATION";
         vm.expectRevert(initErr);
         rootERC20Predicate.initialize(
@@ -168,26 +175,82 @@ contract RootERC20Predicate_Uninitialized is UninitializedSetup {
 }
 
 contract RootERC20Predicate_Initialized is InitializedSetup {
-    function testDeposit() public {
-        rootNativeToken.mint(charlie, 100);
-
-        vm.startPrank(charlie);
-        rootNativeToken.approve(address(rootERC20Predicate), 1);
-        rootERC20Predicate.deposit(rootNativeToken, 1);
-        vm.stopPrank();
-
-        assertEq(rootNativeToken.balanceOf(address(rootERC20Predicate)), 1);
-        assertEq(rootNativeToken.balanceOf(address(charlie)), 99);
+    function test_initialize_reverts() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+        rootERC20Predicate.initialize(
+            address(stateSender),
+            address(exitHelper),
+            childERC20Predicate,
+            childTokenTemplate,
+            address(rootNativeToken)
+        );
     }
 
-    function testDepositNativeToken() public {
-        uint256 startBalance = 100;
-        vm.deal(charlie, startBalance);
+    function test_depositToUnmappedToken() public {
+        MockERC20 mockCoin = new MockERC20();
+        mockCoin.mint(charlie, 100);
+
+        address childMockCoin = Clones.predictDeterministicAddress(
+            childTokenTemplate,
+            keccak256(abi.encodePacked(mockCoin)),
+            childERC20Predicate
+        );
 
         vm.startPrank(charlie);
+        mockCoin.approve(address(rootERC20Predicate), 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit TokenMapped(address(mockCoin), childMockCoin);
+        vm.expectEmit(true, true, true, true);
+        emit ERC20Deposit(address(mockCoin), childMockCoin, charlie, charlie, 1);
+
+        rootERC20Predicate.depositTo(mockCoin, charlie, 1);
+        vm.stopPrank();
+
+        assertEq(mockCoin.balanceOf(address(rootERC20Predicate)), 1);
+        assertEq(mockCoin.balanceOf(address(charlie)), 99);
+    }
+
+    function test_depositTo_mappedToken() public skipTest {
+        // TODO: Implement once foundry supports negative assertions
+    }
+
+    function test_depositNativeToValueZero_reverts() public {
+        vm.startPrank(charlie);
+        vm.expectRevert("RootERC20Predicate: INVALID_AMOUNT");
+        rootERC20Predicate.depositNativeTo{value: 0}(charlie);
+        vm.stopPrank();
+    }
+
+    function test_depositNativeToInvalidRecipient() public {
+        vm.deal(charlie, 100);
+
+        vm.startPrank(charlie);
+        vm.expectRevert("RootERC20Predicate: INVALID_RECEIVER");
+        rootERC20Predicate.depositNativeTo{value: 1}(address(0));
+        vm.stopPrank();
+    }
+
+    function test_depositNativeToValidRecipientValidValue() public {
+        vm.deal(charlie, 100);
+
+        address childCoin = Clones.predictDeterministicAddress(
+            childTokenTemplate,
+            keccak256(abi.encodePacked(address(1))),
+            childERC20Predicate
+        );
+
+        vm.startPrank(charlie);
+        vm.expectEmit(true, true, true, true);
+        emit ERC20Deposit(address(1), childCoin, charlie, charlie, 1);
         rootERC20Predicate.depositNativeTo{value: 1}(charlie);
+        vm.stopPrank();
         assertEq(charlie.balance, 99);
         assertEq(address(rootERC20Predicate).balance, 1);
-        vm.stopPrank();
+    }
+
+    function test_mapTokenAddressZero_reverts() public {
+        vm.expectRevert("RootERC20Predicate: INVALID_TOKEN");
+        rootERC20Predicate.mapToken(MockERC20(address(0)));
     }
 }

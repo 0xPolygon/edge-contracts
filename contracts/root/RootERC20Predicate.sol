@@ -140,6 +140,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        require(receiver != address(0), "RootERC20Predicate: INVALID_RECEIVER");
         address childToken = rootTokenToChildToken[address(rootToken)];
 
         // The native token does not need to be mapped since it should have been mapped on initialization

@@ -40,6 +40,8 @@ RootERC20Predicate.t.sol
     ├── When "depositNativeTo" is called
     │   ├── When the message value is 0
     │   │   └── it should revert with error "RootERC20Predicate: INVALID_AMOUNT"
+    │   ├── When the message recipient is address(0)
+    │   │   └── it should pass
     │   └── When the message value is greater than 0
     │       ├── it should reduce the depositors native token balance
     │       ├── it should increase the predicate contract's balance
