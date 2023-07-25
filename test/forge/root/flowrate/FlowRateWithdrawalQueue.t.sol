@@ -178,7 +178,99 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         assertEq(amount, amount2, "Amount");
     }
     
+    function testDequeueNoneAvailable() public {
+        uint256 now1 = 100;
+        vm.warp(now1);
+        uint256 amount1 = 123;
+        flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount1);
 
+        (bool more, address withdrawer, address token, uint256 amount) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+        assertEq(more, false, "More");
+        assertEq(withdrawer, address(0), "Withdrawer");
+        assertEq(token, address(0), "Token");
+        assertEq(amount, 0, "Amount");
+    }
+
+    function testDequeueOneAvailable() public {
+        uint256 now1 = 100;
+        vm.warp(now1);
+        uint256 amount1 = 123;
+        flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount1);
+        uint256 now2 = 200;
+        vm.warp(now2);
+        uint256 amount2 = 456;
+        flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount2);
+
+        uint256 now3 = now1 + withdrawalDelay;
+        vm.warp(now3);
+
+        (bool more, address withdrawer, address token, uint256 amount) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+        assertEq(more, true, "More");
+        assertEq(withdrawer, WUSER1, "Withdrawer");
+        assertEq(token, TOKEN1, "Token");
+        assertEq(amount, amount1, "Amount");
+
+        (more, withdrawer, token, amount) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+        assertEq(more, false, "More");
+        assertEq(withdrawer, address(0), "Withdrawer");
+        assertEq(token, address(0), "Token");
+        assertEq(amount, 0, "Amount");
+    }
+
+    function testDequeueTwoAvailable() public {
+        uint256 now1 = 100;
+        vm.warp(now1);
+        uint256 amount1 = 123;
+        flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount1);
+        uint256 now2 = 200;
+        vm.warp(now2);
+        uint256 amount2 = 456;
+        flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount2);
+        uint256 now3 = 300;
+        vm.warp(now3);
+        uint256 amount3 = 789;
+        flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount3);
+
+        uint256 now4 = now2 + withdrawalDelay;
+        vm.warp(now4);
+
+        (bool more, address withdrawer, address token, uint256 amount) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+        assertEq(more, true, "More");
+        assertEq(withdrawer, WUSER1, "Withdrawer");
+        assertEq(token, TOKEN1, "Token");
+        assertEq(amount, amount1, "Amount");
+
+        (more, withdrawer, token, amount) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+        assertEq(more, true, "More");
+        assertEq(withdrawer, WUSER2, "Withdrawer");
+        assertEq(token, TOKEN2, "Token");
+        assertEq(amount, amount2, "Amount");
+
+        (more, withdrawer, token, amount) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+        assertEq(more, false, "More");
+        assertEq(withdrawer, address(0), "Withdrawer");
+        assertEq(token, address(0), "Token");
+        assertEq(amount, 0, "Amount");
+    }
+
+    function testEnqueueDequeueMultiple() public {
+        uint256 timeNow = 100;
+        // Loop around some times enqueuing and then dequeuing. 
+        for (uint256 i = 0; i < 5; i++) {
+            timeNow += 100;
+            vm.warp(timeNow);
+            uint256 amount = timeNow + 1;
+            flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount);
+            timeNow += withdrawalDelay;
+            vm.warp(timeNow);
+
+            (bool more, address withdrawer, address token, uint256 amountOut) = flowRateWithdrawalQueue.dequeueWithdrawal(RUSER1);
+            assertEq(more, false, "More");
+            assertEq(withdrawer, WUSER1, "Withdrawer");
+            assertEq(token, TOKEN1, "Token");
+            assertEq(amountOut, amount, "Amount");
+        }
+    }
 }
 
 

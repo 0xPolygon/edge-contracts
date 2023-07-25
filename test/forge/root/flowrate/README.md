@@ -66,17 +66,17 @@ Operational function tests:
 
 | Test name                       |Description                                        | Happy Case | Implemented |
 |---------------------------------| --------------------------------------------------|------------|-------------|
-| testEnqueueWithdrawal           | _enqueueWithdrawal                                | Yes        | No           |
-| testEnqueueTwoWithdrawals       | _enqueueWithdrawal with two different tokens.     | Yes        | No           |
-| testDequeueSingle               | _dequeueWithdrawal with one available element in the queue | Yes | No     |
-| testDequeueDouble               | _dequeueWithdrawal with two available elements in the queue | Yes | No     |
-|           | _dequeueWithdrawal with one element in the queue, but not available | Yes | No |
-|           | _dequeueWithdrawal with two elements in the queue, but only one is available | Yes | No |
-|           | _dequeueWithdrawal with three elements in the queue, but only two are available | Yes | No |
-|           | Enqueue one token, dequeue the token, and repeat multiple times. | Yes | No |
+| testEnqueueWithdrawal           | _enqueueWithdrawal                                | Yes        | No          |
+| testEnqueueTwoWithdrawals       | _enqueueWithdrawal with two different tokens.     | Yes        | No          |
+| testDequeueSingle               | _dequeueWithdrawal with one available element in the queue | Yes | No        |
+| testDequeueDouble               | _dequeueWithdrawal with two available elements in the queue | Yes | No       |
+| testDequeueNoneAvailable        | _dequeueWithdrawal with one element in the queue, but not available | Yes | No |
+| testDequeueOneAvailable         | _dequeueWithdrawal with two elements in the queue, but only one is available | Yes | No |
+| testDequeueTwoAvailable         | _dequeueWithdrawal with three elements in the queue, but only two are available | Yes | No |
+| testEnqueueDequeueMultiple      | Enqueue one token, dequeue the token, and repeat multiple times. | Yes | No  |
 
 
-## Flow Rate Withdrawal Queue
+## Root ERC 20 Predicate Flow Rate
 This section defines tests for contracts/root/flowrate/RootERC20PredicateFlowRate.sol
 
 
