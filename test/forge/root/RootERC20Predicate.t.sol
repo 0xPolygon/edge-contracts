@@ -8,6 +8,7 @@ import {ChildERC20} from "contracts/child/ChildERC20.sol";
 import {StateSenderHelper} from "./StateSender.t.sol";
 import {PredicateHelper} from "./PredicateHelper.t.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
+import {MockERC721} from "contracts/mocks/MockERC721.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 abstract contract UninitializedSetup is PredicateHelper, Test {
@@ -51,6 +52,24 @@ abstract contract InitializedSetup is UninitializedSetup {
             childTokenTemplate,
             address(rootNativeToken)
         );
+    }
+}
+
+abstract contract DepositedSetup is InitializedSetup {
+    address depositor = makeAddr("depositor");
+
+    function setUp() public virtual override {
+        super.setUp();
+        rootNativeToken.mint(depositor, 1000);
+        vm.deal(depositor, 1000);
+
+        vm.startPrank(depositor);
+        rootERC20Predicate.depositNativeTo{value: 1000}(depositor);
+
+        // Child Native Token / ERC20
+        rootNativeToken.approve(address(rootERC20Predicate), 1000);
+        rootERC20Predicate.depositTo(rootNativeToken, address(depositor), 1000);
+        vm.stopPrank();
     }
 }
 
@@ -252,5 +271,72 @@ contract RootERC20Predicate_Initialized is InitializedSetup {
     function test_mapTokenAddressZero_reverts() public {
         vm.expectRevert("RootERC20Predicate: INVALID_TOKEN");
         rootERC20Predicate.mapToken(MockERC20(address(0)));
+    }
+
+    function test_mapTokenInvalidERC20_reverts() public {
+        MockERC20 invalidERC20 = MockERC20(address(new MockERC721()));
+        vm.expectRevert();
+        rootERC20Predicate.mapToken(invalidERC20);
+    }
+
+    function test_mapTokenAlreadyMapped_reverts() public {
+        MockERC20 mockCoin = new MockERC20();
+        rootERC20Predicate.mapToken(mockCoin);
+        vm.expectRevert("RootERC20Predicate: ALREADY_MAPPED");
+        rootERC20Predicate.mapToken(mockCoin);
+    }
+
+    function test_mapTokenUnmappedToken() public {
+        MockERC20 mockCoin = new MockERC20();
+
+        address childCoin = Clones.predictDeterministicAddress(
+            childTokenTemplate,
+            keccak256(abi.encodePacked(address(mockCoin))),
+            childERC20Predicate
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit TokenMapped(address(mockCoin), childCoin);
+        rootERC20Predicate.mapToken(mockCoin);
+    }
+}
+
+contract RootERC20Predicate_Withdrawals is DepositedSetup {
+    function test_onL2StateReceiveIsNotExitHelper_reverts() public {
+        vm.startPrank(charlie);
+        vm.expectRevert("RootERC20Predicate: ONLY_EXIT_HELPER");
+        rootERC20Predicate.onL2StateReceive(0, depositor, "");
+        vm.stopPrank();
+    }
+
+    function test_onL2StateReceiveSenderNotChildPredicate_reverts() public {
+        vm.startPrank(address(exitHelper));
+        vm.expectRevert("RootERC20Predicate: ONLY_CHILD_PREDICATE");
+        rootERC20Predicate.onL2StateReceive(0, depositor, "");
+        vm.stopPrank();
+    }
+
+    function test_onL2StateReceiveShortSignature_reverts() public {
+        vm.startPrank(address(exitHelper));
+        bytes memory shortSignature = new bytes(31);
+        vm.expectRevert(bytes(""));
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, shortSignature);
+        vm.stopPrank();
+    }
+
+    function test_onL2StateReceiveLongInvalidSignature_reverts() public {
+        vm.startPrank(address(exitHelper));
+        bytes memory longSignature = new bytes(32);
+        vm.expectRevert("RootERC20Predicate: INVALID_SIGNATURE");
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, longSignature);
+        vm.stopPrank();
+    }
+
+    function test_onL2StateReceiveValidSignatureInvalidPayload_reverts() public {
+        vm.startPrank(address(exitHelper));
+        bytes memory longSignature = new bytes(32);
+        vm.expectRevert("RootERC20Predicate: INVALID_SIGNATURE");
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, longSignature);
+        vm.stopPrank();
     }
 }
