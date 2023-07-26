@@ -136,6 +136,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, receiver, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
+        // slither-disable-next-line incorrect-equality
         require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
     }
 
@@ -167,6 +168,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
         if (rootToken == NATIVE_TOKEN) {
+            // slither-disable-next-line arbitrary-send-eth
             (bool success, ) = receiver.call{value: amount}("");
             require(success, "RootERC20Predicate: ETH_TRANSFER_FAILED");
         } else {
