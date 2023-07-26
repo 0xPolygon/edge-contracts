@@ -22,6 +22,13 @@ abstract contract UninitializedSetup is PredicateHelper, Test {
         address indexed receiver,
         uint256 amount
     );
+    event ERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address withdrawer,
+        address indexed receiver,
+        uint256 amount
+    );
 
     RootERC20Predicate rootERC20Predicate;
     MockERC20 erc20;
@@ -334,9 +341,51 @@ contract RootERC20Predicate_Withdrawals is DepositedSetup {
 
     function test_onL2StateReceiveValidSignatureInvalidPayload_reverts() public {
         vm.startPrank(address(exitHelper));
-        bytes memory payload = abi.encodePacked(keccak256("WITHDRAW"));
+        bytes memory payload = abi.encode(keccak256("WITHDRAW"));
         vm.expectRevert(bytes(""));
         rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, payload);
         vm.stopPrank();
+    }
+
+    function test_onL2StateReceiveNoMapping_reverts() public {
+        vm.startPrank(address(exitHelper));
+        bytes memory payload = abi.encode(keccak256("WITHDRAW"), address(2), depositor, depositor, uint256(50));
+        vm.expectRevert();
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, payload);
+        vm.stopPrank();
+    }
+
+    function test_onL2StateReceiveNativeToken() public {
+        vm.startPrank(address(exitHelper));
+        bytes memory payload = abi.encode(keccak256("WITHDRAW"), address(1), depositor, depositor, uint256(50));
+        vm.expectEmit(true, true, true, true);
+        emit ERC20Withdraw(address(1), rootERC20Predicate.rootTokenToChildToken(address(1)), depositor, depositor, 50);
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, payload);
+        vm.stopPrank();
+        assertEq(depositor.balance, 50);
+        assertEq(address(rootERC20Predicate).balance, 950);
+
+        assertEq(rootNativeToken.balanceOf(address(rootERC20Predicate)), 1000);
+        assertEq(rootNativeToken.balanceOf(depositor), 0);
+    }
+
+    function test_onL2StateReceiveERC20() public {
+        vm.startPrank(address(exitHelper));
+        bytes memory payload = abi.encode(keccak256("WITHDRAW"), rootNativeToken, depositor, depositor, uint256(50));
+        vm.expectEmit(true, true, true, true);
+        emit ERC20Withdraw(
+            address(rootNativeToken),
+            rootERC20Predicate.rootTokenToChildToken(address(rootNativeToken)),
+            depositor,
+            depositor,
+            50
+        );
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, payload);
+        vm.stopPrank();
+        assertEq(depositor.balance, 0);
+        assertEq(address(rootERC20Predicate).balance, 1000);
+
+        assertEq(rootNativeToken.balanceOf(address(rootERC20Predicate)), 950);
+        assertEq(rootNativeToken.balanceOf(depositor), 50);
     }
 }
