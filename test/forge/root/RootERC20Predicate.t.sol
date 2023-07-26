@@ -334,9 +334,9 @@ contract RootERC20Predicate_Withdrawals is DepositedSetup {
 
     function test_onL2StateReceiveValidSignatureInvalidPayload_reverts() public {
         vm.startPrank(address(exitHelper));
-        bytes memory longSignature = new bytes(32);
-        vm.expectRevert("RootERC20Predicate: INVALID_SIGNATURE");
-        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, longSignature);
+        bytes memory payload = abi.encodePacked(keccak256("WITHDRAW"));
+        vm.expectRevert(bytes(""));
+        rootERC20Predicate.onL2StateReceive(0, childERC20Predicate, payload);
         vm.stopPrank();
     }
 }
