@@ -33,7 +33,30 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address newChildERC20Predicate,
         address newChildTokenTemplate,
         address nativeTokenRootAddress
-    ) public initializer {
+    ) external virtual initializer {
+        __RootERC20Predicate_init(
+            newStateSender,
+            newExitHelper,
+            newChildERC20Predicate,
+            newChildTokenTemplate,
+            nativeTokenRootAddress
+        );
+    }
+
+    /**
+     * @notice Initilization function for RootERC20Predicate
+     * @param newStateSender Address of StateSender to send deposit information to
+     * @param newExitHelper Address of ExitHelper to receive withdrawal information from
+     * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with
+     * @dev Can only be called once.
+     */
+    function __RootERC20Predicate_init(
+        address newStateSender,
+        address newExitHelper,
+        address newChildERC20Predicate,
+        address newChildTokenTemplate,
+        address nativeTokenRootAddress
+    ) public {
         require(
             newStateSender != address(0) &&
                 newExitHelper != address(0) &&

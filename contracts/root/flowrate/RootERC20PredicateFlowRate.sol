@@ -48,6 +48,8 @@ contract RootERC20PredicateFlowRate is
     // Map ERC 20 token address to threshold
     mapping(address => uint256) public largeTransferThresholds;
 
+    error WrongInitializer();
+
     /**
      * @notice Indicates a withdrawal was queued.
      * @param token Address of token that is being withdrawn.
@@ -95,8 +97,8 @@ contract RootERC20PredicateFlowRate is
         address newChildERC20Predicate,
         address newChildTokenTemplate,
         address nativeTokenRootAddress
-    ) external {
-        super.initialize(
+    ) external initializer {
+        __RootERC20Predicate_init(
             newStateSender,
             newExitHelper,
             newChildERC20Predicate,
@@ -110,6 +112,11 @@ contract RootERC20PredicateFlowRate is
         _setupRole(PAUSER_ADMIN_ROLE, pauseAdmin);
         _setupRole(UNPAUSER_ADMIN_ROLE, unpauseAdmin);
         _setupRole(RATE_CONTROL_ROLE, rateAdmin);
+    }
+
+    // Ensure initialize from RootERC20Predicate can not be called.
+    function initialize(address, address, address, address, address) external pure override {
+        revert WrongInitializer();
     }
 
     /**

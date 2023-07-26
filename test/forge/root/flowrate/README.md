@@ -9,35 +9,34 @@ All of these tests are in test/forge/root/flowrate/FlowRateDetection.t.sol.
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-| testUninitFlowRateBuckets       | flowRateBuckets(address) returns an empty bucket. | NA         | Yes         |
-| testUnWithdrawalQueueActivated  | withdrawalQueueActivated returns false.           | NA         | No          |
-
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testUninitFlowRateBuckets       | flowRateBuckets(address) returns an empty bucket. | NA         |
+| testUnWithdrawalQueueActivated  | withdrawalQueueActivated returns false.           | NA         |
 
 
 Control functions tests:
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-| testActivateWithdrawalQueue     | _activateWithdrawalQueue().                       | Yes        | No          |
-| testDeactivateWithdrawalQueue   | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true. | Yes | No |
-| testSetFlowRateThreshold        | _setFlowRateThreshold() with valid values         | Yes        | No          |
-| testSetFlowRateThresholdBadToken | _setFlowRateThreshold() with token address = 0   | No         | No          |
-| testSetFlowRateThresholdBadCapacity | _setFlowRateThreshold() with capacity = 0     | No         | No          |
-| testSetFlowRateThresholdBadFillRate | _setFlowRateThreshold() with refill rate = 0  | No         | No          |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testActivateWithdrawalQueue     | _activateWithdrawalQueue().                       | Yes        |
+| testDeactivateWithdrawalQueue   | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true. | Yes |
+| testSetFlowRateThreshold        | _setFlowRateThreshold() with valid values         | Yes        |
+| testSetFlowRateThresholdBadToken | _setFlowRateThreshold() with token address = 0   | No         |
+| testSetFlowRateThresholdBadCapacity | _setFlowRateThreshold() with capacity = 0     | No         |
+| testSetFlowRateThresholdBadFillRate | _setFlowRateThreshold() with refill rate = 0  | No         |
 
 Operational functions tests:
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-| testUpdateFlowRateBucketSingle  | _updateFlowRateBucket() with a single call for a configured token | Yes | No |
-| testUpdateFlowRateBucketMultiple | _updateFlowRateBucket() with a multiple calls for a configured token | Yes | No |
-| testUpdateFlowRateBucketOverflow | _updateFlowRateBucket() when the bucket overflows | Yes       | No          |
-| testUpdateFlowRateBucketJustEmpty | _updateFlowRateBucket() when the bucket is exactly empty. | Yes | No       |
-| testUpdateFlowRateBucketEmpty | _updateFlowRateBucket() when the bucket has underflowed. | Yes  | No           |
-| testUpdateFlowRateBucketAfterEmpty | _updateFlowRateBucket() after the bucket was empty. | Yes  | No           |
-| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket. | No         | No          |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testUpdateFlowRateBucketSingle  | _updateFlowRateBucket() with a single call for a configured token | Yes |
+| testUpdateFlowRateBucketMultiple | _updateFlowRateBucket() with a multiple calls for a configured token | Yes |
+| testUpdateFlowRateBucketOverflow | _updateFlowRateBucket() when the bucket overflows | Yes       |
+| testUpdateFlowRateBucketJustEmpty | _updateFlowRateBucket() when the bucket is exactly empty. | Yes |
+| testUpdateFlowRateBucketEmpty | _updateFlowRateBucket() when the bucket has underflowed. | Yes  |
+| testUpdateFlowRateBucketAfterEmpty | _updateFlowRateBucket() after the bucket was empty. | Yes  |
+| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket. | No        |
 
 
 ## Flow Rate Withdrawal Queue
@@ -46,34 +45,34 @@ This section defines tests for contracts/root/flowrate/FlowRateWithdrawalQueue.s
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-| testUninitWithdrawalQueue       | withdrawalDelay() returns zero.                   | NA         | No          |
-| testUninitPendingWithdrawals    | getPendingWithdrawals returns a zero length array.| NA         | No          |
-| testDequeueEmpty                | _dequeueWithdrawal with no elements in the queue. | Yes        | No          |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testUninitWithdrawalQueue       | withdrawalDelay() returns zero.                   | NA         |
+| testUninitPendingWithdrawals    | getPendingWithdrawals returns a zero length array.| NA         |
+| testDequeueEmpty                | _dequeueWithdrawal with no elements in the queue. | Yes        |
 
 
 Control function tests: 
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-| testInitWithdrawalQueue         | __FlowRateWithdrawalQueue_init().                 | Yes        | No          |
-| testSetWithdrawalDelay          | _setWithdrawalDelay can confugre a withdrawal delay | Yes      | No          |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testInitWithdrawalQueue         | __FlowRateWithdrawalQueue_init().                 | Yes        |
+| testSetWithdrawalDelay          | _setWithdrawalDelay can confugre a withdrawal delay | Yes      |
 
 
 
 Operational function tests: 
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-| testEnqueueWithdrawal           | _enqueueWithdrawal                                | Yes        | No          |
-| testEnqueueTwoWithdrawals       | _enqueueWithdrawal with two different tokens.     | Yes        | No          |
-| testDequeueSingle               | _dequeueWithdrawal with one available element in the queue | Yes | No        |
-| testDequeueDouble               | _dequeueWithdrawal with two available elements in the queue | Yes | No       |
-| testDequeueNoneAvailable        | _dequeueWithdrawal with one element in the queue, but not available | Yes | No |
-| testDequeueOneAvailable         | _dequeueWithdrawal with two elements in the queue, but only one is available | Yes | No |
-| testDequeueTwoAvailable         | _dequeueWithdrawal with three elements in the queue, but only two are available | Yes | No |
-| testEnqueueDequeueMultiple      | Enqueue one token, dequeue the token, and repeat multiple times. | Yes | No  |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testEnqueueWithdrawal           | _enqueueWithdrawal                                | Yes        |
+| testEnqueueTwoWithdrawals       | _enqueueWithdrawal with two different tokens.     | Yes        |
+| testDequeueSingle               | _dequeueWithdrawal with one available element in the queue | Yes |
+| testDequeueDouble               | _dequeueWithdrawal with two available elements in the queue | Yes |
+| testDequeueNoneAvailable        | _dequeueWithdrawal with one element in the queue, but not available | Yes |
+| testDequeueOneAvailable         | _dequeueWithdrawal with two elements in the queue, but only one is available | Yes |
+| testDequeueTwoAvailable         | _dequeueWithdrawal with three elements in the queue, but only two are available | Yes |
+| testEnqueueDequeueMultiple      | Enqueue one token, dequeue the token, and repeat multiple times. | Yes |
 
 
 ## Root ERC 20 Predicate Flow Rate
@@ -82,24 +81,25 @@ This section defines tests for contracts/root/flowrate/RootERC20PredicateFlowRat
 
 Uninitialized testing: Check that default values are returned by view calls:
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-|           | paused() returns false. | NA | No |
-|           | largeTransferThresholds returns 0 for a  returns a zero length array | NA | No |
+| Test name                         |Description                                        | Happy Case |
+|-----------------------------------| --------------------------------------------------|------------|
+| testUninitPaused                  | paused() returns false.                           | NA         |
+| testUninitLargeTransferThresholds | largeTransferThresholds returns 0 for a  returns a zero length array | NA |
+| testWrongInit                     | Check calling RootERC20Predicate's initialize reverts. | NA    |
 
 
 Control functions testing: 
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-|           | pause() | Yes | No |
-|           | pause() bad auth. | No | No |
-|           | unpause() | Yes | No |
-|           | unpause() bad auth. | No | No |
-|           | activateWithdrawalQueue() | Yes | No |
-|           | activateWithdrawalQueue() bad auth. | No | No |
-|           | deactivateWithdrawalQueue() | Yes | No |
-|           | deactivateWithdrawalQueue() bad auth. | No | No |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testPause                       | pause()                                           | Yes        |
+| testPauseBadAuth                | pause() bad auth.                                 | No         |
+| testUnpause                     | unpause()                                         | Yes        |
+| testUnpauseBadAuth              | unpause() bad auth.                               | No         |
+| testActivateWithdrawalQueue     | activateWithdrawalQueue()                         | Yes        |
+| testActivateWithdrawalQueueBadAuth | activateWithdrawalQueue() bad auth.            | No         |
+| testDeactivateWithdrawalQueue   | deactivateWithdrawalQueue()                       | Yes        |
+| testDeactivateWithdrawalQueueBadAuth | deactivateWithdrawalQueue() bad auth.        | No         |
 |           | setRateControlThreshold() | Yes | No |
 |           | setRateControlThreshold() bad auth| No | No |
 |           | grantRole() | Yes | No |

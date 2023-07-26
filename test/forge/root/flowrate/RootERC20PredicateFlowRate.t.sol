@@ -11,22 +11,54 @@ import {PredicateHelper} from "../PredicateHelper.t.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 
 
-contract UninitializedRootERC20PredicateFlowRateTest is PredicateHelper, Test {
+contract UninitializedRootERC20PredicateFlowRateTest is Test {
+    RootERC20PredicateFlowRate rootERC20PredicateFlowRate;
+    address constant TOKEN = address(1234);
+
+    function setUp() public virtual {
+        rootERC20PredicateFlowRate = new RootERC20PredicateFlowRate();
+    }
+
+    function testUninitPaused() public {
+        assertEq(rootERC20PredicateFlowRate.paused(), false, "Paused");
+    }
+
+    function testUninitLargeTransferThresholds() public {
+        assertEq(rootERC20PredicateFlowRate.largeTransferThresholds(TOKEN), 0, "largeTransferThresholds");
+    }
+
+    function testWrongInit() public {
+        vm.expectRevert();
+        rootERC20PredicateFlowRate.initialize(address(0), address(0), address(0), address(0), address(0));
+    }
+}
+
+contract InitializedRootERC20PredicateFlowRateTest is PredicateHelper {
     RootERC20PredicateFlowRate rootERC20PredicateFlowRate;
     MockERC20 erc20Token;
-    address charlie;
+    address superAdmin;
+    address pauseAdmin;
+    address unpauseAdmin;
+    address rateAdmin;
 
     function setUp() public virtual override {
-        super.setUp();
-
+        PredicateHelper.setUp();
+        rootERC20PredicateFlowRate = new RootERC20PredicateFlowRate();
         erc20Token = new MockERC20();
 
-        charlie = makeAddr("charlie");
+        superAdmin = makeAddr("superadmin");
+        pauseAdmin = makeAddr("pauseadmin");
+        unpauseAdmin = makeAddr("unpauseadmin");
+        rateAdmin = makeAddr("rateadmin");
 
-        rootERC20PredicateFlowRate = new RootERC20PredicateFlowRate();
         address newChildERC20Predicate = address(0x1004);
         address newChildTokenTemplate = address(0x1003);
+
         rootERC20PredicateFlowRate.initialize(
+            superAdmin,
+            pauseAdmin,
+            unpauseAdmin,
+            rateAdmin,
             address(stateSender),
             address(exitHelper),
             newChildERC20Predicate,
@@ -37,40 +69,86 @@ contract UninitializedRootERC20PredicateFlowRateTest is PredicateHelper, Test {
 }
 
 
-contract RootERC20PredicateFlowRateTest is PredicateHelper, Test {
-    RootERC20PredicateFlowRate rootERC20PredicateFlowRate;
-    MockERC20 rootNativeToken;
+contract ControlRootERC20PredicateFlowRateTest is InitializedRootERC20PredicateFlowRateTest {
+    function testPause() public {
+        vm.prank(pauseAdmin);
+        rootERC20PredicateFlowRate.pause();
+        assertEq(rootERC20PredicateFlowRate.paused(), true);
+    }
+
+    function testPauseBadAuth() public {
+        vm.expectRevert();
+        vm.prank(unpauseAdmin);
+        rootERC20PredicateFlowRate.pause();
+    }
+
+    function testUnpause() public {
+        vm.prank(pauseAdmin);
+        rootERC20PredicateFlowRate.pause();
+        vm.prank(unpauseAdmin);
+        rootERC20PredicateFlowRate.unpause();
+        assertEq(rootERC20PredicateFlowRate.paused(), false);
+    }
+
+    function testUnpauseBadAuth() public {
+        vm.prank(pauseAdmin);
+        rootERC20PredicateFlowRate.pause();
+        vm.expectRevert();
+        rootERC20PredicateFlowRate.unpause();
+    }
+
+    function testActivateWithdrawalQueue() public {
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+        assertEq(rootERC20PredicateFlowRate.withdrawalQueueActivated(), true);
+    }
+
+    function testActivateWithdrawalQueueBadAuth() public {
+        vm.prank(pauseAdmin);
+        vm.expectRevert();
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+    }
+
+    function testDeactivateWithdrawalQueue() public {
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.deactivateWithdrawalQueue();
+        assertEq(rootERC20PredicateFlowRate.withdrawalQueueActivated(), false);
+    }
+
+    function testDeactivateWithdrawalQueueBadAuth() public {
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+        vm.prank(pauseAdmin);
+        vm.expectRevert();
+        rootERC20PredicateFlowRate.deactivateWithdrawalQueue();
+    }
+}
+
+
+
+
+contract RootERC20PredicateFlowRateTest is InitializedRootERC20PredicateFlowRateTest {
     address charlie;
 
     function setUp() public virtual override {
         super.setUp();
 
-        rootNativeToken = new MockERC20();
-
         charlie = makeAddr("charlie");
 
-        rootERC20PredicateFlowRate = new RootERC20PredicateFlowRate();
-        address newChildERC20Predicate = address(0x1004);
-        address newChildTokenTemplate = address(0x1003);
-        rootERC20PredicateFlowRate.initialize(
-            address(stateSender),
-            address(exitHelper),
-            newChildERC20Predicate,
-            newChildTokenTemplate,
-            address(rootNativeToken)
-        );
     }
 
     function testDeposit() public {
-        rootNativeToken.mint(charlie, 100);
+       erc20Token.mint(charlie, 100);
 
         vm.startPrank(charlie);
-        rootNativeToken.approve(address(rootERC20PredicateFlowRate), 1);
-        rootERC20PredicateFlowRate.deposit(rootNativeToken, 1);
+        erc20Token.approve(address(rootERC20PredicateFlowRate), 1);
+        rootERC20PredicateFlowRate.deposit(erc20Token, 1);
         vm.stopPrank();
 
-        assertEq(rootNativeToken.balanceOf(address(rootERC20PredicateFlowRate)), 1);
-        assertEq(rootNativeToken.balanceOf(address(charlie)), 99);
+        assertEq(erc20Token.balanceOf(address(rootERC20PredicateFlowRate)), 1);
+        assertEq(erc20Token.balanceOf(address(charlie)), 99);
     }
 
 

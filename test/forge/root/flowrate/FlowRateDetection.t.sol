@@ -19,9 +19,7 @@ contract FlowRateDetectionT is FlowRateDetection {
         return _updateFlowRateBucket(token, amount);
     
     }
-    
 }
-
 
 abstract contract FlowRateDetectionTests is Test {
     FlowRateDetectionT flowRateDetection;
@@ -34,7 +32,6 @@ abstract contract FlowRateDetectionTests is Test {
         flowRateDetection = new FlowRateDetectionT();
     }
 }
-
 
 contract UninitializedFlowRateDetectionTest is FlowRateDetectionTests {
     function testUninitFlowRateBuckets() public {
