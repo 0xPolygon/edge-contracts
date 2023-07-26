@@ -168,7 +168,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
         if (rootToken == NATIVE_TOKEN) {
-            // slither-disable-next-line arbitrary-send-eth
+            // slither-disable-next-line arbitrary-send-eth low-level-calls
             (bool success, ) = receiver.call{value: amount}("");
             require(success, "RootERC20Predicate: ETH_TRANSFER_FAILED");
         } else {
