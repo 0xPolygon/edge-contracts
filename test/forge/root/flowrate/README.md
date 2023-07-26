@@ -100,21 +100,23 @@ Control functions testing:
 | testActivateWithdrawalQueueBadAuth | activateWithdrawalQueue() bad auth.            | No         |
 | testDeactivateWithdrawalQueue   | deactivateWithdrawalQueue()                       | Yes        |
 | testDeactivateWithdrawalQueueBadAuth | deactivateWithdrawalQueue() bad auth.        | No         |
-|           | setRateControlThreshold() | Yes | No |
-|           | setRateControlThreshold() bad auth| No | No |
-|           | grantRole() | Yes | No |
-|           | grantRole() bad auth| No | No |
+| testSetWithdrawDelay            | setWithdrawDelay()                                | Yes        |
+| testSetWithdrawDelayBadAuth     | setWithdrawDelay() bad auth                       | No         |
+| testSetRateControlThreshold     | setRateControlThreshold()                         | Yes        |
+| testSetRateControlThresholdBadAuth | setRateControlThreshold() bad auth             | No         |
+| testGrantRole                   | grantRole()                                       | Yes        |
+| testGrantRoleBadAuth            | grantRole() bad auth                              | No         |
 
 
 Operational functions testing: 
 
-| Test name                       |Description                                        | Happy Case | Implemented |
-|---------------------------------| --------------------------------------------------|------------|-------------|
-|           | _withdraw() small amount, no quue | Yes | No |
-|           | _withdraw() with data parameter too small | No | No |
-|           | _withdraw() with unconfigured child / root token | No | No |
-|           | _withdraw() with large value | Yes | No |
-|           | _withdraw() with unconfigured token | Yes | No |
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| testWithdrawal                  | _withdraw() small amount, no queue                | Yes        |
+| testWithdrawalBadData           | _withdraw() with data parameter too small         | No         |
+| testWithdrawalUnconfiguredToken | _withdraw() with unconfigured child / root token  | No         |
+| testWithdrawalLargeWithdrawal   | _withdraw() with large value                      | Yes        |
+|           | _withdraw() causing high flow rate | Yes | No |
 |           | _withdraw() with withdrawal queue active | Yes | No |
 |           | finaliseQueueWithdrawal() with no queued withdrawal | Yes | No |
 |           | finaliseQueueWithdrawal() with one queued withdrawal that is available | Yes | No |

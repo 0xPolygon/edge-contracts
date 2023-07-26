@@ -60,12 +60,17 @@ abstract contract FlowRateDetection {
      * @param token Address of the token to configure the bucket for.
      * @param capacity The number of tokens before the bucket overflows.
      * @param refillRate The number of tokens added to the bucket each second.
+     * @dev If this is a new bucket, then the depth is the capacity. If the bucket is existing, then
+     *      don't touch the depth.
      */
     function _setFlowRateThreshold(address token, uint256 capacity, uint256 refillRate) internal {
         require(token != address(0), "FlowRate:Invalid token address");
         require(capacity != 0, "FlowRate:Capacity must be > 0");
         require(refillRate != 0, "FlowRate:RefillRate must be > 0");
         Bucket storage bucket = flowRateBuckets[token];
+        if (bucket.capacity == 0) {
+            bucket.depth = capacity;
+        }
         bucket.capacity = capacity;
         bucket.refillRate = refillRate;
     }

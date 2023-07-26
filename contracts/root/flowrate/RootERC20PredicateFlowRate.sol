@@ -162,7 +162,7 @@ contract RootERC20PredicateFlowRate is
      *         called.
      * @dev Only RATE role.
      */
-    function setWithdrawDelay(uint256 delay) external onlyRole(RATE_CONTROL_ROLE) {
+    function setWithdrawalDelay(uint256 delay) external onlyRole(RATE_CONTROL_ROLE) {
         _setWithdrawalDelay(delay);
     }
 
