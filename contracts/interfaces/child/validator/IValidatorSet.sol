@@ -28,7 +28,7 @@ interface IValidatorSet is IStateReceiver {
 
     /// @notice commits a new epoch
     /// @dev system call
-    function commitEpoch(uint256 id, Epoch calldata epoch) external;
+    function commitEpoch(uint256 id, Epoch calldata epoch, uint256 epochSize) external;
 
     /// @notice allows a validator to announce their intention to withdraw a given amount of tokens
     /// @dev initializes a waiting period before the tokens can be withdrawn
