@@ -116,12 +116,11 @@ Operational functions testing:
 | testWithdrawalBadData           | _withdraw() with data parameter too small         | No         |
 | testWithdrawalUnconfiguredToken | _withdraw() with unconfigured child / root token  | No         |
 | testWithdrawalLargeWithdrawal   | _withdraw() with large value                      | Yes        |
-|           | _withdraw() causing high flow rate | Yes | No |
-|           | _withdraw() with withdrawal queue active | Yes | No |
-|           | finaliseQueueWithdrawal() with no queued withdrawal | Yes | No |
-|           | finaliseQueueWithdrawal() with one queued withdrawal that is available | Yes | No |
-|           | finaliseQueueWithdrawal() with two queued withdrawals that are available | Yes | No |
-|           | finaliseQueueWithdrawal() with three queued withdrawals that are available | Yes | No |
-|           | finaliseQueueWithdrawal() with one queued withdrawals that is not available | Yes | No |
-|           | finaliseQueueWithdrawal() with four queued withdrawals, three of which are available | Yes | No |
+| testWithdrawalLargeWithdrawal   | _withdraw() causing high flow rate                | Yes        |
+| testHighFlowRate                | _withdraw() with withdrawal queue active          | Yes        |
+| testFinaliseQueuedWithdrawalEmptyQueue | finaliseQueueWithdrawal() with no queued withdrawal | Yes |
+| testFinaliseQueuedWithdrawalSingle | finaliseQueueWithdrawal() with one queued withdrawal that is available | Yes |
+| testFinaliseQueuedWithdrawalMultiple | finaliseQueueWithdrawal() with three queued withdrawals that are available | Yes |
+| testFinaliseQueuedWithdrawalNonAvailable | finaliseQueueWithdrawal() with one queued withdrawal that is not available | Yes |
+| testFinaliseQueuedWithdrawalComplex  | finaliseQueueWithdrawal() with four queued withdrawals, three of which are available | Yes |
 

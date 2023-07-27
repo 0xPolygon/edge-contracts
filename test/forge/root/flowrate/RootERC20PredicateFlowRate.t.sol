@@ -182,6 +182,24 @@ contract ControlRootERC20PredicateFlowRateTest is InitializedRootERC20PredicateF
 
 
 contract OperationalRootERC20PredicateFlowRateTest is InitializedRootERC20PredicateFlowRateTest {
+    event ERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address withdrawer,
+        address indexed receiver,
+        uint256 amount
+    );
+    event QueuedWithdrawal(
+        address indexed token,
+        address indexed withdrawer,
+        address indexed receiver,
+        uint256 amount,
+        bool delayWithdrawalLargeAmount,
+        bool delayWithdrawalUnknownToken,
+        bool withdrawalQueueActivated
+    );
+    event NoneAvailable();
+
     address charlie;
 
     uint256 constant BRIDGED_VALUE = CAPACITY * 100;
@@ -211,7 +229,12 @@ contract OperationalRootERC20PredicateFlowRateTest is InitializedRootERC20Predic
             bob,
             amount
         );
+        address childERC20Token = rootERC20PredicateFlowRate.rootTokenToChildToken(address(erc20Token));
+        //emit log_named_address("Child ERC 20 token", childERC20Token);
+
         vm.prank(address(exitHelper));
+        vm.expectEmit(true, true, true, true, address(rootERC20PredicateFlowRate));
+        emit ERC20Withdraw(address(erc20Token), childERC20Token, alice, bob, amount);
         rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
 
         assertEq(erc20Token.balanceOf(address(charlie)), CHARLIE_REMAINDER, "charlie");
@@ -251,6 +274,8 @@ contract OperationalRootERC20PredicateFlowRateTest is InitializedRootERC20Predic
             amount
         );
         vm.prank(address(exitHelper));
+        vm.expectEmit(true, true, true, true, address(rootERC20PredicateFlowRate));
+        emit QueuedWithdrawal(address(erc20Token), alice, bob, amount, false, true, false);
         rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
 
         assertEq(erc20Token.balanceOf(address(charlie)), CHARLIE_REMAINDER, "charlie");
@@ -282,6 +307,8 @@ contract OperationalRootERC20PredicateFlowRateTest is InitializedRootERC20Predic
             amount
         );
         vm.prank(address(exitHelper));
+        vm.expectEmit(true, true, true, true, address(rootERC20PredicateFlowRate));
+        emit QueuedWithdrawal(address(erc20Token), alice, bob, amount, true, false, false);
         rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
 
         assertEq(erc20Token.balanceOf(address(charlie)), CHARLIE_REMAINDER, "charlie");
@@ -311,17 +338,158 @@ contract OperationalRootERC20PredicateFlowRateTest is InitializedRootERC20Predic
             bob,
             amount
         );
+        address childERC20Token = rootERC20PredicateFlowRate.rootTokenToChildToken(address(erc20Token));
 
         for (uint256 i = 0; i < timesBeforeHighFlowRate; i++) {
             vm.prank(address(exitHelper));
+            vm.expectEmit(true, true, true, true, address(rootERC20PredicateFlowRate));
+            emit ERC20Withdraw(address(erc20Token), childERC20Token, alice, bob, amount);
             rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
             assertFalse(rootERC20PredicateFlowRate.withdrawalQueueActivated(), "queue activated!");
         }
         assertFalse(rootERC20PredicateFlowRate.withdrawalQueueActivated(), "queue activated!");
 
         vm.prank(address(exitHelper));
+        emit QueuedWithdrawal(address(erc20Token), alice, bob, amount, false, false, true);
         rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
         assertTrue(rootERC20PredicateFlowRate.withdrawalQueueActivated(), "queue not activated!");
+    }
+
+    function testFinaliseQueuedWithdrawalEmptyQueue() public {
+        configureFlowRate();
+        transferTokensToChild();
+        vm.expectEmit(false, false, false, false, address(rootERC20PredicateFlowRate));
+        emit NoneAvailable();
+        rootERC20PredicateFlowRate.finaliseQueuedWithdrawal(address(bob));
+        assertEq(erc20Token.balanceOf(address(bob)), 0, "bob");
+        assertEq(erc20Token.balanceOf(address(rootERC20PredicateFlowRate)), BRIDGED_VALUE, "rootERC20PredicateFlowRate");
+    }
+
+    function testFinaliseQueuedWithdrawalSingle() public {
+        configureFlowRate();
+        transferTokensToChild();
+        uint256 amount = LARGE - 1;
+        uint256 now1 = 100;
+        vm.warp(now1);
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+
+        bytes memory exitData = abi.encode(
+            keccak256("WITHDRAW"),
+            erc20Token,
+            alice,
+            bob,
+            amount
+        );
+        address childERC20Token = rootERC20PredicateFlowRate.rootTokenToChildToken(address(erc20Token));
+
+        vm.prank(address(exitHelper));
+        vm.expectEmit(true, true, true, true, address(rootERC20PredicateFlowRate));
+        emit QueuedWithdrawal(address(erc20Token), alice, bob, amount, false, false, true);
+        rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
+        assertEq(erc20Token.balanceOf(address(bob)), 0, "bob");
+
+        now1 += rootERC20PredicateFlowRate.withdrawalDelay();
+        vm.warp(now1);
+
+        vm.expectEmit(true, true, true, true, address(rootERC20PredicateFlowRate));
+        emit ERC20Withdraw(address(erc20Token), childERC20Token, alice, bob, amount);
+        rootERC20PredicateFlowRate.finaliseQueuedWithdrawal(address(bob));
+        assertEq(erc20Token.balanceOf(address(bob)), amount, "bob");
+        assertEq(erc20Token.balanceOf(address(rootERC20PredicateFlowRate)), BRIDGED_VALUE - amount, "rootERC20PredicateFlowRate");
+    }
+
+    function testFinaliseQueuedWithdrawalMultiple() public {
+        configureFlowRate();
+        transferTokensToChild();
+        uint256 amount = LARGE - 100;
+        uint256 now1 = 100;
+        uint256 total;
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+
+        for (uint256 i = 0; i < 3; i++) {
+            now1 += 70;
+            vm.warp(now1);
+            total += amount + i;
+            bytes memory exitData = abi.encode(
+                keccak256("WITHDRAW"),
+                erc20Token,
+                alice,
+                bob,
+                amount + i
+            );
+
+            vm.prank(address(exitHelper));
+            rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
+        }
+        assertEq(erc20Token.balanceOf(address(bob)), 0, "bob");
+
+        now1 += rootERC20PredicateFlowRate.withdrawalDelay();
+        vm.warp(now1);
+
+        rootERC20PredicateFlowRate.finaliseQueuedWithdrawal(address(bob));
+        assertEq(erc20Token.balanceOf(address(bob)), total, "bob");
+        assertEq(erc20Token.balanceOf(address(rootERC20PredicateFlowRate)), BRIDGED_VALUE - total, "rootERC20PredicateFlowRate");
+    }
+
+    function testFinaliseQueuedWithdrawalNonAvailable() public {
+        configureFlowRate();
+        transferTokensToChild();
+        uint256 amount = LARGE - 1;
+        uint256 now1 = 100;
+        vm.warp(now1);
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+
+        bytes memory exitData = abi.encode(
+            keccak256("WITHDRAW"),
+            erc20Token,
+            alice,
+            bob,
+            amount
+        );
+        vm.prank(address(exitHelper));
+        rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
+        assertEq(erc20Token.balanceOf(address(bob)), 0, "bob");
+
+        rootERC20PredicateFlowRate.finaliseQueuedWithdrawal(address(bob));
+        assertEq(erc20Token.balanceOf(address(bob)), 0, "bob");
+        assertEq(erc20Token.balanceOf(address(rootERC20PredicateFlowRate)), BRIDGED_VALUE, "rootERC20PredicateFlowRate");
+    }
+
+    function testFinaliseQueuedWithdrawalComplex() public {
+        configureFlowRate();
+        transferTokensToChild();
+        uint256 amount = LARGE - 100;
+        uint256 now1 = 100;
+        uint256 total;
+        vm.prank(rateAdmin);
+        rootERC20PredicateFlowRate.activateWithdrawalQueue();
+
+        for (uint256 i = 0; i < 3; i++) {
+            now1 += 70;
+            total += amount + i;
+            doL2StateReceiveNoEventCheck(amount + i, now1);
+        }
+        assertEq(erc20Token.balanceOf(address(bob)), 0, "bob");
+
+        now1 += rootERC20PredicateFlowRate.withdrawalDelay();
+        vm.warp(now1);
+        amount += amount;
+        now1 += 100;
+        doL2StateReceiveNoEventCheck(amount, now1);
+
+        rootERC20PredicateFlowRate.finaliseQueuedWithdrawal(address(bob));
+        assertEq(erc20Token.balanceOf(address(bob)), total, "bob");
+        assertEq(erc20Token.balanceOf(address(rootERC20PredicateFlowRate)), BRIDGED_VALUE - total, "rootERC20PredicateFlowRate");
+
+        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending = rootERC20PredicateFlowRate.getPendingWithdrawals(bob);
+        assertEq(pending.length, 1, "Pending withdrawal length");
+        assertEq(pending[0].withdrawer, address(alice), "Withdrawer");
+        assertEq(pending[0].token, address(erc20Token), "Token");
+        assertEq(pending[0].amount, amount, "Amount");
+        assertEq(pending[0].timestamp, now1, "Timestamp");
     }
 
 
@@ -340,5 +508,19 @@ contract OperationalRootERC20PredicateFlowRateTest is InitializedRootERC20Predic
         erc20Token.approve(address(rootERC20PredicateFlowRate), BRIDGED_VALUE);
         rootERC20PredicateFlowRate.deposit(erc20Token, BRIDGED_VALUE);
         vm.stopPrank();
+    }
+
+    function doL2StateReceiveNoEventCheck(uint256 amount, uint256 time) private {
+        vm.warp(time);
+        bytes memory exitData = abi.encode(
+            keccak256("WITHDRAW"),
+            erc20Token,
+            alice,
+            bob,
+            amount
+        );
+
+        vm.prank(address(exitHelper));
+        rootERC20PredicateFlowRate.onL2StateReceive(1, childERC20Predicate, exitData);
     }
 }

@@ -62,14 +62,20 @@ contract RootERC20PredicateFlowRate is
      * @param withdrawalQueueActivated is true if the withdrawal queue has been activated.
      */
     event QueuedWithdrawal(
-        address token,
-        address withdrawer,
-        address receiver,
+        address indexed token,
+        address indexed withdrawer,
+        address indexed receiver,
         uint256 amount,
         bool delayWithdrawalLargeAmount,
         bool delayWithdrawalUnknownToken,
         bool withdrawalQueueActivated
     );
+
+    /**
+     * Indicates that there were no queued withdrawals that were available to be
+     * withdrawn.
+     */
+    event NoneAvailable();
 
     /**
      * @notice Initilization function for RootERC20PredicateFlowRate
@@ -220,14 +226,20 @@ contract RootERC20PredicateFlowRate is
             uint256 amount
         ) = _decodeCrosschainMessage(data);
 
-        // Delay the withdrawal if the amount is greater than the threshold.
-        bool delayWithdrawalLargeAmount = (amount >= largeTransferThresholds[rootToken]);
-
         // Update the flow rate checking. Delay the withdrawal if the request was
         // for a token that has not been configured.
         bool delayWithdrawalUnknownToken = _updateFlowRateBucket(rootToken, amount);
+        bool delayWithdrawalLargeAmount;
 
-        if (delayWithdrawalLargeAmount || delayWithdrawalUnknownToken || withdrawalQueueActivated) {
+        // Delay the withdrawal if the amount is greater than the threshold.
+        if (!delayWithdrawalUnknownToken) {
+            delayWithdrawalLargeAmount = (amount >= largeTransferThresholds[rootToken]);
+        }
+
+        // Ensure storage variable is cached on the stack.
+        bool queueActivated = withdrawalQueueActivated;
+
+        if (delayWithdrawalLargeAmount || delayWithdrawalUnknownToken || queueActivated) {
             _enqueueWithdrawal(receiver, withdrawer, rootToken, amount);
             emit QueuedWithdrawal(
                 rootToken,
@@ -236,7 +248,7 @@ contract RootERC20PredicateFlowRate is
                 amount,
                 delayWithdrawalLargeAmount,
                 delayWithdrawalUnknownToken,
-                withdrawalQueueActivated
+                queueActivated
             );
         } else {
             _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
@@ -249,6 +261,7 @@ contract RootERC20PredicateFlowRate is
      * @dev Only when not paused.
      */
     function finaliseQueuedWithdrawal(address receiver) external whenNotPaused {
+        bool none = true;
         bool more;
         do {
             address withdrawer;
@@ -257,8 +270,12 @@ contract RootERC20PredicateFlowRate is
             (more, withdrawer, token, amount) = _dequeueWithdrawal(receiver);
             if (token == address(0)) {
                 // No more help transfers to process.
+                if (none) {
+                    emit NoneAvailable();
+                }
                 return;
             }
+            none = false;
 
             address childToken = rootTokenToChildToken[token];
             _executeTransfer(token, childToken, withdrawer, receiver, amount);
