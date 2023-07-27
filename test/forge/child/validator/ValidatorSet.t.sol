@@ -24,7 +24,9 @@ abstract contract Uninitialized is Test {
 
     function setUp() public virtual {
         networkParams = new NetworkParams();
-        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 1, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1));
+        networkParams.initialize(
+            NetworkParams.InitParams(address(1), 1, epochSize, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+        );
 
         stateSender = new L2StateSender();
         validatorSet = new ValidatorSet();

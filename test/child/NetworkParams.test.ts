@@ -16,6 +16,7 @@ describe("NetworkParams", () => {
       newCheckpointBlockInterval: 0,
       newEpochSize: 0,
       newEpochReward: 0,
+      newSprintSize: 0,
       newMinValidatorSetSize: 0,
       newMaxValidatorSetSize: 0,
       newWithdrawalWaitPeriod: 0,
@@ -39,6 +40,7 @@ describe("NetworkParams", () => {
     initParams.newCheckpointBlockInterval = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newEpochSize = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newEpochReward = ethers.utils.parseUnits(String(Math.floor(Math.random() * 20 + 1)));
+    initParams.newSprintSize = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newMinValidatorSetSize = Math.floor(Math.random() * 20 + 5);
     initParams.newMaxValidatorSetSize = Math.floor(Math.random() * 20 + 5);
     initParams.newWithdrawalWaitPeriod = 2 ** Math.floor(Math.random() * 5 + 10);
@@ -54,6 +56,7 @@ describe("NetworkParams", () => {
     expect(await networkParams.checkpointBlockInterval()).to.equal(initParams.newCheckpointBlockInterval);
     expect(await networkParams.epochSize()).to.equal(initParams.newEpochSize);
     expect(await networkParams.epochReward()).to.equal(initParams.newEpochReward);
+    expect(await networkParams.sprintSize()).to.equal(initParams.newSprintSize);
     expect(await networkParams.minValidatorSetSize()).to.equal(initParams.newMinValidatorSetSize);
     expect(await networkParams.maxValidatorSetSize()).to.equal(initParams.newMaxValidatorSetSize);
     expect(await networkParams.withdrawalWaitPeriod()).to.equal(initParams.newWithdrawalWaitPeriod);
@@ -132,6 +135,25 @@ describe("NetworkParams", () => {
     await networkParams.setNewEpochReward(initParams.newEpochReward);
 
     expect(await networkParams.epochReward()).to.equal(initParams.newEpochReward);
+  });
+
+  it("set new sprint size fail: only owner", async () => {
+    await impersonateAccount(accounts[1].address);
+    await setBalance(accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    const newNetworkParams = networkParams.connect(accounts[1]);
+    await expect(newNetworkParams.setNewSprintSize(1)).to.be.revertedWith("Ownable: caller is not the owner");
+    await stopImpersonatingAccount(accounts[1].address);
+  });
+
+  it("set new sprint size fail: invalid input", async () => {
+    await expect(networkParams.setNewSprintSize(0)).to.be.revertedWith("NetworkParams: INVALID_SPRINT_SIZE");
+  });
+
+  it("set new sprint size success", async () => {
+    initParams.newSprintSize = 10 ** Math.floor(Math.random() + 6);
+    await networkParams.setNewSprintSize(initParams.newSprintSize);
+
+    expect(await networkParams.sprintSize()).to.equal(initParams.newSprintSize);
   });
 
   it("set new min validator set size fail: only owner", async () => {
