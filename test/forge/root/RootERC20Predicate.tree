@@ -1,0 +1,86 @@
+RootERC20Predicate.t.sol
+├── When the contract is not initialized
+│   ├── When public variables are called [RootERC20Predicate_Uninitialized:test_UnititializedValues]
+│   │   └── it should be unitialized
+│   ├── When "onL2StateReceive" is called [RootERC20Predicate_Uninitialized:test_onL2StateReceive_reverts]
+│   │   └── it should revert with error "RootERC20Predicate: ONLY_EXIT_HELPER"
+│   ├── When "deposit" is called [RootERC20Predicate_Uninitialized:test_deposit_reverts]
+│   │   └── it should revert
+│   ├── When "depositTo" is called [RootERC20Predicate_Uninitialized:test_depositTo_reverts]
+│   │   └── it should revert
+│   ├── When "depositNativeTo" is called [RootERC20Predicate_Uninitialized:test_depositNativeTo_reverts]
+│   │   └── it should revert
+│   ├── When "mapToken" is called [RootERC20Predicate_Uninitialized:test_mapToken_reverts]
+│   │   └── it should revert
+│   └── When "initialize" is called
+│       ├── When the state sender address is set to 0 [RootERC20Predicate_Uninitialized:test_initializeZeroAddress_reverts]
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the exit helper address is set to 0 [RootERC20Predicate_Uninitialized:test_initializeZeroAddress_reverts]
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the child erc20 predicate is set to 0 [RootERC20Predicate_Uninitialized:test_initializeZeroAddress_reverts]
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the child erc20 template is set to 0 [RootERC20Predicate_Uninitialized:test_initializeZeroAddress_reverts]
+│       │   └── it should revert with error "RootERC20Predicate: BAD_INITIALIZATION"
+│       ├── When the native token root address is set to 0 [RootERC20Predicate_Uninitialized:test_initializeNativeTokenRootZero_NoMapping]
+│       │   └── it should not emit a "TokenMapped" event
+│       └── When the initializer has valid inputs with a non-zero native token root [RootERC20Predicate_Uninitialized:test_initializeNoZeroNativeToken]
+│           ├── it should emit a "TokenMapped" event for the native token root address
+│           ├── it should emit a "StateSynced" event
+│           ├── it should emit a "TokenMapped" event for the native token (ether)
+│           └── it should emit an "Initialized" event
+└── When the contract is initialized
+    ├── When "initialize" is called [RootERC20Predicate_Initialized:test_initialize_reverts]
+    │   └── it should revert with "Initializable: contract is already initialized"
+    ├── When "depositTo" is called
+    │   ├── When the token is not mapped [RootERC20Predicate_Initialized:test_depositToUnmappedToken]
+    │   │   ├── it should emit a "TokenMapped" event
+    │   │   ├── it should increase the balance of the bridge by `amount`
+    │   │   └── it should emit an "ERC20Deposit" event
+    │   └── When the token is mapped [RootERC20Predicate_Initialized:test_depositTo_mappedToken]
+    │       ├── it should increase the balance of the bridge by `amount`
+    │       └── it should emit an "ERC20Deposit" event
+    ├── When "depositNativeTo" is called
+    │   ├── When the message value is 0 [RootERC20Predicate_Initialized:test_depositNativeToValueZero_reverts]
+    │   │   └── it should revert with error "RootERC20Predicate: INVALID_AMOUNT"
+    │   ├── When the message recipient is address(0) [RootERC20Predicate_Initialized:test_depositNativeToInvalidRecipient]
+    │   │   └── it should revert with error "RootERC20Predicate: INVALID_RECEIVER"
+    │   └── When the message value is greater than 0 with a valid recipient [RootERC20Predicate_Initialized:test_depositNativeToValidRecipientValidValue]
+    │       ├── it should reduce the depositors native token balance
+    │       ├── it should increase the predicate contract's balance
+    │       └── it should emit an "ERC20Deposit" event with the correct fields
+    ├── When "mapToken" is called
+    │   ├── When the rootToken address is 0 [RootERC20Predicate_Initialized:test_mapTokenAddressZero_reverts]
+    │   │   └── it should revert with "RootERC20Predicate: INVALID_TOKEN"
+    │   └── When the root token address is not 0
+    │       ├── When the rootToken has invalid name, symbol or decimals [RootERC20Predicate_Initialized:test_mapTokenInvalidERC20_reverts]
+    │       │   └── it should revert
+    │       └── When the rootToken has valid name, symbol and decimals
+    │           ├── When the token is already mapped [RootERC20Predicate_Initialized:test_mapTokenAlreadyMapped_reverts]
+    │           │   └── it should revert with "RootERC20Predicate: ALREADY_MAPPED"
+    │           └── When the token is not mapped [RootERC20Predicate_Initialized:test_mapTokenUnmappedToken]
+    │               └── it should emit a token "TokenMapped" event
+    └── When "onL2StateReceive" is called
+        ├── When msg.sender is not exit helper [RootERC20Predicate_Withdrawals:test_onL2StateReceiveIsNotExitHelper_reverts]
+        │   └── it should revert with "RootERC20Predicate: ONLY_EXIT_HELPER"
+        └── When msg.sender is exit helper
+            ├── When sender is not childERC20Predicate [RootERC20Predicate_Withdrawals:test_onL2StateReceiveSenderNotChildPredicate_reverts]
+            │   └── it should revert with "RootERC20Predicate: ONLY_CHILD_PREDICATE"
+            └── When sender is childERC20Predicate
+                ├── When withdraw signature is less than 32 bytes [RootERC20Predicate_Withdrawals:test_onL2StateReceiveShortSignature_reverts]
+                │   └── it should revert with no message
+                ├── When withdraw signature is not keccak256("WITHDRAW") but more than 32 bytes [RootERC20Predicate_Withdrawals:test_onL2StateReceiveLongInvalidSignature_reverts]
+                │   └── it should revert with "RootERC20Predicate: INVALID_SIGNATURE"
+                └── When withdraw signature is keccak256("WITHDRAW")
+                    ├── When abi encoded payload is invalid [RootERC20Predicate_Withdrawals:test_onL2StateReceiveValidSignatureInvalidPayload_reverts]
+                    │   └── it should revert with no message
+                    └── When abi encoded payload is valid
+                        ├── When root token mapping doesn't exist [RootERC20Predicate_Withdrawals:test_onL2StateReceiveNoMapping_reverts]
+                        │   └── it should revert
+                        ├── When root token is native token [RootERC20Predicate_Withdrawals:test_onL2StateReceiveNativeToken]
+                        │   ├── it should increase balance of receiver
+                        │   ├── it should decrease balance of bridge
+                        │   └── it should emit "ERC20Withdraw" event
+                        └── When root token is not native token [RootERC20Predicate_Withdrawals:test_onL2StateReceiveERC20]
+                            ├── it should increase balance of receiver
+                            ├── it should decrease balance of bridge
+                            └── it should emit "ERC20Withdraw" event

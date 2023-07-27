@@ -5,17 +5,23 @@ import "@utils/Test.sol";
 
 import {StateSender} from "contracts/root/StateSender.sol";
 
-contract StateSenderTest is Test {
-    event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
-
+abstract contract StateSenderHelper {
     StateSender stateSender;
+
+    function setUp() public virtual {
+        stateSender = new StateSender();
+    }
+}
+
+contract StateSenderTest is StateSenderHelper, Test {
+    event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
 
     address receiver;
     bytes maxData;
     bytes moreThanMaxData;
 
-    function setUp() public {
-        stateSender = new StateSender();
+    function setUp() public virtual override {
+        super.setUp();
         receiver = makeAddr("receiver");
         maxData = new bytes(stateSender.MAX_LENGTH());
         moreThanMaxData = new bytes(stateSender.MAX_LENGTH() + 1);
