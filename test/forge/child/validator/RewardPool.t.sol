@@ -23,7 +23,7 @@ abstract contract Uninitialized is Test {
 
     function setUp() public virtual {
         networkParams = new NetworkParams();
-        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 1, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1));
+        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 64, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1));
 
         token = new MockERC20();
         validatorSet = new ValidatorSet();

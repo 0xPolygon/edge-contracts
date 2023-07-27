@@ -346,6 +346,22 @@ function to set new proposal threshold
 |---|---|---|
 | newProposalThreshold | uint256 | new proposal threshold |
 
+### setNewSprintSize
+
+```solidity
+function setNewSprintSize(uint256 newSprintSize) external nonpayable
+```
+
+function to set new sprint size
+
+*disallows setting of a zero value for sanity check purposes*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newSprintSize | uint256 | new sprint size |
+
 ### setNewVotingDelay
 
 ```solidity
@@ -393,6 +409,23 @@ function to set new withdrawal wait period
 | Name | Type | Description |
 |---|---|---|
 | newWithdrawalWaitPeriod | uint256 | new withdrawal wait period |
+
+### sprintSize
+
+```solidity
+function sprintSize() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### transferOwnership
 
@@ -608,6 +641,22 @@ event NewProposalThreshold(uint256 indexed proposalThreshold)
 | Name | Type | Description |
 |---|---|---|
 | proposalThreshold `indexed` | uint256 | undefined |
+
+### NewSprintSize
+
+```solidity
+event NewSprintSize(uint256 indexed size)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| size `indexed` | uint256 | undefined |
 
 ### NewVotingDelay
 

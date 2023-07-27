@@ -16,6 +16,7 @@ contract NetworkParams is Ownable2Step, Initializable {
         uint256 newCheckpointBlockInterval; // in blocks
         uint256 newEpochSize; // in blocks
         uint256 newEpochReward; // in wei
+        uint256 newSprintSize; // in blocks
         uint256 newMinValidatorSetSize;
         uint256 newMaxValidatorSetSize;
         uint256 newWithdrawalWaitPeriod; // in blocks
@@ -29,6 +30,7 @@ contract NetworkParams is Ownable2Step, Initializable {
     uint256 public checkpointBlockInterval; // in blocks
     uint256 public epochSize; // in blocks
     uint256 public epochReward; // in wei
+    uint256 public sprintSize; // in blocks
     uint256 public minValidatorSetSize;
     uint256 public maxValidatorSetSize;
     uint256 public withdrawalWaitPeriod; // in blocks
@@ -41,6 +43,7 @@ contract NetworkParams is Ownable2Step, Initializable {
     event NewCheckpointBlockInterval(uint256 indexed checkpointInterval);
     event NewEpochSize(uint256 indexed size);
     event NewEpochReward(uint256 indexed reward);
+    event NewSprintSize(uint256 indexed size);
     event NewMinValidatorSetSize(uint256 indexed minValidatorSet);
     event NewMaxValidatorSetSize(uint256 indexed maxValidatorSet);
     event NewWithdrawalWaitPeriod(uint256 indexed withdrawalPeriod);
@@ -61,6 +64,7 @@ contract NetworkParams is Ownable2Step, Initializable {
                 initParams.newCheckpointBlockInterval != 0 &&
                 initParams.newEpochSize != 0 &&
                 initParams.newEpochReward != 0 &&
+                initParams.newSprintSize != 0 &&
                 initParams.newMinValidatorSetSize != 0 &&
                 initParams.newMaxValidatorSetSize != 0 &&
                 initParams.newWithdrawalWaitPeriod != 0 &&
@@ -74,6 +78,7 @@ contract NetworkParams is Ownable2Step, Initializable {
         checkpointBlockInterval = initParams.newCheckpointBlockInterval;
         epochSize = initParams.newEpochSize;
         epochReward = initParams.newEpochReward;
+        sprintSize = initParams.newSprintSize;
         minValidatorSetSize = initParams.newMinValidatorSetSize;
         maxValidatorSetSize = initParams.newMaxValidatorSetSize;
         withdrawalWaitPeriod = initParams.newWithdrawalWaitPeriod;
@@ -119,6 +124,18 @@ contract NetworkParams is Ownable2Step, Initializable {
         epochReward = newEpochReward;
 
         emit NewEpochReward(newEpochReward);
+    }
+
+    /**
+     * @notice function to set new sprint size
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newSprintSize new sprint size
+     */
+    function setNewSprintSize(uint256 newSprintSize) external onlyOwner {
+        require(newSprintSize != 0, "NetworkParams: INVALID_SPRINT_SIZE");
+        sprintSize = newSprintSize;
+
+        emit NewSprintSize(newSprintSize);
     }
 
     /**
