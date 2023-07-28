@@ -49,6 +49,22 @@ function featureToBlockNumber(bytes32) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### initialize
+
+```solidity
+function initialize(address newOwner) external nonpayable
+```
+
+initialize function to set the owner
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address | address to transfer the ownership to |
+
 ### isFeatureActivated
 
 ```solidity
@@ -135,6 +151,22 @@ function to update the block number for a feature
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+*Triggered when the contract has been initialized or reinitialized.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### NewFeature
 

@@ -7,7 +7,6 @@ import {FlowRateWithdrawalQueue} from "contracts/root/flowrate/FlowRateWithdrawa
 import {RootERC20PredicateFlowRate} from "contracts/root/flowrate/RootERC20PredicateFlowRate.sol";
 import {ChildERC20} from "contracts/child/ChildERC20.sol";
 import {StateSenderHelper} from "../StateSender.t.sol";
-import {Initialized} from "../ExitHelper.t.sol";
 import {PredicateHelper} from "../PredicateHelper.t.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 

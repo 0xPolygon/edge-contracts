@@ -85,14 +85,14 @@ abstract contract Uninitialized is Test {
     }
 }
 
-abstract contract Initialized is Uninitialized {
+abstract contract InitializedExitHelper is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
         exitHelper.initialize(checkpointManager);
     }
 }
 
-abstract contract CheckpointSubmitted is Initialized {
+abstract contract CheckpointSubmitted is InitializedExitHelper {
     function setUp() public virtual override {
         super.setUp();
 
@@ -177,7 +177,7 @@ contract ExitHelper_ExitFailedBeforeInitialized is Uninitialized {
     }
 }
 
-contract ExitHelper_Exit is Initialized {
+contract ExitHelper_Exit is InitializedExitHelper {
     function testExit() public {
         ICheckpointManager.Checkpoint memory checkpoint = ICheckpointManager.Checkpoint({
             epoch: 1,

@@ -6,7 +6,6 @@ import "forge-std/Test.sol";
 import {RootERC20Predicate} from "contracts/root/RootERC20Predicate.sol";
 import {ChildERC20} from "contracts/child/ChildERC20.sol";
 import {StateSenderHelper} from "./StateSender.t.sol";
-import {Initialized} from "./ExitHelper.t.sol";
 import {PredicateHelper} from "./PredicateHelper.t.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 

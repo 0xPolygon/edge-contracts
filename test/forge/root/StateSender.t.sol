@@ -5,7 +5,6 @@ import "@utils/Test.sol";
 
 import {StateSender} from "contracts/root/StateSender.sol";
 
-
 abstract contract StateSenderHelper {
     StateSender stateSender;
 
