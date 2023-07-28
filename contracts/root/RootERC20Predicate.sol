@@ -18,6 +18,9 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+
+    // assign arbitrary unaccessable address of 1 to native token
+    address public constant NATIVE_TOKEN = address(1);
     mapping(address => address) public rootTokenToChildToken;
 
     /**
@@ -49,6 +52,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
             rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
             emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
         }
+        _mapNative();
     }
 
     /**
@@ -71,14 +75,22 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external {
-        _deposit(rootToken, msg.sender, amount);
+        _depositERC20(rootToken, msg.sender, amount);
     }
 
     /**
      * @inheritdoc IRootERC20Predicate
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external {
-        _deposit(rootToken, receiver, amount);
+        _depositERC20(rootToken, receiver, amount);
+    }
+
+    /**
+     * @inheritdoc IRootERC20Predicate
+     */
+    function depositNativeTo(address receiver) external payable {
+        require(msg.value > 0, "RootERC20Predicate: INVALID_AMOUNT");
+        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, msg.value);
     }
 
     /**
@@ -86,7 +98,20 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      */
     function mapToken(IERC20Metadata rootToken) public returns (address) {
         require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
-        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+        return _map(address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals());
+    }
+
+    function _mapNative() private {
+        _map(NATIVE_TOKEN, "Ether", "ETH", 18);
+    }
+
+    function _map(
+        address rootToken,
+        string memory tokenName,
+        string memory tokenSymbol,
+        uint8 tokenDecimals
+    ) internal returns (address) {
+        require(rootTokenToChildToken[rootToken] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC20Predicate;
 
@@ -97,28 +122,38 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
-
         stateSender.syncState(
             childPredicate,
-            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals())
+            abi.encode(MAP_TOKEN_SIG, rootToken, tokenName, tokenSymbol, tokenDecimals)
         );
         // slither-disable-next-line reentrancy-events
-        emit TokenMapped(address(rootToken), childToken);
+        emit TokenMapped(rootToken, childToken);
 
         return childToken;
     }
 
+    function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
+        _deposit(rootToken, receiver, amount);
+        // invariant check to ensure that the root token balance has increased by the amount deposited
+        // slither-disable-next-line incorrect-equality
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
+    }
+
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        require(receiver != address(0), "RootERC20Predicate: INVALID_RECEIVER");
         address childToken = rootTokenToChildToken[address(rootToken)];
 
-        if (childToken == address(0)) {
-            childToken = mapToken(rootToken);
+        // The native token does not need to be mapped since it should have been mapped on initialization
+        // The native token also cannot be transferred since it was received in the payable function call
+        if (address(rootToken) != NATIVE_TOKEN) {
+            if (childToken == address(0)) {
+                childToken = mapToken(rootToken);
+            }
+            // ERC20 must be transferred explicitly
+            rootToken.safeTransferFrom(msg.sender, address(this), amount);
         }
-
-        assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
-
-        rootToken.safeTransferFrom(msg.sender, address(this), amount);
-
+        assert(childToken != address(0));
         stateSender.syncState(childERC20Predicate, abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount));
         // slither-disable-next-line reentrancy-events
         emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
@@ -132,7 +167,13 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address childToken = rootTokenToChildToken[rootToken];
         assert(childToken != address(0)); // invariant because child predicate should have already mapped tokens
 
-        IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+        if (rootToken == NATIVE_TOKEN) {
+            // slither-disable-next-line arbitrary-send-eth,low-level-calls
+            (bool success, ) = receiver.call{value: amount}("");
+            require(success, "RootERC20Predicate: ETH_TRANSFER_FAILED");
+        } else {
+            IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+        }
         // slither-disable-next-line reentrancy-events
         emit ERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
