@@ -21,23 +21,6 @@ function acceptOwnership() external nonpayable
 *The new owner accepts the ownership transfer.*
 
 
-### blockGasLimit
-
-```solidity
-function blockGasLimit() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### blockTime
 
 ```solidity
@@ -156,23 +139,6 @@ function maxValidatorSetSize() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### minStake
-
-```solidity
-function minStake() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### minValidatorSetSize
 
 ```solidity
@@ -251,22 +217,6 @@ function renounceOwnership() external nonpayable
 
 *Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
 
-
-### setNewBlockGasLimit
-
-```solidity
-function setNewBlockGasLimit(uint256 newBlockGasLimit) external nonpayable
-```
-
-function to set new block gas limit
-
-*disallows setting of a zero value for sanity check purposes*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newBlockGasLimit | uint256 | new block gas limit |
 
 ### setNewBlockTime
 
@@ -364,22 +314,6 @@ function to set new maximum validator set size
 |---|---|---|
 | newMaxValidatorSetSize | uint256 | new maximum validator set size |
 
-### setNewMinStake
-
-```solidity
-function setNewMinStake(uint256 newMinStake) external nonpayable
-```
-
-function to set new minimum stake
-
-*disallows setting of a zero value for sanity check purposes*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newMinStake | uint256 | new minimum stake |
-
 ### setNewMinValidatorSetSize
 
 ```solidity
@@ -411,6 +345,22 @@ function to set new proposal threshold
 | Name | Type | Description |
 |---|---|---|
 | newProposalThreshold | uint256 | new proposal threshold |
+
+### setNewSprintSize
+
+```solidity
+function setNewSprintSize(uint256 newSprintSize) external nonpayable
+```
+
+function to set new sprint size
+
+*disallows setting of a zero value for sanity check purposes*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newSprintSize | uint256 | new sprint size |
 
 ### setNewVotingDelay
 
@@ -459,6 +409,23 @@ function to set new withdrawal wait period
 | Name | Type | Description |
 |---|---|---|
 | newWithdrawalWaitPeriod | uint256 | new withdrawal wait period |
+
+### sprintSize
+
+```solidity
+function sprintSize() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### transferOwnership
 
@@ -546,22 +513,6 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
-
-### NewBlockGasLimit
-
-```solidity
-event NewBlockGasLimit(uint256 indexed gasLimit)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| gasLimit `indexed` | uint256 | undefined |
 
 ### NewBlockTime
 
@@ -659,22 +610,6 @@ event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet)
 |---|---|---|
 | maxValidatorSet `indexed` | uint256 | undefined |
 
-### NewMinStake
-
-```solidity
-event NewMinStake(uint256 indexed minStake)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| minStake `indexed` | uint256 | undefined |
-
 ### NewMinValidatorSetSize
 
 ```solidity
@@ -706,6 +641,22 @@ event NewProposalThreshold(uint256 indexed proposalThreshold)
 | Name | Type | Description |
 |---|---|---|
 | proposalThreshold `indexed` | uint256 | undefined |
+
+### NewSprintSize
+
+```solidity
+event NewSprintSize(uint256 indexed size)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| size `indexed` | uint256 | undefined |
 
 ### NewVotingDelay
 

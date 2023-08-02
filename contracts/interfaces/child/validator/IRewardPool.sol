@@ -20,7 +20,7 @@ interface IRewardPool {
     /// @notice distributes reward for the given epoch
     /// @dev transfers funds from sender to this contract
     /// @param uptime uptime data for every validator
-    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime) external;
+    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime, uint256 epochSize) external;
 
     /// @notice withdraws pending rewards for the sender (validator)
     function withdrawReward() external;

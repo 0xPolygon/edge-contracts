@@ -17,12 +17,13 @@ abstract contract Uninitialized is Test {
     RewardPool pool;
     address rewardWallet = makeAddr("rewardWallet");
     address alice = makeAddr("alice");
+    uint256 epochSize = 64;
 
     NetworkParams networkParams;
 
     function setUp() public virtual {
         networkParams = new NetworkParams();
-        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 1, 64, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 64, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1));
 
         token = new MockERC20();
         validatorSet = new ValidatorSet();
@@ -32,7 +33,7 @@ abstract contract Uninitialized is Test {
         validatorSet.initialize(address(1), address(1), address(1), address(networkParams), init);
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch);
+        validatorSet.commitEpoch(1, epoch, epochSize);
         vm.roll(block.number + 1);
         pool = new RewardPool();
         token.mint(rewardWallet, 1000 ether);
@@ -55,7 +56,7 @@ abstract contract Distributed is Initialized {
         uptime[0] = Uptime({validator: address(this), signedBlocks: 64});
         uptime[1] = Uptime({validator: alice, signedBlocks: 64});
         vm.prank(SYSTEM);
-        pool.distributeRewardFor(1, uptime);
+        pool.distributeRewardFor(1, uptime, epochSize);
     }
 }
 
@@ -73,21 +74,21 @@ contract RewardPool_Distribute is Initialized {
 
     function test_RevertOnlySystem() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        pool.distributeRewardFor(1, new Uptime[](0));
+        pool.distributeRewardFor(1, new Uptime[](0), epochSize);
     }
 
     function test_RevertGenesisEpoch() public {
         Uptime[] memory uptime = new Uptime[](0);
         vm.expectRevert("EPOCH_NOT_COMMITTED");
         vm.prank(SYSTEM);
-        pool.distributeRewardFor(0, uptime);
+        pool.distributeRewardFor(0, uptime, epochSize);
     }
 
     function test_RevertFutureEpoch() public {
         Uptime[] memory uptime = new Uptime[](0);
         vm.expectRevert("EPOCH_NOT_COMMITTED");
         vm.prank(SYSTEM);
-        pool.distributeRewardFor(2, uptime);
+        pool.distributeRewardFor(2, uptime, epochSize);
     }
 
     function test_RevertSignedBlocksExceedsTotalBlocks() public {
@@ -95,7 +96,7 @@ contract RewardPool_Distribute is Initialized {
         uptime[0] = Uptime({validator: address(this), signedBlocks: 65});
         vm.prank(SYSTEM);
         vm.expectRevert("SIGNED_BLOCKS_EXCEEDS_TOTAL");
-        pool.distributeRewardFor(1, uptime);
+        pool.distributeRewardFor(1, uptime, epochSize);
     }
 
     function test_DistributeRewards(uint256 epochReward) public {
@@ -111,7 +112,7 @@ contract RewardPool_Distribute is Initialized {
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
         emit RewardDistributed(1, totalReward);
-        pool.distributeRewardFor(1, uptime);
+        pool.distributeRewardFor(1, uptime, epochSize);
         assertEq(pool.pendingRewards(address(this)), reward1);
         assertEq(pool.pendingRewards(alice), reward2);
         assertEq(pool.paidRewardPerEpoch(1), totalReward);
@@ -123,7 +124,7 @@ contract RewardPool_DuplicateDistribution is Distributed {
         Uptime[] memory uptime = new Uptime[](0);
         vm.startPrank(SYSTEM);
         vm.expectRevert("REWARD_ALREADY_DISTRIBUTED");
-        pool.distributeRewardFor(1, uptime);
+        pool.distributeRewardFor(1, uptime, epochSize);
     }
 }
 
