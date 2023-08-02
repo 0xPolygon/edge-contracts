@@ -132,7 +132,7 @@ contract StakeManager_StakeFor is Registered, StakeManager {
 
 contract StakeManager_ReleaseStake is Staked, StakeManager {
     function test_RevertNotSupernetManager() public {
-        vm.expectRevert("ChildManagerLib: INVALID_MANAGER");
+        vm.expectRevert("StakeManagerChildData: INVALID_MANAGER");
         stakeManager.releaseStakeOf(address(this), 1);
     }
 
@@ -152,7 +152,7 @@ contract StakeManager_ReleaseStake is Staked, StakeManager {
 
 contract StakeManager_SlashStake is Staked, StakeManager {
     function test_RevertNotSupernetManager() public {
-        vm.expectRevert("ChildManagerLib: INVALID_MANAGER");
+        vm.expectRevert("StakeManagerChildData: INVALID_MANAGER");
         stakeManager.slashStakeOf(address(this), 1);
     }
 
