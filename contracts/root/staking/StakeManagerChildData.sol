@@ -12,6 +12,7 @@ abstract contract StakeManagerChildData {
     // child chain id to child chain manager contract address.
     mapping(uint256 => address) private _managers;
     // child chain manager contract address to child chain id.
+    // slither-disable-next-line naming-convention
     mapping(address => uint256) internal _ids;
 
     /**
@@ -49,6 +50,6 @@ abstract contract StakeManagerChildData {
     }
 
     // Storage gap
-    // solhint-disable-next-line var-name-mixedcase
+    // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;
 }

@@ -7,6 +7,7 @@ pragma solidity 0.8.19;
  * Note that this is contract is designed to be included in StakeManager. It is upgradeable.
  */
 abstract contract StakeManagerStakingData {
+    // slither-disable-next-line naming-convention
     uint256 internal _totalStake;
     // validator => child => amount
     mapping(address => mapping(uint256 => uint256)) private _stakes;
@@ -53,6 +54,6 @@ abstract contract StakeManagerStakingData {
     }
 
     // Storage gap
-    // solhint-disable-next-line var-name-mixedcase
+    // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;
 }
