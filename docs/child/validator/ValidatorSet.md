@@ -331,7 +331,7 @@ function clock() external view returns (uint48)
 ### commitEpoch
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch) external nonpayable
+function commitEpoch(uint256 id, Epoch epoch, uint256 epochSize) external nonpayable
 ```
 
 
@@ -344,6 +344,7 @@ function commitEpoch(uint256 id, Epoch epoch) external nonpayable
 |---|---|---|
 | id | uint256 | undefined |
 | epoch | Epoch | undefined |
+| epochSize | uint256 | undefined |
 
 ### currentEpochId
 

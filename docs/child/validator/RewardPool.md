@@ -166,7 +166,7 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 ### distributeRewardFor
 
 ```solidity
-function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayable
+function distributeRewardFor(uint256 epochId, Uptime[] uptime, uint256 epochSize) external nonpayable
 ```
 
 
@@ -179,6 +179,7 @@ function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayab
 |---|---|---|
 | epochId | uint256 | undefined |
 | uptime | Uptime[] | undefined |
+| epochSize | uint256 | undefined |
 
 ### initialize
 
