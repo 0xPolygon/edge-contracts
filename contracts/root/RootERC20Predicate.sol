@@ -21,7 +21,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootERC20Predicate
+     * @notice Initialization function for RootERC20Predicate
      * @param newStateSender Address of StateSender to send deposit information to
      * @param newExitHelper Address of ExitHelper to receive withdrawal information from
      * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with

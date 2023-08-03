@@ -27,7 +27,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootMintableERC20Predicate
+     * @notice Initialization function for RootMintableERC20Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with

@@ -68,7 +68,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     }
 
     /**
-     * @notice Initilization function for ChildERC721Predicate
+     * @notice Initialization function for ChildERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
@@ -149,7 +149,7 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
     }
 
     /**
-     * @notice Initilization function for ChildERC721Predicate
+     * @notice Initialization function for ChildERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with

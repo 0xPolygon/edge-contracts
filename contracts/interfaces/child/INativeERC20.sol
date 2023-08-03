@@ -41,7 +41,7 @@ interface INativeERC20 is IERC20MetadataUpgradeable {
      * @dev Can only be called by the predicate address
      * @param account Account of the user to mint the tokens to
      * @param amount Amount of tokens to mint to the account
-     * @return bool Returns true if function call is succesful
+     * @return bool Returns true if function call is successful
      */
     function mint(address account, uint256 amount) external returns (bool);
 
@@ -50,7 +50,7 @@ interface INativeERC20 is IERC20MetadataUpgradeable {
      * @dev Can only be called by the predicate address
      * @param account Account of the user to burn the tokens from
      * @param amount Amount of tokens to burn from the account
-     * @return bool Returns true if function call is succesful
+     * @return bool Returns true if function call is successful
      */
     function burn(address account, uint256 amount) external returns (bool);
 }

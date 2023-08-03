@@ -21,7 +21,7 @@ contract EIP1559Burn is Initializable {
     receive() external payable {} // solhint-disable-line no-empty-blocks
 
     /**
-     * @notice Initilization function for EIP1559 burn contract
+     * @notice Initialization function for EIP1559 burn contract
      * @param newChildERC20Predicate Address of the ERC20 predicate on child chain
      * @param newBurnDestination Address on the root chain to burn the tokens and send to
      * @dev Can only be called once

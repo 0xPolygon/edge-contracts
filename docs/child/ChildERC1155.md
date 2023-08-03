@@ -78,7 +78,7 @@ Burns an NFT tokens from a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### burnBatch
 
@@ -230,7 +230,7 @@ Mints an NFT token to a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### mintBatch
 
