@@ -66,6 +66,7 @@ const config: HardhatUserConfig = {
   dodoc: {
     // uncomment to stop docs from autogenerating each compile
     // runOnCompile: false,
+    exclude: ["mocks", "openzeppelin/contracts", "openzeppelin/contracts-upgradeable"],
   },
 };
 
