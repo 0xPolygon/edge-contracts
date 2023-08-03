@@ -263,7 +263,7 @@ Burns an amount of tokens from a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### decimals
 
@@ -371,7 +371,7 @@ Mints an amount of tokens to a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### name
 

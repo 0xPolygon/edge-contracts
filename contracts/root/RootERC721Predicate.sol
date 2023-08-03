@@ -21,7 +21,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootERC721Predicate
+     * @notice Initialization function for RootERC721Predicate
      * @param newStateSender Address of StateSender to send deposit information to
      * @param newExitHelper Address of ExitHelper to receive withdrawal information from
      * @param newChildERC721Predicate Address of child ERC721 predicate to communicate with

@@ -322,7 +322,7 @@ function initialize(address newL2StateSender, address newStateReceiver, address 
 function initialize(address newL2StateSender, address newStateReceiver, address newChildERC20Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
-Initilization function for RootMintableERC20Predicate
+Initialization function for RootMintableERC20Predicate
 
 *Can only be called once.*
 

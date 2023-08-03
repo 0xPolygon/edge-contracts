@@ -34,7 +34,7 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
      * @dev Can only be called by the predicate address
      * @param account Account of the user to mint the tokens to
      * @param tokenId Index of NFT to mint to the account
-     * @return bool Returns true if function call is succesful
+     * @return bool Returns true if function call is successful
      */
     function mint(address account, uint256 tokenId) external returns (bool);
 
@@ -52,7 +52,7 @@ interface IChildERC721 is IERC721MetadataUpgradeable {
      * @dev Can only be called by the predicate address
      * @param account Address to burn the NFTs from
      * @param tokenId Index of NFT to burn
-     * @return bool Returns true if function call is succesful
+     * @return bool Returns true if function call is successful
      */
     function burn(address account, uint256 tokenId) external returns (bool);
 

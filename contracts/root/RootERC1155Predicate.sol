@@ -21,7 +21,7 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootERC1155Predicate
+     * @notice Initialization function for RootERC1155Predicate
      * @param newStateSender Address of StateSender to send deposit information to
      * @param newExitHelper Address of ExitHelper to receive withdrawal information from
      * @param newChildERC1155Predicate Address of child ERC1155 predicate to communicate with

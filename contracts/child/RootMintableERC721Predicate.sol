@@ -22,7 +22,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootMintableERC721Predicate
+     * @notice Initialization function for RootMintableERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send deposit information to
      * @param newStateReceiver Address of StateReceiver to receive withdrawal information from
      * @param newChildERC721Predicate Address of child ERC721 predicate to communicate with

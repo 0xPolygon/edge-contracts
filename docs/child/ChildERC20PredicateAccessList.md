@@ -248,7 +248,7 @@ function childTokenTemplate() external view returns (address)
 function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
 ```
 
-Initilization function for ChildERC20Predicate
+Initialization function for ChildERC20Predicate
 
 *Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.*
 

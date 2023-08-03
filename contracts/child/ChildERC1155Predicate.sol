@@ -72,7 +72,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     }
 
     /**
-     * @notice Initilization function for ChildERC1155Predicate
+     * @notice Initialization function for ChildERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
@@ -157,7 +157,7 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
     }
 
     /**
-     * @notice Internal initilization function for ChildERC1155Predicate
+     * @notice Internal initialization function for ChildERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
