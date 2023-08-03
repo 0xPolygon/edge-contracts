@@ -594,10 +594,10 @@ event NewEpochSize(uint256 indexed size)
 |---|---|---|
 | size `indexed` | uint256 | undefined |
 
-### NewMaxValdidatorSetSize
+### NewMaxValidatorSetSize
 
 ```solidity
-event NewMaxValdidatorSetSize(uint256 indexed maxValidatorSet)
+event NewMaxValidatorSetSize(uint256 indexed maxValidatorSet)
 ```
 
 
