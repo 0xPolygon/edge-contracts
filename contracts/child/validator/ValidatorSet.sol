@@ -101,6 +101,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
      * @inheritdoc IValidatorSet
      */
     function withdrawable(address account) external view returns (uint256 amount) {
+        // slither-disable-next-line unused-return
         (amount, ) = withdrawals[account].withdrawable(currentEpochId);
     }
 
