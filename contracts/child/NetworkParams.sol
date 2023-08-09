@@ -70,9 +70,7 @@ contract NetworkParams is Ownable2Step, Initializable {
                 initParams.newWithdrawalWaitPeriod != 0 &&
                 initParams.newBlockTime != 0 &&
                 initParams.newBlockTimeDrift != 0 &&
-                initParams.newVotingDelay != 0 &&
-                initParams.newVotingPeriod != 0 &&
-                initParams.newProposalThreshold != 0,
+                initParams.newVotingPeriod != 0,
             "NetworkParams: INVALID_INPUT"
         );
         checkpointBlockInterval = initParams.newCheckpointBlockInterval;
@@ -206,7 +204,6 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @param newVotingDelay new voting delay
      */
     function setNewVotingDelay(uint256 newVotingDelay) external onlyOwner {
-        require(newVotingDelay != 0, "NetworkParams: INVALID_VOTING_DELAY");
         votingDelay = newVotingDelay;
 
         emit NewVotingDelay(newVotingDelay);
@@ -230,7 +227,6 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @param newProposalThreshold new proposal threshold
      */
     function setNewProposalThreshold(uint256 newProposalThreshold) external onlyOwner {
-        require(newProposalThreshold != 0, "NetworkParams: INVALID_PROPOSAL_THRESHOLD");
         proposalThreshold = newProposalThreshold;
 
         emit NewProposalThreshold(newProposalThreshold);
