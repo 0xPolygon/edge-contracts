@@ -271,10 +271,6 @@ describe("NetworkParams", () => {
     await stopImpersonatingAccount(accounts[1].address);
   });
 
-  it("set new voting delay fail: invalid input", async () => {
-    await expect(networkParams.setNewVotingDelay(0)).to.be.revertedWith("NetworkParams: INVALID_VOTING_DELAY");
-  });
-
   it("set new voting delay success", async () => {
     initParams.newVotingDelay = 10 ** Math.floor(Math.random() + 6);
     await networkParams.setNewVotingDelay(initParams.newVotingDelay);
@@ -309,12 +305,6 @@ describe("NetworkParams", () => {
 
     await expect(newNetworkParams.setNewProposalThreshold(1)).to.be.revertedWith("Ownable: caller is not the owner");
     await stopImpersonatingAccount(accounts[1].address);
-  });
-
-  it("set new proposal threshold fail: invalid input", async () => {
-    await expect(networkParams.setNewProposalThreshold(0)).to.be.revertedWith(
-      "NetworkParams: INVALID_PROPOSAL_THRESHOLD"
-    );
   });
 
   it("set new proposal threshold success", async () => {

@@ -206,7 +206,6 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @param newVotingDelay new voting delay
      */
     function setNewVotingDelay(uint256 newVotingDelay) external onlyOwner {
-        require(newVotingDelay != 0, "NetworkParams: INVALID_VOTING_DELAY");
         votingDelay = newVotingDelay;
 
         emit NewVotingDelay(newVotingDelay);
@@ -230,7 +229,6 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @param newProposalThreshold new proposal threshold
      */
     function setNewProposalThreshold(uint256 newProposalThreshold) external onlyOwner {
-        require(newProposalThreshold != 0, "NetworkParams: INVALID_PROPOSAL_THRESHOLD");
         proposalThreshold = newProposalThreshold;
 
         emit NewProposalThreshold(newProposalThreshold);
