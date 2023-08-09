@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^4.9.2",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "hardhat": "^2.17.1",
     "keccak256": "^1.0.6",
