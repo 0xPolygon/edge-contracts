@@ -58,12 +58,59 @@ async function deploy() {
   const exitHelperAddress = await deployExitHelper(checkpointManagerAddress);
 
   // Deploy RootERC20Predicate
-  const rootERC20PredicateAddress = await deployRootERC2Predicte(
+  const rootERC20PredicateAddress = await deployRootERC20Predicte(
     stateSenderAddress,
     exitHelperAddress,
     ChildERC20PredicateContract,
-    ChildERC20Contract,
-    ethers.constants
+    ChildERC20Contract
+  );
+
+  // Deploy childERC20MintablePredicate
+  const childERC20MintablePredicateAddress = await deployChildMintableERC20Predicate(
+    stateSenderAddress,
+    exitHelperAddress,
+    RootMintableERC20PredicateContract
+  );
+
+  // Deploy RootERC721Predicate
+  const rootERC721PredicateAddress = await deployRootERC721Predicate(
+    stateSenderAddress,
+    exitHelperAddress,
+    ChildERC721PredicateContract,
+    ChildERC721Contract
+  );
+
+  // Deploy childERC721MintablePredicate
+  const childERC721MintablePredicateAddress = await deployChildMintableERC721Predicate(
+    stateSenderAddress,
+    exitHelperAddress,
+    RootMintableERC721PredicateContract
+  );
+
+  // Deploy RootERC1155Predicate
+  const rootERC1155PredicateAddress = await deployRootERC1155Predicate(
+    stateSenderAddress,
+    exitHelperAddress,
+    ChildERC1155PredicateContract,
+    ChildERC1155Contract
+  );
+
+  // Deploy childERC1155MintablePredicate
+  const childERC1155MintablePredicateAddress = await deployChildMintableERC1155Predicate(
+    stateSenderAddress,
+    exitHelperAddress,
+    RootMintableERC1155PredicateContract
+  );
+
+  // Deploy CustomSupernetManager
+  const customSupernetManagerAddress = await deployCustomerSupernetManager(
+    stateSenderAddress, // FIXME: this should be the stake manager address from stakemanagerDeploy.ts
+    blsAddress,
+    stateSenderAddress,
+    blsAddress, // FIXME: this should be the stake token address which is passed in as a CLI param
+    ValidatorSetContract,
+    exitHelperAddress,
+    DomainValidatorSetString
   );
 }
 
@@ -115,7 +162,7 @@ async function deployExitHelper(checkPointManagerAddress: string) {
   return proxy.address;
 }
 
-async function deployRootERC2Predicte(
+async function deployRootERC20Predicte(
   stateSenderAddress: string,
   exitHelperAddress: string,
   childERC20PredicateAddress: string,
@@ -133,11 +180,157 @@ async function deployRootERC2Predicte(
     stateSenderAddress,
     exitHelperAddress,
     childERC20PredicateAddress,
-    childTokenTemplateAddress,
+    childTokenTemplateAddress, // L2
     mockERC20.address,
   ]);
   const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
   const proxy = await Proxy.deploy(rootERC20Predicate.address, admin, rootERC20PredicateInit);
+
+  return proxy.address;
+}
+
+async function deployChildMintableERC20Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  rootERC20PredicateAddress: string
+) {
+  const ChildMintableERC20Predicate = await ethers.getContractFactory("ChildMintableERC20Predicate");
+  const childMintableERC20Predicate = await ChildMintableERC20Predicate.deploy();
+
+  // L2 template deployed on L1
+  const ChildERC20 = await ethers.getContractFactory("ChildERC20");
+  const childERC20 = await ChildERC20.deploy();
+
+  const childMintableERC20PredicateInit = childMintableERC20Predicate.interface.encodeFunctionData("initialize", [
+    stateSenderAddress,
+    exitHelperAddress,
+    rootERC20PredicateAddress,
+    childERC20.address,
+  ]);
+  const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await Proxy.deploy(childMintableERC20Predicate.address, admin, childMintableERC20PredicateInit);
+
+  return proxy.address;
+}
+
+async function deployRootERC721Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  childERC721PredicateAddress: string,
+  childTokenTemplateAddress: string
+) {
+  const RootERC721Predicate = await ethers.getContractFactory("RootERC721Predicate");
+  const rootERC721Predicate = await RootERC721Predicate.deploy();
+
+  const rootERC721PredicateInit = rootERC721Predicate.interface.encodeFunctionData("initialize", [
+    stateSenderAddress,
+    exitHelperAddress,
+    childERC721PredicateAddress,
+    childTokenTemplateAddress,
+  ]);
+
+  const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await Proxy.deploy(rootERC721Predicate.address, admin, rootERC721PredicateInit);
+
+  return proxy.address;
+}
+
+async function deployChildMintableERC721Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  rootERC721PredicateAddress: string
+) {
+  const ChildMintableERC721Predicate = await ethers.getContractFactory("ChildMintableERC721Predicate");
+  const childMintableERC721Predicate = await ChildMintableERC721Predicate.deploy();
+
+  // L2 template deployed on L1
+  const ChildERC721 = await ethers.getContractFactory("ChildERC721");
+  const childERC721 = await ChildERC721.deploy();
+
+  const childMintableERC721PredicateInit = childMintableERC721Predicate.interface.encodeFunctionData("initialize", [
+    stateSenderAddress,
+    exitHelperAddress,
+    rootERC721PredicateAddress,
+    childERC721.address,
+  ]);
+
+  const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await Proxy.deploy(childMintableERC721Predicate.address, admin, childMintableERC721PredicateInit);
+
+  return proxy.address;
+}
+
+async function deployRootERC1155Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  childERC1155PredicateAddress: string,
+  childTokenTemplateAddress: string
+) {
+  const RootERC1155Predicate = await ethers.getContractFactory("RootERC1155Predicate");
+  const rootERC1155Predicate = await RootERC1155Predicate.deploy();
+
+  const rootERC1155PredicateInit = rootERC1155Predicate.interface.encodeFunctionData("initialize", [
+    stateSenderAddress,
+    exitHelperAddress,
+    childERC1155PredicateAddress,
+    childTokenTemplateAddress,
+  ]);
+
+  const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await Proxy.deploy(rootERC1155Predicate.address, admin, rootERC1155PredicateInit);
+
+  return proxy.address;
+}
+
+async function deployChildMintableERC1155Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  rootERC1155PredicateAddress: string
+) {
+  const ChildMintableERC1155Predicate = await ethers.getContractFactory("ChildMintableERC1155Predicate");
+  const childMintableERC1155Predicate = await ChildMintableERC1155Predicate.deploy();
+
+  // L2 template deployed on L1
+  const ChildERC1155 = await ethers.getContractFactory("ChildERC1155");
+  const childERC1155 = await ChildERC1155.deploy();
+
+  const childMintableERC1155PredicateInit = childMintableERC1155Predicate.interface.encodeFunctionData("initialize", [
+    stateSenderAddress,
+    exitHelperAddress,
+    rootERC1155PredicateAddress,
+    childERC1155.address,
+  ]);
+
+  const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await Proxy.deploy(childMintableERC1155Predicate.address, admin, childMintableERC1155PredicateInit);
+
+  return proxy.address;
+}
+
+async function deployCustomerSupernetManager(
+  stakeManagerAddress: string,
+  blsAddress: string,
+  stateSenderAddress: string,
+  stakeTokenAddress: string,
+  validatorSetContract: string,
+  exitHelperAddress: string,
+  newDomain: string
+) {
+  const CustomerSupernetManager = await ethers.getContractFactory("CustomerSupernetManager");
+  const customerSupernetManager = await CustomerSupernetManager.deploy();
+
+  const customerSupernetManagerInit = customerSupernetManager.interface.encodeFunctionData("initialize", [
+    stakeManagerAddress,
+    blsAddress,
+    stateSenderAddress,
+    stakeTokenAddress,
+    validatorSetContract,
+    exitHelperAddress,
+    newDomain,
+  ]);
+
+  const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await Proxy.deploy(customerSupernetManager.address, admin, customerSupernetManagerInit);
 
   return proxy.address;
 }
