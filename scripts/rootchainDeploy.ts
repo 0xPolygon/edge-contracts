@@ -1,30 +1,34 @@
 import { ethers } from "hardhat";
 import { ExitHelper, StakeManager, TransparentUpgradeableProxy } from "../typechain-types";
 
+// FILE LOCATION:
+// imx-engine/services/zkevm/deploy || genesis/...
+// polycore-contracts as dependency here @ given tag and release
+
 const admin = "0xEB7FFb9fb0c80437120f6F97EdE60aB59055EAE0";
 
 // Domain string
 const DomainValidatorSetString = "DOMAIN_CHILD_VALIDATOR_SET";
 
 // Childchain contract addresses
-const ValidatorSetContract = "0x101";
+const ValidatorSetContract = "0x0000000000000000000000000000000000000101";
 
 // 20
-const ChildERC20Contract = "0x1003";
-const ChildERC20PredicateContract = "0x1004";
+const ChildERC20Contract = "0x0000000000000000000000000000000000001003";
+const ChildERC20PredicateContract = "0x0000000000000000000000000000000000001004";
 
 // 721
-const ChildERC721Contract = "0x1005";
-const ChildERC721PredicateContract = "0x1006";
+const ChildERC721Contract = "0x0000000000000000000000000000000000001005";
+const ChildERC721PredicateContract = "0x0000000000000000000000000000000000001006";
 
 // 1155
-const ChildERC1155Contract = "0x1007";
-const ChildERC1155PredicateContract = "0x1008";
+const ChildERC1155Contract = "0x0000000000000000000000000000000000001007";
+const ChildERC1155PredicateContract = "0x0000000000000000000000000000000000001008";
 
 // Root mintable
-const RootMintableERC20PredicateContract = "0x1009";
-const RootMintableERC721PredicateContract = "0x100a";
-const RootMintableERC1155PredicateContract = "0x100b";
+const RootMintableERC20PredicateContract = "0x0000000000000000000000000000000000001009";
+const RootMintableERC721PredicateContract = "0x000000000000000000000000000000000000100a";
+const RootMintableERC1155PredicateContract = "0x000000000000000000000000000000000000100b";
 
 // CLI params
 // type deployParams struct {
@@ -112,6 +116,13 @@ async function deploy() {
     exitHelperAddress,
     DomainValidatorSetString
   );
+
+  // Call function to emit supernetID event and consume
+  // Call `StakeManager.registerChlildChain(customSupernetManagerAddr)
+  // Consume `ChildManagerRegistered(id, manager)`
+
+  // Read genesis json file
+  // create bridge object and populate with the addresses derived
 }
 
 deploy().catch((error) => {
@@ -316,7 +327,7 @@ async function deployCustomerSupernetManager(
   exitHelperAddress: string,
   newDomain: string
 ) {
-  const CustomerSupernetManager = await ethers.getContractFactory("CustomerSupernetManager");
+  const CustomerSupernetManager = await ethers.getContractFactory("CustomSupernetManager");
   const customerSupernetManager = await CustomerSupernetManager.deploy();
 
   const customerSupernetManagerInit = customerSupernetManager.interface.encodeFunctionData("initialize", [
