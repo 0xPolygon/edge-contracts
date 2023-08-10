@@ -83,7 +83,7 @@ abstract contract Whitelisted is Registered {
     function toHexString(address addr) public pure returns (string memory) {
         bytes memory buffer = abi.encodePacked(addr);
 
-        // Fixed buffer size for hexadecimal convertion
+        // Fixed buffer size for hexadecimal conversion
         bytes memory converted = new bytes(buffer.length * 2);
 
         bytes memory _base = "0123456789abcdef";
