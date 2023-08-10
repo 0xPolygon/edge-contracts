@@ -161,7 +161,7 @@ contract BN256G2 is IBN256G2 {
     // }
 
     /**
-     * @notice FQ2-FQ2 substraction operation
+     * @notice FQ2-FQ2 subtraction operation
      * @param xx First FQ2 operands first coordinate
      * @param xy First FQ2 operands second coordinate
      * @param yx Second FQ2 operands first coordinate
@@ -227,7 +227,7 @@ contract BN256G2 is IBN256G2 {
 
     /**
      * @notice Calculates the modular inverse of a over n
-     * @param a The operand to calcualte the inverse of
+     * @param a The operand to calculate the inverse of
      * @param n The modulus
      * @return result Inv(a)modn
      **/
