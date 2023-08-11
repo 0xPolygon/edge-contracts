@@ -1,10 +1,7 @@
 import { task } from "hardhat/config";
 const fs = require("fs");
 
-// FIXME: we need to read in
-// HH private key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-
-// npx hardhat stake_manager_deploy "./tasks/genesis_TEST_2.json" "http://127.0.0.1:8545/" "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" "0xD5bFeBDce5c91413E41cc7B24C8402c59A344f7c" "./tasks/" "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+// npx hardhat stake_manager_deploy "./tasks/genesis_TEST_2.json" "http://127.0.0.1:8545/" "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" "0xD5bFeBDce5c91413E41cc7B24C8402c59A344f7c" "./tasks/" "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
 
 task("stake_manager_deploy", "Deploy StakeManager")
   .addPositionalParam("genesis")
@@ -17,21 +14,19 @@ task("stake_manager_deploy", "Deploy StakeManager")
     const ethers = hre.ethers;
     const provider = new ethers.providers.JsonRpcProvider(args.jsonRPC);
     const admin = args.adminKey;
-    // Admin
-    // FIXME: this will be public key of initial admin
     const deployer = new ethers.Wallet(args.deployerKey, provider);
 
     // StakeToken Address
     const stakeTokenAddress = args.stakeTokenAddress;
 
     // Deploy StakeManager
-    const stakeManagerAddress = await deployStakeManager(stakeTokenAddress, admin);
+    const stakeManagerAddress = await deployStakeManager(stakeTokenAddress);
 
     // Update genesis.json
     // - StakeManageerAddr
     updateGenesis(args.genesis, stakeManagerAddress);
 
-    async function deployStakeManager(stakeTokenAddress: string, adminAddress: string) {
+    async function deployStakeManager(stakeTokenAddress: string) {
       // Deploy StakeManager (implementation)
       const StakeManager = await ethers.getContractFactory("StakeManager", deployer);
       const stakeManager = await StakeManager.deploy();
@@ -39,7 +34,7 @@ task("stake_manager_deploy", "Deploy StakeManager")
       // Deploy proxy StakeManager and initialise
       const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy", deployer);
       const stakeManagerInit = stakeManager.interface.encodeFunctionData("initialize", [stakeTokenAddress]);
-      const proxy = await Proxy.deploy(stakeManager.address, adminAddress, stakeManagerInit);
+      const proxy = await Proxy.deploy(stakeManager.address, admin, stakeManagerInit);
 
       return proxy.address;
     }

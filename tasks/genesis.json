@@ -156,7 +156,26 @@
           }
         ],
         "bridge": {
-          "stakeManagerAddr": "0x71C95911E9a5D330f4D621842EC243EE1343292e"
+          "stakeManagerAddr": "0x7bc06c482DEAd17c0e297aFbC32f6e63d3846650",
+          "stateSenderAddress": "0xFD471836031dc5108809D173A067e8486B9047A3",
+          "checkpointManagerAddress": "0x1429859428C0aBc9C2C47C8Ee9FBaf82cFA0F20f",
+          "exitHelperAddress": "0x5081a39b8A5f0E35a8D959395a630b68B74Dd30f",
+          "erc20PredicateAddress": "0xdbC43Ba45381e02825b14322cDdd15eC4B3164E6",
+          "erc20ChildMinatablePredicateAddress": "0x21dF544947ba3E8b3c32561399E88B52Dc8b2823",
+          "nativeERC20Address": "0x0000000000000000000000000000000000001003",
+          "erc721PredicateAddress": "0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43",
+          "erc721ChildMinatablePredicateAddress": "0x36b58F5C1969B7b6591D752ea6F5486D069010AB",
+          "erc1155PredicateAddress": "0x0355B7B8cb128fA5692729Ab3AAa199C1753f726",
+          "erc1155ChildMinatablePredicateAddress": "0x172076E0166D1F9Cc711C77Adf8488051744980C",
+          "childERC20Address": "0x04C89607413713Ec9775E14b954286519d836FEf",
+          "childERC721Address": "0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD",
+          "childERC1155Address": "0x202CCe504e04bEd6fC0521238dDf04Bc9E8E15aB",
+          "customSupernetManagerAddress": "0xBEc49fA140aCaA83533fB00A2BB19bDdd0290f25",
+          "blsAddress": "0xB0D4afd8879eD9F52b28595d31B441D079B2Ca07",
+          "bn256g2Address": "0x162A433068F51e18b7d13932F27e66a3f99E6890",
+          "eventTrackerStartBlocks": {
+            "stateSenderAddress": 58
+          }
         },
         "epochSize": 300,
         "epochReward": 0,

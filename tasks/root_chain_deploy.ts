@@ -1,6 +1,8 @@
 import { task } from "hardhat/config";
 const fs = require("fs");
 
+// npx hardhat rootchain_deploy "./tasks/genesis.json" "http://127.0.0.1:8545/" "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" "0xD5bFeBDce5c91413E41cc7B24C8402c59A344f7c" "0xD5bFeBDce5c91413E41cc7B24C8402c59A344f7c" "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"  "./tasks/" "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
+
 // Domain string
 const DomainValidatorSetString = "DOMAIN_CHILD_VALIDATOR_SET";
 
@@ -40,6 +42,7 @@ task("rootchain_deploy", "Deploy rootchain contracs")
     const deployer = new ethers.Wallet(args.privateKey, provider);
     const stakeManagerAddress = args.stakeManagerAddress;
     const stakeTokenAddress = args.stakeTokenAddress;
+    const erc20Address = args.erc20Address;
     // Get current block number for event tracker
     const blockNumber = await provider.getBlockNumber();
 
@@ -63,7 +66,8 @@ task("rootchain_deploy", "Deploy rootchain contracs")
       stateSenderAddress,
       exitHelperAddress,
       ChildERC20PredicateContract,
-      ChildERC20Contract
+      ChildERC20Contract,
+      erc20Address
     );
 
     // deploy ChildERC20
@@ -138,16 +142,14 @@ task("rootchain_deploy", "Deploy rootchain contracs")
     for (var log in receipt.logs) {
       let parsedLog = stakeManager.interface.parseLog(receipt.logs[log]);
       if (parsedLog.name == "ChildManagerRegistered") {
+        console.log(log);
         supernetID = parsedLog.args[0].toNumber();
         break;
       }
     }
-    // Read genesis json file
-    // create bridge object and populate with the addresses derived
-    console.log("Successfully deployed contracts. Updating JSON");
 
     updateGenesis(
-      "./scripts/genesis.json",
+      args.genesis,
       stateSenderAddress,
       checkpointManagerAddress,
       exitHelperAddress,
@@ -215,22 +217,18 @@ task("rootchain_deploy", "Deploy rootchain contracs")
       stateSenderAddress: string,
       exitHelperAddress: string,
       childERC20PredicateAddress: string,
-      childTokenTemplateAddress: string
+      childTokenTemplateAddress: string,
+      nativeRootTokenAddress: string
     ) {
       const RootERC20Predicate = await ethers.getContractFactory("RootERC20Predicate", deployer);
       const rootERC20Predicate = await RootERC20Predicate.deploy();
-
-      // https://github.com/immutable/polygon-edge/blob/10029bcf80540174b89a8d9b622fcc82d000db2b/command/rootchain/deploy/deploy.go#L443
-      // Deploy and use MockERC20 as native token address
-      const MockERC20 = await ethers.getContractFactory("MockERC20", deployer);
-      const mockERC20 = await MockERC20.deploy();
 
       const rootERC20PredicateInit = rootERC20Predicate.interface.encodeFunctionData("initialize", [
         stateSenderAddress,
         exitHelperAddress,
         childERC20PredicateAddress,
         childTokenTemplateAddress, // L2
-        mockERC20.address,
+        nativeRootTokenAddress,
       ]);
       const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy", deployer);
       const proxy = await Proxy.deploy(rootERC20Predicate.address, admin, rootERC20PredicateInit);
@@ -450,7 +448,7 @@ task("rootchain_deploy", "Deploy rootchain contracs")
       const updated = JSON.stringify(genesis, null, 4);
 
       // write the JSON to file
-      fs.writeFileSync("./scripts/genesis.json", updated, (error: any) => {
+      fs.writeFileSync(`${args.genesisOut}/genesis.json`, updated, (error: any) => {
         if (error) {
           console.error(error);
           throw error;
