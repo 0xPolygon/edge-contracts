@@ -68,11 +68,15 @@ async function deploy() {
     ChildERC20Contract
   );
 
-  // Deploy childERC20MintablePredicate
+  // deploy ChildERC20
+  const childERC20Address = await deployChildERC20();
+
+  // Deploy ChildERC20MintablePredicate
   const childERC20MintablePredicateAddress = await deployChildMintableERC20Predicate(
     stateSenderAddress,
     exitHelperAddress,
-    RootMintableERC20PredicateContract
+    RootMintableERC20PredicateContract,
+    childERC20Address
   );
 
   // Deploy RootERC721Predicate
@@ -83,11 +87,15 @@ async function deploy() {
     ChildERC721Contract
   );
 
-  // Deploy childERC721MintablePredicate
+  // Deploy ChildERC721
+  const childERC721Address = await deployChildERC721();
+
+  // Deploy ChildERC721MintablePredicate
   const childERC721MintablePredicateAddress = await deployChildMintableERC721Predicate(
     stateSenderAddress,
     exitHelperAddress,
-    RootMintableERC721PredicateContract
+    RootMintableERC721PredicateContract,
+    childERC721Address
   );
 
   // Deploy RootERC1155Predicate
@@ -98,16 +106,25 @@ async function deploy() {
     ChildERC1155Contract
   );
 
-  // Deploy childERC1155MintablePredicate
+  // Deploy ChildERC1155
+  const childERC1155Address = await deployChildERC1155();
+
+  // Deploy ChildERC1155MintablePredicate
   const childERC1155MintablePredicateAddress = await deployChildMintableERC1155Predicate(
     stateSenderAddress,
     exitHelperAddress,
-    RootMintableERC1155PredicateContract
+    RootMintableERC1155PredicateContract,
+    childERC1155Address
   );
+
+  // FIXME: clean me up
+  const json = fs.readFileSync("./scripts/genesis.json");
+  const genesis = JSON.parse(json);
+  const stakeManagerAddress = genesis["params"]["engine"]["polybft"]["bridge"]["stakeManagerAddr"];
 
   // Deploy CustomSupernetManager
   const customSupernetManagerAddress = await deployCustomerSupernetManager(
-    stateSenderAddress, // FIXME: this should be the stake manager address from stakemanagerDeploy.ts
+    stakeManagerAddress, // FIXME: this should be the stake manager address from stakemanagerDeploy.ts
     blsAddress,
     stateSenderAddress,
     blsAddress, // FIXME: this should be the stake token address which is passed in as a CLI param
@@ -117,11 +134,46 @@ async function deploy() {
   );
 
   // Call function to emit supernetID event and consume
+
   // Call `StakeManager.registerChlildChain(customSupernetManagerAddr)
   // Consume `ChildManagerRegistered(id, manager)`
 
+  const stakeManager = await ethers.getContractAt("StakeManager", stakeManagerAddress);
+  const tx = await stakeManager.registerChildChain(customSupernetManagerAddress);
+  const receipt = await tx.wait();
+  let supernetID;
+  for (var log in receipt.logs) {
+    let parsedLog = stakeManager.interface.parseLog(receipt.logs[log]);
+    if (parsedLog.name == "ChildManagerRegistered") {
+      supernetID = parsedLog.args[0].toNumber();
+      break;
+    }
+  }
   // Read genesis json file
   // create bridge object and populate with the addresses derived
+  console.log("Successfully deployed contracts. Updating JSON");
+
+  updateGenesis(
+    "./scripts/genesis.json",
+    stateSenderAddress,
+    checkpointManagerAddress,
+    exitHelperAddress,
+    rootERC20PredicateAddress,
+    childERC20MintablePredicateAddress,
+    ChildERC20Contract,
+    rootERC721PredicateAddress,
+    childERC721MintablePredicateAddress,
+    rootERC1155PredicateAddress,
+    childERC1155MintablePredicateAddress,
+    childERC20Address,
+    childERC721Address,
+    childERC1155Address,
+    customSupernetManagerAddress,
+    blsAddress,
+    bn256g2Address,
+    blockNumber,
+    supernetID
+  );
 }
 
 deploy().catch((error) => {
@@ -199,23 +251,28 @@ async function deployRootERC20Predicte(
   return proxy.address;
 }
 
-async function deployChildMintableERC20Predicate(
-  stateSenderAddress: string,
-  exitHelperAddress: string,
-  rootERC20PredicateAddress: string
-) {
-  const ChildMintableERC20Predicate = await ethers.getContractFactory("ChildMintableERC20Predicate");
-  const childMintableERC20Predicate = await ChildMintableERC20Predicate.deploy();
-
+async function deployChildERC20() {
   // L2 template deployed on L1
   const ChildERC20 = await ethers.getContractFactory("ChildERC20");
   const childERC20 = await ChildERC20.deploy();
+
+  return childERC20.address;
+}
+
+async function deployChildMintableERC20Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  rootERC20PredicateAddress: string,
+  childERC20Address: string
+) {
+  const ChildMintableERC20Predicate = await ethers.getContractFactory("ChildMintableERC20Predicate");
+  const childMintableERC20Predicate = await ChildMintableERC20Predicate.deploy();
 
   const childMintableERC20PredicateInit = childMintableERC20Predicate.interface.encodeFunctionData("initialize", [
     stateSenderAddress,
     exitHelperAddress,
     rootERC20PredicateAddress,
-    childERC20.address,
+    childERC20Address,
   ]);
   const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
   const proxy = await Proxy.deploy(childMintableERC20Predicate.address, admin, childMintableERC20PredicateInit);
@@ -245,23 +302,28 @@ async function deployRootERC721Predicate(
   return proxy.address;
 }
 
-async function deployChildMintableERC721Predicate(
-  stateSenderAddress: string,
-  exitHelperAddress: string,
-  rootERC721PredicateAddress: string
-) {
-  const ChildMintableERC721Predicate = await ethers.getContractFactory("ChildMintableERC721Predicate");
-  const childMintableERC721Predicate = await ChildMintableERC721Predicate.deploy();
-
+async function deployChildERC721() {
   // L2 template deployed on L1
   const ChildERC721 = await ethers.getContractFactory("ChildERC721");
   const childERC721 = await ChildERC721.deploy();
+
+  return childERC721.address;
+}
+
+async function deployChildMintableERC721Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  rootERC721PredicateAddress: string,
+  childERC721Address: string
+) {
+  const ChildMintableERC721Predicate = await ethers.getContractFactory("ChildMintableERC721Predicate");
+  const childMintableERC721Predicate = await ChildMintableERC721Predicate.deploy();
 
   const childMintableERC721PredicateInit = childMintableERC721Predicate.interface.encodeFunctionData("initialize", [
     stateSenderAddress,
     exitHelperAddress,
     rootERC721PredicateAddress,
-    childERC721.address,
+    childERC721Address,
   ]);
 
   const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
@@ -292,23 +354,28 @@ async function deployRootERC1155Predicate(
   return proxy.address;
 }
 
-async function deployChildMintableERC1155Predicate(
-  stateSenderAddress: string,
-  exitHelperAddress: string,
-  rootERC1155PredicateAddress: string
-) {
-  const ChildMintableERC1155Predicate = await ethers.getContractFactory("ChildMintableERC1155Predicate");
-  const childMintableERC1155Predicate = await ChildMintableERC1155Predicate.deploy();
-
+async function deployChildERC1155() {
   // L2 template deployed on L1
   const ChildERC1155 = await ethers.getContractFactory("ChildERC1155");
   const childERC1155 = await ChildERC1155.deploy();
+
+  return childERC1155.address;
+}
+
+async function deployChildMintableERC1155Predicate(
+  stateSenderAddress: string,
+  exitHelperAddress: string,
+  rootERC1155PredicateAddress: string,
+  childERC1155Address: string
+) {
+  const ChildMintableERC1155Predicate = await ethers.getContractFactory("ChildMintableERC1155Predicate");
+  const childMintableERC1155Predicate = await ChildMintableERC1155Predicate.deploy();
 
   const childMintableERC1155PredicateInit = childMintableERC1155Predicate.interface.encodeFunctionData("initialize", [
     stateSenderAddress,
     exitHelperAddress,
     rootERC1155PredicateAddress,
-    childERC1155.address,
+    childERC1155Address,
   ]);
 
   const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
@@ -363,13 +430,38 @@ async function updateGenesis(
   customSupernetManagerAddress: string,
   blsAddress: string,
   bn256g2Address: string,
-  startblock: number
+  startblock: number,
+  supernetID: number
 ) {
   // Read genesis json file
-  // create bridge object and populate with the addresses derived
   const json = fs.readFileSync(path);
   const genesis = JSON.parse(json);
-  genesis["params"]["engine"]["polybft"]["bridge"]["stakeManagerAddr"] = stakeManagerAddress;
+  if (genesis["params"]["engine"]["polybft"]["bridge"] == undefined) {
+    console.error("genesis.json does not contain a bridge object");
+  }
+
+  genesis["params"]["engine"]["polybft"]["bridge"]["stateSenderAddress"] = stateSenderAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["checkpointManagerAddress"] = checkpointManagerAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["exitHelperAddress"] = exitHelperAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["erc20PredicateAddress"] = erc20PredicateAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["erc20ChildMinatablePredicateAddress"] =
+    erc20ChildMinatablePredicateAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["nativeERC20Address"] = nativeERC20Address;
+  genesis["params"]["engine"]["polybft"]["bridge"]["erc721PredicateAddress"] = erc721PredicateAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["erc721ChildMinatablePredicateAddress"] =
+    erc721ChildMinatablePredicateAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["erc1155PredicateAddress"] = erc1155PredicateAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["erc1155ChildMinatablePredicateAddress"] =
+    erc1155ChildMinatablePredicateAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["childERC20Address"] = childERC20Address;
+  genesis["params"]["engine"]["polybft"]["bridge"]["childERC721Address"] = childERC721Address;
+  genesis["params"]["engine"]["polybft"]["bridge"]["childERC1155Address"] = childERC1155Address;
+  genesis["params"]["engine"]["polybft"]["bridge"]["customSupernetManagerAddress"] = customSupernetManagerAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["blsAddress"] = blsAddress;
+  genesis["params"]["engine"]["polybft"]["bridge"]["bn256g2Address"] = bn256g2Address;
+  genesis["params"]["engine"]["polybft"]["bridge"]["eventTrackerStartBlocks"] = { stateSenderAddress: startblock };
+  genesis["params"]["engine"]["polybft"]["supernetID"] = supernetID;
+
   const updated = JSON.stringify(genesis, null, 4);
 
   // write the JSON to file

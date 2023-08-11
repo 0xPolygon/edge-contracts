@@ -1,6 +1,9 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
 import "@primitivefi/hardhat-dodoc";
+import "./tasks/stake_manager_deploy";
+import "./tasks/root_chain_deploy";
+
 import * as dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 
@@ -46,6 +49,9 @@ const config: HardhatUserConfig = {
       // allow impersonation of smart contracts without modifying balance
       gasPrice: 0,
       hardfork: "berlin",
+    },
+    local: {
+      url: "http://127.0.0.1:8545/",
     },
   },
   gasReporter: {

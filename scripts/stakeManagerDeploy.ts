@@ -2,6 +2,8 @@ import { ethers } from "hardhat";
 import { StakeManager, TransparentUpgradeableProxy } from "../typechain-types";
 const fs = require("fs");
 
+// FIXME: we need to read in
+
 async function deploy() {
   // Admin
   // FIXME: this will be public key of initial admin
