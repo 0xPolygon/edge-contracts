@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { ExitHelper, StakeManager, TransparentUpgradeableProxy } from "../typechain-types";
+const fs = require("fs");
 
 // FILE LOCATION:
 // imx-engine/services/zkevm/deploy || genesis/...
@@ -32,13 +32,12 @@ const RootMintableERC1155PredicateContract = "0x00000000000000000000000000000000
 
 // CLI params
 // type deployParams struct {
-// 	genesisPath        string
-// 	deployerKey        string
-// 	jsonRPCAddress     string
-// 	stakeTokenAddr     string
-// 	rootERC20TokenAddr string
-// 	stakeManagerAddr   string
-// 	isTestMode         bool
+// 	genesisPath        string <- need
+// 	deployerKey        string <- hardware wallet
+// 	jsonRPCAddress     string <- need
+// 	stakeTokenAddr     string <- need
+// 	rootERC20TokenAddr string <- not needed
+// 	stakeManagerAddr   string <- need
 // }
 
 async function deploy() {
@@ -164,7 +163,7 @@ async function deployBN256G2() {
 
 async function deployExitHelper(checkPointManagerAddress: string) {
   const ExitHelper = await ethers.getContractFactory("ExitHelper");
-  const exitHelper: ExitHelper = await ExitHelper.deploy();
+  const exitHelper = await ExitHelper.deploy();
 
   const exitHelperInit = exitHelper.interface.encodeFunctionData("initialize", [checkPointManagerAddress]);
   const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
@@ -344,4 +343,42 @@ async function deployCustomerSupernetManager(
   const proxy = await Proxy.deploy(customerSupernetManager.address, admin, customerSupernetManagerInit);
 
   return proxy.address;
+}
+
+async function updateGenesis(
+  path: string,
+  stateSenderAddress: string,
+  checkpointManagerAddress: string,
+  exitHelperAddress: string,
+  erc20PredicateAddress: string,
+  erc20ChildMinatablePredicateAddress: string,
+  nativeERC20Address: string,
+  erc721PredicateAddress: string,
+  erc721ChildMinatablePredicateAddress: string,
+  erc1155PredicateAddress: string,
+  erc1155ChildMinatablePredicateAddress: string,
+  childERC20Address: string,
+  childERC721Address: string,
+  childERC1155Address: string,
+  customSupernetManagerAddress: string,
+  blsAddress: string,
+  bn256g2Address: string,
+  startblock: number
+) {
+  // Read genesis json file
+  // create bridge object and populate with the addresses derived
+  const json = fs.readFileSync(path);
+  const genesis = JSON.parse(json);
+  genesis["params"]["engine"]["polybft"]["bridge"]["stakeManagerAddr"] = stakeManagerAddress;
+  const updated = JSON.stringify(genesis, null, 4);
+
+  // write the JSON to file
+  fs.writeFile("./scripts/genesis.json", updated, (error: any) => {
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+
+    console.log("Updated genesis.json with StakeManager address");
+  });
 }

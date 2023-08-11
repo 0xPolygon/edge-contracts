@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
 import { StakeManager, TransparentUpgradeableProxy } from "../typechain-types";
+const fs = require("fs");
 
 async function deploy() {
   // Admin
@@ -10,6 +11,20 @@ async function deploy() {
   // FIXME: this will be the IMX token address
   const stakeTokenAddress = admin.address;
 
+  // Deploy StakeManager
+  const stakeManagerAddress = await deployStakeManager(stakeTokenAddress, admin.address);
+
+  // Update genesis.json
+  // - StakeManageerAddr
+  updateGenesis("./scripts/genesis_TEST_2.json", stakeManagerAddress);
+}
+
+deploy().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+
+async function deployStakeManager(stakeTokenAddress: string, adminAddress: string) {
   // Deploy StakeManager (implementation)
   const StakeManager = await ethers.getContractFactory("StakeManager");
   const stakeManager: StakeManager = await StakeManager.deploy();
@@ -17,14 +32,25 @@ async function deploy() {
   // Deploy proxy StakeManager and initialise
   const Proxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
   const stakeManagerInit = stakeManager.interface.encodeFunctionData("initialize", [stakeTokenAddress]);
-  const proxy: TransparentUpgradeableProxy = await Proxy.deploy(stakeManager.address, admin.address, stakeManagerInit);
+  const proxy: TransparentUpgradeableProxy = await Proxy.deploy(stakeManager.address, adminAddress, stakeManagerInit);
 
-  // Update genesis.json
-  // - StakeManageerAddr
-  // - StakeTokenAddr
+  return proxy.address;
 }
 
-deploy().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+function updateGenesis(path: string, stakeManagerAddress: string) {
+  const json = fs.readFileSync(path);
+  const genesis = JSON.parse(json);
+  genesis["params"]["engine"]["polybft"]["bridge"] = { stakeManagerAddr: stakeManagerAddress };
+  // genesis["params"]["engine"]["polybft"]["bridge"]["stakeManagerAddr"] = stakeManagerAddress;
+  const updated = JSON.stringify(genesis, null, 4);
+
+  // write the JSON to file
+  fs.writeFile("./scripts/genesis.json", updated, (error: any) => {
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+
+    console.log("Updated genesis.json with StakeManager address");
+  });
+}
