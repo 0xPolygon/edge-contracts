@@ -163,7 +163,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         uint256 totalSlashedAmount;
         for (uint256 i = 0; i < length; ) {
             uint256 slashedAmount = (stakeManager.stakeOf(validatorsToSlash[i], id) * SLASHING_PERCENTAGE) / 100;
-            // slither-disable-next-line reentrancy-benign,reentrancy-events
+            // slither-disable-next-line reentrancy-benign,reentrancy-events,reentrancy-no-eth
             stakeManager.slashStakeOf(validatorsToSlash[i], slashedAmount);
             _removeIfValidatorUnstaked(validatorsToSlash[i]);
             totalSlashedAmount += slashedAmount;

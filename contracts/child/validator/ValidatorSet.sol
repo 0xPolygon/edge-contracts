@@ -155,7 +155,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
             slashedAmounts[i] = (balanceOf(validatorsToSlash[i]) * SLASHING_PERCENTAGE) / 100;
             _burn(validatorsToSlash[i], slashedAmounts[i]); // partially unstake validator
             // slither-disable-next-line mapping-deletion
-            delete withdrawals[validatorsToSlash[i]]; // ? do we need to remove pending withdrawals
+            delete withdrawals[validatorsToSlash[i]]; // remove pending withdrawals
             unchecked {
                 ++i;
             }
