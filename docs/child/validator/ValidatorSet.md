@@ -146,6 +146,23 @@ function READ_ADDRESSLIST_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### SLASHING_PERCENTAGE
+
+```solidity
+function SLASHING_PERCENTAGE() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### SYSTEM
 
 ```solidity
@@ -764,6 +781,44 @@ function permit(address owner, address spender, uint256 value, uint256 deadline,
 | r | bytes32 | undefined |
 | s | bytes32 | undefined |
 
+### slash
+
+```solidity
+function slash(address[] validators) external nonpayable
+```
+
+initialises slashing process
+
+*system call,given list of validators are slashed on L2 subsequently after their stake is slashed on L1*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validators | address[] | list of validators to be slashed |
+
+### slashProcessed
+
+```solidity
+function slashProcessed(uint256) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### symbol
 
 ```solidity
@@ -1045,7 +1100,7 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 ### Slashed
 
 ```solidity
-event Slashed(uint256 indexed validator, uint256 amount)
+event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts)
 ```
 
 
@@ -1056,8 +1111,9 @@ event Slashed(uint256 indexed validator, uint256 amount)
 
 | Name | Type | Description |
 |---|---|---|
-| validator `indexed` | uint256 | undefined |
-| amount  | uint256 | undefined |
+| exitId `indexed` | uint256 | undefined |
+| validators  | address[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### Transfer
 

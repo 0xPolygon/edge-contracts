@@ -213,3 +213,53 @@ contract ValidatorSet_WithdrawStake is Committed {
         assertEq(validatorSet.withdrawable(address(this)), 0);
     }
 }
+
+contract ValidatorSet_Slash is Committed {
+    bytes32 private constant SLASH_SIG = keccak256("SLASH");
+    event L2StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
+    event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts);
+
+    function test_InitilizeSlashOnlySystemCall() public {
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
+        validatorSet.slash(new address[](0));
+    }
+
+    function test_InitialiseSlash(address[] memory validators) public {
+        vm.assume(validators.length <= (stateSender.MAX_LENGTH() - 96) / 32);
+        vm.prank(SYSTEM);
+        vm.expectEmit(true, true, true, true);
+        emit L2StateSynced(1, address(validatorSet), rootChainManager, abi.encode(SLASH_SIG, validators));
+        validatorSet.slash(validators);
+    }
+
+    function test_FinalizeSlash() public {
+        uint256 exitEventId = 1;
+        uint256 slashingPercentage = validatorSet.SLASHING_PERCENTAGE();
+        address[] memory validatorsToSlash = new address[](2);
+        validatorsToSlash[0] = alice;
+        validatorsToSlash[1] = address(this);
+        uint256[] memory slashedAmounts = new uint256[](2);
+        slashedAmounts[0] = (validatorSet.balanceOf(alice) * slashingPercentage) / 100;
+        slashedAmounts[1] = (validatorSet.balanceOf(address(this)) * slashingPercentage) / 100;
+
+        assertEq(validatorSet.balanceOf(alice), 100);
+        assertEq(validatorSet.balanceOf(address(this)), 300);
+
+        vm.expectEmit(true, true, true, true);
+        emit Slashed(exitEventId, validatorsToSlash, slashedAmounts);
+        vm.prank(stateReceiver);
+        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash));
+        
+        assertEq(validatorSet.balanceOf(alice), 100 - slashedAmounts[0]);
+        assertEq(validatorSet.balanceOf(address(this)), 300 - slashedAmounts[1]);
+    }
+
+    function test_FinalizeSlashAlreadyProcessedSanityCheck() public {
+        uint256 exitEventId = 1;
+        vm.startPrank(stateReceiver);
+        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0)));
+        vm.expectRevert("SLASH_ALREADY_PROCESSED");
+        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0)));
+        vm.stopPrank();
+    }
+}

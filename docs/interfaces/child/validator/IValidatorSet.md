@@ -91,6 +91,22 @@ Calculates how much is yet to become withdrawable for account.
 |---|---|---|
 | _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
 
+### slash
+
+```solidity
+function slash(address[] validators) external nonpayable
+```
+
+initialises slashing process
+
+*system call,given list of validators are slashed on L2 subsequently after their stake is slashed on L1*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validators | address[] | list of validators to be slashed |
+
 ### totalBlocks
 
 ```solidity
@@ -210,7 +226,7 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 ### Slashed
 
 ```solidity
-event Slashed(uint256 indexed validator, uint256 amount)
+event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts)
 ```
 
 
@@ -221,8 +237,9 @@ event Slashed(uint256 indexed validator, uint256 amount)
 
 | Name | Type | Description |
 |---|---|---|
-| validator `indexed` | uint256 | undefined |
-| amount  | uint256 | undefined |
+| exitId `indexed` | uint256 | undefined |
+| validators  | address[] | undefined |
+| amounts  | uint256[] | undefined |
 
 ### Withdrawal
 
