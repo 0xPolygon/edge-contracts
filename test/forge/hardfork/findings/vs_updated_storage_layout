@@ -1,0 +1,37 @@
+| Name                             | Type                                                          | Slot | Offset | Bytes |
+| -------------------------------- | ------------------------------------------------------------- | ---- | ------ | ----- |
+| _initialized                     | uint8                                                         | 0    | 0      | 1     |
+| _initializing                    | bool                                                          | 0    | 1      | 1     |
+| __gap                            | uint256[50]                                                   | 1    | 0      | 1600  |
+| _balances                        | mapping(address => uint256)                                   | 51   | 0      | 32    |
+| _allowances                      | mapping(address => mapping(address => uint256))               | 52   | 0      | 32    |
+| _totalSupply                     | uint256                                                       | 53   | 0      | 32    |
+| _name                            | string                                                        | 54   | 0      | 32    |
+| _symbol                          | string                                                        | 55   | 0      | 32    |
+| __gap                            | uint256[45]                                                   | 56   | 0      | 1440  |
+| _accountBalanceSnapshots 🔹       | mapping(address => struct LegacyStateVars.Snapshots)          | 101  | 0      | 32    |
+| _totalSupplySnapshots 🔹          | struct LegacyStateVars.Snapshots                              | 102  | 0      | 64    |
+| _currentSnapshotId 🔹             | struct CountersUpgradeable.Counter                            | 104  | 0      | 32    |
+| _hashedName                      | bytes32                                                       | 105  | 0      | 32    |
+| _hashedVersion                   | bytes32                                                       | 106  | 0      | 32    |
+| _name                            | string                                                        | 107  | 0      | 32    |
+| _version                         | string                                                        | 108  | 0      | 32    |
+| __gap                            | uint256[12]                                                   | 109  | 0      | 384   |
+| _nonces                          | mapping(address => struct CountersUpgradeable.Counter)        | 121  | 0      | 32    |
+| _PERMIT_TYPEHASH_DEPRECATED_SLOT | bytes32                                                       | 122  | 0      | 32    |
+| __gap                            | uint256[13]                                                   | 123  | 0      | 416   |
+| _delegates                       | mapping(address => address)                                   | 136  | 0      | 32    |
+| _checkpoints                     | mapping(address => struct ERC20VotesUpgradeable.Checkpoint[]) | 137  | 0      | 32    |
+| _totalSupplyCheckpoints          | struct ERC20VotesUpgradeable.Checkpoint[]                     | 138  | 0      | 32    |
+| __gap                            | uint256[12]                                                   | 139  | 0      | 384   |
+| __gap                            | uint256[50]                                                   | 151  | 0      | 1600  |
+| stateSender  🏁                   | contract IStateSender                                         | 201  | 0      | 20    |
+| stateReceiver                    | address                                                       | 202  | 0      | 20    |
+| rootChainManager                 | address                                                       | 203  | 0      | 20    |
+| __legacy_compat_gap              | uint256[1]                                                    | 204  | 0      | 32    |
+| currentEpochId                   | uint256                                                       | 205  | 0      | 32    |
+| epochs                           | mapping(uint256 => struct Epoch)                              | 206  | 0      | 32    |
+| epochEndBlocks                   | uint256[]                                                     | 207  | 0      | 32    |
+| withdrawals                      | mapping(address => struct WithdrawalQueue)                    | 208  | 0      | 32    |
+| networkParams                    | contract NetworkParams                                        | 209  | 0      | 20    |
+| _commitBlockNumbers              | mapping(uint256 => uint256)                                   | 210  | 0      | 32    |

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+import "./legacy-compat/@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import "../../lib/WithdrawalQueue.sol";
 import "../../interfaces/child/validator/IValidatorSet.sol";
 import "../../interfaces/IStateSender.sol";
@@ -18,14 +18,16 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     IStateSender private stateSender;
     address private stateReceiver;
     address private rootChainManager;
-    NetworkParams private networkParams;
+    uint256[1] private __legacy_compat_gap;
 
     uint256 public currentEpochId;
 
-    mapping(uint256 => uint256) private _commitBlockNumbers;
-    mapping(address => WithdrawalQueue) private withdrawals;
     mapping(uint256 => Epoch) public epochs;
     uint256[] public epochEndBlocks;
+    mapping(address => WithdrawalQueue) private withdrawals;
+
+    NetworkParams private networkParams;
+    mapping(uint256 => uint256) private _commitBlockNumbers;
 
     function initialize(
         address newStateSender,

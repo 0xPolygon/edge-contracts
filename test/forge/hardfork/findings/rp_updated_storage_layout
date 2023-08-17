@@ -1,0 +1,12 @@
+| Name                | Type                        | Slot | Offset | Bytes |
+| ------------------- | --------------------------- | ---- | ------ | ----- |
+| __gap               | uint256[50]                 | 0    | 0      | 1600  |
+| _initialized        | uint8                       | 50   | 0      | 1     |
+| _initializing       | bool                        | 50   | 1      | 1     |
+| rewardToken 🏁       | contract IERC20Upgradeable  | 50   | 2      | 20    |
+| rewardWallet        | address                     | 51   | 0      | 20    |
+| validatorSet        | contract IValidatorSet      | 52   | 0      | 20    |
+| __legacy_compat_gap | uint256[1]                  | 53   | 0      | 32    |
+| paidRewardPerEpoch  | mapping(uint256 => uint256) | 54   | 0      | 32    |
+| pendingRewards      | mapping(address => uint256) | 55   | 0      | 32    |
+| networkParams       | contract NetworkParams      | 56   | 0      | 20    |
