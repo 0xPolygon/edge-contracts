@@ -225,10 +225,12 @@ contract ValidatorSet_Slash is Committed {
     }
 
     function test_InitialiseSlash(address[] memory validators) public {
-        vm.assume(validators.length <= (stateSender.MAX_LENGTH() - 96) / 32);
+        vm.assume(validators.length <= (stateSender.MAX_LENGTH() - 160) / 32);
+        uint256 slashingPercentage = validatorSet.SLASHING_PERCENTAGE();
+        uint256 slashIncentivePercentage = validatorSet.SLASH_INCENTIVE_PERCENTAGE();
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
-        emit L2StateSynced(1, address(validatorSet), rootChainManager, abi.encode(SLASH_SIG, validators));
+        emit L2StateSynced(1, address(validatorSet), rootChainManager, abi.encode(SLASH_SIG, validators, slashingPercentage, slashIncentivePercentage));
         validatorSet.slash(validators);
     }
 
@@ -248,7 +250,7 @@ contract ValidatorSet_Slash is Committed {
         vm.expectEmit(true, true, true, true);
         emit Slashed(exitEventId, validatorsToSlash, slashedAmounts);
         vm.prank(stateReceiver);
-        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash));
+        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage));
         
         assertEq(validatorSet.balanceOf(alice), 100 - slashedAmounts[0]);
         assertEq(validatorSet.balanceOf(address(this)), 300 - slashedAmounts[1]);
@@ -257,9 +259,9 @@ contract ValidatorSet_Slash is Committed {
     function test_FinalizeSlashAlreadyProcessedSanityCheck() public {
         uint256 exitEventId = 1;
         vm.startPrank(stateReceiver);
-        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0)));
+        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0), 0));
         vm.expectRevert("SLASH_ALREADY_PROCESSED");
-        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0)));
+        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0), 0));
         vm.stopPrank();
     }
 }

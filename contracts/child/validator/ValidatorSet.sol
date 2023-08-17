@@ -14,7 +14,8 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
-    uint256 public constant SLASHING_PERCENTAGE = 50;
+    uint256 public constant SLASHING_PERCENTAGE = 50; // to be read through NetworkParams later
+    uint256 public constant SLASH_INCENTIVE_PERCENTAGE = 30; // exitor reward, to be read through NetworkParams later
 
     IStateSender private stateSender;
     address private stateReceiver;
@@ -74,7 +75,10 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
      * @inheritdoc IValidatorSet
      */
     function slash(address[] calldata validators) external onlySystemCall {
-        stateSender.syncState(rootChainManager, abi.encode(SLASH_SIG, validators));
+        stateSender.syncState(
+            rootChainManager,
+            abi.encode(SLASH_SIG, validators, SLASHING_PERCENTAGE, SLASH_INCENTIVE_PERCENTAGE)
+        );
     }
 
     function onStateReceive(uint256 /*counter*/, address sender, bytes calldata data) external override {
@@ -83,11 +87,11 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _stake(validator, amount);
         } else if (bytes32(data[:32]) == SLASH_SIG) {
-            (, uint256 exitEventId, address[] memory validatorsToSlash) = abi.decode(
+            (, uint256 exitEventId, address[] memory validatorsToSlash, uint256 slashingPercentage) = abi.decode(
                 data,
-                (bytes32, uint256, address[])
+                (bytes32, uint256, address[], uint256)
             );
-            _slash(exitEventId, validatorsToSlash);
+            _slash(exitEventId, validatorsToSlash, slashingPercentage); // reuse slashingPercentage present during this slash's initiation
         }
     }
 
@@ -146,13 +150,13 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         emit WithdrawalRegistered(account, amount);
     }
 
-    function _slash(uint256 exitEventId, address[] memory validatorsToSlash) internal {
+    function _slash(uint256 exitEventId, address[] memory validatorsToSlash, uint256 slashingPercentage) internal {
         require(!slashProcessed[exitEventId], "SLASH_ALREADY_PROCESSED"); // sanity check
         slashProcessed[exitEventId] = true;
         uint256 length = validatorsToSlash.length;
         uint256[] memory slashedAmounts = new uint256[](length);
         for (uint256 i = 0; i < length; ) {
-            slashedAmounts[i] = (balanceOf(validatorsToSlash[i]) * SLASHING_PERCENTAGE) / 100;
+            slashedAmounts[i] = (balanceOf(validatorsToSlash[i]) * slashingPercentage) / 100;
             _burn(validatorsToSlash[i], slashedAmounts[i]); // partially unstake validator
             // slither-disable-next-line mapping-deletion
             delete withdrawals[validatorsToSlash[i]]; // remove pending withdrawals

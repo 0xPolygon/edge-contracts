@@ -144,12 +144,15 @@ abstract contract EnabledStaking is FinalizedGenesis {
 
 abstract contract Slashed is EnabledStaking {
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
+    uint256 internal slashingPercentage = 50; // sent from ValidatorSet
+    uint256 internal slashIncentivePercentage = 30; // sent from ValidatorSet
+
 
     function setUp() public virtual override {
         super.setUp();
         address[] memory validatorsToSlash = new address[](1);
         validatorsToSlash[0] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash);
+        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
         vm.prank(exitHelper);
         supernetManager.onL2StateReceive(1, childValidatorSet, callData);
     }
@@ -386,13 +389,15 @@ contract CustomSupernetManager_Slash is EnabledStaking {
     event StakeWithdrawn(address indexed validator, address indexed recipient, uint256 amount);
     event Transfer(address indexed from, address indexed to, uint256 value);
 
+    uint256 private slashingPercentage = 50; // sent from ValidatorSet
+    uint256 private slashIncentivePercentage = 30; // sent from ValidatorSet
+
     function test_SuccessfulFullWithdrawal() public {
         uint256 exitEventId = 1;
-        uint256 slashingPercentage = supernetManager.SLASHING_PERCENTAGE();
 
         address[] memory validatorsToSlash = new address[](1);
         validatorsToSlash[0] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash);
+        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
         uint256 slashedAmount = (amount * slashingPercentage) / 100;
 
         vm.expectEmit(true, true, true, true);
@@ -403,7 +408,7 @@ contract CustomSupernetManager_Slash is EnabledStaking {
         emit ValidatorDeactivated(address(this));
         // emits state sync event to complete slashing on child chain
         vm.expectEmit(true, true, true, true);
-        emit StateSynced(exitEventId, address(supernetManager), childValidatorSet, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash));
+        emit StateSynced(exitEventId, address(supernetManager), childValidatorSet, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage));
         vm.prank(exitHelper);
         supernetManager.onL2StateReceive(exitEventId, childValidatorSet, callData);
 
@@ -421,9 +426,9 @@ contract CustomSupernetManager_Slash is EnabledStaking {
         uint256 exitEventId = 1;
         address[] memory validatorsToSlash = new address[](1);
         validatorsToSlash[0] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash);
-        uint256 slashedAmount = (amount * supernetManager.SLASHING_PERCENTAGE()) / 100;
-        uint256 exitorReward = (slashedAmount * supernetManager.SLASH_INCENTIVE_PERCENTAGE()) / 100;
+        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
+        uint256 slashedAmount = (amount * slashingPercentage) / 100;
+        uint256 exitorReward = (slashedAmount * slashIncentivePercentage) / 100;
 
         assertEq(token.balanceOf(mev), 0); // balance before
         vm.expectEmit(true, true, true, true);
@@ -434,19 +439,18 @@ contract CustomSupernetManager_Slash is EnabledStaking {
     }
 
     function test_SlashEntireValidatorSet() external {
-        uint256 slashingPercentage = supernetManager.SLASHING_PERCENTAGE();
         uint256 aliceStakedAmount = amount << 3;
         token.mint(alice, aliceStakedAmount);
         vm.prank(alice);
         stakeManager.stakeFor(1, aliceStakedAmount);
 
-        uint256 thisSlashedAmount = (amount * slashingPercentage) / 100;
         uint256 aliceSlashedAmount = (aliceStakedAmount * slashingPercentage) / 100;
+        uint256 thisSlashedAmount = (amount * slashingPercentage) / 100;
 
         address[] memory validatorsToSlash = new address[](2);
         validatorsToSlash[0] = alice;
         validatorsToSlash[1] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash);
+        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
 
         vm.prank(exitHelper, mev /* tx.origin */);
         supernetManager.onL2StateReceive(1, childValidatorSet, callData);
@@ -465,7 +469,7 @@ contract CustomSupernetManager_Slash is EnabledStaking {
         );
         assertEq(supernetManager.getValidator(address(this)).isActive, false, "should deactivate");
         assertEq(supernetManager.getValidator(alice).isActive, false, "should deactivate");
-        uint256 exitorReward = ((thisSlashedAmount + aliceSlashedAmount) * supernetManager.SLASH_INCENTIVE_PERCENTAGE()) / 100;
+        uint256 exitorReward = ((thisSlashedAmount + aliceSlashedAmount) * slashIncentivePercentage) / 100;
         assertEq(token.balanceOf(mev), exitorReward, "should transfer slashing reward");
     }
 }
@@ -480,8 +484,8 @@ contract CustomSupernetManager_WithdrawSlash is Slashed {
     }
 
     function test_WithdrawSlashedAmount() public {
-        uint256 slashedAmount = (amount * supernetManager.SLASHING_PERCENTAGE()) / 100;
-        uint256 slashingReward = (slashedAmount * supernetManager.SLASH_INCENTIVE_PERCENTAGE()) / 100; // given to exitor after slash
+        uint256 slashedAmount = (amount * slashingPercentage) / 100;
+        uint256 slashingReward = (slashedAmount * slashIncentivePercentage) / 100; // given to exitor after slash
         uint256 withdrawableAmount = slashedAmount - slashingReward;
         assertEq(token.balanceOf(address(supernetManager)), withdrawableAmount);
         vm.expectEmit(true, true, true, true);
