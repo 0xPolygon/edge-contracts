@@ -14,6 +14,8 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     bytes32 private constant STAKE_SIG = keccak256("STAKE");
     bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
+    uint256 public constant SLASHING_PERCENTAGE = 50; // to be read through NetworkParams later
+    uint256 public constant SLASH_INCENTIVE_PERCENTAGE = 30; // exitor reward, to be read through NetworkParams later
 
     IStateSender private stateSender;
     address private stateReceiver;
@@ -25,6 +27,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     mapping(uint256 => uint256) private _commitBlockNumbers;
     mapping(address => WithdrawalQueue) private withdrawals;
     mapping(uint256 => Epoch) public epochs;
+    mapping(uint256 => bool) public slashProcessed;
     uint256[] public epochEndBlocks;
 
     function initialize(
@@ -68,11 +71,27 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         emit NewEpoch(id, epoch.startBlock, epoch.endBlock, epoch.epochRoot);
     }
 
+    /**
+     * @inheritdoc IValidatorSet
+     */
+    function slash(address[] calldata validators) external onlySystemCall {
+        stateSender.syncState(
+            rootChainManager,
+            abi.encode(SLASH_SIG, validators, SLASHING_PERCENTAGE, SLASH_INCENTIVE_PERCENTAGE)
+        );
+    }
+
     function onStateReceive(uint256 /*counter*/, address sender, bytes calldata data) external override {
         require(msg.sender == stateReceiver && sender == rootChainManager, "INVALID_SENDER");
         if (bytes32(data[:32]) == STAKE_SIG) {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _stake(validator, amount);
+        } else if (bytes32(data[:32]) == SLASH_SIG) {
+            (, uint256 exitEventId, address[] memory validatorsToSlash, uint256 slashingPercentage) = abi.decode(
+                data,
+                (bytes32, uint256, address[], uint256)
+            );
+            _slash(exitEventId, validatorsToSlash, slashingPercentage); // reuse slashingPercentage present during this slash's initiation
         }
     }
 
@@ -131,16 +150,21 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         emit WithdrawalRegistered(account, amount);
     }
 
-    /// @dev no public facing slashing function implemented yet
-    // slither-disable-next-line dead-code
-    function _slash(address validator) internal {
-        // unstake validator
-        _burn(validator, balanceOf(validator));
-        // remove pending withdrawals
-        // slither-disable-next-line mapping-deletion
-        delete withdrawals[validator];
-        // slash validator
-        stateSender.syncState(rootChainManager, abi.encode(SLASH_SIG, validator));
+    function _slash(uint256 exitEventId, address[] memory validatorsToSlash, uint256 slashingPercentage) internal {
+        require(!slashProcessed[exitEventId], "SLASH_ALREADY_PROCESSED"); // sanity check
+        slashProcessed[exitEventId] = true;
+        uint256 length = validatorsToSlash.length;
+        uint256[] memory slashedAmounts = new uint256[](length);
+        for (uint256 i = 0; i < length; ) {
+            slashedAmounts[i] = (balanceOf(validatorsToSlash[i]) * slashingPercentage) / 100;
+            _burn(validatorsToSlash[i], slashedAmounts[i]); // partially unstake validator
+            // slither-disable-next-line mapping-deletion
+            delete withdrawals[validatorsToSlash[i]]; // remove pending withdrawals
+            unchecked {
+                ++i;
+            }
+        }
+        emit Slashed(exitEventId, validatorsToSlash, slashedAmounts);
     }
 
     function _stake(address validator, uint256 amount) internal {

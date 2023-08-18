@@ -22,13 +22,20 @@ struct Epoch {
  */
 interface IValidatorSet is IStateReceiver {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
-    event Slashed(uint256 indexed validator, uint256 amount);
+    event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts);
     event WithdrawalRegistered(address indexed account, uint256 amount);
     event Withdrawal(address indexed account, uint256 amount);
 
     /// @notice commits a new epoch
     /// @dev system call
     function commitEpoch(uint256 id, Epoch calldata epoch, uint256 epochSize) external;
+
+    /// @notice initialises slashing process
+    /// @dev system call,
+    /// @dev given list of validators are slashed on L2
+    /// subsequently after their stake is slashed on L1
+    /// @param validators list of validators to be slashed
+    function slash(address[] calldata validators) external;
 
     /// @notice allows a validator to announce their intention to withdraw a given amount of tokens
     /// @dev initializes a waiting period before the tokens can be withdrawn
