@@ -8,6 +8,7 @@ import "../../interfaces/IStateSender.sol";
 import "../../child/NetworkParams.sol";
 import "../System.sol";
 
+///@dev Inherits a modified version of `ERC20VotesUpgradeable`with a shifted storage layout.
 contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     using WithdrawalQueueLib for WithdrawalQueue;
 
@@ -25,12 +26,13 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     uint256 public currentEpochId;
 
     mapping(uint256 => Epoch) public epochs;
-    mapping(uint256 => bool) public slashProcessed;
     uint256[] public epochEndBlocks;
     mapping(address => WithdrawalQueue) private withdrawals;
 
     NetworkParams private networkParams;
     mapping(uint256 => uint256) private _commitBlockNumbers;
+
+    mapping(uint256 => bool) public slashProcessed;
 
     function initialize(
         address newStateSender,

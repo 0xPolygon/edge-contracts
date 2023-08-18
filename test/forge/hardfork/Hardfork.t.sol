@@ -7,11 +7,26 @@ import {NetworkParams} from "contracts/child/NetworkParams.sol";
 
 import {ValidatorSet as Old_ValidatorSet, ValidatorInit as Old_ValidatorInit} from "./deployed/ValidatorSet.sol";
 import {ValidatorSet, ValidatorInit} from "contracts/child/validator/ValidatorSet.sol";
-import {ValidatorSetProxy} from "./utils/ValidatorSetProxy.sol";
+import {ValidatorSetProxy} from "contracts/child/validator/proxy/ValidatorSetProxy.sol";
 
 import {RewardPool as Old_RewardPool} from "./deployed/RewardPool.sol";
 import {RewardPool} from "contracts/child/validator/RewardPool.sol";
-import {RewardPoolProxy} from "./utils/RewardPoolProxy.sol";
+import {RewardPoolProxy} from "contracts/child/validator/proxy/RewardPoolProxy.sol";
+
+/// @notice Checks if all modified OpenZeppelin contracts are up-to-date.
+contract Hardfork_ModifiedOpenZeppelinContractsCheck is Test {
+    function test_CheckModifiedOpenZeppelinContracts() public {
+        string[] memory cmd = new string[](2);
+        cmd[0] = "node";
+        cmd[1] = "test/forge/hardfork/utils/checkModifiedOpenZeppelinContracts.js";
+
+        bytes memory out = vm.ffi(cmd);
+
+        bytes32 ok = keccak256("All modified OpenZeppelin contracts up-to-date.");
+
+        require(keccak256(out) == ok, string(out));
+    }
+}
 
 abstract contract Initialized is Test {
     // Actors.
@@ -52,7 +67,7 @@ abstract contract Initialized is Test {
         //
         old_rewardPool = new Old_RewardPool();
 
-        // Simulate initializations without proxy!
+        // Simulate initializations without proxies!
 
         Old_ValidatorInit[] memory initialValidators = new Old_ValidatorInit[](2);
         initialValidators[0] = Old_ValidatorInit({addr: VALIDATOR_A, stake: 300});
@@ -65,11 +80,22 @@ abstract contract Initialized is Test {
 }
 
 contract HardforkTest_Initialized is Initialized {
+    /// @dev Do not use the already deployed contract for this test.
     function test_Old_ValidatorSet_OGStorageStart() public {
+        old_validatorSet = new Old_ValidatorSet();
+        Old_ValidatorInit[] memory initialValidators = new Old_ValidatorInit[](2);
+        initialValidators[0] = Old_ValidatorInit({addr: VALIDATOR_A, stake: 300});
+        initialValidators[1] = Old_ValidatorInit({addr: VALIDATOR_B, stake: 100});
+        old_validatorSet.initialize(stateSender, stateReceiver, rootChainManager, 1, initialValidators);
+
         assertEq(vm.load(address(old_validatorSet), EXPECTED_STORAGE_START_VS), bytes32(uint256(uint160(stateSender))));
     }
 
+    /// @dev Do not use the already deployed contract for this test.
     function test_Old_RewardPool_OGStorageStart() public {
+        old_rewardPool = new Old_RewardPool();
+        old_rewardPool.initialize(rewardToken, rewardWallet, address(old_validatorSet), 1);
+
         assertEq(
             vm.load(address(old_rewardPool), EXPECTED_STORAGE_START_RP),
             bytes32(bytes.concat(hex"00000000000000000000", abi.encodePacked(rewardToken), hex"0001"))
@@ -133,10 +159,10 @@ abstract contract Hardforked is StateContaining {
         //
         rewardPool = new RewardPool();
 
-        // 2. Replace bytecode with proxy.
+        // 2. Replace contracts with proxies.
         deployCodeTo(
             "ValidatorSetProxy.sol",
-            abi.encode(address(validatorSet), ADMIN, address(networkParams)),
+            //abi.encode(address(validatorSet), ADMIN, address(networkParams)),
             address(old_validatorSet)
         );
         //
@@ -147,14 +173,37 @@ abstract contract Hardforked is StateContaining {
         );
 
         validatorSetProxyAddr = address(old_validatorSet);
-        validatorSetViaProxy = ValidatorSet(validatorSetProxyAddr);
         //
         rewardPoolProxyAddr = address(old_rewardPool);
+
+        // 3. Set up proxies.
+        ValidatorSetProxy(payable(validatorSetProxyAddr)).setUpProxy(
+            address(validatorSet),
+            ADMIN,
+            "",
+            address(networkParams)
+        );
+        //
+        RewardPoolProxy(payable(rewardPoolProxyAddr)).setUpProxy(
+            address(rewardPool),
+            ADMIN,
+            "",
+            address(networkParams)
+        );
+
+        validatorSetViaProxy = ValidatorSet(validatorSetProxyAddr);
+        //
         rewardPoolViaProxy = RewardPool(rewardPoolProxyAddr);
     }
 }
 
 contract HardforkTest_Hardforked is Hardforked {
+    function test_ValidatorSetProxy_RevertOn_setUpProxy() public {
+        vm.expectRevert("GenesisProxy: Already set up.");
+
+        ValidatorSetProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
+    }
+
     function test_ValidatorSet_RevertOn_initialize() public {
         vm.expectRevert("Initializable: contract is already initialized");
 
@@ -174,8 +223,27 @@ contract HardforkTest_Hardforked is Hardforked {
         );
     }
 
+    /// @dev Do not use the already deployed contract for this test.
     function test_ValidatorSet_OGStorageStart() public {
-        assertEq(vm.load(validatorSetProxyAddr, EXPECTED_STORAGE_START_VS), bytes32(uint256(uint160(stateSender))));
+        validatorSet = new ValidatorSet();
+        ValidatorInit[] memory initialValidators = new ValidatorInit[](2);
+        initialValidators[0] = ValidatorInit({addr: VALIDATOR_A, stake: 300});
+        initialValidators[1] = ValidatorInit({addr: VALIDATOR_B, stake: 100});
+        validatorSet.initialize(
+            stateSender,
+            stateReceiver,
+            rootChainManager,
+            address(networkParams),
+            initialValidators
+        );
+
+        assertEq(vm.load(address(validatorSet), EXPECTED_STORAGE_START_VS), bytes32(uint256(uint160(stateSender))));
+    }
+
+    function test_RewardPoolProxy_RevertOn_setUpProxy() public {
+        vm.expectRevert("GenesisProxy: Already set up.");
+
+        RewardPoolProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
     }
 
     function test_RewardPool_RevertOn_initialize() public {
@@ -193,7 +261,11 @@ contract HardforkTest_Hardforked is Hardforked {
         assertEq(vm.load(rewardPoolProxyAddr, bytes32(uint256(56))), bytes32(uint256(uint160(address(networkParams)))));
     }
 
+    /// @dev Do not use the already deployed contract for this test.
     function test_RewardPool_OGStorageStart() public {
+        rewardPool = new RewardPool();
+        rewardPool.initialize(address(rewardToken), rewardWallet, address(validatorSet), address(networkParams));
+
         assertEq(
             vm.load(rewardPoolProxyAddr, EXPECTED_STORAGE_START_RP),
             bytes32(bytes.concat(hex"00000000000000000000", abi.encodePacked(rewardToken), hex"0001"))
