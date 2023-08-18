@@ -8,6 +8,7 @@ import "./SupernetManager.sol";
 import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
+import "../../interfaces/root/IExitHelper.sol";
 
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeable, SupernetManager {
     using SafeERC20 for IERC20;
@@ -178,8 +179,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
         // contract will always have enough balance since slashStakeOf returns entire slashed amt
         uint256 rewardAmount = (totalSlashedAmount * slashIncentivePercentage) / 100;
-        // solhint-disable avoid-tx-origin
-        matic.safeTransfer(tx.origin, rewardAmount);
+        matic.safeTransfer(IExitHelper(exitHelper).caller(), rewardAmount);
 
         // complete slashing on child chain
         stateSender.syncState(
