@@ -70,7 +70,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
         if (amount > stake) amount = stake;
         _removeStake(validator, id, amount);
         _withdrawStake(validator, msg.sender, amount);
-        emit StakeRemoved(id, validator, stake);
+        emit StakeRemoved(id, validator, amount);
         emit ValidatorSlashed(id, validator, amount);
     }
 
