@@ -406,26 +406,20 @@ contract CustomSupernetManager_Slash is EnabledStaking {
         vm.expectEmit(true, true, true, true);
         emit StakeWithdrawn(address(this), address(supernetManager), slashedAmount);
         vm.expectEmit(true, true, true, true);
-        emit StakeRemoved(exitEventId, address(this), amount);
-        vm.expectEmit(true, true, true, true);
-        emit ValidatorDeactivated(address(this));
+        emit StakeRemoved(exitEventId, address(this), slashedAmount);
         // emits state sync event to complete slashing on child chain
         vm.expectEmit(true, true, true, true);
-        emit StateSynced(exitEventId, address(supernetManager), childValidatorSet, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage));
+        emit StateSynced(exitEventId, address(supernetManager), childValidatorSet, 
+            abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage));
         vm.store(exitHelper, callerSlotOnExitHelper, bytes32(uint256(uint160(mev)))); // simulate caller of exit()
         vm.prank(exitHelper);
         supernetManager.onL2StateReceive(exitEventId, childValidatorSet, callData);
         vm.store(exitHelper, callerSlotOnExitHelper, bytes32(0));
 
-        assertEq(stakeManager.stakeOf(address(this), 1), 0, "should unstake all");
-        assertEq(
-            stakeManager.withdrawableStake(address(this)),
-            amount - (amount * slashingPercentage) / 100,
-            "should slash"
-        );
-        assertEq(supernetManager.getValidator(address(this)).isActive, false, "should deactivate");
+        assertEq(stakeManager.stakeOf(address(this), 1), amount-slashedAmount, "stake should be reduced only by slashed amount");
+        assertEq(stakeManager.withdrawableStake(address(this)), 0, "should slash");
+        assertEq(supernetManager.getValidator(address(this)).isActive, true, "should remain active, since only half of stake is slashed");
     }
-
 
     function test_SlashIncentiveDistribution() external {
         uint256 exitEventId = 1;
@@ -464,20 +458,20 @@ contract CustomSupernetManager_Slash is EnabledStaking {
         supernetManager.onL2StateReceive(1, childValidatorSet, callData);
         vm.store(exitHelper, callerSlotOnExitHelper, bytes32(0));
 
-        assertEq(stakeManager.stakeOf(address(this), 1), 0, "should unstake all");
-        assertEq(stakeManager.stakeOf(alice, 1), 0, "should unstake all");
         assertEq(
-            stakeManager.withdrawableStake(address(this)),
+            stakeManager.stakeOf(address(this), 1),
             amount - thisSlashedAmount,
-            "should slash"
+            "should unstake just a diff between original and slashed amount"
         );
         assertEq(
-            stakeManager.withdrawableStake(alice),
+            stakeManager.stakeOf(alice, 1),
             aliceStakedAmount - aliceSlashedAmount,
-            "should slash"
+            "should unstake just a diff between original and slashed amount"
         );
-        assertEq(supernetManager.getValidator(address(this)).isActive, false, "should deactivate");
-        assertEq(supernetManager.getValidator(alice).isActive, false, "should deactivate");
+        assertEq(stakeManager.withdrawableStake(address(this)), 0, "should slash");
+        assertEq(stakeManager.withdrawableStake(alice), 0, "should slash");
+        assertEq(supernetManager.getValidator(address(this)).isActive, true, "should remain active");
+        assertEq(supernetManager.getValidator(alice).isActive, true, "should remain active");
         uint256 exitorReward = ((thisSlashedAmount + aliceSlashedAmount) * slashIncentivePercentage) / 100;
         assertEq(token.balanceOf(mev), exitorReward, "should transfer slashing reward");
     }

@@ -159,22 +159,22 @@ contract StakeManager_SlashStake is Staked, StakeManager {
     function test_SlashStakeFor(uint256 amount) public {
         if (amount > maxAmount) amount = maxAmount;
         vm.expectEmit(true, true, true, true);
-        emit StakeRemoved(id, address(this), stakeManager.stakeOf(address(this), id));
+        emit StakeRemoved(id, address(this), amount);
         vm.expectEmit(true, true, true, true);
         emit ValidatorSlashed(id, address(this), amount);
         vm.prank(address(supernetManager));
         stakeManager.slashStakeOf(address(this), amount);
-        assertEq(stakeManager.stakeOf(address(this), id), 0, "should be unstaked completely");
+        assertEq(
+            stakeManager.stakeOf(address(this), id),
+            maxAmount-amount,
+            "should be unstaked by slashed amount"
+        );
         assertEq(
             stakeManager.withdrawableStake(address(this)),
-            maxAmount - amount,
+            0,
             "withdrawable stake should be reduced by the slashed amount"
         );
-        assertEq(
-            token.balanceOf(address(supernetManager)),
-            amount,
-            "supernet manager should receive the slashed amount"
-        );
+        assertEq(token.balanceOf(address(supernetManager)), amount, "supernet manager should receive the slashed amount");
     }
 }
 
