@@ -14,15 +14,6 @@ import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/l
 
 // ⭐️ ASSERTIONS
 abstract contract Assertions is StdAssertions {
-    function assertNotEq(uint256 a, uint256 b) internal virtual {
-        if (a == b) {
-            emit log("Error: a != b not satisfied [uint]");
-            emit log_named_uint("Not expected", b);
-            emit log_named_uint("      Actual", a);
-            fail();
-        }
-    }
-
     function assertEq(Validator memory a, Validator memory b) internal virtual {
         _compareHash(keccak256(abi.encode(a)), keccak256(abi.encode(b)), "Validator");
     }
