@@ -10,40 +10,6 @@
 
 ## Methods
 
-### SLASHING_PERCENTAGE
-
-```solidity
-function SLASHING_PERCENTAGE() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### SLASH_INCENTIVE_PERCENTAGE
-
-```solidity
-function SLASH_INCENTIVE_PERCENTAGE() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### acceptOwnership
 
 ```solidity
