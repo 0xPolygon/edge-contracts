@@ -6,4 +6,4 @@
 
 ### Checks
 
-See the [script](../../../../../../test/forge/hardfork/utils/checkModifiedOpenZeppelinContracts.js)
+See the [script](../../../../../../scripts/maintenance/checkModifiedOpenZeppelinContracts.js)
