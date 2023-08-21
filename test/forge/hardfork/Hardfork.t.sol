@@ -18,9 +18,11 @@ contract Hardfork_ModifiedOpenZeppelinContractsCheck is Test {
     function test_CheckModifiedOpenZeppelinContracts() public {
         string[] memory cmd = new string[](2);
         cmd[0] = "node";
-        cmd[1] = "test/forge/hardfork/utils/checkModifiedOpenZeppelinContracts.js";
+        cmd[1] = "scripts/maintenance/checkModifiedOpenZeppelinContracts.js";
 
         bytes memory out = vm.ffi(cmd);
+
+        require(out.length > 0, "Script contains errors.");
 
         bytes32 ok = keccak256("All modified OpenZeppelin contracts up-to-date.");
 
