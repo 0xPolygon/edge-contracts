@@ -15,6 +15,7 @@ contract RewardPool is IRewardPool, System, Initializable {
     IERC20Upgradeable public rewardToken;
     address public rewardWallet;
     IValidatorSet public validatorSet;
+    // slither-disable-next-line unused-state,naming-convention
     uint256[1] private __legacy_compat_gap;
 
     mapping(uint256 => uint256) public paidRewardPerEpoch;

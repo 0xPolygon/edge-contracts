@@ -21,6 +21,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     IStateSender private stateSender;
     address private stateReceiver;
     address private rootChainManager;
+    // slither-disable-next-line unused-state,naming-convention
     uint256[1] private __legacy_compat_gap;
 
     uint256 public currentEpochId;

@@ -11,6 +11,7 @@ abstract contract GenesisProxy is TransparentUpgradeableProxy {
         bytes32 setUpState;
         bytes32 setUpSlot = keccak256("GenesisProxy setUpSlot");
 
+        // slither-disable-next-line assembly
         assembly {
             setUpState := sload(setUpSlot)
         }
@@ -23,6 +24,7 @@ abstract contract GenesisProxy is TransparentUpgradeableProxy {
         // ERC1967Proxy
         _upgradeToAndCall(logic, data, false);
 
+        // slither-disable-next-line assembly
         assembly {
             sstore(setUpSlot, 0x01)
         }
