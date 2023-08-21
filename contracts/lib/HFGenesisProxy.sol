@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-abstract contract GenesisProxy is TransparentUpgradeableProxy {
+abstract contract HFGenesisProxy is TransparentUpgradeableProxy {
     constructor() TransparentUpgradeableProxy(address(this), msg.sender, "") {}
 
     function _setUpProxy(address logic, address admin, bytes memory data) internal {
         bytes32 setUpState;
-        bytes32 setUpSlot = keccak256("GenesisProxy setUpSlot");
+        bytes32 setUpSlot = keccak256("GenesisProxy _setUpProxy setUpSlot");
 
         // slither-disable-next-line assembly
         assembly {

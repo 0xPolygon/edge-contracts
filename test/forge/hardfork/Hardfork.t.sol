@@ -7,11 +7,11 @@ import {NetworkParams} from "contracts/child/NetworkParams.sol";
 
 import {ValidatorSet as Old_ValidatorSet, ValidatorInit as Old_ValidatorInit} from "./deployed/ValidatorSet.sol";
 import {ValidatorSet, ValidatorInit} from "contracts/child/validator/ValidatorSet.sol";
-import {ValidatorSetProxy} from "contracts/child/validator/proxy/ValidatorSetProxy.sol";
+import {ValidatorSetHFGProxy} from "contracts/child/validator/proxy/ValidatorSetHFGProxy.sol";
 
 import {RewardPool as Old_RewardPool} from "./deployed/RewardPool.sol";
 import {RewardPool} from "contracts/child/validator/RewardPool.sol";
-import {RewardPoolProxy} from "contracts/child/validator/proxy/RewardPoolProxy.sol";
+import {RewardPoolHFGProxy} from "contracts/child/validator/proxy/RewardPoolHFGProxy.sol";
 
 /// @notice Checks if all modified OpenZeppelin contracts are up-to-date.
 contract Hardfork_ModifiedOpenZeppelinContractsCheck is Test {
@@ -163,13 +163,13 @@ abstract contract Hardforked is StateContaining {
 
         // 2. Replace contracts with proxies.
         deployCodeTo(
-            "ValidatorSetProxy.sol",
+            "ValidatorSetHFGProxy.sol",
             //abi.encode(address(validatorSet), ADMIN, address(networkParams)),
             address(old_validatorSet)
         );
         //
         deployCodeTo(
-            "RewardPoolProxy.sol",
+            "RewardPoolHFGProxy.sol",
             abi.encode(address(rewardPool), ADMIN, address(networkParams)),
             address(old_rewardPool)
         );
@@ -179,14 +179,14 @@ abstract contract Hardforked is StateContaining {
         rewardPoolProxyAddr = address(old_rewardPool);
 
         // 3. Set up proxies.
-        ValidatorSetProxy(payable(validatorSetProxyAddr)).setUpProxy(
+        ValidatorSetHFGProxy(payable(validatorSetProxyAddr)).setUpProxy(
             address(validatorSet),
             ADMIN,
             "",
             address(networkParams)
         );
         //
-        RewardPoolProxy(payable(rewardPoolProxyAddr)).setUpProxy(
+        RewardPoolHFGProxy(payable(rewardPoolProxyAddr)).setUpProxy(
             address(rewardPool),
             ADMIN,
             "",
@@ -200,10 +200,10 @@ abstract contract Hardforked is StateContaining {
 }
 
 contract HardforkTest_Hardforked is Hardforked {
-    function test_ValidatorSetProxy_RevertOn_setUpProxy() public {
+    function test_ValidatorSetHFGProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("GenesisProxy: Already set up.");
 
-        ValidatorSetProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
+        ValidatorSetHFGProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
     }
 
     function test_ValidatorSet_RevertOn_initialize() public {
@@ -242,10 +242,10 @@ contract HardforkTest_Hardforked is Hardforked {
         assertEq(vm.load(address(validatorSet), EXPECTED_STORAGE_START_VS), bytes32(uint256(uint160(stateSender))));
     }
 
-    function test_RewardPoolProxy_RevertOn_setUpProxy() public {
+    function test_RewardPoolHFGProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("GenesisProxy: Already set up.");
 
-        RewardPoolProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
+        RewardPoolHFGProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
     }
 
     function test_RewardPool_RevertOn_initialize() public {
