@@ -7,6 +7,12 @@ on:
     branches: [main, dev]
 
 jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check modified OpenZeppelin contracts
+        run: node scripts/maintenance/checkModifiedOpenZeppelinContracts.js
   tests:
     runs-on: ubuntu-latest
     steps:
