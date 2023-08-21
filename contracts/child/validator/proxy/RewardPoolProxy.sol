@@ -8,6 +8,7 @@ contract RewardPoolProxy is GenesisProxy {
     function setUpProxy(address logic, address admin, bytes memory data, address newNetworkParams) external {
         _setUpProxy(logic, admin, data);
 
+        // slither-disable-next-line assembly
         assembly {
             sstore(56, newNetworkParams)
         }
