@@ -53,5 +53,5 @@ if (nonMatchingFiles.length === 0) {
   nonMatchingFiles.forEach(({ file }) => {
     console.log(`- ${file}`);
   });
-  process.exit(1);
+  throw new Error();
 }
