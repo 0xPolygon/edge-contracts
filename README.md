@@ -15,6 +15,7 @@ This repository contains the smart contract suite used in Polygon's ecosystems. 
 - [Using This Repo](#using-this-repo)
   - [Requirements](#requirements)
   - [Installation](#installation)
+  - [Deployment](#deployment)
   - [Compiling Contracts](#compiling-contracts)
   - [Running Tests](#running-tests)
   - [Check Test Coverage](#check-test-coverage)
@@ -151,6 +152,13 @@ Install Foundry libs:
 ```bash
 forge install
 ```
+### Deployment
+
+Deploying these contracts in the context of a production blockchain is out of the scope of this repo, as it requires a client that has support of the Edge specification integrated. At current, Edge maintains its own client [here](https://github.com/0xPolygon/polygon-edge), which can be consulted.
+
+One point that is worth emphasizing in this context is that from the perspective of launching a Supernet is understanding genesis contracts. Another is that for at least the time being, the decision has been made to proxify all genesis contracts in order to facilitate upgrades/updates without necessitating a hardfork or regenesis. A basic proxy for this task has been provided in [`contracts/lib/BasicGenesisProxy.sol`](/contracts/lib/BasicGenesisProxy.sol). 
+
+**Important:** The `RewardPool` and `ValidatorSet` contracts have their own custom proxies. This stems from an incident in which Supernets were deployed without proxifying the genesis contracts. These contracts already had historical state, which complicated simply hardforking their bytecode into being a proxy. The proxy contracts supplied for them (in [`contracts/child/validator/proxy`](/contracts/child/validator/proxy/)) have been tailored to facilitate storage compatability between the legacy and current versions of these contracts.
 
 ### Environment Setup
 
