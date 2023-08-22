@@ -217,7 +217,7 @@ contract ValidatorSet_WithdrawStake is Committed {
 contract ValidatorSet_Slash is Committed {
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
     event L2StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
-    event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts);
+    event Slashed(uint256 indexed exitId, address[] validators);
 
     function test_InitilizeSlashOnlySystemCall() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
@@ -240,20 +240,17 @@ contract ValidatorSet_Slash is Committed {
         address[] memory validatorsToSlash = new address[](2);
         validatorsToSlash[0] = alice;
         validatorsToSlash[1] = address(this);
-        uint256[] memory slashedAmounts = new uint256[](2);
-        slashedAmounts[0] = (validatorSet.balanceOf(alice) * slashingPercentage) / 100;
-        slashedAmounts[1] = (validatorSet.balanceOf(address(this)) * slashingPercentage) / 100;
 
         assertEq(validatorSet.balanceOf(alice), 100);
         assertEq(validatorSet.balanceOf(address(this)), 300);
 
         vm.expectEmit(true, true, true, true);
-        emit Slashed(exitEventId, validatorsToSlash, slashedAmounts);
+        emit Slashed(exitEventId, validatorsToSlash);
         vm.prank(stateReceiver);
         validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage));
         
-        assertEq(validatorSet.balanceOf(alice), 100 - slashedAmounts[0]);
-        assertEq(validatorSet.balanceOf(address(this)), 300 - slashedAmounts[1]);
+        assertEq(validatorSet.balanceOf(alice), 0, "should unstake");
+        assertEq(validatorSet.balanceOf(address(this)), 0, "should unstake");
     }
 
     function test_FinalizeSlashAlreadyProcessedSanityCheck() public {

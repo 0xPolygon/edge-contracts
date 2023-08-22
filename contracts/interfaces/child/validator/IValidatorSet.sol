@@ -22,7 +22,7 @@ struct Epoch {
  */
 interface IValidatorSet is IStateReceiver {
     event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed endBlock, bytes32 epochRoot);
-    event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts);
+    event Slashed(uint256 indexed exitId, address[] validators);
     event WithdrawalRegistered(address indexed account, uint256 amount);
     event Withdrawal(address indexed account, uint256 amount);
 

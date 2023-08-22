@@ -92,11 +92,11 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _stake(validator, amount);
         } else if (bytes32(data[:32]) == SLASH_SIG) {
-            (, uint256 exitEventId, address[] memory validatorsToSlash, uint256 slashingPercentage) = abi.decode(
+            (, uint256 exitEventId, address[] memory validatorsToSlash, ) = abi.decode(
                 data,
                 (bytes32, uint256, address[], uint256)
             );
-            _slash(exitEventId, validatorsToSlash, slashingPercentage); // reuse slashingPercentage present during this slash's initiation
+            _slash(exitEventId, validatorsToSlash);
         }
     }
 
@@ -155,21 +155,19 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         emit WithdrawalRegistered(account, amount);
     }
 
-    function _slash(uint256 exitEventId, address[] memory validatorsToSlash, uint256 slashingPercentage) internal {
+    function _slash(uint256 exitEventId, address[] memory validatorsToSlash) internal {
         require(!slashProcessed[exitEventId], "SLASH_ALREADY_PROCESSED"); // sanity check
         slashProcessed[exitEventId] = true;
         uint256 length = validatorsToSlash.length;
-        uint256[] memory slashedAmounts = new uint256[](length);
         for (uint256 i = 0; i < length; ) {
-            slashedAmounts[i] = (balanceOf(validatorsToSlash[i]) * slashingPercentage) / 100;
-            _burn(validatorsToSlash[i], slashedAmounts[i]); // partially unstake validator
+            _burn(validatorsToSlash[i], balanceOf(validatorsToSlash[i])); // unstake validator
             // slither-disable-next-line mapping-deletion
             delete withdrawals[validatorsToSlash[i]]; // remove pending withdrawals
             unchecked {
                 ++i;
             }
         }
-        emit Slashed(exitEventId, validatorsToSlash, slashedAmounts);
+        emit Slashed(exitEventId, validatorsToSlash);
     }
 
     function _stake(address validator, uint256 amount) internal {
