@@ -162,17 +162,9 @@ abstract contract Hardforked is StateContaining {
         rewardPool = new RewardPool();
 
         // 2. Replace contracts with proxies.
-        deployCodeTo(
-            "ValidatorSetHFGenesisProxy.sol",
-            //abi.encode(address(validatorSet), ADMIN, address(networkParams)),
-            address(old_validatorSet)
-        );
+        deployCodeTo("ValidatorSetHFGenesisProxy.sol", address(old_validatorSet));
         //
-        deployCodeTo(
-            "RewardPoolHFGenesisProxy.sol",
-            abi.encode(address(rewardPool), ADMIN, address(networkParams)),
-            address(old_rewardPool)
-        );
+        deployCodeTo("RewardPoolHFGenesisProxy.sol", address(old_rewardPool));
 
         validatorSetProxyAddr = address(old_validatorSet);
         //
@@ -182,14 +174,12 @@ abstract contract Hardforked is StateContaining {
         ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(
             address(validatorSet),
             ADMIN,
-            "",
             address(networkParams)
         );
         //
         RewardPoolHFGenesisProxy(payable(rewardPoolProxyAddr)).setUpProxy(
             address(rewardPool),
             ADMIN,
-            "",
             address(networkParams)
         );
 
@@ -203,7 +193,7 @@ contract HardforkTest_Hardforked is Hardforked {
     function test_ValidatorSetHFGenesisProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("GenesisProxy: Already set up.");
 
-        ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
+        ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), address(0));
     }
 
     function test_ValidatorSet_RevertOn_initialize() public {
@@ -245,7 +235,7 @@ contract HardforkTest_Hardforked is Hardforked {
     function test_RewardPoolHFGenesisProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("GenesisProxy: Already set up.");
 
-        RewardPoolHFGenesisProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
+        RewardPoolHFGenesisProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), address(0));
     }
 
     function test_RewardPool_RevertOn_initialize() public {

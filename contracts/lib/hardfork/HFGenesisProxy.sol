@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 abstract contract HFGenesisProxy is TransparentUpgradeableProxy {
     constructor() TransparentUpgradeableProxy(address(this), msg.sender, "") {}
 
-    function _setUpProxy(address logic, address admin, bytes memory data) internal {
+    function _setUpProxy(address logic, address admin) internal {
         bytes32 setUpState;
         bytes32 setUpSlot = keccak256("GenesisProxy _setUpProxy setUpSlot");
 
@@ -22,7 +22,7 @@ abstract contract HFGenesisProxy is TransparentUpgradeableProxy {
         _changeAdmin(admin);
 
         // ERC1967Proxy
-        _upgradeToAndCall(logic, data, false);
+        _upgradeTo(logic);
 
         // slither-disable-next-line assembly
         assembly {
