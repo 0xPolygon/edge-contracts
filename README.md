@@ -164,7 +164,7 @@ Deploying these contracts in the context of a production blockchain is out of th
 
 One point that is worth emphasizing in this context is that from the perspective of launching a Supernet is understanding genesis contracts. Another is that for at least the time being, the decision has been made to proxify all genesis contracts in order to facilitate upgrades/updates without necessitating a hardfork or regenesis. A basic proxy for this task has been provided in [`contracts/lib/BasicGenesisProxy.sol`](/contracts/lib/BasicGenesisProxy.sol).
 
-**Important:** If you are hardforking, the `RewardPool` and `ValidatorSet` contracts have their own custom proxies. This stems from an incident in which Supernets were deployed without proxifying the genesis contracts. These contracts already had historical state, which complicated simply hardforking their bytecode into being a proxy. The proxy contracts supplied for them (in [`contracts/child/validator/proxy/hardfork`](/contracts/child/validator/proxy/hardfork)) have been tailored to facilitate storage compatability between the legacy and current versions of these contracts.
+**Important:** If you have to hardfork, the `RewardPool` and `ValidatorSet` contracts have their own custom proxies. This stems from an incident in which Supernets were deployed without proxifying the genesis contracts. These contracts already had historical state, which complicated simply hardforking their bytecode into being a proxy. The proxy contracts supplied for them (in [`contracts/child/validator/proxy/hardfork`](/contracts/child/validator/proxy/hardfork)) have been tailored to facilitate storage compatability between the legacy and current versions of these contracts.
 
 ### Environment Setup
 
