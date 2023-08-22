@@ -9,19 +9,24 @@ This repository contains the smart contract suite used in Polygon's ecosystems. 
 
 ## Contents
 
-- [Repo Architecture](#repo-architecture)
-  - [Contracts](#contracts)
-  - [General Repo Layout](#general-repo-layout)
-- [Using This Repo](#using-this-repo)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-  - [Deployment](#deployment)
-  - [Compiling Contracts](#compiling-contracts)
-  - [Running Tests](#running-tests)
-  - [Check Test Coverage](#check-test-coverage)
-  - [Run Slither](#run-slither)
-  - [Continuous Integration](#continuous-integration)
-  - [Documentation](#documentation)
+- [Core Contracts](#core-contracts)
+  - [Contents](#contents)
+  - [Repo Architecture](#repo-architecture)
+    - [Contracts](#contracts)
+    - [General Repo Layout](#general-repo-layout)
+  - [Using This Repo](#using-this-repo)
+    - [Requirements](#requirements)
+    - [General Repo Layout](#general-repo-layout-1)
+    - [Installation](#installation)
+    - [Deployment](#deployment)
+    - [Environment Setup](#environment-setup)
+    - [Compiling Contracts](#compiling-contracts)
+    - [Running tests](#running-tests)
+    - [Linting](#linting)
+    - [Check Test Coverage](#check-test-coverage)
+    - [Run Slither](#run-slither)
+    - [Continuous Integration](#continuous-integration)
+    - [Documentation](#documentation)
 
 ## Repo Architecture
 
@@ -159,7 +164,7 @@ Deploying these contracts in the context of a production blockchain is out of th
 
 One point that is worth emphasizing in this context is that from the perspective of launching a Supernet is understanding genesis contracts. Another is that for at least the time being, the decision has been made to proxify all genesis contracts in order to facilitate upgrades/updates without necessitating a hardfork or regenesis. A basic proxy for this task has been provided in [`contracts/lib/BasicGenesisProxy.sol`](/contracts/lib/BasicGenesisProxy.sol).
 
-**Important:** The `RewardPool` and `ValidatorSet` contracts have their own custom proxies. This stems from an incident in which Supernets were deployed without proxifying the genesis contracts. These contracts already had historical state, which complicated simply hardforking their bytecode into being a proxy. The proxy contracts supplied for them (in [`contracts/child/validator/proxy`](/contracts/child/validator/proxy/)) have been tailored to facilitate storage compatability between the legacy and current versions of these contracts.
+**Important:** If you are hardforking, the `RewardPool` and `ValidatorSet` contracts have their own custom proxies. This stems from an incident in which Supernets were deployed without proxifying the genesis contracts. These contracts already had historical state, which complicated simply hardforking their bytecode into being a proxy. The proxy contracts supplied for them (in [`contracts/child/validator/proxy/hardfork`](/contracts/child/validator/proxy/hardfork)) have been tailored to facilitate storage compatability between the legacy and current versions of these contracts.
 
 ### Environment Setup
 
