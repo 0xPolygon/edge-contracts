@@ -9,7 +9,7 @@ contract NetworkParamsHFGenesisProxy is HFGenesisProxy {
     function setUpProxy(address logic, address admin, NetworkParams.InitParams memory initParams) external {
         _setUpProxy(logic, admin);
 
-        // slither-disable-next-line assembly
+        // slither-disable-next-line assembly, too-many-digits
         assembly {
             sstore(0, 0x0000000000000000000000000000000000000000000000000000000000000000)
             sstore(1, 0x0000000000000000000000000000000000000000000000000000000000000000)
