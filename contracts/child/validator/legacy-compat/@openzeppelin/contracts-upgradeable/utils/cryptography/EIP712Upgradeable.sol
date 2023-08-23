@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (utils/cryptography/EIP712.sol)
+// customized by Polygon in order to synchronize storage slots between contracts
 
 pragma solidity ^0.8.8;
 
