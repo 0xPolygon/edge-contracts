@@ -100,5 +100,5 @@ contract ExitHelper is IExitHelper, Initializable {
     }
 
     // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
+    uint256[50 - ((4) - 3)] private __gap;
 }

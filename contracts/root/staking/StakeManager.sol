@@ -5,13 +5,18 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/root/staking/IStakeManager.sol";
+import {StakeManagerLegacyCompatStorage} from "./StakeManagerLegacyCompatStorage.sol";
 import "./StakeManagerChildData.sol";
 import "./StakeManagerStakingData.sol";
 
-contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, StakeManagerStakingData {
+contract StakeManager is
+    IStakeManager,
+    Initializable,
+    StakeManagerLegacyCompatStorage,
+    StakeManagerChildData,
+    StakeManagerStakingData
+{
     using SafeERC20 for IERC20;
-
-    IERC20 internal stakingToken;
 
     function initialize(address newStakingToken) public initializer {
         stakingToken = IERC20(newStakingToken);

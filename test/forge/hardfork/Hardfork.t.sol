@@ -13,6 +13,14 @@ import {RewardPool as Old_RewardPool} from "./deployed/RewardPool.sol";
 import {RewardPool} from "contracts/child/validator/RewardPool.sol";
 import {RewardPoolHFGenesisProxy} from "contracts/child/validator/proxy/hardfork/RewardPoolHFGenesisProxy.sol";
 
+import {NetworkParams as Old_NetworkParams} from "./deployed/NetworkParams.sol";
+import {NetworkParams} from "contracts/child/NetworkParams.sol";
+import {NetworkParamsHFGenesisProxy} from "contracts/child/proxy/hardfork/NetworkParamsHFGenesisProxy.sol";
+
+import {ForkParams as Old_ForkParams} from "./deployed/ForkParams.sol";
+import {ForkParams} from "contracts/child/ForkParams.sol";
+import {ForkParamsHFGenesisProxy} from "contracts/child/proxy/hardfork/ForkParamsHFGenesisProxy.sol";
+
 /// @notice Checks if all modified OpenZeppelin contracts are up-to-date.
 contract Hardfork_ModifiedOpenZeppelinContractsCheck is Test {
     function test_CheckModifiedOpenZeppelinContracts() public {
@@ -50,6 +58,10 @@ abstract contract Initialized is Test {
     //
     Old_RewardPool internal old_rewardPool;
     bytes32 constant EXPECTED_STORAGE_START_RP = bytes32(uint256(50));
+    //
+    Old_NetworkParams internal old_networkParams;
+    //
+    Old_ForkParams internal old_forkParams;
 
     /// @notice Deploys or mocks other required contracts.
     /// @dev Called by `setUp`.
@@ -68,6 +80,10 @@ abstract contract Initialized is Test {
         old_validatorSet = new Old_ValidatorSet();
         //
         old_rewardPool = new Old_RewardPool();
+        //
+        old_networkParams = new Old_NetworkParams(address(1), 1, 1, 1, 1);
+        //
+        old_forkParams = new Old_ForkParams(ADMIN);
 
         // Simulate initializations without proxies!
 
@@ -103,6 +119,16 @@ contract HardforkTest_Initialized is Initialized {
             bytes32(bytes.concat(hex"00000000000000000000", abi.encodePacked(rewardToken), hex"0001"))
         );
     }
+
+    function test_Old_NetworkParams_StorageSlots() public {
+        for (uint i; i < 4; i++) {
+            assertNotEq(vm.load(address(old_networkParams), bytes32(i)), bytes32(uint256(0)));
+        }
+    }
+
+    function test_Old_ForkParams_StorageSlots() public {
+        assertEq(old_forkParams.owner(), ADMIN);
+    }
 }
 
 abstract contract StateContaining is Initialized {
@@ -114,12 +140,11 @@ abstract contract StateContaining is Initialized {
 contract HardforkTest_StateContaining is StateContaining {}
 
 abstract contract Hardforked is StateContaining {
-    // Other required contracts.
-    NetworkParams internal networkParams;
-
     // New versions.
     ValidatorSet internal validatorSet;
     RewardPool internal rewardPool;
+    NetworkParams internal networkParams;
+    ForkParams internal forkParams;
 
     // Helpers.
     address internal validatorSetProxyAddr;
@@ -127,29 +152,12 @@ abstract contract Hardforked is StateContaining {
     //
     address internal rewardPoolProxyAddr;
     RewardPool internal rewardPoolViaProxy;
-
-    function _setUp_OtherContracts() internal virtual override {
-        super._setUp_OtherContracts();
-
-        networkParams = new NetworkParams();
-        networkParams.initialize(
-            NetworkParams.InitParams({
-                newOwner: address(1),
-                newCheckpointBlockInterval: 1,
-                newEpochSize: 1,
-                newEpochReward: 1,
-                newSprintSize: 1,
-                newMinValidatorSetSize: 1,
-                newMaxValidatorSetSize: 1,
-                newWithdrawalWaitPeriod: 1,
-                newBlockTime: 1,
-                newBlockTimeDrift: 1,
-                newVotingDelay: 1,
-                newVotingPeriod: 1,
-                newProposalThreshold: 1
-            })
-        );
-    }
+    //
+    address internal networkParamsProxyAddr;
+    NetworkParams internal networkParamsViaProxy;
+    //
+    address internal forkParamsProxyAddr;
+    ForkParams internal forkParamsViaProxy;
 
     function setUp() public virtual override {
         super.setUp();
@@ -160,23 +168,27 @@ abstract contract Hardforked is StateContaining {
         validatorSet = new ValidatorSet();
         //
         rewardPool = new RewardPool();
+        //
+        networkParams = new NetworkParams();
+        //
+        forkParams = new ForkParams();
 
         // 2. Replace contracts with proxies.
-        deployCodeTo(
-            "ValidatorSetHFGenesisProxy.sol",
-            //abi.encode(address(validatorSet), ADMIN, address(networkParams)),
-            address(old_validatorSet)
-        );
+        deployCodeTo("ValidatorSetHFGenesisProxy.sol", address(old_validatorSet));
         //
-        deployCodeTo(
-            "RewardPoolHFGenesisProxy.sol",
-            abi.encode(address(rewardPool), ADMIN, address(networkParams)),
-            address(old_rewardPool)
-        );
+        deployCodeTo("RewardPoolHFGenesisProxy.sol", address(old_rewardPool));
+        //
+        deployCodeTo("NetworkParamsHFGenesisProxy.sol", address(old_networkParams));
+        //
+        deployCodeTo("ForkParamsHFGenesisProxy.sol", address(old_forkParams));
 
         validatorSetProxyAddr = address(old_validatorSet);
         //
         rewardPoolProxyAddr = address(old_rewardPool);
+        //
+        networkParamsProxyAddr = address(old_networkParams);
+        //
+        forkParamsProxyAddr = address(old_forkParams);
 
         // 3. Set up proxies.
         ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(
@@ -192,16 +204,42 @@ abstract contract Hardforked is StateContaining {
             "",
             address(networkParams)
         );
+        //
+        NetworkParamsHFGenesisProxy(payable(networkParamsProxyAddr)).setUpProxy(
+            address(networkParams),
+            ADMIN,
+            NetworkParams.InitParams({
+                newOwner: ADMIN,
+                newCheckpointBlockInterval: 2,
+                newEpochSize: 2,
+                newEpochReward: 2,
+                newSprintSize: 2,
+                newMinValidatorSetSize: 2,
+                newMaxValidatorSetSize: 2,
+                newWithdrawalWaitPeriod: 2,
+                newBlockTime: 2,
+                newBlockTimeDrift: 2,
+                newVotingDelay: 2,
+                newVotingPeriod: 2,
+                newProposalThreshold: 2
+            })
+        );
+        //
+        ForkParamsHFGenesisProxy(payable(forkParamsProxyAddr)).setUpProxy(address(forkParams), ADMIN);
 
         validatorSetViaProxy = ValidatorSet(validatorSetProxyAddr);
         //
         rewardPoolViaProxy = RewardPool(rewardPoolProxyAddr);
+        //
+        networkParamsViaProxy = NetworkParams(networkParamsProxyAddr);
+        //
+        forkParams = ForkParams(forkParamsProxyAddr);
     }
 }
 
 contract HardforkTest_Hardforked is Hardforked {
     function test_ValidatorSetHFGenesisProxy_RevertOn_setUpProxy() public {
-        vm.expectRevert("GenesisProxy: Already set up.");
+        vm.expectRevert("HFGenesisProxy: Already set up.");
 
         ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
     }
@@ -243,7 +281,7 @@ contract HardforkTest_Hardforked is Hardforked {
     }
 
     function test_RewardPoolHFGenesisProxy_RevertOn_setUpProxy() public {
-        vm.expectRevert("GenesisProxy: Already set up.");
+        vm.expectRevert("HFGenesisProxy: Already set up.");
 
         RewardPoolHFGenesisProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), "", address(0));
     }
@@ -272,5 +310,53 @@ contract HardforkTest_Hardforked is Hardforked {
             vm.load(rewardPoolProxyAddr, EXPECTED_STORAGE_START_RP),
             bytes32(bytes.concat(hex"00000000000000000000", abi.encodePacked(rewardToken), hex"0001"))
         );
+    }
+
+    function test_NetworkParamsHFGenesisProxy_RevertOn_setUpProxy() public {
+        NetworkParams.InitParams memory initParams;
+
+        vm.expectRevert("HFGenesisProxy: Already set up.");
+
+        NetworkParamsHFGenesisProxy(payable(networkParamsProxyAddr)).setUpProxy(address(0), address(0), initParams);
+    }
+
+    function test_NetworkParams_RevertOn_initialize() public {
+        NetworkParams.InitParams memory initParams;
+
+        vm.expectRevert("Initializable: contract is already initialized");
+
+        networkParamsViaProxy.initialize(initParams);
+    }
+
+    function test_NetworkParams_StorageSlots() public {
+        assertEq(networkParamsViaProxy.owner(), ADMIN);
+        assertEq(networkParamsViaProxy.checkpointBlockInterval(), 2);
+        assertEq(networkParamsViaProxy.epochSize(), 2);
+        assertEq(networkParamsViaProxy.epochReward(), 2);
+        assertEq(networkParamsViaProxy.sprintSize(), 2);
+        assertEq(networkParamsViaProxy.minValidatorSetSize(), 2);
+        assertEq(networkParamsViaProxy.maxValidatorSetSize(), 2);
+        assertEq(networkParamsViaProxy.withdrawalWaitPeriod(), 2);
+        assertEq(networkParamsViaProxy.blockTime(), 2);
+        assertEq(networkParamsViaProxy.blockTimeDrift(), 2);
+        assertEq(networkParamsViaProxy.votingDelay(), 2);
+        assertEq(networkParamsViaProxy.votingPeriod(), 2);
+        assertEq(networkParamsViaProxy.proposalThreshold(), 2);
+    }
+
+    function test_ForParamsHFGenesisProxy_RevertOn_setUpProxy() public {
+        vm.expectRevert("HFGenesisProxy: Already set up.");
+
+        ForkParamsHFGenesisProxy(payable(address(old_forkParams))).setUpProxy(address(0), address(0));
+    }
+
+    function test_ForkParams_RevertOn_initialize() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+
+        forkParams.initialize(address(0));
+    }
+
+    function test_ForkParams_StorageSlots() public {
+        assertEq(forkParams.owner(), ADMIN);
     }
 }
