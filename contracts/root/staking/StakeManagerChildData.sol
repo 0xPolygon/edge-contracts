@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+// the next import is to facilitate storage compatibility across versions of StakeManager
 import {StakeManagerLegacyCompatStorage} from "./StakeManagerLegacyCompatStorage.sol";
 
 /**
