@@ -9,7 +9,7 @@ import "./HFGenesisProxy.sol";
     @author Polygon Technology
     @notice wrapper for OpenZeppelin's Transparent Upgreadable Proxy, intended for use during harfork genesis for genesis contracts
     @notice one BasicHFGenesisProxy should be deployed for each genesis contract
-    @dev For ValidatorSet and RewardPool, use their dedicated proxies instead
+    @dev For ValidatorSet, RewardPool, ForkParams, and NetworkParams, use their dedicated proxies instead
     @dev If starting fresh, use BasicGenesisProxy instead
  */
 contract BasicHFGenesisProxy is HFGenesisProxy {

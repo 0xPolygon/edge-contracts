@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import "contracts/lib/hardfork/HFGenesisProxy.sol";
 import {NetworkParams} from "contracts/child/NetworkParams.sol";
 
+/// @notice NetworkParams-specific proxy for hardfork migration
+/// @dev If starting fresh, use BasicGenesisProxy instead
 contract NetworkParamsHFGenesisProxy is HFGenesisProxy {
     function setUpProxy(address logic, address admin, NetworkParams.InitParams memory initParams) external {
         _setUpProxy(logic, admin);

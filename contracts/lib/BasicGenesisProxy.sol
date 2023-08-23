@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
     @author Polygon Technology
     @notice wrapper for OpenZeppelin's Transparent Upgreadable Proxy, intended for use during genesis for genesis contracts
     @notice one BasicGenesisProxy should be deployed for each genesis contract
+    @dev If hardforking, use BasicGenesisProxy & the contract-specific proxies instead
  */
 contract BasicGenesisProxy is TransparentUpgradeableProxy {
     /// @param logic the address of the implementation (logic) contract for the genesis contract
