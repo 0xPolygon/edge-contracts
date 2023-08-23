@@ -16,7 +16,7 @@ abstract contract HFGenesisProxy is TransparentUpgradeableProxy {
             setUpState := sload(setUpSlot)
         }
 
-        require(setUpState == "", "GenesisProxy: Already set up.");
+        require(setUpState == "", "HFGenesisProxy: Already set up.");
 
         // TransparentUpgradeableProxy
         _changeAdmin(admin);
