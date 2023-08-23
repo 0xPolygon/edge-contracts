@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/root/staking/IStakeManager.sol";
+// the next import is to facilitate storage compatibility across versions of StakeManager
 import {StakeManagerLegacyCompatStorage} from "./StakeManagerLegacyCompatStorage.sol";
 import "./StakeManagerChildData.sol";
 import "./StakeManagerStakingData.sol";
