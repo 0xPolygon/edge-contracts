@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "contracts/lib/hardfork/HPCore.sol";
+import "contracts/lib/ProxyBase.sol";
 import {NetworkParams} from "contracts/child/NetworkParams.sol";
 
 /// @notice NetworkParams-specific proxy for hardfork migration
-/// @dev If starting fresh, use StandardProxy instead
-contract NetworkParamsHardforkProxy is HPCore {
+/// @dev If starting fresh, use GenesisProxy instead
+contract NetworkParamsHardforkProxy is ProxyBase {
     function setUpProxy(address logic, address admin, NetworkParams.InitParams memory initParams) external {
-        _setUpProxy(logic, admin);
+        _setUpProxy(logic, admin, "");
 
         // slither-disable-next-line assembly
         assembly {

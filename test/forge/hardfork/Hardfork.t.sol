@@ -237,7 +237,7 @@ abstract contract Hardforked is StateContaining {
 
 contract HardforkTest_Hardforked is Hardforked {
     function test_ValidatorSetHardforkProxy_RevertOn_setUpProxy() public {
-        vm.expectRevert("HFGenesisProxy: Already set up.");
+        vm.expectRevert("ProxyBase: Already set up.");
 
         ValidatorSetHardforkProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), address(0));
     }
@@ -279,7 +279,7 @@ contract HardforkTest_Hardforked is Hardforked {
     }
 
     function test_RewardPoolHardforkProxy_RevertOn_setUpProxy() public {
-        vm.expectRevert("HFGenesisProxy: Already set up.");
+        vm.expectRevert("ProxyBase: Already set up.");
 
         RewardPoolHardforkProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), address(0));
     }
@@ -313,7 +313,7 @@ contract HardforkTest_Hardforked is Hardforked {
     function test_NetworkParamsHardforkProxy_RevertOn_setUpProxy() public {
         NetworkParams.InitParams memory initParams;
 
-        vm.expectRevert("HFGenesisProxy: Already set up.");
+        vm.expectRevert("ProxyBase: Already set up.");
 
         NetworkParamsHardforkProxy(payable(networkParamsProxyAddr)).setUpProxy(address(0), address(0), initParams);
     }
@@ -342,8 +342,8 @@ contract HardforkTest_Hardforked is Hardforked {
         assertEq(networkParamsViaProxy.proposalThreshold(), 2);
     }
 
-    function test_ForParamsHFGenesisProxy_RevertOn_setUpProxy() public {
-        vm.expectRevert("HFGenesisProxy: Already set up.");
+    function test_ForkParamsHardforkProxy_RevertOn_setUpProxy() public {
+        vm.expectRevert("ProxyBase: Already set up.");
 
         ForkParamsHardforkProxy(payable(address(old_forkParams))).setUpProxy(address(0), address(0));
     }
