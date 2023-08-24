@@ -7,19 +7,19 @@ import {NetworkParams} from "contracts/child/NetworkParams.sol";
 
 import {ValidatorSet as Old_ValidatorSet, ValidatorInit as Old_ValidatorInit} from "./deployed/ValidatorSet.sol";
 import {ValidatorSet, ValidatorInit} from "contracts/child/validator/ValidatorSet.sol";
-import {ValidatorSetHFGenesisProxy} from "contracts/child/validator/proxy/hardfork/ValidatorSetHFGenesisProxy.sol";
+import {ValidatorSetHardforkProxy} from "contracts/child/validator/proxy/hardfork/ValidatorSetHardforkProxy.sol";
 
 import {RewardPool as Old_RewardPool} from "./deployed/RewardPool.sol";
 import {RewardPool} from "contracts/child/validator/RewardPool.sol";
-import {RewardPoolHFGenesisProxy} from "contracts/child/validator/proxy/hardfork/RewardPoolHFGenesisProxy.sol";
+import {RewardPoolHardforkProxy} from "contracts/child/validator/proxy/hardfork/RewardPoolHardforkProxy.sol";
 
 import {NetworkParams as Old_NetworkParams} from "./deployed/NetworkParams.sol";
 import {NetworkParams} from "contracts/child/NetworkParams.sol";
-import {NetworkParamsHFGenesisProxy} from "contracts/child/proxy/hardfork/NetworkParamsHFGenesisProxy.sol";
+import {NetworkParamsHardforkProxy} from "contracts/child/proxy/hardfork/NetworkParamsHardforkProxy.sol";
 
 import {ForkParams as Old_ForkParams} from "./deployed/ForkParams.sol";
 import {ForkParams} from "contracts/child/ForkParams.sol";
-import {ForkParamsHFGenesisProxy} from "contracts/child/proxy/hardfork/ForkParamsHFGenesisProxy.sol";
+import {ForkParamsHardforkProxy} from "contracts/child/proxy/hardfork/ForkParamsHardforkProxy.sol";
 
 /// @notice Checks if all modified OpenZeppelin contracts are up-to-date.
 contract Hardfork_ModifiedOpenZeppelinContractsCheck is Test {
@@ -174,13 +174,13 @@ abstract contract Hardforked is StateContaining {
         forkParams = new ForkParams();
 
         // 2. Replace contracts with proxies.
-        deployCodeTo("ValidatorSetHFGenesisProxy.sol", address(old_validatorSet));
+        deployCodeTo("ValidatorSetHardforkProxy.sol", address(old_validatorSet));
         //
-        deployCodeTo("RewardPoolHFGenesisProxy.sol", address(old_rewardPool));
+        deployCodeTo("RewardPoolHardforkProxy.sol", address(old_rewardPool));
         //
-        deployCodeTo("NetworkParamsHFGenesisProxy.sol", address(old_networkParams));
+        deployCodeTo("NetworkParamsHardforkProxy.sol", address(old_networkParams));
         //
-        deployCodeTo("ForkParamsHFGenesisProxy.sol", address(old_forkParams));
+        deployCodeTo("ForkParamsHardforkProxy.sol", address(old_forkParams));
 
         validatorSetProxyAddr = address(old_validatorSet);
         //
@@ -191,19 +191,19 @@ abstract contract Hardforked is StateContaining {
         forkParamsProxyAddr = address(old_forkParams);
 
         // 3. Set up proxies.
-        ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(
+        ValidatorSetHardforkProxy(payable(validatorSetProxyAddr)).setUpProxy(
             address(validatorSet),
             ADMIN,
             address(networkParams)
         );
         //
-        RewardPoolHFGenesisProxy(payable(rewardPoolProxyAddr)).setUpProxy(
+        RewardPoolHardforkProxy(payable(rewardPoolProxyAddr)).setUpProxy(
             address(rewardPool),
             ADMIN,
             address(networkParams)
         );
         //
-        NetworkParamsHFGenesisProxy(payable(networkParamsProxyAddr)).setUpProxy(
+        NetworkParamsHardforkProxy(payable(networkParamsProxyAddr)).setUpProxy(
             address(networkParams),
             ADMIN,
             NetworkParams.InitParams({
@@ -223,7 +223,7 @@ abstract contract Hardforked is StateContaining {
             })
         );
         //
-        ForkParamsHFGenesisProxy(payable(forkParamsProxyAddr)).setUpProxy(address(forkParams), ADMIN);
+        ForkParamsHardforkProxy(payable(forkParamsProxyAddr)).setUpProxy(address(forkParams), ADMIN);
 
         validatorSetViaProxy = ValidatorSet(validatorSetProxyAddr);
         //
@@ -236,10 +236,10 @@ abstract contract Hardforked is StateContaining {
 }
 
 contract HardforkTest_Hardforked is Hardforked {
-    function test_ValidatorSetHFGenesisProxy_RevertOn_setUpProxy() public {
+    function test_ValidatorSetHardforkProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("HFGenesisProxy: Already set up.");
 
-        ValidatorSetHFGenesisProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), address(0));
+        ValidatorSetHardforkProxy(payable(validatorSetProxyAddr)).setUpProxy(address(0), address(0), address(0));
     }
 
     function test_ValidatorSet_RevertOn_initialize() public {
@@ -278,10 +278,10 @@ contract HardforkTest_Hardforked is Hardforked {
         assertEq(vm.load(address(validatorSet), EXPECTED_STORAGE_START_VS), bytes32(uint256(uint160(stateSender))));
     }
 
-    function test_RewardPoolHFGenesisProxy_RevertOn_setUpProxy() public {
+    function test_RewardPoolHardforkProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("HFGenesisProxy: Already set up.");
 
-        RewardPoolHFGenesisProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), address(0));
+        RewardPoolHardforkProxy(payable(rewardPoolProxyAddr)).setUpProxy(address(0), address(0), address(0));
     }
 
     function test_RewardPool_RevertOn_initialize() public {
@@ -310,12 +310,12 @@ contract HardforkTest_Hardforked is Hardforked {
         );
     }
 
-    function test_NetworkParamsHFGenesisProxy_RevertOn_setUpProxy() public {
+    function test_NetworkParamsHardforkProxy_RevertOn_setUpProxy() public {
         NetworkParams.InitParams memory initParams;
 
         vm.expectRevert("HFGenesisProxy: Already set up.");
 
-        NetworkParamsHFGenesisProxy(payable(networkParamsProxyAddr)).setUpProxy(address(0), address(0), initParams);
+        NetworkParamsHardforkProxy(payable(networkParamsProxyAddr)).setUpProxy(address(0), address(0), initParams);
     }
 
     function test_NetworkParams_RevertOn_initialize() public {
@@ -345,7 +345,7 @@ contract HardforkTest_Hardforked is Hardforked {
     function test_ForParamsHFGenesisProxy_RevertOn_setUpProxy() public {
         vm.expectRevert("HFGenesisProxy: Already set up.");
 
-        ForkParamsHFGenesisProxy(payable(address(old_forkParams))).setUpProxy(address(0), address(0));
+        ForkParamsHardforkProxy(payable(address(old_forkParams))).setUpProxy(address(0), address(0));
     }
 
     function test_ForkParams_RevertOn_initialize() public {

@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.0;
 
-import "./HFGenesisProxy.sol";
+import "./HPCore.sol";
 
 /**
-    @title BasicHFGenesisProxy
+    @title HardforkProxy
     @author Polygon Technology
     @notice wrapper for OpenZeppelin's Transparent Upgreadable Proxy, intended for use during harfork genesis for genesis contracts
-    @notice one BasicHFGenesisProxy should be deployed for each genesis contract
-    @dev For ValidatorSet, RewardPool, ForkParams, and NetworkParams, use their dedicated proxies instead
-    @dev If starting fresh, use BasicGenesisProxy instead
+    @notice one HarforkProxy should be deployed for each genesis contract, but there are exceptions - see below
+    @dev For ValidatorSet, RewardPool, ForkParams, and NetworkParams, use the respective dedicated HardforkProxy instead
+    @dev If starting fresh, use StandardProxy instead
  */
-contract BasicHFGenesisProxy is HFGenesisProxy {
+contract HardforkProxy is HPCore {
     /// @notice function for initializing proxy
     /// @param logic the address of the implementation (logic) contract for the genesis contract
     /// @param admin the address that has permission to update what address contains the implementation

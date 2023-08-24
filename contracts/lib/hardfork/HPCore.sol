@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-abstract contract HFGenesisProxy is TransparentUpgradeableProxy {
+abstract contract HPCore is TransparentUpgradeableProxy {
     constructor() TransparentUpgradeableProxy(address(this), msg.sender, "") {}
 
     function _setUpProxy(address logic, address admin) internal {
