@@ -10,7 +10,7 @@ abstract contract ProxyBase is TransparentUpgradeableProxy {
 
     function _setUpProxy(address logic, address admin, bytes memory data) internal {
         bytes32 setUpState;
-        bytes32 setUpSlot = keccak256("CustomProxy _setUpProxy setUpSlot");
+        bytes32 setUpSlot = keccak256("ProxyBase _setUpProxy setUpSlot");
 
         // slither-disable-next-line assembly
         assembly {
