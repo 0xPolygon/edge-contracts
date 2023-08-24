@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "contracts/lib/hardfork/ProxyBase.sol";
+import "contracts/lib/ProxyBase.sol";
 
 /// @notice RewardPool-specific proxy for hardfork migration
 /// @dev If starting fresh, use GenesisProxy instead

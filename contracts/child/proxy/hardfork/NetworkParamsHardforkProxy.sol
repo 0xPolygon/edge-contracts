@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "contracts/lib/hardfork/ProxyBase.sol";
+import "contracts/lib/ProxyBase.sol";
 import {NetworkParams} from "contracts/child/NetworkParams.sol";
 
 /// @notice NetworkParams-specific proxy for hardfork migration
