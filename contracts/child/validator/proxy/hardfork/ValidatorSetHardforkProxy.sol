@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "contracts/lib/hardfork/HFGenesisProxy.sol";
+import "contracts/lib/hardfork/HPCore.sol";
 
 /// @notice ValidatorSet-specific proxy for hardfork migration
-/// @dev If starting fresh, use BasicGenesisProxy instead
-contract ValidatorSetHFGenesisProxy is HFGenesisProxy {
+/// @dev If starting fresh, use StandardProxy instead
+contract ValidatorSetHardforkProxy is HPCore {
     /// @notice function for initializing proxy for the ValidatorSet genesis contract
     /// @dev meant to be deployed during genesis
     /// @param logic the address of the implementation (logic) contract for the validator set
