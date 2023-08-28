@@ -226,7 +226,7 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 ### Slashed
 
 ```solidity
-event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts)
+event Slashed(uint256 indexed exitId, address[] validators)
 ```
 
 
@@ -239,7 +239,6 @@ event Slashed(uint256 indexed exitId, address[] validators, uint256[] amounts)
 |---|---|---|
 | exitId `indexed` | uint256 | undefined |
 | validators  | address[] | undefined |
-| amounts  | uint256[] | undefined |
 
 ### Withdrawal
 
