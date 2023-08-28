@@ -8,7 +8,7 @@ import "../../interfaces/IStateSender.sol";
 import "../../child/NetworkParams.sol";
 import "../System.sol";
 
-///@dev Inherits a modified version of `ERC20VotesUpgradeable`with a shifted storage layout.
+///@dev Inherits a modified version of `ERC20VotesUpgradeable` with a shifted storage layout.
 contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     using WithdrawalQueueLib for WithdrawalQueue;
 

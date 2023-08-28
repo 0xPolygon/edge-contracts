@@ -6,7 +6,7 @@
 
 
 
-
+*Inherits a modified version of `ERC20VotesUpgradeable` with a shifted storage layout.*
 
 ## Methods
 
