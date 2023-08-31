@@ -219,7 +219,8 @@ abstract contract Hardforked is StateContaining {
                 newBlockTimeDrift: 2,
                 newVotingDelay: 2,
                 newVotingPeriod: 2,
-                newProposalThreshold: 2
+                newProposalThreshold: 2,
+                newBaseFeeChangeDenom: 2
             })
         );
         //
