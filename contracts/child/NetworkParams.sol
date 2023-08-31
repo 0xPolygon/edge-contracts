@@ -25,6 +25,7 @@ contract NetworkParams is Ownable2Step, Initializable {
         uint256 newVotingDelay; // in blocks
         uint256 newVotingPeriod; // in blocks
         uint256 newProposalThreshold; // in percent
+        uint256 newBaseFeeChangeDenom; // in wei
     }
 
     uint256 public checkpointBlockInterval; // in blocks
@@ -39,6 +40,7 @@ contract NetworkParams is Ownable2Step, Initializable {
     uint256 public votingDelay; // in blocks
     uint256 public votingPeriod; // in blocks
     uint256 public proposalThreshold; // in percent
+    uint256 public baseFeeChangeDenom; // in wei
 
     event NewCheckpointBlockInterval(uint256 indexed checkpointInterval);
     event NewEpochSize(uint256 indexed size);
@@ -52,6 +54,7 @@ contract NetworkParams is Ownable2Step, Initializable {
     event NewVotingDelay(uint256 indexed votingDelay);
     event NewVotingPeriod(uint256 indexed votingPeriod);
     event NewProposalThreshold(uint256 indexed proposalThreshold);
+    event NewBaseFeeChangeDenom(uint256 indexed baseFeeChangeDenom);
 
     /**
      * @notice initializer for NetworkParams, sets the initial set of values for the network
@@ -71,6 +74,7 @@ contract NetworkParams is Ownable2Step, Initializable {
                 initParams.newBlockTime != 0 &&
                 initParams.newBlockTimeDrift != 0 &&
                 initParams.newVotingPeriod != 0,
+                initParams.newBaseFeeChangeDenom != 0,
             "NetworkParams: INVALID_INPUT"
         );
         checkpointBlockInterval = initParams.newCheckpointBlockInterval;
@@ -85,6 +89,7 @@ contract NetworkParams is Ownable2Step, Initializable {
         votingDelay = initParams.newVotingDelay;
         votingPeriod = initParams.newVotingPeriod;
         proposalThreshold = initParams.newProposalThreshold;
+        baseFeeChangeDenom = initParams.newBaseFeeChangeDenom;
         _transferOwnership(initParams.newOwner);
     }
 
@@ -230,5 +235,17 @@ contract NetworkParams is Ownable2Step, Initializable {
         proposalThreshold = newProposalThreshold;
 
         emit NewProposalThreshold(newProposalThreshold);
+    }
+
+    /**
+     * @notice function to set new base fee change denominator
+     * @dev disallows setting of a zero value for sanity check purposes
+     * @param newBaseFeeChangeDenom new base fee change denominator
+     */
+    function setNewBaseFeeChangeDenom(uint256 newBaseFeeChangeDenom) external onlyOwner {
+        require(newBaseFeeChangeDenom != 0, "NetworkParams: INVALID_BASE_FEE_CHANGE_DENOM");
+        baseFeeChangeDenom = newBaseFeeChangeDenom;
+
+        emit NewBaseFeeChangeDenom(newBaseFeeChangeDenom);
     }
 }
