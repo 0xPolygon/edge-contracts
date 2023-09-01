@@ -21,6 +21,23 @@ function acceptOwnership() external nonpayable
 *The new owner accepts the ownership transfer.*
 
 
+### baseFeeChangeDenom
+
+```solidity
+function baseFeeChangeDenom() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### blockTime
 
 ```solidity
@@ -217,6 +234,22 @@ function renounceOwnership() external nonpayable
 
 *Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
 
+
+### setNewBaseFeeChangeDenom
+
+```solidity
+function setNewBaseFeeChangeDenom(uint256 newBaseFeeChangeDenom) external nonpayable
+```
+
+function to set new base fee change denominator
+
+*disallows setting of a zero value for sanity check purposes*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newBaseFeeChangeDenom | uint256 | new base fee change denominator |
 
 ### setNewBlockTime
 
@@ -513,6 +546,22 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### NewBaseFeeChangeDenom
+
+```solidity
+event NewBaseFeeChangeDenom(uint256 indexed baseFeeChangeDenom)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| baseFeeChangeDenom `indexed` | uint256 | undefined |
 
 ### NewBlockTime
 

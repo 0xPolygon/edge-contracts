@@ -25,6 +25,7 @@ describe("NetworkParams", () => {
       newVotingDelay: 0,
       newVotingPeriod: 0,
       newProposalThreshold: 0,
+      newBaseFeeChangeDenom: 0,
     };
   });
 
@@ -49,6 +50,7 @@ describe("NetworkParams", () => {
     initParams.newVotingDelay = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newVotingPeriod = 2 ** Math.floor(Math.random() * 5 + 10);
     initParams.newProposalThreshold = Math.floor(Math.random() * 100 + 1);
+    initParams.newBaseFeeChangeDenom = ethers.utils.parseUnits(String(Math.floor(Math.random() * 20 + 1)));
 
     await networkParams.initialize(initParams);
 
@@ -65,6 +67,7 @@ describe("NetworkParams", () => {
     expect(await networkParams.votingDelay()).to.equal(initParams.newVotingDelay);
     expect(await networkParams.votingPeriod()).to.equal(initParams.newVotingPeriod);
     expect(await networkParams.proposalThreshold()).to.equal(initParams.newProposalThreshold);
+    expect(await networkParams.baseFeeChangeDenom()).to.equal(initParams.newBaseFeeChangeDenom);
   });
 
   it("should throw error on reinitialization", async () => {
@@ -312,5 +315,27 @@ describe("NetworkParams", () => {
     await networkParams.setNewProposalThreshold(initParams.newProposalThreshold);
 
     expect(await networkParams.proposalThreshold()).to.equal(initParams.newProposalThreshold);
+  });
+
+  it("set new base fee change denom fail: only owner", async () => {
+    await impersonateAccount(accounts[1].address);
+    await setBalance(accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    const newNetworkParams = networkParams.connect(accounts[1]);
+
+    await expect(newNetworkParams.setNewBaseFeeChangeDenom(1)).to.be.revertedWith("Ownable: caller is not the owner");
+    await stopImpersonatingAccount(accounts[1].address);
+  });
+
+  it("set new base fee change denom fail: invalid input", async () => {
+    await expect(networkParams.setNewBaseFeeChangeDenom(0)).to.be.revertedWith(
+      "NetworkParams: INVALID_BASE_FEE_CHANGE_DENOM"
+    );
+  });
+
+  it("set new base fee change denom success", async () => {
+    initParams.newBaseFeeChangeDenom = ethers.utils.parseUnits(String(Math.floor(Math.random() * 20 + 11)));
+    await networkParams.setNewBaseFeeChangeDenom(initParams.newBaseFeeChangeDenom);
+
+    expect(await networkParams.baseFeeChangeDenom()).to.equal(initParams.newBaseFeeChangeDenom);
   });
 });
