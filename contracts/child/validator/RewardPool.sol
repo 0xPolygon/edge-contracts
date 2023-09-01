@@ -52,14 +52,14 @@ contract RewardPool is IRewardPool, System, Initializable {
         uint256 reward = (networkParams.epochReward() * totalBlocks) / epochSize;
         // TODO disincentivize long epoch times
 
-        uint256 totalSupply = validatorSet.totalSupplyAt(epochId);
+        uint256 totalSupply = IERC20Upgradeable(address(validatorSet)).totalSupply();
         uint256 length = uptime.length;
         uint256 totalReward = 0;
         for (uint256 i = 0; i < length; i++) {
             Uptime memory data = uptime[i];
             require(data.signedBlocks <= totalBlocks, "SIGNED_BLOCKS_EXCEEDS_TOTAL");
             // slither-disable-next-line calls-loop
-            uint256 balance = validatorSet.balanceOfAt(data.validator, epochId);
+            uint256 balance = IERC20Upgradeable(address(validatorSet)).balanceOf(data.validator);
             // slither-disable-next-line divide-before-multiply
             uint256 validatorReward = (reward * balance * data.signedBlocks) / (totalSupply * totalBlocks);
             pendingRewards[data.validator] += validatorReward;
