@@ -16,20 +16,20 @@ contract ChildGovernor is
     GovernorVotesQuorumFractionUpgradeable,
     GovernorTimelockControlUpgradeable
 {
-    NetworkParams internal _networkParams;
+    NetworkParams private _networkParams;
 
     function initialize(
         IVotesUpgradeable token_,
         TimelockControllerUpgradeable timelock_,
         uint256 quorumNumerator_,
-        address networkParams_
+        address networkParams
     ) public initializer {
         __Governor_init("ChildGovernor");
         __GovernorTimelockControl_init(timelock_);
         __GovernorVotes_init(token_);
         __GovernorVotesQuorumFraction_init(quorumNumerator_);
 
-        _networkParams = NetworkParams(networkParams_);
+        _networkParams = NetworkParams(networkParams);
     }
 
     // TODO: adjust values for block time of child chain

@@ -8,6 +8,7 @@ pragma solidity 0.8.19;
  */
 abstract contract StakeManagerChildData {
     // Highest child chain id allocated thus far. Child chain id 0x00 is an invalid id.
+    // slither-disable-next-line naming-convention
     uint256 internal _counter;
     // child chain id to child chain manager contract address.
     mapping(uint256 => address) private _managers;

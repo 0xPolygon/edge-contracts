@@ -6,6 +6,7 @@ import "../../interfaces/root/staking/IStakeManager.sol";
 import "../../interfaces/root/staking/ISupernetManager.sol";
 
 abstract contract SupernetManager is ISupernetManager, Initializable {
+    // slither-disable-next-line naming-convention
     IStakeManager internal _stakeManager;
     uint256 public id;
 

@@ -11,7 +11,7 @@ import "./StakeManagerStakingData.sol";
 contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, StakeManagerStakingData {
     using SafeERC20 for IERC20;
 
-    IERC20 internal _stakingToken;
+    IERC20 private _stakingToken;
 
     function initialize(address newStakingToken) public initializer {
         _stakingToken = IERC20(newStakingToken);
