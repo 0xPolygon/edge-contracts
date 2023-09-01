@@ -7,15 +7,15 @@ import "forge-std/Script.sol";
 import {RootERC20Predicate} from "contracts/root/RootERC20Predicate.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployRootERC20Predicate is Script {
-    function run(
+abstract contract RootERC20PredicateDeployer is Script {
+    function deployRootERC20Predicate(
         address proxyAdmin,
         address newStateSender,
         address newExitHelper,
         address newChildERC20Predicate,
         address newChildTokenTemplate,
         address nativeTokenRootAddress
-    ) external returns (address logicAddr, address proxyAddr) {
+    ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             RootERC20Predicate.initialize,
             (newStateSender, newExitHelper, newChildERC20Predicate, newChildTokenTemplate, nativeTokenRootAddress)
@@ -35,5 +35,26 @@ contract DeployRootERC20Predicate is Script {
 
         logicAddr = address(rootERC20Predicate);
         proxyAddr = address(proxy);
+    }
+}
+
+contract DeployRootERC20Predicate is RootERC20PredicateDeployer {
+    function run(
+        address proxyAdmin,
+        address newStateSender,
+        address newExitHelper,
+        address newChildERC20Predicate,
+        address newChildTokenTemplate,
+        address nativeTokenRootAddress
+    ) external returns (address logicAddr, address proxyAddr) {
+        return
+            deployRootERC20Predicate(
+                proxyAdmin,
+                newStateSender,
+                newExitHelper,
+                newChildERC20Predicate,
+                newChildTokenTemplate,
+                nativeTokenRootAddress
+            );
     }
 }

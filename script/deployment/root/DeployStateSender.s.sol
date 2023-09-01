@@ -6,11 +6,18 @@ import "forge-std/Script.sol";
 
 import {StateSender} from "contracts/root/StateSender.sol";
 
-contract DeployStateSender is Script {
-    function run() external returns (address contractAddr) {
+abstract contract StateSenderDeployer is Script {
+    function deployStateSender() internal returns (address proxyAddr, address logicAddr) {
         vm.broadcast();
         StateSender stateSender = new StateSender();
 
-        contractAddr = address(stateSender);
+        logicAddr = address(stateSender);
+        proxyAddr;
+    }
+}
+
+contract DeployStateSender is StateSenderDeployer {
+    function run() external returns (address proxyAddr, address logicAddr) {
+        return deployStateSender();
     }
 }

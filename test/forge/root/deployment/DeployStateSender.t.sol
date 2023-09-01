@@ -16,7 +16,7 @@ contract DeployStateSenderTest is Test {
     function setUp() public {
         deployer = new DeployStateSender();
 
-        address contractAddr = deployer.run();
+        (, address contractAddr) = deployer.run();
         stateSender = StateSender(contractAddr);
     }
 

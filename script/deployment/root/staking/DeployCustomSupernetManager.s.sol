@@ -7,8 +7,8 @@ import "forge-std/Script.sol";
 import {CustomSupernetManager} from "contracts/root/staking/CustomSupernetManager.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployCustomSupernetManager is Script {
-    function run(
+abstract contract CustomSupernetManagerDeployer is Script {
+    function deployCustomSupernetManager(
         address proxyAdmin,
         address newStakeManager,
         address newBls,
@@ -17,7 +17,7 @@ contract DeployCustomSupernetManager is Script {
         address newChildValidatorSet,
         address newExitHelper,
         string memory newDomain
-    ) external returns (address logicAddr, address proxyAddr) {
+    ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             CustomSupernetManager.initialize,
             (newStakeManager, newBls, newStateSender, newMatic, newChildValidatorSet, newExitHelper, newDomain)
@@ -37,5 +37,30 @@ contract DeployCustomSupernetManager is Script {
 
         logicAddr = address(customSupernetManager);
         proxyAddr = address(proxy);
+    }
+}
+
+contract DeployCustomSupernetManager is CustomSupernetManagerDeployer {
+    function run(
+        address proxyAdmin,
+        address newStakeManager,
+        address newBls,
+        address newStateSender,
+        address newMatic,
+        address newChildValidatorSet,
+        address newExitHelper,
+        string memory newDomain
+    ) external returns (address logicAddr, address proxyAddr) {
+        return
+            deployCustomSupernetManager(
+                proxyAdmin,
+                newStakeManager,
+                newBls,
+                newStateSender,
+                newMatic,
+                newChildValidatorSet,
+                newExitHelper,
+                newDomain
+            );
     }
 }

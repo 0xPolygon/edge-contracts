@@ -7,14 +7,14 @@ import "forge-std/Script.sol";
 import {ChildMintableERC20Predicate} from "contracts/root/ChildMintableERC20Predicate.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployChildMintableERC20Predicate is Script {
-    function run(
+abstract contract ChildMintableERC20PredicateDeployer is Script {
+    function deployChildMintableERC20Predicate(
         address proxyAdmin,
         address newStateSender,
         address newExitHelper,
         address newRootERC20Predicate,
         address newChildTokenTemplate
-    ) external returns (address logicAddr, address proxyAddr) {
+    ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             ChildMintableERC20Predicate.initialize,
             (newStateSender, newExitHelper, newRootERC20Predicate, newChildTokenTemplate)
@@ -34,5 +34,24 @@ contract DeployChildMintableERC20Predicate is Script {
 
         logicAddr = address(childMintableERC20Predicate);
         proxyAddr = address(proxy);
+    }
+}
+
+contract DeployChildMintableERC20Predicate is ChildMintableERC20PredicateDeployer {
+    function run(
+        address proxyAdmin,
+        address newStateSender,
+        address newExitHelper,
+        address newRootERC20Predicate,
+        address newChildTokenTemplate
+    ) external returns (address logicAddr, address proxyAddr) {
+        return
+            deployChildMintableERC20Predicate(
+                proxyAdmin,
+                newStateSender,
+                newExitHelper,
+                newRootERC20Predicate,
+                newChildTokenTemplate
+            );
     }
 }

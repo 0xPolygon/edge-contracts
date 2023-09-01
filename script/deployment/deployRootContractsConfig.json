@@ -1,0 +1,36 @@
+{
+  "common": {
+    "proxyAdmin": "",
+    "newBls": "",
+    "newChildTokenTemplate": ""
+  },
+
+  "StakeManager": {
+    "newStakingToken": ""
+  },
+
+  "CheckpointManager": {
+    "newBn256G2": "",
+    "chainId_": "",
+    "newValidatorSet": ""
+  },
+
+  "CustomSupernetManager": {
+    "newMatic": "",
+    "newChildValidatorSet": "",
+    "newDomain": ""
+  },
+
+  "RootERC20Predicate": {
+    "newChildERC20Predicate": "",
+    "nativeTokenRootAddress": ""
+  },
+
+  "RootERC721Predicate": {
+    "newChildERC721Predicate": ""
+  },
+
+  "RootERC1155Predicate": {
+    "newChildERC1155Predicate": ""
+  }
+}
