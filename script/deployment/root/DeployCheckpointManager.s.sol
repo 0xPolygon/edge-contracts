@@ -11,14 +11,14 @@ import {IBLS} from "contracts/interfaces/common/IBLS.sol";
 import {IBN256G2} from "contracts/interfaces/common/IBN256G2.sol";
 import {ICheckpointManager} from "contracts/interfaces/root/ICheckpointManager.sol";
 
-contract DeployCheckpointManager is Script {
-    function run(
+abstract contract CheckpointManagerDeployer is Script {
+    function deployCheckpointManager(
         address proxyAdmin,
         IBLS newBls,
         IBN256G2 newBn256G2,
         uint256 chainId_,
-        ICheckpointManager.Validator[] calldata newValidatorSet
-    ) external returns (address logicAddr, address proxyAddr) {
+        ICheckpointManager.Validator[] memory newValidatorSet
+    ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             CheckpointManager.initialize,
             (newBls, newBn256G2, chainId_, newValidatorSet)
@@ -38,5 +38,17 @@ contract DeployCheckpointManager is Script {
 
         logicAddr = address(checkpointManager);
         proxyAddr = address(proxy);
+    }
+}
+
+contract DeployCheckpointManager is CheckpointManagerDeployer {
+    function run(
+        address proxyAdmin,
+        IBLS newBls,
+        IBN256G2 newBn256G2,
+        uint256 chainId_,
+        ICheckpointManager.Validator[] calldata newValidatorSet
+    ) external returns (address logicAddr, address proxyAddr) {
+        return deployCheckpointManager(proxyAdmin, newBls, newBn256G2, chainId_, newValidatorSet);
     }
 }

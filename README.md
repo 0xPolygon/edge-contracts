@@ -19,6 +19,7 @@ This repository contains the smart contract suite used in Polygon's ecosystems. 
     - [General Repo Layout](#general-repo-layout-1)
     - [Installation](#installation)
     - [Deployment](#deployment)
+      - [Root contracts](#root-contracts)
     - [Environment Setup](#environment-setup)
     - [Compiling Contracts](#compiling-contracts)
     - [Running tests](#running-tests)
@@ -165,6 +166,21 @@ Deploying these contracts in the context of a production blockchain is out of th
 One point that is worth emphasizing in this context is that from the perspective of launching a Supernet is understanding genesis contracts. Another is that for at least the time being, the decision has been made to proxify all genesis contracts in order to facilitate upgrades/updates without necessitating a hardfork or regenesis. A basic proxy for this task has been provided in [`contracts/lib/BasicGenesisProxy.sol`](/contracts/lib/BasicGenesisProxy.sol).
 
 **Important:** If you have to hardfork, the `RewardPool` and `ValidatorSet` contracts have their own custom proxies. This stems from an incident in which Supernets were deployed without proxifying the genesis contracts. These contracts already had historical state, which complicated simply hardforking their bytecode into being a proxy. The proxy contracts supplied for them (in [`contracts/child/validator/proxy/hardfork`](/contracts/child/validator/proxy/hardfork)) have been tailored to facilitate storage compatability between the legacy and current versions of these contracts.
+
+#### Root contracts
+
+Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.) In order to facilitate a full deployment, a Forge script [`DeployRootContracts.s.sol`](script/deployment/DeployRootContracts.s.sol) is provided. In order to use the script, [`deployRootContractsConfig.json`](script/deployment/deployRootContractsConfig.json) must be filled with appropriate values. When filling the value for a complex type (as opposed to a value type, such as `address`), provide raw, ABI-encoded bytes (currently, there's only one such case for `newValidatorSet` of `CheckpointManager`). Once `deployRootContractsConfig.json` is complete, the bash script can be run by invoking:
+
+```bash
+forge script script/deployment/DeployRootContracts.s.sol \
+  --broadcast \
+  <SIGNING_METHOD> \
+  --rpc-url <RPC_URL> \
+  --verify \
+  --sig "run()"
+```
+
+For the signing method and other options, consult [Foundry Book](https://book.getfoundry.sh/reference/forge/forge-script).
 
 ### Environment Setup
 

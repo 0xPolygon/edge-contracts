@@ -9,11 +9,11 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 
 import {ICheckpointManager} from "contracts/interfaces/root/ICheckpointManager.sol";
 
-contract DeployExitHelper is Script {
-    function run(
+abstract contract ExitHelperDeployer is Script {
+    function deployExitHelper(
         address proxyAdmin,
         ICheckpointManager checkpointManager
-    ) external returns (address logicAddr, address proxyAddr) {
+    ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(ExitHelper.initialize, (checkpointManager));
 
         vm.startBroadcast();
@@ -26,5 +26,14 @@ contract DeployExitHelper is Script {
 
         logicAddr = address(exitHelper);
         proxyAddr = address(proxy);
+    }
+}
+
+contract DeployExitHelper is ExitHelperDeployer {
+    function run(
+        address proxyAdmin,
+        ICheckpointManager checkpointManager
+    ) external returns (address logicAddr, address proxyAddr) {
+        return deployExitHelper(proxyAdmin, checkpointManager);
     }
 }

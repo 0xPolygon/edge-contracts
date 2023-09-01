@@ -7,8 +7,11 @@ import "forge-std/Script.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployStakeManager is Script {
-    function run(address proxyAdmin, address newStakingToken) external returns (address logicAddr, address proxyAddr) {
+contract StakeManagerDeployer is Script {
+    function deployStakeManager(
+        address proxyAdmin,
+        address newStakingToken
+    ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(StakeManager.initialize, (newStakingToken));
 
         vm.startBroadcast();
@@ -25,5 +28,11 @@ contract DeployStakeManager is Script {
 
         logicAddr = address(stakeManager);
         proxyAddr = address(proxy);
+    }
+}
+
+contract DeployStakeManager is StakeManagerDeployer {
+    function run(address proxyAdmin, address newStakingToken) external returns (address logicAddr, address proxyAddr) {
+        return deployStakeManager(proxyAdmin, newStakingToken);
     }
 }
