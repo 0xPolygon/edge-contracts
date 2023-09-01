@@ -45,8 +45,8 @@ contract DeployStakeManagerTest is Test {
         proxyAsStakeManager.initialize(newStakingToken);
 
         assertEq(
-            vm.load(address(proxyAsStakeManager), bytes32(uint(0))),
-            bytes32(bytes.concat(hex"00000000000000000000", abi.encodePacked(newStakingToken), hex"0001"))
+            vm.load(address(proxyAsStakeManager), bytes32(uint(109))),
+            bytes32(bytes.concat(hex"000000000000000000000000", abi.encodePacked(newStakingToken)))
         );
     }
 

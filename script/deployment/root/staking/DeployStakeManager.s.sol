@@ -7,7 +7,7 @@ import "forge-std/Script.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract StakeManagerDeployer is Script {
+abstract contract StakeManagerDeployer is Script {
     function deployStakeManager(
         address proxyAdmin,
         address newStakingToken
