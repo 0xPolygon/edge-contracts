@@ -13,7 +13,7 @@ import "../interfaces/child/IChildERC20Predicate.sol";
 contract EIP1559Burn is Initializable {
     IChildERC20Predicate public childERC20Predicate;
     address public burnDestination;
-    IChildERC20 private constant NATIVE_TOKEN = IChildERC20(0x0000000000000000000000000000000000001010);
+    IChildERC20 private constant _NATIVE_TOKEN = IChildERC20(0x0000000000000000000000000000000000001010);
 
     event NativeTokenBurnt(address indexed burner, uint256 amount);
 
@@ -42,7 +42,7 @@ contract EIP1559Burn is Initializable {
 
         uint256 balance = address(this).balance;
 
-        childERC20Predicate.withdrawTo(NATIVE_TOKEN, burnDestination, balance);
+        childERC20Predicate.withdrawTo(_NATIVE_TOKEN, burnDestination, balance);
         // slither-disable-next-line reentrancy-events
         emit NativeTokenBurnt(msg.sender, balance);
     }
