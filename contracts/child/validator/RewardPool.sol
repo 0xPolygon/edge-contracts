@@ -15,13 +15,11 @@ contract RewardPool is IRewardPool, System, Initializable {
     IERC20Upgradeable public rewardToken;
     address public rewardWallet;
     IValidatorSet public validatorSet;
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[1] private __legacy_compat_gap;
 
     mapping(uint256 => uint256) public paidRewardPerEpoch;
     mapping(address => uint256) public pendingRewards;
 
-    NetworkParams internal networkParams;
+    NetworkParams private _networkParams;
 
     function initialize(
         address newRewardToken,
@@ -38,7 +36,7 @@ contract RewardPool is IRewardPool, System, Initializable {
         rewardWallet = newRewardWallet;
         validatorSet = IValidatorSet(newValidatorSet);
 
-        networkParams = NetworkParams(networkParamsAddr);
+        _networkParams = NetworkParams(networkParamsAddr);
     }
 
     /**
@@ -49,7 +47,7 @@ contract RewardPool is IRewardPool, System, Initializable {
         uint256 totalBlocks = validatorSet.totalBlocks(epochId);
         require(totalBlocks != 0, "EPOCH_NOT_COMMITTED");
         // slither-disable-next-line divide-before-multiply
-        uint256 reward = (networkParams.epochReward() * totalBlocks) / epochSize;
+        uint256 reward = (_networkParams.epochReward() * totalBlocks) / epochSize;
         // TODO disincentivize long epoch times
 
         uint256 totalSupply = validatorSet.totalSupplyAt(epochId);

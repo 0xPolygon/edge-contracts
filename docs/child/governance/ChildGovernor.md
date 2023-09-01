@@ -472,7 +472,7 @@ function hashProposal(address[] targets, uint256[] values, bytes[] calldatas, by
 ### initialize
 
 ```solidity
-function initialize(contract IVotesUpgradeable token_, contract TimelockControllerUpgradeable timelock_, uint256 quorumNumerator_, address networkParams_) external nonpayable
+function initialize(contract IVotesUpgradeable token_, contract TimelockControllerUpgradeable timelock_, uint256 quorumNumerator_, address networkParams) external nonpayable
 ```
 
 
@@ -486,7 +486,7 @@ function initialize(contract IVotesUpgradeable token_, contract TimelockControll
 | token_ | contract IVotesUpgradeable | undefined |
 | timelock_ | contract TimelockControllerUpgradeable | undefined |
 | quorumNumerator_ | uint256 | undefined |
-| networkParams_ | address | undefined |
+| networkParams | address | undefined |
 
 ### name
 

@@ -16,36 +16,36 @@ contract ChildGovernor is
     GovernorVotesQuorumFractionUpgradeable,
     GovernorTimelockControlUpgradeable
 {
-    NetworkParams internal networkParams;
+    NetworkParams private _networkParams;
 
     function initialize(
         IVotesUpgradeable token_,
         TimelockControllerUpgradeable timelock_,
         uint256 quorumNumerator_,
-        address networkParams_
+        address networkParams
     ) public initializer {
         __Governor_init("ChildGovernor");
         __GovernorTimelockControl_init(timelock_);
         __GovernorVotes_init(token_);
         __GovernorVotesQuorumFraction_init(quorumNumerator_);
 
-        networkParams = NetworkParams(networkParams_);
+        _networkParams = NetworkParams(networkParams);
     }
 
     // TODO: adjust values for block time of child chain
 
     function votingDelay() public view override returns (uint256) {
-        return networkParams.votingDelay();
+        return _networkParams.votingDelay();
     }
 
     function votingPeriod() public view override returns (uint256) {
-        return networkParams.votingPeriod();
+        return _networkParams.votingPeriod();
     }
 
     // END TODO
 
     function proposalThreshold() public view override returns (uint256) {
-        return networkParams.proposalThreshold();
+        return _networkParams.proposalThreshold();
     }
 
     // The functions below are overrides required by Solidity.

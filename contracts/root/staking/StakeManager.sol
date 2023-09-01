@@ -5,22 +5,16 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/root/staking/IStakeManager.sol";
-// the next import is to facilitate storage compatibility across versions of StakeManager
-import {StakeManagerLegacyCompatStorage} from "./StakeManagerLegacyCompatStorage.sol";
 import "./StakeManagerChildData.sol";
 import "./StakeManagerStakingData.sol";
 
-contract StakeManager is
-    IStakeManager,
-    Initializable,
-    StakeManagerLegacyCompatStorage,
-    StakeManagerChildData,
-    StakeManagerStakingData
-{
+contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, StakeManagerStakingData {
     using SafeERC20 for IERC20;
 
+    IERC20 private _stakingToken;
+
     function initialize(address newStakingToken) public initializer {
-        stakingToken = IERC20(newStakingToken);
+        _stakingToken = IERC20(newStakingToken);
     }
 
     /**
@@ -38,9 +32,9 @@ contract StakeManager is
      * @inheritdoc IStakeManager
      */
     function stakeFor(uint256 id, uint256 amount) external {
-        require(id != 0 && id <= counter, "StakeManager: INVALID_ID");
+        require(id != 0 && id <= _counter, "StakeManager: INVALID_ID");
         // slither-disable-next-line reentrancy-benign,reentrancy-events
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        _stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         // calling the library directly once fixes the coverage issue
         // https://github.com/foundry-rs/foundry/issues/4854#issuecomment-1528897219
         _addStake(msg.sender, id, amount);
@@ -132,7 +126,7 @@ contract StakeManager is
     function _withdrawStake(address validator, address to, uint256 amount) private {
         _withdrawStake(validator, amount);
         // slither-disable-next-line reentrancy-events
-        stakingToken.safeTransfer(to, amount);
+        _stakingToken.safeTransfer(to, amount);
         emit StakeWithdrawn(validator, to, amount);
     }
 
