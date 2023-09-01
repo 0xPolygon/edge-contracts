@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "./legacy-compat/@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import "../../lib/WithdrawalQueue.sol";
 import "../../interfaces/child/validator/IValidatorSet.sol";
 import "../../interfaces/IStateSender.sol";
@@ -12,25 +12,23 @@ import "../System.sol";
 contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     using WithdrawalQueueLib for WithdrawalQueue;
 
-    bytes32 private constant STAKE_SIG = keccak256("STAKE");
-    bytes32 private constant UNSTAKE_SIG = keccak256("UNSTAKE");
-    bytes32 private constant SLASH_SIG = keccak256("SLASH");
+    bytes32 private constant _STAKE_SIG = keccak256("STAKE");
+    bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
+    bytes32 private constant _SLASH_SIG = keccak256("SLASH");
     uint256 public constant SLASHING_PERCENTAGE = 50; // to be read through NetworkParams later
     uint256 public constant SLASH_INCENTIVE_PERCENTAGE = 30; // exitor reward, to be read through NetworkParams later
 
-    IStateSender private stateSender;
-    address private stateReceiver;
-    address private rootChainManager;
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[1] private __legacy_compat_gap;
+    IStateSender private _stateSender;
+    address private _stateReceiver;
+    address private _rootChainManager;
 
     uint256 public currentEpochId;
 
     mapping(uint256 => Epoch) public epochs;
     uint256[] public epochEndBlocks;
-    mapping(address => WithdrawalQueue) private withdrawals;
+    mapping(address => WithdrawalQueue) private _withdrawals;
 
-    NetworkParams private networkParams;
+    NetworkParams private _networkParams;
     mapping(uint256 => uint256) private _commitBlockNumbers;
 
     mapping(uint256 => bool) public slashProcessed;
@@ -47,10 +45,10 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
             "INVALID_INPUT"
         );
         __ERC20_init("ValidatorSet", "VSET");
-        stateSender = IStateSender(newStateSender);
-        stateReceiver = newStateReceiver;
-        rootChainManager = newRootChainManager;
-        networkParams = NetworkParams(newNetworkParams);
+        _stateSender = IStateSender(newStateSender);
+        _stateReceiver = newStateReceiver;
+        _rootChainManager = newRootChainManager;
+        _networkParams = NetworkParams(newNetworkParams);
         for (uint256 i = 0; i < initialValidators.length; ) {
             _stake(initialValidators[i].addr, initialValidators[i].stake);
             unchecked {
@@ -80,18 +78,18 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
      * @inheritdoc IValidatorSet
      */
     function slash(address[] calldata validators) external onlySystemCall {
-        stateSender.syncState(
-            rootChainManager,
-            abi.encode(SLASH_SIG, validators, SLASHING_PERCENTAGE, SLASH_INCENTIVE_PERCENTAGE)
+        _stateSender.syncState(
+            _rootChainManager,
+            abi.encode(_SLASH_SIG, validators, SLASHING_PERCENTAGE, SLASH_INCENTIVE_PERCENTAGE)
         );
     }
 
     function onStateReceive(uint256 /*counter*/, address sender, bytes calldata data) external override {
-        require(msg.sender == stateReceiver && sender == rootChainManager, "INVALID_SENDER");
-        if (bytes32(data[:32]) == STAKE_SIG) {
+        require(msg.sender == _stateReceiver && sender == _rootChainManager, "INVALID_SENDER");
+        if (bytes32(data[:32]) == _STAKE_SIG) {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _stake(validator, amount);
-        } else if (bytes32(data[:32]) == SLASH_SIG) {
+        } else if (bytes32(data[:32]) == _SLASH_SIG) {
             (, uint256 exitEventId, address[] memory validatorsToSlash, ) = abi.decode(
                 data,
                 (bytes32, uint256, address[], uint256)
@@ -112,11 +110,11 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
      * @inheritdoc IValidatorSet
      */
     function withdraw() external {
-        WithdrawalQueue storage queue = withdrawals[msg.sender];
+        WithdrawalQueue storage queue = _withdrawals[msg.sender];
         (uint256 amount, uint256 newHead) = queue.withdrawable(currentEpochId);
         queue.head = newHead;
         emit Withdrawal(msg.sender, amount);
-        stateSender.syncState(rootChainManager, abi.encode(UNSTAKE_SIG, msg.sender, amount));
+        _stateSender.syncState(_rootChainManager, abi.encode(_UNSTAKE_SIG, msg.sender, amount));
     }
 
     /**
@@ -124,14 +122,14 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
      */
     // slither-disable-next-line unused-return
     function withdrawable(address account) external view returns (uint256 amount) {
-        (amount, ) = withdrawals[account].withdrawable(currentEpochId);
+        (amount, ) = _withdrawals[account].withdrawable(currentEpochId);
     }
 
     /**
      * @inheritdoc IValidatorSet
      */
     function pendingWithdrawals(address account) external view returns (uint256) {
-        return withdrawals[account].pending(currentEpochId);
+        return _withdrawals[account].pending(currentEpochId);
     }
 
     /**
@@ -151,7 +149,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
     }
 
     function _registerWithdrawal(address account, uint256 amount) internal {
-        withdrawals[account].append(amount, currentEpochId + networkParams.withdrawalWaitPeriod());
+        _withdrawals[account].append(amount, currentEpochId + _networkParams.withdrawalWaitPeriod());
         emit WithdrawalRegistered(account, amount);
     }
 
@@ -162,7 +160,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
         for (uint256 i = 0; i < length; ) {
             _burn(validatorsToSlash[i], balanceOf(validatorsToSlash[i])); // unstake validator
             // slither-disable-next-line mapping-deletion
-            delete withdrawals[validatorsToSlash[i]]; // remove pending withdrawals
+            delete _withdrawals[validatorsToSlash[i]]; // remove pending withdrawals
             unchecked {
                 ++i;
             }
