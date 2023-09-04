@@ -12,12 +12,13 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
 
+    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
+
     uint256 public chainId;
     uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
     uint256 public currentCheckpointBlockNumber;
     uint256 public totalVotingPower;
-    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
     IBLS public bls;
     IBN256G2 public bn256G2;
 
