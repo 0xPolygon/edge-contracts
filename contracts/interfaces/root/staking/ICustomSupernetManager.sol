@@ -10,6 +10,19 @@ struct Validator {
     bool isActive;
 }
 
+struct SupernetInitParams {
+    address newStakeManager;
+    address newBls;
+    address newStateSender;
+    address newMatic;
+    address newChildValidatorSet;
+    address newExitHelper;
+    string newDomain;
+    GenesisValidator[] genesisSet;
+    address[] validatorAddresses;
+    Validator[] validators;
+}
+
 /**
     @title ICustomSupernetManager
     @author Polygon Technology (@gretzke)

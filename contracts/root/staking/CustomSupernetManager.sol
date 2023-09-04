@@ -14,19 +14,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     using SafeERC20 for IERC20;
     using GenesisLib for GenesisSet;
 
-    struct SupernetInitParams {
-        address newStakeManager;
-        address newBls;
-        address newStateSender;
-        address newMatic;
-        address newChildValidatorSet;
-        address newExitHelper;
-        string newDomain;
-        GenesisValidator[] genesisSet;
-        address[] validatorAddresses;
-        Validator[] validators;
-    }
-
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant _SLASH_SIG = keccak256("SLASH");

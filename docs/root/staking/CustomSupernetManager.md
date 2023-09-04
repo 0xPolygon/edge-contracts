@@ -119,7 +119,7 @@ function id() external view returns (uint256)
 ### initialize
 
 ```solidity
-function initialize(CustomSupernetManager.SupernetInitParams initParams) external nonpayable
+function initialize(SupernetInitParams initParams) external nonpayable
 ```
 
 
@@ -130,12 +130,12 @@ function initialize(CustomSupernetManager.SupernetInitParams initParams) externa
 
 | Name | Type | Description |
 |---|---|---|
-| initParams | CustomSupernetManager.SupernetInitParams | undefined |
+| initParams | SupernetInitParams | undefined |
 
 ### initializeOnMigration
 
 ```solidity
-function initializeOnMigration(CustomSupernetManager.SupernetInitParams initParams) external nonpayable
+function initializeOnMigration(SupernetInitParams initParams) external nonpayable
 ```
 
 
@@ -146,7 +146,7 @@ function initializeOnMigration(CustomSupernetManager.SupernetInitParams initPara
 
 | Name | Type | Description |
 |---|---|---|
-| initParams | CustomSupernetManager.SupernetInitParams | undefined |
+| initParams | SupernetInitParams | undefined |
 
 ### onInit
 

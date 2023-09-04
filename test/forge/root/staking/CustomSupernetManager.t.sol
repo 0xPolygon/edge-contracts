@@ -6,7 +6,7 @@ import "contracts/common/BLS.sol";
 import "contracts/root/StateSender.sol";
 import {ExitHelper} from "contracts/root/ExitHelper.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
-import {CustomSupernetManager, Validator, GenesisValidator} from "contracts/root/staking/CustomSupernetManager.sol";
+import {CustomSupernetManager, Validator, GenesisValidator, SupernetInitParams} from "contracts/root/staking/CustomSupernetManager.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 import "contracts/interfaces/Errors.sol";
 
@@ -36,15 +36,19 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        supernetManager.initialize(
-            address(stakeManager),
-            address(bls),
-            address(stateSender),
-            address(token),
-            childValidatorSet,
-            exitHelper,
-            DOMAIN
-        );
+        SupernetInitParams memory initParams = SupernetInitParams({
+            newStakeManager: address(stakeManager),
+            newBls: address(bls),
+            newStateSender: address(stateSender),
+            newMatic: address(token),
+            newChildValidatorSet: childValidatorSet,
+            newExitHelper: exitHelper,
+            newDomain: DOMAIN,
+            genesisSet: new GenesisValidator[](0),
+            validatorAddresses: new address[](0),
+            validators: new Validator[](0)
+        });
+        supernetManager.initialize(initParams);
     }
 }
 
@@ -163,15 +167,19 @@ abstract contract Slashed is EnabledStaking {
 
 contract CustomSupernetManager_Initialize is Uninitialized {
     function testInititialize() public {
-        supernetManager.initialize(
-            address(stakeManager),
-            address(bls),
-            address(stateSender),
-            address(token),
-            childValidatorSet,
-            exitHelper,
-            DOMAIN
-        );
+        SupernetInitParams memory initParams = SupernetInitParams({
+            newStakeManager: address(stakeManager),
+            newBls: address(bls),
+            newStateSender: address(stateSender),
+            newMatic: address(token),
+            newChildValidatorSet: childValidatorSet,
+            newExitHelper: exitHelper,
+            newDomain: DOMAIN,
+            genesisSet: new GenesisValidator[](0),
+            validatorAddresses: new address[](0),
+            validators: new Validator[](0)
+        });
+        supernetManager.initialize(initParams);
         assertEq(supernetManager.owner(), address(this), "should set owner");
         assertEq((supernetManager.domain()), keccak256(abi.encodePacked(DOMAIN)), "should set and hash DOMAIN");
     }

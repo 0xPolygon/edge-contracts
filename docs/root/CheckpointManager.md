@@ -332,7 +332,7 @@ function initialize(contract IBLS newBls, contract IBN256G2 newBn256G2, uint256 
 ### initializeOnMigration
 
 ```solidity
-function initializeOnMigration(contract IBLS newBls, contract IBN256G2 newBn256G2, uint256 chainId_, ICheckpointManager.Validator[] existingValidatorSet, ICheckpointManager.Checkpoint[] existingCheckpoints) external nonpayable
+function initializeOnMigration(contract IBLS newBls, contract IBN256G2 newBn256G2, uint256 chainId_, ICheckpointManager.Validator[] existingValidatorSet, ICheckpointManager.Checkpoint[] existingCheckpoints, uint256[] existingCheckpointBlockNumbers) external nonpayable
 ```
 
 
@@ -348,6 +348,7 @@ function initializeOnMigration(contract IBLS newBls, contract IBN256G2 newBn256G
 | chainId_ | uint256 | undefined |
 | existingValidatorSet | ICheckpointManager.Validator[] | undefined |
 | existingCheckpoints | ICheckpointManager.Checkpoint[] | undefined |
+| existingCheckpointBlockNumbers | uint256[] | undefined |
 
 ### submit
 
