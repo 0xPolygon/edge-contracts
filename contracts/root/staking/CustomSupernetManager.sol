@@ -14,6 +14,19 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     using SafeERC20 for IERC20;
     using GenesisLib for GenesisSet;
 
+    struct SupernetInitParams {
+        address newStakeManager;
+        address newBls;
+        address newStateSender;
+        address newMatic;
+        address newChildValidatorSet;
+        address newExitHelper;
+        string newDomain;
+        GenesisValidator[] genesisSet;
+        address[] validatorAddresses;
+        Validator[] validators;
+    }
+
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
     bytes32 private constant _SLASH_SIG = keccak256("SLASH");
@@ -34,33 +47,57 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         _;
     }
 
-    function initialize(
-        address newStakeManager,
-        address newBls,
-        address newStateSender,
-        address newMatic,
-        address newChildValidatorSet,
-        address newExitHelper,
-        string memory newDomain
-    ) public initializer {
-        require(
-            newStakeManager != address(0) &&
-                newBls != address(0) &&
-                newStateSender != address(0) &&
-                newMatic != address(0) &&
-                newChildValidatorSet != address(0) &&
-                newExitHelper != address(0) &&
-                bytes(newDomain).length != 0,
-            "INVALID_INPUT"
+    /**
+     * @notice Initialize the contract with initial parameters
+     * @dev The StakeManager, CheckpointManager, StateSender, BLS and ExitHelper must be deployed first
+     * @param initParams Initialization parameters
+     */
+    function initialize(SupernetInitParams calldata initParams) public initializer {
+        _setInitialValues(
+            initParams.newStakeManager,
+            initParams.newBls,
+            initParams.newStateSender,
+            initParams.newMatic,
+            initParams.newChildValidatorSet,
+            initParams.newExitHelper,
+            initParams.newDomain
         );
-        __SupernetManager_init(newStakeManager);
-        _bls = IBLS(newBls);
-        _stateSender = IStateSender(newStateSender);
-        _matic = IERC20(newMatic);
-        _childValidatorSet = newChildValidatorSet;
-        _exitHelper = newExitHelper;
-        domain = keccak256(abi.encodePacked(newDomain));
-        __Ownable2Step_init();
+    }
+
+    /**
+     * @notice Initialize the contract with initial parameters on migration
+     * @dev The StakeManager, CheckpointManager, StateSender, BLS and ExitHelper must be deployed first
+     * @param initParams Initialization parameters
+     */
+    function initializeOnMigration(SupernetInitParams calldata initParams) public initializer {
+        _setInitialValues(
+            initParams.newStakeManager,
+            initParams.newBls,
+            initParams.newStateSender,
+            initParams.newMatic,
+            initParams.newChildValidatorSet,
+            initParams.newExitHelper,
+            initParams.newDomain
+        );
+
+        uint256 length = initParams.genesisSet.length;
+        for (uint256 i = 0; i < length; i++) {
+            GenesisValidator calldata genesisValidator = initParams.genesisSet[i];
+            _genesis.insert(genesisValidator.validator, genesisValidator.initialStake);
+        }
+
+        _genesis.status = GenesisStatus.COMPLETED;
+
+        require(
+            initParams.validatorAddresses.length == initParams.validators.length,
+            "ADDRESSES_AND_VALIDATORS_NOT_PAIRED"
+        );
+
+        length = initParams.validatorAddresses.length;
+        for (uint256 i = 0; i < length; i++) {
+            Validator calldata validator = initParams.validators[i];
+            validators[initParams.validatorAddresses[i]] = validator;
+        }
     }
 
     /**
@@ -221,6 +258,35 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
             validators[validator].isActive = false;
             emit ValidatorDeactivated(validator);
         }
+    }
+
+    function _setInitialValues(
+        address newStakeManager,
+        address newBls,
+        address newStateSender,
+        address newMatic,
+        address newChildValidatorSet,
+        address newExitHelper,
+        string memory newDomain
+    ) private {
+        require(
+            newStakeManager != address(0) &&
+                newBls != address(0) &&
+                newStateSender != address(0) &&
+                newMatic != address(0) &&
+                newChildValidatorSet != address(0) &&
+                newExitHelper != address(0) &&
+                bytes(newDomain).length != 0,
+            "INVALID_INPUT"
+        );
+        __SupernetManager_init(newStakeManager);
+        _bls = IBLS(newBls);
+        _stateSender = IStateSender(newStateSender);
+        _matic = IERC20(newMatic);
+        _childValidatorSet = newChildValidatorSet;
+        _exitHelper = newExitHelper;
+        domain = keccak256(abi.encodePacked(newDomain));
+        __Ownable2Step_init();
     }
 
     // slither-disable-next-line unused-state,naming-convention

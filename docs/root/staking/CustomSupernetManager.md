@@ -119,7 +119,7 @@ function id() external view returns (uint256)
 ### initialize
 
 ```solidity
-function initialize(address newStakeManager, address newBls, address newStateSender, address newMatic, address newChildValidatorSet, address newExitHelper, string newDomain) external nonpayable
+function initialize(CustomSupernetManager.SupernetInitParams initParams) external nonpayable
 ```
 
 
@@ -130,13 +130,23 @@ function initialize(address newStakeManager, address newBls, address newStateSen
 
 | Name | Type | Description |
 |---|---|---|
-| newStakeManager | address | undefined |
-| newBls | address | undefined |
-| newStateSender | address | undefined |
-| newMatic | address | undefined |
-| newChildValidatorSet | address | undefined |
-| newExitHelper | address | undefined |
-| newDomain | string | undefined |
+| initParams | CustomSupernetManager.SupernetInitParams | undefined |
+
+### initializeOnMigration
+
+```solidity
+function initializeOnMigration(CustomSupernetManager.SupernetInitParams initParams) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| initParams | CustomSupernetManager.SupernetInitParams | undefined |
 
 ### onInit
 

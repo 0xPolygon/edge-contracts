@@ -39,11 +39,33 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
-        chainId = chainId_;
-        bls = newBls;
-        bn256G2 = newBn256G2;
-        currentValidatorSetLength = newValidatorSet.length;
-        _setNewValidatorSet(newValidatorSet);
+        _setInitialValues(newBls, newBn256G2, chainId_, newValidatorSet);
+    }
+
+    /**
+     * @notice Initialization function for CheckpointManager on migration
+     * @dev Contract can only be initialized once
+     * @param newBls Address of the BLS library contract
+     * @param newBn256G2 Address of the BLS library contract
+     * @param chainId_ Chain ID of the child chain
+     * @param existingValidatorSet Existing validator set on old contract
+     * @param existingCheckpoints Existing checkpoints on old contract
+     */
+    function initializeOnMigration(
+        IBLS newBls,
+        IBN256G2 newBn256G2,
+        uint256 chainId_,
+        Validator[] calldata existingValidatorSet,
+        Checkpoint[] calldata existingCheckpoints
+    ) external initializer {
+        _setInitialValues(newBls, newBn256G2, chainId_, existingValidatorSet);
+
+        uint256 length = existingCheckpoints.length;
+        for (uint256 i = 0; i < length; i++) {
+            Checkpoint calldata checkpoint = existingCheckpoints[i];
+            checkpoints[checkpoint.epoch] = checkpoint;
+            _addCheckpointBlockNumber(currentEpoch, checkpoint.epoch, checkpoint.blockNumber);
+        }
     }
 
     /**
@@ -80,16 +102,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
         checkpoints[checkpoint.epoch] = checkpoint;
 
-        if (checkpoint.epoch > prevEpoch) {
-            // if new epoch, push new end block
-            checkpointBlockNumbers.push(checkpoint.blockNumber);
-            ++currentEpoch;
-        } else {
-            // update last end block if updating event root for epoch
-            checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpoint.blockNumber;
-        }
-
-        currentCheckpointBlockNumber = checkpoint.blockNumber;
+        _addCheckpointBlockNumber(prevEpoch, checkpoint.epoch, checkpoint.blockNumber);
 
         _setNewValidatorSet(newValidatorSet);
     }
@@ -225,6 +238,36 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
         // Get the value of the bit at the given 'index' in a byte.
         return uint8(bitmap[byteNumber]) & (1 << bitNumber) > 0;
+    }
+
+    function _setInitialValues(
+        IBLS newBls,
+        IBN256G2 newBn256G2,
+        uint256 chainId_,
+        Validator[] calldata newValidatorSet
+    ) private {
+        chainId = chainId_;
+        bls = newBls;
+        bn256G2 = newBn256G2;
+        currentValidatorSetLength = newValidatorSet.length;
+        _setNewValidatorSet(newValidatorSet);
+    }
+
+    function _addCheckpointBlockNumber(
+        uint256 prevEpoch,
+        uint256 checkpointEpoch,
+        uint256 checkpointBlockNumber
+    ) private {
+        if (checkpointEpoch > prevEpoch) {
+            // if new epoch, push new end block
+            checkpointBlockNumbers.push(checkpointBlockNumber);
+            ++currentEpoch;
+        } else {
+            // update last end block if updating event root for epoch
+            checkpointBlockNumbers[checkpointBlockNumbers.length - 1] = checkpointBlockNumber;
+        }
+
+        currentCheckpointBlockNumber = checkpointBlockNumber;
     }
 
     // slither-disable-next-line unused-state,naming-convention

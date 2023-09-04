@@ -24,11 +24,26 @@ contract ExitHelper is IExitHelper, Initializable {
      * @param newCheckpointManager Address of the checkpoint manager contract
      */
     function initialize(ICheckpointManager newCheckpointManager) external initializer {
-        require(
-            address(newCheckpointManager) != address(0) && address(newCheckpointManager).code.length != 0,
-            "ExitHelper: INVALID_ADDRESS"
-        );
-        checkpointManager = newCheckpointManager;
+        _setInitialValues(newCheckpointManager);
+    }
+
+    /**
+     * @notice Initialize the contract with migrated data from old contract version
+     * @dev The checkpoint manager contract must be deployed first
+     * @param newCheckpointManager Address of the checkpoint manager contract
+     * @param processedExits_ Ids of processed exit events
+     */
+    function initializeOnMigration(
+        ICheckpointManager newCheckpointManager,
+        uint256[] calldata processedExits_
+    ) external initializer {
+        _setInitialValues(newCheckpointManager);
+
+        uint256 length = processedExits_.length;
+        for (uint256 i = 0; i < length; i++) {
+            uint256 exitId = processedExits_[i];
+            processedExits[exitId] = true;
+        }
     }
 
     /**
@@ -97,6 +112,14 @@ contract ExitHelper is IExitHelper, Initializable {
         if (!success) processedExits[id] = false;
 
         emit ExitProcessed(id, success, returnData);
+    }
+
+    function _setInitialValues(ICheckpointManager newCheckpointManager) private {
+        require(
+            address(newCheckpointManager) != address(0) && address(newCheckpointManager).code.length != 0,
+            "ExitHelper: INVALID_ADDRESS"
+        );
+        checkpointManager = newCheckpointManager;
     }
 
     // slither-disable-next-line unused-state,naming-convention

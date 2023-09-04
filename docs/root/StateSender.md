@@ -44,6 +44,22 @@ function counter() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### initializeOnMigration
+
+```solidity
+function initializeOnMigration(uint256 lastId) external nonpayable
+```
+
+initializer for StateSender, sets the initial id for state sync events
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| lastId | uint256 | last state sync id on old contract |
+
 ### syncState
 
 ```solidity
@@ -64,6 +80,22 @@ Generates sync state event based on receiver and data. Anyone can call this meth
 
 
 ## Events
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+*Triggered when the contract has been initialized or reinitialized.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### StateSynced
 

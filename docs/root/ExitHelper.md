@@ -95,6 +95,23 @@ Initialize the contract with the checkpoint manager address
 |---|---|---|
 | newCheckpointManager | contract ICheckpointManager | Address of the checkpoint manager contract |
 
+### initializeOnMigration
+
+```solidity
+function initializeOnMigration(contract ICheckpointManager newCheckpointManager, uint256[] processedExits_) external nonpayable
+```
+
+Initialize the contract with migrated data from old contract version
+
+*The checkpoint manager contract must be deployed first*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newCheckpointManager | contract ICheckpointManager | Address of the checkpoint manager contract |
+| processedExits_ | uint256[] | Ids of processed exit events |
+
 ### processedExits
 
 ```solidity

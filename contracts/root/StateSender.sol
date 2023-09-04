@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IStateSender.sol";
 
-contract StateSender is IStateSender {
+contract StateSender is IStateSender, Initializable {
     uint256 public constant MAX_LENGTH = 2048;
     uint256 public counter;
 
     event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
+
+    /**
+     * @notice initializer for StateSender, sets the initial id for state sync events
+     * @param lastId last state sync id on old contract
+     */
+    function initializeOnMigration(uint256 lastId) public initializer {
+        counter = lastId;
+    }
 
     /**
      *
