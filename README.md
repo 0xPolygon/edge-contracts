@@ -169,10 +169,10 @@ One point that is worth emphasizing in this context is that from the perspective
 
 #### Root contracts
 
-Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.) In order to facilitate a full deployment, a Forge script [`DeployRootContracts.s.sol`](script/deployment/DeployRootContracts.s.sol) is provided. In order to use the script, [`deployRootContractsConfig.json`](script/deployment/deployRootContractsConfig.json) must be filled with appropriate values. When filling the value for a complex type (as opposed to a value type, such as `address`), provide raw, ABI-encoded bytes (currently, there's only one such case for `newValidatorSet` of `CheckpointManager`). Once `deployRootContractsConfig.json` is complete, the bash script can be run by invoking:
+Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.) In order to facilitate a full deployment, Forge scripts [`DeploySharedRootContracts`](script/deployment/DeploySharedRootContracts.sol) and [`DeployNewRootContractSet.s.sol`](script/deployment/DeployNewRootContractSet.s.sol) are provided, along with their configuration files, [`sharedRootContractsConfig`](script/deployment/sharedRootContractsConfig.json) and [`rootContractSetConfig.json`](script/deployment/rootContractSetConfig.json), which must be filled with appropriate values. Once a configuration is complete, the script can be run by invoking:
 
 ```bash
-forge script script/deployment/DeployRootContracts.s.sol \
+forge script script/deployment/<SCRIPT_NAME>.s.sol \
   --broadcast \
   <SIGNING_METHOD> \
   --rpc-url <RPC_URL> \

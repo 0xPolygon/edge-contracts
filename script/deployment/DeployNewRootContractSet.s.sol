@@ -6,7 +6,6 @@ import "forge-std/Script.sol";
 
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-import "script/deployment/root/staking/DeployStakeManager.s.sol";
 import "script/deployment/root/DeployStateSender.s.sol";
 import "script/deployment/root/DeployCheckpointManager.s.sol";
 import "script/deployment/root/DeployExitHelper.s.sol";
@@ -18,8 +17,7 @@ import "script/deployment/root/DeployChildMintableERC721Predicate.s.sol";
 import "script/deployment/root/DeployRootERC1155Predicate.s.sol";
 import "script/deployment/root/DeployChildMintableERC1155Predicate.s.sol";
 
-contract DeployRootContracts is
-    StakeManagerDeployer,
+contract DeployNewRootContractSet is
     StateSenderDeployer,
     CheckpointManagerDeployer,
     ExitHelperDeployer,
@@ -35,9 +33,7 @@ contract DeployRootContracts is
 
     address proxyAdmin;
 
-    address stakeManagerLogic;
-    address stakeManagerProxy;
-    address stateSenderLogic;
+    address stateSender;
     address checkpointManagerLogic;
     address checkpointManagerProxy;
     address exitHelperLogic;
@@ -58,7 +54,7 @@ contract DeployRootContracts is
     address childMintableERC1155PredicateProxy;
 
     function run() external {
-        string memory config = vm.readFile("script/deployment/deployRootContractsConfig.json");
+        string memory config = vm.readFile("script/deployment/newRootContractSetConfig.json");
 
         vm.startBroadcast();
 
@@ -69,28 +65,18 @@ contract DeployRootContracts is
 
         proxyAdmin = address(_proxyAdmin);
 
-        (stakeManagerLogic, stakeManagerProxy) = deployStakeManager(
-            proxyAdmin,
-            config.readAddress('["StakeManager"].newStakingToken')
-        );
+        stateSender = deployStateSender();
 
-        stateSenderLogic = deployStateSender();
-
-        (checkpointManagerLogic, checkpointManagerProxy) = deployCheckpointManager(
-            proxyAdmin,
-            IBLS(config.readAddress('["common"].newBls')),
-            IBN256G2(config.readAddress('["CheckpointManager"].newBn256G2')),
-            config.readUint('["CheckpointManager"].chainId_'),
-            abi.decode(config.readBytes('["CheckpointManager"].newValidatorSet'), (ICheckpointManager.Validator[]))
-        );
+        // To be initialized manually later.
+        (checkpointManagerLogic, checkpointManagerProxy) = deployCheckpointManager(proxyAdmin);
 
         (exitHelperLogic, exitHelperProxy) = deployExitHelper(proxyAdmin, ICheckpointManager(checkpointManagerProxy));
 
         (customSupernetManagerLogic, customSupernetManagerProxy) = deployCustomSupernetManager(
             proxyAdmin,
-            stakeManagerProxy,
+            config.readAddress('["CustomSupernetManager"].newStakeManager'),
             config.readAddress('["common"].newBls'),
-            stateSenderLogic,
+            stateSender,
             config.readAddress('["CustomSupernetManager"].newMatic'),
             config.readAddress('["CustomSupernetManager"].newChildValidatorSet'),
             exitHelperProxy,
@@ -99,7 +85,7 @@ contract DeployRootContracts is
 
         (rootERC20PredicateLogic, rootERC20PredicateProxy) = deployRootERC20Predicate(
             proxyAdmin,
-            stateSenderLogic,
+            stateSender,
             exitHelperProxy,
             config.readAddress('["RootERC20Predicate"].newChildERC20Predicate'),
             config.readAddress('["common"].newChildTokenTemplate'),
@@ -108,7 +94,7 @@ contract DeployRootContracts is
 
         (childMintableERC20PredicateLogic, childMintableERC20PredicateProxy) = deployChildMintableERC20Predicate(
             proxyAdmin,
-            stateSenderLogic,
+            stateSender,
             exitHelperProxy,
             rootERC20PredicateProxy,
             config.readAddress('["common"].newChildTokenTemplate')
@@ -116,7 +102,7 @@ contract DeployRootContracts is
 
         (rootERC721PredicateLogic, rootERC721PredicateProxy) = deployRootERC721Predicate(
             proxyAdmin,
-            stateSenderLogic,
+            stateSender,
             exitHelperProxy,
             config.readAddress('["RootERC721Predicate"].newChildERC721Predicate'),
             config.readAddress('["common"].newChildTokenTemplate')
@@ -124,7 +110,7 @@ contract DeployRootContracts is
 
         (childMintableERC721PredicateLogic, childMintableERC721PredicateProxy) = deployChildMintableERC721Predicate(
             proxyAdmin,
-            stateSenderLogic,
+            stateSender,
             exitHelperProxy,
             rootERC721PredicateProxy,
             config.readAddress('["common"].newChildTokenTemplate')
@@ -132,7 +118,7 @@ contract DeployRootContracts is
 
         (rootERC1155PredicateLogic, rootERC1155PredicateProxy) = deployRootERC1155Predicate(
             proxyAdmin,
-            stateSenderLogic,
+            stateSender,
             exitHelperProxy,
             config.readAddress('["RootERC1155Predicate"].newChildERC1155Predicate'),
             config.readAddress('["common"].newChildTokenTemplate')
@@ -140,7 +126,7 @@ contract DeployRootContracts is
 
         (childMintableERC1155PredicateLogic, childMintableERC1155PredicateProxy) = deployChildMintableERC1155Predicate(
             proxyAdmin,
-            stateSenderLogic,
+            stateSender,
             exitHelperProxy,
             rootERC1155PredicateProxy,
             config.readAddress('["common"].newChildTokenTemplate')
@@ -156,15 +142,9 @@ contract DeployRootContracts is
         console.log("Proxy:", "Does not have a proxy");
         console.log("");
         console.log("");
-        console.log("StakeManager");
-        console.log("");
-        console.log("Logic:", stakeManagerLogic);
-        console.log("Proxy:", stakeManagerProxy);
-        console.log("");
-        console.log("");
         console.log("StateSender");
         console.log("");
-        console.log("Logic:", stateSenderLogic);
+        console.log("Logic:", stateSender);
         console.log("Proxy:", "Does not have a proxy");
         console.log("");
         console.log("");

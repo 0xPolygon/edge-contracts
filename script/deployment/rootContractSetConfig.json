@@ -5,17 +5,10 @@
     "newChildTokenTemplate": ""
   },
 
-  "StakeManager": {
-    "newStakingToken": ""
-  },
-
-  "CheckpointManager": {
-    "newBn256G2": "",
-    "chainId_": "",
-    "newValidatorSet": ""
-  },
+  "CheckpointManager": {},
 
   "CustomSupernetManager": {
+    "newStakeManager": "",
     "newMatic": "",
     "newChildValidatorSet": "",
     "newDomain": ""

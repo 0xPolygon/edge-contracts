@@ -24,6 +24,18 @@ abstract contract CheckpointManagerDeployer is Script {
             (newBls, newBn256G2, chainId_, newValidatorSet)
         );
 
+        return _deployCheckpointManager(proxyAdmin, initData);
+    }
+
+    ///@notice Alternative signature: Does NOT initialize the contract!
+    function deployCheckpointManager(address proxyAdmin) internal returns (address logicAddr, address proxyAddr) {
+        return _deployCheckpointManager(proxyAdmin, "");
+    }
+
+    function _deployCheckpointManager(
+        address proxyAdmin,
+        bytes memory initData
+    ) private returns (address logicAddr, address proxyAddr) {
         vm.startBroadcast();
 
         CheckpointManager checkpointManager = new CheckpointManager();
