@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 
 import "forge-std/Script.sol";
 
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+
 import "script/deployment/root/staking/DeployStakeManager.s.sol";
 import "script/deployment/root/DeployStateSender.s.sol";
 import "script/deployment/root/DeployCheckpointManager.s.sol";
@@ -31,10 +33,11 @@ contract DeployRootContracts is
 {
     using stdJson for string;
 
+    address proxyAdmin;
+
     address stakeManagerLogic;
     address stakeManagerProxy;
     address stateSenderLogic;
-    address stateSenderProxy;
     address checkpointManagerLogic;
     address checkpointManagerProxy;
     address exitHelperLogic;
@@ -57,31 +60,37 @@ contract DeployRootContracts is
     function run() external {
         string memory config = vm.readFile("script/deployment/deployRootContractsConfig.json");
 
+        vm.startBroadcast();
+
+        ProxyAdmin _proxyAdmin = new ProxyAdmin();
+        _proxyAdmin.transferOwnership(config.readAddress('["common"].proxyAdminOwner'));
+
+        vm.stopBroadcast();
+
+        proxyAdmin = address(_proxyAdmin);
+
         (stakeManagerLogic, stakeManagerProxy) = deployStakeManager(
-            config.readAddress('["common"].proxyAdmin'),
+            proxyAdmin,
             config.readAddress('["StakeManager"].newStakingToken')
         );
 
-        (stateSenderLogic, stateSenderProxy) = deployStateSender();
+        stateSenderLogic = deployStateSender();
 
         (checkpointManagerLogic, checkpointManagerProxy) = deployCheckpointManager(
-            config.readAddress('["common"].proxyAdmin'),
+            proxyAdmin,
             IBLS(config.readAddress('["common"].newBls')),
             IBN256G2(config.readAddress('["CheckpointManager"].newBn256G2')),
             config.readUint('["CheckpointManager"].chainId_'),
             abi.decode(config.readBytes('["CheckpointManager"].newValidatorSet'), (ICheckpointManager.Validator[]))
         );
 
-        (exitHelperLogic, exitHelperProxy) = deployExitHelper(
-            config.readAddress('["common"].proxyAdmin'),
-            ICheckpointManager(checkpointManagerProxy)
-        );
+        (exitHelperLogic, exitHelperProxy) = deployExitHelper(proxyAdmin, ICheckpointManager(checkpointManagerProxy));
 
         (customSupernetManagerLogic, customSupernetManagerProxy) = deployCustomSupernetManager(
-            config.readAddress('["common"].proxyAdmin'),
+            proxyAdmin,
             stakeManagerProxy,
             config.readAddress('["common"].newBls'),
-            stateSenderProxy,
+            stateSenderLogic,
             config.readAddress('["CustomSupernetManager"].newMatic'),
             config.readAddress('["CustomSupernetManager"].newChildValidatorSet'),
             exitHelperProxy,
@@ -89,8 +98,8 @@ contract DeployRootContracts is
         );
 
         (rootERC20PredicateLogic, rootERC20PredicateProxy) = deployRootERC20Predicate(
-            config.readAddress('["common"].proxyAdmin'),
-            stateSenderProxy,
+            proxyAdmin,
+            stateSenderLogic,
             exitHelperProxy,
             config.readAddress('["RootERC20Predicate"].newChildERC20Predicate'),
             config.readAddress('["common"].newChildTokenTemplate'),
@@ -98,69 +107,120 @@ contract DeployRootContracts is
         );
 
         (childMintableERC20PredicateLogic, childMintableERC20PredicateProxy) = deployChildMintableERC20Predicate(
-            config.readAddress('["common"].proxyAdmin'),
-            stateSenderProxy,
+            proxyAdmin,
+            stateSenderLogic,
             exitHelperProxy,
             rootERC20PredicateProxy,
             config.readAddress('["common"].newChildTokenTemplate')
         );
 
         (rootERC721PredicateLogic, rootERC721PredicateProxy) = deployRootERC721Predicate(
-            config.readAddress('["common"].proxyAdmin'),
-            stateSenderProxy,
+            proxyAdmin,
+            stateSenderLogic,
             exitHelperProxy,
             config.readAddress('["RootERC721Predicate"].newChildERC721Predicate'),
             config.readAddress('["common"].newChildTokenTemplate')
         );
 
         (childMintableERC721PredicateLogic, childMintableERC721PredicateProxy) = deployChildMintableERC721Predicate(
-            config.readAddress('["common"].proxyAdmin'),
-            stateSenderProxy,
+            proxyAdmin,
+            stateSenderLogic,
             exitHelperProxy,
             rootERC721PredicateProxy,
             config.readAddress('["common"].newChildTokenTemplate')
         );
 
         (rootERC1155PredicateLogic, rootERC1155PredicateProxy) = deployRootERC1155Predicate(
-            config.readAddress('["common"].proxyAdmin'),
-            stateSenderProxy,
+            proxyAdmin,
+            stateSenderLogic,
             exitHelperProxy,
             config.readAddress('["RootERC1155Predicate"].newChildERC1155Predicate'),
             config.readAddress('["common"].newChildTokenTemplate')
         );
 
         (childMintableERC1155PredicateLogic, childMintableERC1155PredicateProxy) = deployChildMintableERC1155Predicate(
-            config.readAddress('["common"].proxyAdmin'),
-            stateSenderProxy,
+            proxyAdmin,
+            stateSenderLogic,
             exitHelperProxy,
             rootERC1155PredicateProxy,
             config.readAddress('["common"].newChildTokenTemplate')
         );
 
+        console.log("Simulating...");
+        console.log("");
         console.log("Expected addresses:");
         console.log("");
-        console.log("StakeManager logic: %s", stakeManagerLogic);
-        console.log("StakeManager proxy: %s", stakeManagerProxy);
-        console.log("StateSender logic: %s", stateSenderLogic);
-        console.log("StateSender proxy: %s", stateSenderProxy);
-        console.log("CheckpointManager logic: %s", checkpointManagerLogic);
-        console.log("CheckpointManager proxy: %s", checkpointManagerProxy);
-        console.log("ExitHelper logic: %s", exitHelperLogic);
-        console.log("ExitHelper proxy: %s", exitHelperProxy);
-        console.log("CustomSupernetManager logic: %s", customSupernetManagerLogic);
-        console.log("CustomSupernetManager proxy: %s", customSupernetManagerProxy);
-        console.log("RootERC20Predicate logic: %s", rootERC20PredicateLogic);
-        console.log("RootERC20Predicate proxy: %s", rootERC20PredicateProxy);
-        console.log("ChildMintableERC20Predicate logic: %s", childMintableERC20PredicateLogic);
-        console.log("ChildMintableERC20Predicate proxy: %s", childMintableERC20PredicateProxy);
-        console.log("RootERC721Predicate logic: %s", rootERC721PredicateLogic);
-        console.log("RootERC721Predicate proxy: %s", rootERC721PredicateProxy);
-        console.log("ChildMintableERC721Predicate logic: %s", childMintableERC721PredicateLogic);
-        console.log("ChildMintableERC721Predicate proxy: %s", childMintableERC721PredicateProxy);
-        console.log("RootERC1155Predicate logic: %s", rootERC1155PredicateLogic);
-        console.log("RootERC1155Predicate proxy: %s", rootERC1155PredicateProxy);
-        console.log("ChildMintableERC1155Predicate logic: %s", childMintableERC1155PredicateLogic);
-        console.log("ChildMintableERC1155Predicate proxy: %s", childMintableERC1155PredicateProxy);
+        console.log("ProxyAdmin");
+        console.log("");
+        console.log("Logic:", proxyAdmin);
+        console.log("Proxy:", "Does not have a proxy");
+        console.log("");
+        console.log("");
+        console.log("StakeManager");
+        console.log("");
+        console.log("Logic:", stakeManagerLogic);
+        console.log("Proxy:", stakeManagerProxy);
+        console.log("");
+        console.log("");
+        console.log("StateSender");
+        console.log("");
+        console.log("Logic:", stateSenderLogic);
+        console.log("Proxy:", "Does not have a proxy");
+        console.log("");
+        console.log("");
+        console.log("CheckpointManager");
+        console.log("");
+        console.log("Logic:", checkpointManagerLogic);
+        console.log("Proxy:", checkpointManagerProxy);
+        console.log("");
+        console.log("");
+        console.log("ExitHelper");
+        console.log("");
+        console.log("Logic:", exitHelperLogic);
+        console.log("Proxy:", exitHelperProxy);
+        console.log("");
+        console.log("");
+        console.log("CustomSupernetManager");
+        console.log("");
+        console.log("Logic:", customSupernetManagerLogic);
+        console.log("Proxy:", customSupernetManagerProxy);
+        console.log("");
+        console.log("");
+        console.log("RootERC20Predicate");
+        console.log("");
+        console.log("Logic:", rootERC20PredicateLogic);
+        console.log("Proxy:", rootERC20PredicateProxy);
+        console.log("");
+        console.log("");
+        console.log("ChildMintableERC20Predicate");
+        console.log("");
+        console.log("Logic:", childMintableERC20PredicateLogic);
+        console.log("Proxy:", childMintableERC20PredicateProxy);
+        console.log("");
+        console.log("");
+        console.log("RootERC721Predicate");
+        console.log("");
+        console.log("Logic:", rootERC721PredicateLogic);
+        console.log("Proxy:", rootERC721PredicateProxy);
+        console.log("");
+        console.log("");
+        console.log("ChildMintableERC721Predicate");
+        console.log("");
+        console.log("Logic:", childMintableERC721PredicateLogic);
+        console.log("Proxy:", childMintableERC721PredicateProxy);
+        console.log("");
+        console.log("");
+        console.log("RootERC1155Predicate");
+        console.log("");
+        console.log("Logic:", rootERC1155PredicateLogic);
+        console.log("Proxy:", rootERC1155PredicateProxy);
+        console.log("");
+        console.log("");
+        console.log("ChildMintableERC1155Predicate");
+        console.log("");
+        console.log("Logic:", childMintableERC1155PredicateLogic);
+        console.log("Proxy:", childMintableERC1155PredicateProxy);
+        console.log("");
         console.log("");
         console.log("See logs for actual addresses.");
     }

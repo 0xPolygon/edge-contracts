@@ -1,6 +1,6 @@
 {
   "common": {
-    "proxyAdmin": "",
+    "proxyAdminOwner": "",
     "newBls": "",
     "newChildTokenTemplate": ""
   },
