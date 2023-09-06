@@ -21,8 +21,8 @@ library Merkle {
         bytes32 rootHash,
         bytes32[] calldata proof
     ) internal pure returns (bool isMember) {
-        // slither-disable-next-line assembly
         // solhint-disable-next-line no-inline-assembly
+        // slither-disable-next-line assembly
         assembly ("memory-safe") {
             // if proof is empty, check if the leaf is the root
             if proof.length {
@@ -73,8 +73,8 @@ library Merkle {
         bytes32 rootHash,
         bytes32[] calldata proof
     ) internal pure returns (bool isMember) {
-        // slither-disable-next-line assembly
         // solhint-disable-next-line no-inline-assembly
+        // slither-disable-next-line assembly
         assembly ("memory-safe") {
             // if proof is empty, check if the leaf is the root
             if proof.length {
