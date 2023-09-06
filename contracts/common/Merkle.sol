@@ -21,6 +21,7 @@ library Merkle {
         bytes32 rootHash,
         bytes32[] calldata proof
     ) internal pure returns (bool isMember) {
+        // slither-disable-next-line assembly
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             // if proof is empty, check if the leaf is the root
@@ -72,6 +73,7 @@ library Merkle {
         bytes32 rootHash,
         bytes32[] calldata proof
     ) internal pure returns (bool isMember) {
+        // slither-disable-next-line assembly
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             // if proof is empty, check if the leaf is the root
@@ -104,6 +106,7 @@ library Merkle {
             // check if log2(numLeaves) is an integer, or else rounds up to the next integer
             // then, checks if the calculated root matches the expected root
             // finally, checks if index was zeroed while calculating proof, else an invalid index was provided
+            // slither-disable-next-line incorrect-shift
             isMember := and(
                 and(lt(numLeaves, add(shl(proof.length, 0x1), 1)), gt(numLeaves, shl(sub(proof.length, 1), 0x1))),
                 and(eq(leaf, rootHash), iszero(index))
