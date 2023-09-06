@@ -15,5 +15,6 @@ ffi = true
 # do not use for computationally expensive tests
 [profile.intense.fuzz]
 runs = 10000
+max_test_rejects = 999999
 
 # See more config options https://book.getfoundry.sh/reference/config.html
