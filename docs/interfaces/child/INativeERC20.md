@@ -99,7 +99,7 @@ Burns an amount of tokens from a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### decimals
 
@@ -121,7 +121,7 @@ function decimals() external view returns (uint8)
 ### initialize
 
 ```solidity
-function initialize(address predicate_, address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
+function initialize(address predicate_, address rootToken_, string name_, string symbol_, uint8 decimals_, uint256 tokenSupply_) external nonpayable
 ```
 
 
@@ -137,6 +137,7 @@ function initialize(address predicate_, address rootToken_, string name_, string
 | name_ | string | undefined |
 | symbol_ | string | undefined |
 | decimals_ | uint8 | undefined |
+| tokenSupply_ | uint256 | undefined |
 
 ### mint
 
@@ -159,7 +160,7 @@ Mints an amount of tokens to a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### name
 

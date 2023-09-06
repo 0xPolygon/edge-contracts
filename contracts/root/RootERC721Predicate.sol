@@ -21,7 +21,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootERC721Predicate
+     * @notice Initialization function for RootERC721Predicate
      * @param newStateSender Address of StateSender to send deposit information to
      * @param newExitHelper Address of ExitHelper to receive withdrawal information from
      * @param newChildERC721Predicate Address of child ERC721 predicate to communicate with
@@ -183,4 +183,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
         if (childToken == address(0)) childToken = mapToken(IERC721Metadata(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

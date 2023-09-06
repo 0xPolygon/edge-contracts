@@ -8,6 +8,7 @@ import "../interfaces/root/IExitHelper.sol";
 contract ExitHelper is IExitHelper, Initializable {
     mapping(uint256 => bool) public processedExits;
     ICheckpointManager public checkpointManager;
+    address public caller;
 
     event ExitProcessed(uint256 indexed id, bool indexed success, bytes returnData);
 
@@ -83,14 +84,21 @@ contract ExitHelper is IExitHelper, Initializable {
 
         processedExits[id] = true;
 
-        // slither-disable-next-line calls-loop,low-level-calls,reentrancy-events,reentrancy-no-eth
+        // slither-disable-next-line costly-loop
+        caller = msg.sender;
+        // slither-disable-next-line calls-loop,low-level-calls,reentrancy-events,reentrancy-no-eth,reentrancy-benign
         (bool success, bytes memory returnData) = receiver.call(
             abi.encodeWithSignature("onL2StateReceive(uint256,address,bytes)", id, sender, data)
         );
+        // slither-disable-next-line costly-loop
+        caller = address(0);
 
         // if state sync fails, revert flag
         if (!success) processedExits[id] = false;
 
         emit ExitProcessed(id, success, returnData);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

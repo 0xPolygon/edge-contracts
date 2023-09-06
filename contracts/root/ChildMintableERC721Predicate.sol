@@ -33,7 +33,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
     }
 
     /**
-     * @notice Initilization function for ChildMintableERC721Predicate
+     * @notice Initialization function for ChildMintableERC721Predicate
      * @param newStateSender Address of StateSender to send exit information to
      * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
@@ -114,7 +114,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
     }
 
     /**
-     * @notice Initilization function for ChildMintableERC721Predicate
+     * @notice Initialization function for ChildMintableERC721Predicate
      * @param newStateSender Address of StateSender to send exit information to
      * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC721Predicate Address of root ERC721 predicate to communicate with
@@ -282,4 +282,7 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
             return false;
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

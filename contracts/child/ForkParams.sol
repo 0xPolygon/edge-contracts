@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
     @title ForkParams
@@ -9,17 +10,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     @notice Configurable softfork features that are read by the client on each epoch
     @dev The contract allows for configurable softfork parameters without genesis updation
  */
-contract ForkParams is Ownable {
+contract ForkParams is Ownable, Initializable {
     mapping(bytes32 => uint256) public featureToBlockNumber; // keccak256("FEATURE_NAME") -> blockNumber
 
     event NewFeature(bytes32 indexed feature, uint256 indexed block);
     event UpdatedFeature(bytes32 indexed feature, uint256 indexed block);
 
     /**
-     * @notice constructor function to set the owner
+     * @notice initialize function to set the owner
      * @param newOwner address to transfer the ownership to
      */
-    constructor(address newOwner) {
+    function initialize(address newOwner) public initializer {
         _transferOwnership(newOwner);
     }
 

@@ -50,7 +50,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
     /**
-     * @notice Initilization function for ChildERC20Predicate
+     * @notice Initialization function for ChildERC20Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
@@ -226,4 +226,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         // slither-disable-next-line reentrancy-events
         emit L2TokenMapped(rootToken, address(childToken));
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

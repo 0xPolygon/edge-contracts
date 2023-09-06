@@ -248,7 +248,7 @@ function childTokenTemplate() external view returns (address)
 function initialize(address newL2StateSender, address newStateReceiver, address newRootERC20Predicate, address newChildTokenTemplate, address newNativeTokenRootAddress) external nonpayable
 ```
 
-Initilization function for ChildERC20Predicate
+Initialization function for ChildERC20Predicate
 
 *Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.*
 
@@ -362,7 +362,7 @@ function renounceOwnership() external nonpayable
 
 
 
-*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
 
 
 ### rootERC20Predicate

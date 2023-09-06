@@ -50,7 +50,7 @@ function childERC20Predicate() external view returns (contract IChildERC20Predic
 function initialize(contract IChildERC20Predicate newChildERC20Predicate, address newBurnDestination) external nonpayable
 ```
 
-Initilization function for EIP1559 burn contract
+Initialization function for EIP1559 burn contract
 
 *Can only be called once*
 

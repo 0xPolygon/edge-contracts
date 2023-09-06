@@ -5,7 +5,7 @@ import "./EIP712Upgradeable.sol";
 
 // solhint-disable reason-string
 contract EIP712MetaTransaction is EIP712Upgradeable {
-    bytes32 private constant META_TRANSACTION_TYPEHASH =
+    bytes32 private constant _META_TRANSACTION_TYPEHASH =
         keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
 
     event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature);
@@ -96,7 +96,7 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
     function _hashMetaTransaction(MetaTransaction memory metaTx) private pure returns (bytes32) {
         return
             keccak256(
-                abi.encode(META_TRANSACTION_TYPEHASH, metaTx.nonce, metaTx.from, keccak256(metaTx.functionSignature))
+                abi.encode(_META_TRANSACTION_TYPEHASH, metaTx.nonce, metaTx.from, keccak256(metaTx.functionSignature))
             );
     }
 
@@ -110,4 +110,7 @@ contract EIP712MetaTransaction is EIP712Upgradeable {
             outBytes4 := mload(add(inBytes, 32))
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

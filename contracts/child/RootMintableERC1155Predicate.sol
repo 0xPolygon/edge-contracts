@@ -21,7 +21,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootMintableERC1155Predicate
+     * @notice Initialization function for RootMintableERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send deposit information to
      * @param newStateReceiver Address of StateReceiver to receive withdrawal information from
      * @param newChildERC1155Predicate Address of child ERC1155 predicate to communicate with
@@ -230,4 +230,7 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
         if (childToken == address(0)) childToken = mapToken(IERC1155MetadataURI(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

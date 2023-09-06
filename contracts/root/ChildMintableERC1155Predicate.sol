@@ -33,7 +33,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     }
 
     /**
-     * @notice Initilization function for ChildMintableERC1155Predicate
+     * @notice Initialization function for ChildMintableERC1155Predicate
      * @param newStateSender Address of StateSender to send exit information to
      * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
@@ -118,7 +118,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     }
 
     /**
-     * @notice Internal initilization function for ChildMintableERC1155Predicate
+     * @notice Internal initialization function for ChildMintableERC1155Predicate
      * @param newStateSender Address of StateSender to send exit information to
      * @param newExitHelper Address of ExitHelper to receive deposit information from
      * @param newRootERC1155Predicate Address of root ERC1155 predicate to communicate with
@@ -305,4 +305,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
             return false;
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
