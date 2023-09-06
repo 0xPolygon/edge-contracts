@@ -44,6 +44,7 @@ contract ValidatorSet is IValidatorSet, ERC20VotesUpgradeable, System {
             newStateSender != address(0) && newStateReceiver != address(0) && newRootChainManager != address(0),
             "INVALID_INPUT"
         );
+        __ERC20Permit_init("ValidatorSet");
         __ERC20_init("ValidatorSet", "VSET");
         _stateSender = IStateSender(newStateSender);
         _stateReceiver = newStateReceiver;
