@@ -13,7 +13,7 @@ import "../interfaces/child/IChildERC20Predicate.sol";
 contract EIP1559Burn is Initializable {
     IChildERC20Predicate public childERC20Predicate;
     address public burnDestination;
-    IChildERC20 private constant NATIVE_TOKEN = IChildERC20(0x0000000000000000000000000000000000001010);
+    IChildERC20 private constant _NATIVE_TOKEN = IChildERC20(0x0000000000000000000000000000000000001010);
 
     event NativeTokenBurnt(address indexed burner, uint256 amount);
 
@@ -21,7 +21,7 @@ contract EIP1559Burn is Initializable {
     receive() external payable {} // solhint-disable-line no-empty-blocks
 
     /**
-     * @notice Initilization function for EIP1559 burn contract
+     * @notice Initialization function for EIP1559 burn contract
      * @param newChildERC20Predicate Address of the ERC20 predicate on child chain
      * @param newBurnDestination Address on the root chain to burn the tokens and send to
      * @dev Can only be called once
@@ -42,7 +42,7 @@ contract EIP1559Burn is Initializable {
 
         uint256 balance = address(this).balance;
 
-        childERC20Predicate.withdrawTo(NATIVE_TOKEN, burnDestination, balance);
+        childERC20Predicate.withdrawTo(_NATIVE_TOKEN, burnDestination, balance);
         // slither-disable-next-line reentrancy-events
         emit NativeTokenBurnt(msg.sender, balance);
     }

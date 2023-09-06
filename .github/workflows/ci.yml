@@ -70,7 +70,6 @@ jobs:
         with:
           node-version: "18.x"
           cache: "npm"
-      - run: rm foundry.toml
       - uses: crytic/slither-action@v0.3.0
         with:
           node-version: 18
@@ -89,7 +88,7 @@ jobs:
       - name: solidity-coverage
         run: npx hardhat coverage
       - name: coveralls
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
   forge_coverage:
@@ -109,4 +108,4 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Print coverage
-        run: forge coverage
+        run: forge b; forge coverage

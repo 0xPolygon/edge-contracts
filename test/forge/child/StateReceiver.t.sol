@@ -154,7 +154,7 @@ abstract contract NonEmptyState is EmptyState, MurkyBase {
 
 contract StateReceiverTest_NonEmptyState is NonEmptyState {
     function testCannotExecute_InvalidProof() public {
-        vm.expectRevert("INVALID_PROOF_LENGTH");
+        vm.expectRevert("INVALID_PROOF");
         stateReceiver.execute(proof, stateSyncs[0]);
     }
 

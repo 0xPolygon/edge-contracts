@@ -15,6 +15,13 @@ interface IExitHelper {
     }
 
     /**
+     * @notice Returns the address that called the exit function
+     * @dev only available in the context of the exit function
+     * @return address of the caller
+     */
+    function caller() external view returns (address);
+
+    /**
      * @notice Perform an exit for one event
      * @param blockNumber Block number of the exit event on L2
      * @param leafIndex Index of the leaf in the exit event Merkle tree

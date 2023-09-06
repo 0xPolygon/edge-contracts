@@ -80,7 +80,8 @@ describe("NativeERC20Mintable", () => {
         ethers.constants.AddressZero,
         "TEST",
         "TEST",
-        18
+        18,
+        0
       )
     )
       .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
@@ -95,7 +96,8 @@ describe("NativeERC20Mintable", () => {
         ethers.constants.AddressZero,
         "TEST",
         "TEST",
-        18
+        18,
+        0
       )
     )
       .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
@@ -110,7 +112,8 @@ describe("NativeERC20Mintable", () => {
         ethers.constants.AddressZero,
         "TEST",
         "TEST",
-        18
+        18,
+        0
       )
     ).to.be.revertedWith("NativeERC20: Invalid owner address");
   });
@@ -123,7 +126,8 @@ describe("NativeERC20Mintable", () => {
         ethers.constants.AddressZero,
         "TEST",
         "TEST",
-        18
+        18,
+        0
       )
     ).to.not.be.reverted;
     expect(await nativeERC20.name()).to.equal("TEST");
@@ -143,6 +147,7 @@ describe("NativeERC20Mintable", () => {
         ethers.constants.AddressZero,
         "",
         "",
+        0,
         0
       )
     ).to.be.revertedWith("Initializable: contract is already initialized");

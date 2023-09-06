@@ -20,7 +20,7 @@ interface ICustomSupernetManager {
     event AddedToWhitelist(address indexed validator);
     event RemovedFromWhitelist(address indexed validator);
     event ValidatorRegistered(address indexed validator, uint256[4] blsKey);
-    event ValidatorDeactivated(address validator);
+    event ValidatorDeactivated(address indexed validator);
     event GenesisFinalized(uint256 amountValidators);
     event StakingEnabled();
 

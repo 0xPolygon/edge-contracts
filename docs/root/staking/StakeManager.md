@@ -35,7 +35,7 @@ returns the child id for a child chain manager contract
 ### initialize
 
 ```solidity
-function initialize(address newMatic) external nonpayable
+function initialize(address newStakingToken) external nonpayable
 ```
 
 
@@ -46,7 +46,7 @@ function initialize(address newMatic) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| newMatic | address | undefined |
+| newStakingToken | address | undefined |
 
 ### managerOf
 

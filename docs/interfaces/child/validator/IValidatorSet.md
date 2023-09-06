@@ -10,23 +10,6 @@ Manages voting power for validators and commits epochs for child chains
 
 ## Methods
 
-### EPOCH_SIZE
-
-```solidity
-function EPOCH_SIZE() external view returns (uint256)
-```
-
-amount of blocks in an epoch
-
-*when an epoch is committed a multiple of this number of blocks must be committed*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### balanceOfAt
 
 ```solidity
@@ -53,7 +36,7 @@ returns a validator balance for a given epoch
 ### commitEpoch
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch) external nonpayable
+function commitEpoch(uint256 id, Epoch epoch, uint256 epochSize) external nonpayable
 ```
 
 
@@ -66,6 +49,7 @@ function commitEpoch(uint256 id, Epoch epoch) external nonpayable
 |---|---|---|
 | id | uint256 | undefined |
 | epoch | Epoch | undefined |
+| epochSize | uint256 | undefined |
 
 ### onStateReceive
 
@@ -106,6 +90,22 @@ Calculates how much is yet to become withdrawable for account.
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
+
+### slash
+
+```solidity
+function slash(address[] validators) external nonpayable
+```
+
+initialises slashing process
+
+*system call,given list of validators are slashed on L2 subsequently after their stake is slashed on L1*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| validators | address[] | list of validators to be slashed |
 
 ### totalBlocks
 
@@ -226,7 +226,7 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 ### Slashed
 
 ```solidity
-event Slashed(uint256 indexed validator, uint256 amount)
+event Slashed(uint256 indexed exitId, address[] validators)
 ```
 
 
@@ -237,8 +237,8 @@ event Slashed(uint256 indexed validator, uint256 amount)
 
 | Name | Type | Description |
 |---|---|---|
-| validator `indexed` | uint256 | undefined |
-| amount  | uint256 | undefined |
+| exitId `indexed` | uint256 | undefined |
+| validators  | address[] | undefined |
 
 ### Withdrawal
 

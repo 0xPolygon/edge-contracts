@@ -365,7 +365,7 @@ library ModexpInverse {
  */
 library ModexpSqrt {
     /**
-     * @notice computes square root by modular exponentation
+     * @notice computes square root by modular exponentiation
      * @dev Compute $input^{(N + 1) / 4} mod N$ using Addition Chain method
      * @param t6 the number to derive the square root of
      * @return t0 the square root

@@ -35,4 +35,7 @@ contract ChildERC20PredicateAccessList is AccessList, ChildERC20Predicate {
     function _beforeTokenWithdraw() internal virtual override {
         _checkAccessList();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

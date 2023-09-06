@@ -10,23 +10,6 @@
 
 ## Methods
 
-### SLASHING_PERCENTAGE
-
-```solidity
-function SLASHING_PERCENTAGE() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### acceptOwnership
 
 ```solidity
@@ -265,7 +248,7 @@ function renounceOwnership() external nonpayable
 
 
 
-*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
 
 
 ### transferOwnership
@@ -456,7 +439,7 @@ event StakingEnabled()
 ### ValidatorDeactivated
 
 ```solidity
-event ValidatorDeactivated(address validator)
+event ValidatorDeactivated(address indexed validator)
 ```
 
 
@@ -467,7 +450,7 @@ event ValidatorDeactivated(address validator)
 
 | Name | Type | Description |
 |---|---|---|
-| validator  | address | undefined |
+| validator `indexed` | address | undefined |
 
 ### ValidatorRegistered
 

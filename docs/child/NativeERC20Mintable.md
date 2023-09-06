@@ -263,7 +263,7 @@ Burns an amount of tokens from a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### decimals
 
@@ -331,7 +331,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address predicate_, address owner_, address rootToken_, string name_, string symbol_, uint8 decimals_) external nonpayable
+function initialize(address predicate_, address owner_, address rootToken_, string name_, string symbol_, uint8 decimals_, uint256 tokenSupply_) external nonpayable
 ```
 
 
@@ -348,6 +348,7 @@ function initialize(address predicate_, address owner_, address rootToken_, stri
 | name_ | string | undefined |
 | symbol_ | string | undefined |
 | decimals_ | uint8 | undefined |
+| tokenSupply_ | uint256 | undefined |
 
 ### mint
 
@@ -370,7 +371,7 @@ Mints an amount of tokens to a particular address
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | bool Returns true if function call is succesful |
+| _0 | bool | bool Returns true if function call is successful |
 
 ### name
 
@@ -448,7 +449,7 @@ function renounceOwnership() external nonpayable
 
 
 
-*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
 
 
 ### rootToken
@@ -457,7 +458,7 @@ function renounceOwnership() external nonpayable
 function rootToken() external view returns (address)
 ```
 
-Returns predicate address controlling the child token
+Returns corresponding root token address for the child native token
 
 
 
@@ -466,7 +467,7 @@ Returns predicate address controlling the child token
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | address Returns the address of the predicate |
+| _0 | address | address Returns the root token address |
 
 ### symbol
 

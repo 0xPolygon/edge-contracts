@@ -12,12 +12,13 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];
     using Merkle for bytes32;
 
+    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
+
     uint256 public chainId;
     uint256 public currentEpoch;
     uint256 public currentValidatorSetLength;
     uint256 public currentCheckpointBlockNumber;
     uint256 public totalVotingPower;
-    bytes32 public constant DOMAIN = keccak256("DOMAIN_CHECKPOINT_MANAGER");
     IBLS public bls;
     IBN256G2 public bn256G2;
 
@@ -226,4 +227,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         // Get the value of the bit at the given 'index' in a byte.
         return uint8(bitmap[byteNumber]) & (1 << bitNumber) > 0;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

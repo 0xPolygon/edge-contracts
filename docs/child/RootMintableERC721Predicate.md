@@ -341,7 +341,7 @@ Function to deposit tokens from the depositor to another address on the child ch
 function initialize(address newL2StateSender, address newStateReceiver, address newChildERC721Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
-Initilization function for RootMintableERC721Predicate
+Initialization function for RootMintableERC721Predicate
 
 *Can only be called once.*
 
@@ -349,8 +349,8 @@ Initilization function for RootMintableERC721Predicate
 
 | Name | Type | Description |
 |---|---|---|
-| newL2StateSender | address | Address of StateSender to send deposit information to |
-| newStateReceiver | address | Address of ExitHelper to receive withdrawal information from |
+| newL2StateSender | address | Address of L2StateSender to send deposit information to |
+| newStateReceiver | address | Address of StateReceiver to receive withdrawal information from |
 | newChildERC721Predicate | address | Address of child ERC721 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token template to calculate child token addresses |
 

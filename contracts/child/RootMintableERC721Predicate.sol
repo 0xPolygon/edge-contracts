@@ -22,7 +22,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootMintableERC721Predicate
+     * @notice Initialization function for RootMintableERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send deposit information to
      * @param newStateReceiver Address of StateReceiver to receive withdrawal information from
      * @param newChildERC721Predicate Address of child ERC721 predicate to communicate with
@@ -48,9 +48,13 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         require(sender == childERC721Predicate, "RootMintableERC721Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
+            _beforeTokenWithdraw();
             _withdraw(data[32:]);
+            _afterTokenWithdraw();
         } else if (bytes32(data[:32]) == WITHDRAW_BATCH_SIG) {
+            _beforeTokenWithdraw();
             _withdrawBatch(data);
+            _afterTokenWithdraw();
         } else {
             revert("RootMintableERC721Predicate: INVALID_SIGNATURE");
         }
@@ -89,22 +93,36 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         require(address(rootToken) != address(0), "RootMintableERC721Predicate: INVALID_TOKEN");
         require(rootTokenToChildToken[address(rootToken)] == address(0), "RootMintableERC721Predicate: ALREADY_MAPPED");
 
+        address childPredicate = childERC721Predicate;
+
         address childToken = Clones.predictDeterministicAddress(
             childTokenTemplate,
             keccak256(abi.encodePacked(rootToken)),
-            childERC721Predicate
+            childPredicate
         );
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
         l2StateSender.syncState(
-            childERC721Predicate,
+            childPredicate,
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol())
         );
         // slither-disable-next-line reentrancy-events
         emit L2MintableTokenMapped(address(rootToken), childToken);
         return childToken;
     }
+
+    // solhint-disable no-empty-blocks
+    // slither-disable-start dead-code
+    function _beforeTokenDeposit() internal virtual {}
+
+    function _beforeTokenWithdraw() internal virtual {}
+
+    function _afterTokenDeposit() internal virtual {}
+
+    function _afterTokenWithdraw() internal virtual {}
+
+    // slither-disable-end dead-code
 
     function _initialize(
         address newL2StateSender,
@@ -126,6 +144,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
     }
 
     function _deposit(IERC721Metadata rootToken, address receiver, uint256 tokenId) private {
+        _beforeTokenDeposit();
         address childToken = _getChildToken(rootToken);
 
         rootToken.safeTransferFrom(msg.sender, address(this), tokenId);
@@ -136,6 +155,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         );
         // slither-disable-next-line reentrancy-events
         emit L2MintableERC721Deposit(address(rootToken), childToken, msg.sender, receiver, tokenId);
+        _afterTokenDeposit();
     }
 
     function _depositBatch(
@@ -143,6 +163,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         address[] calldata receivers,
         uint256[] calldata tokenIds
     ) private {
+        _beforeTokenDeposit();
         address childToken = _getChildToken(rootToken);
 
         for (uint256 i = 0; i < tokenIds.length; ) {
@@ -158,6 +179,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         );
         // slither-disable-next-line reentrancy-events
         emit L2MintableERC721DepositBatch(address(rootToken), childToken, msg.sender, receivers, tokenIds);
+        _afterTokenDeposit();
     }
 
     function _withdraw(bytes calldata data) private {
@@ -195,4 +217,7 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
         if (childToken == address(0)) childToken = mapToken(IERC721Metadata(rootToken));
         assert(childToken != address(0)); // invariant because we map the token if mapping does not exist
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

@@ -27,7 +27,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
     mapping(address => address) public rootTokenToChildToken;
 
     /**
-     * @notice Initilization function for RootMintableERC20Predicate
+     * @notice Initialization function for RootMintableERC20Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to
      * @param newStateReceiver Address of StateReceiver to receive deposit information from
      * @param newChildERC20Predicate Address of child ERC20 predicate to communicate with
@@ -172,4 +172,7 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
         // slither-disable-next-line reentrancy-events
         emit L2MintableERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

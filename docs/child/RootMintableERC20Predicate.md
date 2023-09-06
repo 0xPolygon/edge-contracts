@@ -289,7 +289,7 @@ Function to deposit tokens from the depositor to another address on the child ch
 function initialize(address newL2StateSender, address newStateReceiver, address newChildERC20Predicate, address newChildTokenTemplate) external nonpayable
 ```
 
-Initilization function for RootMintableERC20Predicate
+Initialization function for RootMintableERC20Predicate
 
 *Can only be called once.*
 
@@ -299,7 +299,7 @@ Initilization function for RootMintableERC20Predicate
 |---|---|---|
 | newL2StateSender | address | Address of L2StateSender to send exit information to |
 | newStateReceiver | address | Address of StateReceiver to receive deposit information from |
-| newChildERC20Predicate | address | Address of root ERC20 predicate to communicate with |
+| newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | Address of child token implementation to deploy clones of |
 
 ### l2StateSender

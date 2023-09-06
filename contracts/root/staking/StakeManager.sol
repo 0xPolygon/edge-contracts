@@ -4,27 +4,25 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../lib/ChildManagerLib.sol";
-import "../../lib/StakeManagerLib.sol";
+import "../../interfaces/root/staking/IStakeManager.sol";
+import "./StakeManagerChildData.sol";
+import "./StakeManagerStakingData.sol";
 
-contract StakeManager is IStakeManager, Initializable {
-    using ChildManagerLib for ChildChains;
-    using StakeManagerLib for Stakes;
+contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, StakeManagerStakingData {
     using SafeERC20 for IERC20;
 
-    IERC20 internal matic;
-    ChildChains private _chains;
-    Stakes private _stakes;
+    IERC20 private _stakingToken;
 
-    function initialize(address newMatic) public initializer {
-        matic = IERC20(newMatic);
+    function initialize(address newStakingToken) public initializer {
+        _stakingToken = IERC20(newStakingToken);
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function registerChildChain(address manager) external returns (uint256 id) {
-        id = _chains.registerChild(manager);
+        require(_ids[manager] == 0, "StakeManager: ID_ALREADY_SET");
+        id = _registerChild(manager);
         ISupernetManager(manager).onInit(id);
         // slither-disable-next-line reentrancy-events
         emit ChildManagerRegistered(id, manager);
@@ -34,12 +32,12 @@ contract StakeManager is IStakeManager, Initializable {
      * @inheritdoc IStakeManager
      */
     function stakeFor(uint256 id, uint256 amount) external {
-        require(id != 0 && id <= _chains.counter, "INVALID_ID");
+        require(id != 0 && id <= _counter, "StakeManager: INVALID_ID");
         // slither-disable-next-line reentrancy-benign,reentrancy-events
-        matic.safeTransferFrom(msg.sender, address(this), amount);
+        _stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         // calling the library directly once fixes the coverage issue
         // https://github.com/foundry-rs/foundry/issues/4854#issuecomment-1528897219
-        StakeManagerLib.addStake(_stakes, msg.sender, id, amount);
+        _addStake(msg.sender, id, amount);
         ISupernetManager manager = managerOf(id);
         manager.onStake(msg.sender, amount);
         // slither-disable-next-line reentrancy-events
@@ -51,7 +49,7 @@ contract StakeManager is IStakeManager, Initializable {
      */
     function releaseStakeOf(address validator, uint256 amount) external {
         uint256 id = idFor(msg.sender);
-        _stakes.removeStake(validator, id, amount);
+        _removeStake(validator, id, amount);
         // slither-disable-next-line reentrancy-events
         emit StakeRemoved(id, validator, amount);
     }
@@ -68,9 +66,9 @@ contract StakeManager is IStakeManager, Initializable {
      */
     function slashStakeOf(address validator, uint256 amount) external {
         uint256 id = idFor(msg.sender);
-        uint256 stake = stakeOf(validator, id);
+        uint256 stake = _stakeOf(validator, id);
         if (amount > stake) amount = stake;
-        _stakes.removeStake(validator, id, stake);
+        _removeStake(validator, id, stake);
         _withdrawStake(validator, msg.sender, amount);
         emit StakeRemoved(id, validator, stake);
         emit ValidatorSlashed(id, validator, amount);
@@ -80,55 +78,58 @@ contract StakeManager is IStakeManager, Initializable {
      * @inheritdoc IStakeManager
      */
     function withdrawableStake(address validator) external view returns (uint256 amount) {
-        amount = _stakes.withdrawableStakeOf(validator);
+        amount = _withdrawableStakeOf(validator);
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function totalStake() external view returns (uint256 amount) {
-        amount = _stakes.totalStake;
+        amount = _totalStake;
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function totalStakeOfChild(uint256 id) external view returns (uint256 amount) {
-        amount = _stakes.totalStakeOfChild(id);
+        amount = _totalStakeOfChild(id);
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function totalStakeOf(address validator) external view returns (uint256 amount) {
-        amount = _stakes.totalStakeOf(validator);
+        amount = _totalStakeOf(validator);
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function stakeOf(address validator, uint256 id) public view returns (uint256 amount) {
-        amount = _stakes.stakeOf(validator, id);
+        amount = _stakeOf(validator, id);
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function managerOf(uint256 id) public view returns (ISupernetManager manager) {
-        manager = ISupernetManager(_chains.managerOf(id));
+        manager = ISupernetManager(_managerOf(id));
     }
 
     /**
      * @inheritdoc IStakeManager
      */
     function idFor(address manager) public view returns (uint256 id) {
-        id = ChildManagerLib.idFor(_chains, manager);
+        id = _idFor(manager);
     }
 
     function _withdrawStake(address validator, address to, uint256 amount) private {
-        _stakes.withdrawStake(validator, amount);
+        _withdrawStake(validator, amount);
         // slither-disable-next-line reentrancy-events
-        matic.safeTransfer(to, amount);
+        _stakingToken.safeTransfer(to, amount);
         emit StakeWithdrawn(validator, to, amount);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
