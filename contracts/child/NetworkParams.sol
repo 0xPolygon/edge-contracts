@@ -66,7 +66,6 @@ contract NetworkParams is Ownable2Step, Initializable {
             initParams.newOwner != address(0) &&
                 initParams.newCheckpointBlockInterval != 0 &&
                 initParams.newEpochSize != 0 &&
-                initParams.newEpochReward != 0 &&
                 initParams.newSprintSize != 0 &&
                 initParams.newMinValidatorSetSize != 0 &&
                 initParams.newMaxValidatorSetSize != 0 &&
@@ -123,7 +122,6 @@ contract NetworkParams is Ownable2Step, Initializable {
      * @param newEpochReward new epoch reward
      */
     function setNewEpochReward(uint256 newEpochReward) external onlyOwner {
-        require(newEpochReward != 0, "NetworkParams: INVALID_EPOCH_REWARD");
         epochReward = newEpochReward;
 
         emit NewEpochReward(newEpochReward);

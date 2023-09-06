@@ -129,10 +129,6 @@ describe("NetworkParams", () => {
     await stopImpersonatingAccount(accounts[1].address);
   });
 
-  it("set new epoch reward fail: invalid input", async () => {
-    await expect(networkParams.setNewEpochReward(0)).to.be.revertedWith("NetworkParams: INVALID_EPOCH_REWARD");
-  });
-
   it("set new epoch reward success", async () => {
     initParams.newEpochReward = 10 ** Math.floor(Math.random() + 6);
     await networkParams.setNewEpochReward(initParams.newEpochReward);
