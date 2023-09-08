@@ -28,8 +28,13 @@ abstract contract CheckpointManagerDeployer is Script {
     }
 
     ///@notice Alternative signature: Does NOT initialize the contract!
-    function deployCheckpointManager(address proxyAdmin) internal returns (address logicAddr, address proxyAddr) {
-        return _deployCheckpointManager(proxyAdmin, "");
+    function deployCheckpointManager(
+        address proxyAdmin,
+        address reservation
+    ) internal returns (address logicAddr, address proxyAddr) {
+        bytes memory initData = abi.encodeCall(CheckpointManager.protectInitialize, (reservation));
+
+        return _deployCheckpointManager(proxyAdmin, initData);
     }
 
     function _deployCheckpointManager(

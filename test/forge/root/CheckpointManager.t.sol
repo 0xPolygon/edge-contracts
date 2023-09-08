@@ -86,6 +86,32 @@ abstract contract FirstSubmitted is Initialized {
 }
 
 contract CheckpointManager_Initialize is Uninitialized {
+    function testProtectInitialize() public {
+        address reservation = makeAddr("reservation");
+        checkpointManager.protectInitialize(reservation);
+
+        vm.expectRevert("Unauthorized");
+        checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
+    }
+
+    function testCannotProtectInitialize_AlreadyInitialized() public {
+        address reservation = makeAddr("reservation");
+        checkpointManager.protectInitialize(reservation);
+        vm.prank(reservation);
+        checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
+
+        vm.expectRevert("Already initialized");
+        checkpointManager.protectInitialize(reservation);
+    }
+
+    function testCannotProtectInitialize_AlreadyProtected() public {
+        address reservation = makeAddr("reservation");
+        checkpointManager.protectInitialize(reservation);
+
+        vm.expectRevert("Already protected");
+        checkpointManager.protectInitialize(reservation);
+    }
+
     function testInitialize() public {
         checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
 

@@ -1,0 +1,35 @@
+{
+  "common": {
+    "proxyAdmin": "",
+    "newStateSender": "",
+    "newExitHelper": ""
+  },
+
+  "RootERC20Predicate": {
+    "newChildERC20Predicate": "",
+    "newChildTokenTemplate": "",
+    "nativeTokenRootAddress": ""
+  },
+
+  "ChildMintableERC20Predicate": {
+    "newChildTokenTemplate": ""
+  },
+
+  "RootERC721Predicate": {
+    "newChildERC721Predicate": "",
+    "newChildTokenTemplate": ""
+  },
+
+  "ChildMintableERC721Predicate": {
+    "newChildTokenTemplate": ""
+  },
+
+  "RootERC1155Predicate": {
+    "newChildERC1155Predicate": "",
+    "newChildTokenTemplate": ""
+  },
+
+  "ChildMintableERC1155Predicate": {
+    "newChildTokenTemplate": ""
+  }
+}

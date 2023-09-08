@@ -169,10 +169,20 @@ One point that is worth emphasizing in this context is that from the perspective
 
 #### Root contracts
 
-Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.) In order to facilitate a full deployment, Forge scripts [`DeploySharedRootContracts`](script/deployment/DeploySharedRootContracts.sol) and [`DeployNewRootContractSet.s.sol`](script/deployment/DeployNewRootContractSet.s.sol) are provided, along with their configuration files, [`sharedRootContractsConfig`](script/deployment/sharedRootContractsConfig.json) and [`rootContractSetConfig.json`](script/deployment/rootContractSetConfig.json), which must be filled with appropriate values. Once a configuration is complete, the script can be run by invoking:
+Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.)
+
+Some contracts in the Edge suite need be deployed only once on root. These contracts can deployed using the [`DeploySharedRootContracts`](script/deployment/DeploySharedRootContracts.sol) script, after [`sharedRootContractsConfig`](script/deployment/sharedRootContractsConfig.json) has been filled with appropriate values.
+
+Other contracts are deployed on root once per Supernet. These contracts can deployed using the [`DeployNewRootContractSet.s.sol`](script/deployment/DeployNewRootContractSet.s.sol) script, after [`rootContractSetConfig.json`](script/deployment/rootContractSetConfig.json) has been filled with appropriate values.
+
+Note that the script does not initialize `CheckpointManager`, and instead protects it to be initializable by the `reservation` address later.
+
+Not all root contracts are deployed at this point, however. There are parts of the bridge that need the addresses of various child contracts in order to be initialized. These contracts can deployed using the [`DeployRootTokenContracts.s.sol`](script/deployment/DeployRootTokenContracts.s.sol) script, after [`rootTokenContractsConfig.json`](script/deployment/rootTokenContractsConfig.json) has been filled with appropriate values.
+
+Scripts are run by invoking:
 
 ```bash
-forge script script/deployment/<SCRIPT_NAME>.s.sol \
+forge <SCRIPT_NAME> \
   --broadcast \
   <SIGNING_METHOD> \
   --rpc-url <RPC_URL> \

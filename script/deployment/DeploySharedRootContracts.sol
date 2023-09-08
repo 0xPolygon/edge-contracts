@@ -13,14 +13,10 @@ import "script/deployment/root/staking/DeployStakeManager.s.sol";
 contract DeploySharedRootContracts is BLSDeployer, BN256G2Deployer, StakeManagerDeployer {
     using stdJson for string;
 
-    address proxyAdmin;
-
-    address bls;
-    address bn256G2;
-    address stakeManagerLogic;
-    address stakeManagerProxy;
-
-    function run() external {
+    function run()
+        external
+        returns (address proxyAdmin, address bls, address bn256G2, address stakeManagerLogic, address stakeManagerProxy)
+    {
         string memory config = vm.readFile("script/deployment/sharedRootContractsConfig.json");
 
         vm.startBroadcast();
@@ -40,35 +36,5 @@ contract DeploySharedRootContracts is BLSDeployer, BN256G2Deployer, StakeManager
             proxyAdmin,
             config.readAddress('["StakeManager"].newStakingToken')
         );
-
-        console.log("Simulating...");
-        console.log("");
-        console.log("Expected addresses:");
-        console.log("");
-        console.log("ProxyAdmin");
-        console.log("");
-        console.log("Logic:", proxyAdmin);
-        console.log("Proxy:", "Does not have a proxy");
-        console.log("");
-        console.log("");
-        console.log("BLS");
-        console.log("");
-        console.log("Logic:", bls);
-        console.log("Proxy:", "Does not have a proxy");
-        console.log("");
-        console.log("");
-        console.log("BNG256G2");
-        console.log("");
-        console.log("Logic:", bn256G2);
-        console.log("Proxy:", "Does not have a proxy");
-        console.log("");
-        console.log("");
-        console.log("StakeManager");
-        console.log("");
-        console.log("Logic:", stakeManagerLogic);
-        console.log("Proxy:", stakeManagerProxy);
-        console.log("");
-        console.log("");
-        console.log("See logs for actual addresses.");
     }
 }

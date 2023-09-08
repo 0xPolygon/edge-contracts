@@ -5,25 +5,14 @@
     "newChildTokenTemplate": ""
   },
 
-  "CheckpointManager": {},
+  "CheckpointManager": {
+    "reservation": ""
+  },
 
   "CustomSupernetManager": {
     "newStakeManager": "",
     "newMatic": "",
     "newChildValidatorSet": "",
     "newDomain": ""
-  },
-
-  "RootERC20Predicate": {
-    "newChildERC20Predicate": "",
-    "nativeTokenRootAddress": ""
-  },
-
-  "RootERC721Predicate": {
-    "newChildERC721Predicate": ""
-  },
-
-  "RootERC1155Predicate": {
-    "newChildERC1155Predicate": ""
   }
 }
