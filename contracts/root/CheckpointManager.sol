@@ -26,11 +26,13 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     uint256[] public checkpointBlockNumbers;
     bytes32 public currentValidatorSetHash;
 
+    // slither-disable-next-line naming-convention
     address private immutable _INITIALIZER;
 
     /// @notice If the contract is meant to be initialized at a later time, specifiy the address that will initialize it.
     /// @notice Otherwise, pass `address(0)`.
     constructor(address INITIALIZER) {
+        // slither-disable-next-line missing-zero-check
         _INITIALIZER = INITIALIZER;
     }
 
@@ -49,11 +51,13 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     ) external initializer {
         if (_INITIALIZER != address(0)) require(msg.sender == _INITIALIZER);
 
+        // slither-disable-start events-maths
         chainId = chainId_;
         bls = newBls;
         bn256G2 = newBn256G2;
         currentValidatorSetLength = newValidatorSet.length;
         _setNewValidatorSet(newValidatorSet);
+        // slither-disable-end events-maths
     }
 
     /**
