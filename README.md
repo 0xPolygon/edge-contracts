@@ -175,7 +175,7 @@ Some contracts in the Edge suite need be deployed only once on root. These contr
 
 Other contracts are deployed on root once per Supernet. These contracts can deployed using the [`DeployNewRootContractSet.s.sol`](script/deployment/DeployNewRootContractSet.s.sol) script, after [`rootContractSetConfig.json`](script/deployment/rootContractSetConfig.json) has been filled with appropriate values.
 
-Note that the script does not initialize `CheckpointManager`, and instead protects it to be initializable by the `reservation` address later.
+Note that the script does not initialize `CheckpointManager`. Instead protects it to be initializable only by the `INITIALIZER` address later.
 
 Not all root contracts are deployed at this point, however. There are parts of the bridge that need the addresses of various child contracts in order to be initialized. These contracts can deployed using the [`DeployRootTokenContracts.s.sol`](script/deployment/DeployRootTokenContracts.s.sol) script, after [`rootTokenContractsConfig.json`](script/deployment/rootTokenContractsConfig.json) has been filled with appropriate values.
 
