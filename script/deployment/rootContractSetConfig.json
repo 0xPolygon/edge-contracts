@@ -6,7 +6,7 @@
   },
 
   "CheckpointManager": {
-    "reservation": ""
+    "INITIALIZER_": ""
   },
 
   "CustomSupernetManager": {

@@ -24,26 +24,25 @@ abstract contract CheckpointManagerDeployer is Script {
             (newBls, newBn256G2, chainId_, newValidatorSet)
         );
 
-        return _deployCheckpointManager(proxyAdmin, initData);
+        return _deployCheckpointManager(proxyAdmin, initData, address(0));
     }
 
-    ///@notice Alternative signature: Does NOT initialize the contract!
+    ///@notice Alternative function: Does NOT initialize the contract!
     function deployCheckpointManager(
         address proxyAdmin,
-        address reservation
+        address INITIALIZER_
     ) internal returns (address logicAddr, address proxyAddr) {
-        bytes memory initData = abi.encodeCall(CheckpointManager.protectInitialize, (reservation));
-
-        return _deployCheckpointManager(proxyAdmin, initData);
+        return _deployCheckpointManager(proxyAdmin, "", INITIALIZER_);
     }
 
     function _deployCheckpointManager(
         address proxyAdmin,
-        bytes memory initData
+        bytes memory initData,
+        address INITIALIZER_
     ) private returns (address logicAddr, address proxyAddr) {
         vm.startBroadcast();
 
-        CheckpointManager checkpointManager = new CheckpointManager();
+        CheckpointManager checkpointManager = new CheckpointManager(INITIALIZER_);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(checkpointManager),

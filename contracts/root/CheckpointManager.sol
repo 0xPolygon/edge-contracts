@@ -26,21 +26,10 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     uint256[] public checkpointBlockNumbers;
     bytes32 public currentValidatorSetHash;
 
-    function protectInitialize(address reservation) external {
-        bytes32 reservationSlot = keccak256("Temporary Reservation Slot");
+    address private immutable INITIALIZER;
 
-        bytes32 protected;
-        assembly {
-            protected := sload(reservationSlot)
-        }
-
-        require(_getInitializedVersion() == 0, "Already initialized");
-
-        require(protected == bytes32(0), "Already protected");
-
-        assembly {
-            sstore(reservationSlot, reservation)
-        }
+    constructor(address INITIALIZER_) {
+        INITIALIZER = INITIALIZER_;
     }
 
     /**
@@ -56,13 +45,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
-        bytes32 reservationSlot = keccak256("Temporary Reservation Slot");
-        bytes32 reservation;
-        assembly {
-            reservation := sload(reservationSlot)
-            sstore(reservationSlot, 0)
-        }
-        if (reservation != bytes32(0)) require(reservation == bytes32(uint256(uint160((msg.sender)))), "Unauthorized");
+        if (INITIALIZER != address(0)) require(msg.sender == INITIALIZER);
 
         chainId = chainId_;
         bls = newBls;
