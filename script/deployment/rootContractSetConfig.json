@@ -6,7 +6,7 @@
   },
 
   "CheckpointManager": {
-    "INITIALIZER_": ""
+    "INITIALIZER": ""
   },
 
   "CustomSupernetManager": {

@@ -48,7 +48,7 @@ contract DeployNewRootContractSet is
         // To be initialized manually later.
         (checkpointManagerLogic, checkpointManagerProxy) = deployCheckpointManager(
             proxyAdmin,
-            config.readAddress('["CheckpointManager"].INITIALIZER_')
+            config.readAddress('["CheckpointManager"].INITIALIZER')
         );
 
         (exitHelperLogic, exitHelperProxy) = deployExitHelper(proxyAdmin, ICheckpointManager(checkpointManagerProxy));

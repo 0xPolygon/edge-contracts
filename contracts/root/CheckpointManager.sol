@@ -26,10 +26,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     uint256[] public checkpointBlockNumbers;
     bytes32 public currentValidatorSetHash;
 
-    address private immutable INITIALIZER;
+    address private immutable _INITIALIZER;
 
-    constructor(address INITIALIZER_) {
-        INITIALIZER = INITIALIZER_;
+    /// @notice If the contract is meant to be initialized at a later time, specifiy the address that will initialize it.
+    /// @notice Otherwise, pass `address(0)`.
+    constructor(address INITIALIZER) {
+        _INITIALIZER = INITIALIZER;
     }
 
     /**
@@ -45,7 +47,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
-        if (INITIALIZER != address(0)) require(msg.sender == INITIALIZER);
+        if (_INITIALIZER != address(0)) require(msg.sender == _INITIALIZER);
 
         chainId = chainId_;
         bls = newBls;

@@ -28,7 +28,7 @@ describe("CheckpointManager", () => {
     await bn256G2.deployed();
 
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
-    checkpointManager = (await CheckpointManager.deploy()) as CheckpointManager;
+    checkpointManager = (await CheckpointManager.deploy(ethers.constants.AddressZero)) as CheckpointManager;
     await checkpointManager.deployed();
   });
 

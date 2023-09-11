@@ -87,8 +87,8 @@ abstract contract FirstSubmitted is Initialized {
 
 contract CheckpointManager_Initialize is Uninitialized {
     function testCannotIntialize() public {
-        address INITIALIZER_ = makeAddr("INITIALIZER_");
-        checkpointManager = new CheckpointManager(INITIALIZER_);
+        address INITIALIZER = makeAddr("INITIALIZER");
+        checkpointManager = new CheckpointManager(INITIALIZER);
 
         vm.expectRevert();
         checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
