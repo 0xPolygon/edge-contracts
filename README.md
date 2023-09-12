@@ -19,6 +19,7 @@ This repository contains the smart contract suite used in Polygon's ecosystems. 
     - [General Repo Layout](#general-repo-layout-1)
     - [Installation](#installation)
     - [Deployment](#deployment)
+      - [Root contracts](#root-contracts)
     - [Environment Setup](#environment-setup)
     - [Compiling Contracts](#compiling-contracts)
     - [Running tests](#running-tests)
@@ -163,6 +164,31 @@ forge install
 Deploying these contracts in the context of a production blockchain is out of the scope of this repo, as it requires a client that has support of the Edge specification integrated. At current, Edge maintains its own client [here](https://github.com/0xPolygon/polygon-edge), which can be consulted.
 
 One point that is worth emphasizing in this context is that from the perspective of launching a Supernet is understanding genesis contracts. Another is that for at least the time being, the decision has been made to proxify all genesis contracts in order to facilitate upgrades/updates without necessitating a hardfork or regenesis. All deployment scripts in `script/deployment` use OpenZeppelin's `TransparentUpgradeableProxy`.
+
+#### Root contracts
+
+Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.)
+
+Some contracts in the Edge suite need be deployed only once on root. These contracts can deployed using the [`DeploySharedRootContracts`](script/deployment/DeploySharedRootContracts.sol) script, after [`sharedRootContractsConfig`](script/deployment/sharedRootContractsConfig.json) has been filled with appropriate values.
+
+Other contracts are deployed on root once per Supernet. These contracts can deployed using the [`DeployNewRootContractSet.s.sol`](script/deployment/DeployNewRootContractSet.s.sol) script, after [`rootContractSetConfig.json`](script/deployment/rootContractSetConfig.json) has been filled with appropriate values.
+
+Note that the script does not initialize `CheckpointManager`. Instead protects it to be initializable only by the `INITIALIZER` address later.
+
+Not all root contracts are deployed at this point, however. There are parts of the bridge that need the addresses of various child contracts in order to be initialized. These contracts can deployed using the [`DeployRootTokenContracts.s.sol`](script/deployment/DeployRootTokenContracts.s.sol) script, after [`rootTokenContractsConfig.json`](script/deployment/rootTokenContractsConfig.json) has been filled with appropriate values.
+
+Scripts are run by invoking:
+
+```bash
+forge <SCRIPT_NAME> \
+  --broadcast \
+  <SIGNING_METHOD> \
+  --rpc-url <RPC_URL> \
+  --verify \
+  --sig "run()"
+```
+
+For the signing method and other options, consult [Foundry Book](https://book.getfoundry.sh/reference/forge/forge-script).
 
 ### Environment Setup
 

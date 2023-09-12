@@ -1,0 +1,18 @@
+{
+  "common": {
+    "proxyAdminOwner": "",
+    "newBls": "",
+    "newChildTokenTemplate": ""
+  },
+
+  "CheckpointManager": {
+    "INITIALIZER": ""
+  },
+
+  "CustomSupernetManager": {
+    "newStakeManager": "",
+    "newMatic": "",
+    "newChildValidatorSet": "",
+    "newDomain": ""
+  }
+}
