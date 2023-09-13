@@ -37,7 +37,7 @@ abstract contract Uninitialized is Test {
     function setUp() public virtual {
         bls = new BLS();
         bn256G2 = new BN256G2();
-        checkpointManager = new CheckpointManager();
+        checkpointManager = new CheckpointManager(address(0));
         exitHelper = new ExitHelper();
 
         admin = makeAddr("admin");
