@@ -13,7 +13,6 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
 
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
-    bytes32 private constant _SLASH_SIG = keccak256("SLASH");
 
     IStateSender private _stateSender;
     address private _stateReceiver;

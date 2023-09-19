@@ -16,7 +16,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
-    bytes32 private constant _SLASH_SIG = keccak256("SLASH");
 
     IBLS private _bls;
     IStateSender private _stateSender;
