@@ -1,10 +1,10 @@
 # Merkle
 
-*Polygon Technology (similar to ENS, but written from scratch)*
+*QEDK*
 
 > Merkle
 
-library for checking membership in a merkle tree
+Gas optimized verification of proof of inclusion for a leaf in an ordered Merkle tree
 
 
 
