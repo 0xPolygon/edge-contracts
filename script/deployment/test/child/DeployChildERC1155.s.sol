@@ -11,7 +11,7 @@ abstract contract ChildERC1155Deployer is Script {
     function deployChildERC1155(
         address proxyAdmin,
         address rootToken_,
-        string calldata uri_
+        string memory uri_
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(ChildERC1155.initialize, (rootToken_, uri_));
 
@@ -36,7 +36,7 @@ contract DeployChildERC1155 is ChildERC1155Deployer {
     function run(
         address proxyAdmin,
         address rootToken_,
-        string calldata uri_
+        string memory uri_
     ) external returns (address logicAddr, address proxyAddr) {
         return deployChildERC1155(proxyAdmin, rootToken_, uri_);
     }

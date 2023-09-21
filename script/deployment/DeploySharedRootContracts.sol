@@ -22,7 +22,7 @@ contract DeploySharedRootContracts is BLSDeployer, BN256G2Deployer, StakeManager
         vm.startBroadcast();
 
         ProxyAdmin _proxyAdmin = new ProxyAdmin();
-        _proxyAdmin.transferOwnership(config.readAddress('["StakeManager"].proxyAdminOwner'));
+        _proxyAdmin.transferOwnership(config.readAddress('["ProxyAdmin"].proxyAdminOwner'));
 
         vm.stopBroadcast();
 

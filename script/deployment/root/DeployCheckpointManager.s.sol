@@ -30,19 +30,19 @@ abstract contract CheckpointManagerDeployer is Script {
     ///@notice Alternative function: Does NOT initialize the contract!
     function deployCheckpointManager(
         address proxyAdmin,
-        address INITIALIZER
+        address initiator
     ) internal returns (address logicAddr, address proxyAddr) {
-        return _deployCheckpointManager(proxyAdmin, "", INITIALIZER);
+        return _deployCheckpointManager(proxyAdmin, "", initiator);
     }
 
     function _deployCheckpointManager(
         address proxyAdmin,
         bytes memory initData,
-        address INITIALIZER
+        address initiator
     ) private returns (address logicAddr, address proxyAddr) {
         vm.startBroadcast();
 
-        CheckpointManager checkpointManager = new CheckpointManager(INITIALIZER);
+        CheckpointManager checkpointManager = new CheckpointManager(initiator);
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(checkpointManager),

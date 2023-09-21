@@ -12,8 +12,8 @@ abstract contract NativeERC20Deployer is Script {
         address proxyAdmin,
         address predicate_,
         address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) internal returns (address logicAddr, address proxyAddr) {
@@ -40,8 +40,8 @@ contract DeployNativeERC20 is NativeERC20Deployer {
         address proxyAdmin,
         address predicate_,
         address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) external returns (address logicAddr, address proxyAddr) {

@@ -45,7 +45,7 @@ contract DeployRootTokenContracts is
             config.readAddress('["common"].stateSender'),
             config.readAddress('["common"].exitHelper'),
             config.readAddress('["RootERC20Predicate"].newChildERC20Predicate'),
-            config.readAddress('["common"].newChildTokenTemplate'),
+            config.readAddress('["RootERC20Predicate"].newChildTokenTemplate'),
             config.readAddress('["RootERC20Predicate"].nativeTokenRootAddress')
         );
 
@@ -54,7 +54,7 @@ contract DeployRootTokenContracts is
             config.readAddress('["common"].stateSender'),
             config.readAddress('["common"].exitHelper'),
             rootERC20PredicateProxy,
-            config.readAddress('["common"].newChildTokenTemplate')
+            config.readAddress('["newChildTokenTemplate"].newChildTokenTemplate')
         );
 
         (rootERC721PredicateLogic, rootERC721PredicateProxy) = deployRootERC721Predicate(
@@ -62,7 +62,7 @@ contract DeployRootTokenContracts is
             config.readAddress('["common"].stateSender'),
             config.readAddress('["common"].exitHelper'),
             config.readAddress('["RootERC721Predicate"].newChildERC721Predicate'),
-            config.readAddress('["common"].newChildTokenTemplate')
+            config.readAddress('["RootERC721Predicate"].newChildTokenTemplate')
         );
 
         (childMintableERC721PredicateLogic, childMintableERC721PredicateProxy) = deployChildMintableERC721Predicate(
@@ -70,7 +70,7 @@ contract DeployRootTokenContracts is
             config.readAddress('["common"].stateSender'),
             config.readAddress('["common"].exitHelper'),
             rootERC721PredicateProxy,
-            config.readAddress('["common"].newChildTokenTemplate')
+            config.readAddress('["ChildMintableERC721Predicate"].newChildTokenTemplate')
         );
 
         (rootERC1155PredicateLogic, rootERC1155PredicateProxy) = deployRootERC1155Predicate(
@@ -78,7 +78,7 @@ contract DeployRootTokenContracts is
             config.readAddress('["common"].stateSender'),
             config.readAddress('["common"].exitHelper'),
             config.readAddress('["RootERC1155Predicate"].newChildERC1155Predicate'),
-            config.readAddress('["common"].newChildTokenTemplate')
+            config.readAddress('["RootERC1155Predicate"].newChildTokenTemplate')
         );
 
         (childMintableERC1155PredicateLogic, childMintableERC1155PredicateProxy) = deployChildMintableERC1155Predicate(
@@ -86,7 +86,7 @@ contract DeployRootTokenContracts is
             config.readAddress('["common"].stateSender'),
             config.readAddress('["common"].exitHelper'),
             rootERC1155PredicateProxy,
-            config.readAddress('["common"].newChildTokenTemplate')
+            config.readAddress('["ChildMintableERC1155Predicate"].newChildTokenTemplate')
         );
     }
 }
