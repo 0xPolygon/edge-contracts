@@ -45,7 +45,7 @@ abstract contract Uninitialized is Test {
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        pool.initialize(address(token), rewardWallet, address(validatorSet), address(networkParams));
+        pool.initialize(address(token), rewardWallet, address(validatorSet), 1 ether);
     }
 }
 
@@ -62,7 +62,7 @@ abstract contract Distributed is Initialized {
 
 contract RewardPool_Initialize is Uninitialized {
     function test_Initialize() public {
-        pool.initialize(address(token), rewardWallet, address(validatorSet), address(networkParams));
+        pool.initialize(address(token), rewardWallet, address(validatorSet), 1 ether);
         assertEq(address(pool.rewardToken()), address(token));
         assertEq(pool.rewardWallet(), rewardWallet);
         assertEq(address(pool.validatorSet()), address(validatorSet));
@@ -99,15 +99,12 @@ contract RewardPool_Distribute is Initialized {
         pool.distributeRewardFor(1, uptime, epochSize);
     }
 
-    function test_DistributeRewards(uint256 epochReward) public {
-        vm.assume(epochReward <= pool.rewardToken().balanceOf(rewardWallet));
-        vm.mockCall(address(networkParams), abi.encodeCall(networkParams.epochReward, ()), abi.encode(epochReward));
-
+    function test_DistributeRewards() public {
         Uptime[] memory uptime = new Uptime[](2);
         uptime[0] = Uptime({validator: address(this), signedBlocks: 60});
         uptime[1] = Uptime({validator: alice, signedBlocks: 50});
-        uint256 reward1 = (networkParams.epochReward() * 3 * 60) / (4 * 64);
-        uint256 reward2 = (networkParams.epochReward() * 1 * 50) / (4 * 64);
+        uint256 reward1 = (1 ether * 3 * 60) / (4 * 64);
+        uint256 reward2 = (1 ether * 1 * 50) / (4 * 64);
         uint256 totalReward = reward1 + reward2;
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);

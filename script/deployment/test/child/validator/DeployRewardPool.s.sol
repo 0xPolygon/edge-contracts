@@ -13,11 +13,11 @@ abstract contract RewardPoolDeployer is Script {
         address newRewardToken,
         address newRewardWallet,
         address newValidatorSet,
-        address networkParamsAddr
+        uint256 newBaseReward
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             RewardPool.initialize,
-            (newRewardToken, newRewardWallet, newValidatorSet, networkParamsAddr)
+            (newRewardToken, newRewardWallet, newValidatorSet, newBaseReward)
         );
 
         vm.startBroadcast();
@@ -39,8 +39,8 @@ contract DeployRewardPool is RewardPoolDeployer {
         address newRewardToken,
         address newRewardWallet,
         address newValidatorSet,
-        address networkParamsAddr
+        uint256 newBaseReward
     ) external returns (address logicAddr, address proxyAddr) {
-        return deployRewardPool(proxyAdmin, newRewardToken, newRewardWallet, newValidatorSet, networkParamsAddr);
+        return deployRewardPool(proxyAdmin, newRewardToken, newRewardWallet, newValidatorSet, newBaseReward);
     }
 }

@@ -61,54 +61,54 @@ contract DeployChildContracts is
 {
     using stdJson for string;
 
-    address proxyAdmin;
-    address rewardPoolLogic;
-    address rewardPoolProxy;
-    address validatorSetLogic;
-    address validatorSetProxy;
-    address childERC20Logic;
-    address childERC20Proxy;
-    address childERC20PredicateLogic;
-    address childERC20PredicateProxy;
-    address childERC20PredicateAccessListLogic;
-    address childERC20PredicateAccessListProxy;
-    address childERC721Logic;
-    address childERC721Proxy;
-    address childERC721PredicateLogic;
-    address childERC721PredicateProxy;
-    address childERC721PredicateAccessListLogic;
-    address childERC721PredicateAccessListProxy;
-    address childERC1155Logic;
-    address childERC1155Proxy;
-    address childERC1155PredicateLogic;
-    address childERC1155PredicateProxy;
-    address childERC1155PredicateAccessListLogic;
-    address childERC1155PredicateAccessListProxy;
-    address eip1559BurnLogic;
-    address eip1559BurnProxy;
-    address forkParamsLogic;
-    address forkParamsProxy;
-    address l2StateSender;
-    address nativeERC20Logic;
-    address nativeERC20Proxy;
-    address nativeERC20MintableLogic;
-    address nativeERC20MintableProxy;
-    address networkParamsLogic;
-    address networkParamsProxy;
-    address rootMintableERC20PredicateLogic;
-    address rootMintableERC20PredicateProxy;
-    address rootMintableERC20PredicateAccessListLogic;
-    address rootMintableERC20PredicateAccessListProxy;
-    address rootMintableERC721PredicateLogic;
-    address rootMintableERC721PredicateProxy;
-    address rootMintableERC721PredicateAccessListLogic;
-    address rootMintableERC721PredicateAccessListProxy;
-    address rootMintableERC1155PredicateLogic;
-    address rootMintableERC1155PredicateProxy;
-    address rootMintableERC1155PredicateAccessListLogic;
-    address rootMintableERC1155PredicateAccessListProxy;
-    address stateReceiver;
-    address system;
+    address public proxyAdmin;
+    address public rewardPoolLogic;
+    address public rewardPoolProxy;
+    address public validatorSetLogic;
+    address public validatorSetProxy;
+    address public childERC20Logic;
+    address public childERC20Proxy;
+    address public childERC20PredicateLogic;
+    address public childERC20PredicateProxy;
+    address public childERC20PredicateAccessListLogic;
+    address public childERC20PredicateAccessListProxy;
+    address public childERC721Logic;
+    address public childERC721Proxy;
+    address public childERC721PredicateLogic;
+    address public childERC721PredicateProxy;
+    address public childERC721PredicateAccessListLogic;
+    address public childERC721PredicateAccessListProxy;
+    address public childERC1155Logic;
+    address public childERC1155Proxy;
+    address public childERC1155PredicateLogic;
+    address public childERC1155PredicateProxy;
+    address public childERC1155PredicateAccessListLogic;
+    address public childERC1155PredicateAccessListProxy;
+    address public eip1559BurnLogic;
+    address public eip1559BurnProxy;
+    address public forkParamsLogic;
+    address public forkParamsProxy;
+    address public l2StateSender;
+    address public nativeERC20Logic;
+    address public nativeERC20Proxy;
+    address public nativeERC20MintableLogic;
+    address public nativeERC20MintableProxy;
+    address public networkParamsLogic;
+    address public networkParamsProxy;
+    address public rootMintableERC20PredicateLogic;
+    address public rootMintableERC20PredicateProxy;
+    address public rootMintableERC20PredicateAccessListLogic;
+    address public rootMintableERC20PredicateAccessListProxy;
+    address public rootMintableERC721PredicateLogic;
+    address public rootMintableERC721PredicateProxy;
+    address public rootMintableERC721PredicateAccessListLogic;
+    address public rootMintableERC721PredicateAccessListProxy;
+    address public rootMintableERC1155PredicateLogic;
+    address public rootMintableERC1155PredicateProxy;
+    address public rootMintableERC1155PredicateAccessListLogic;
+    address public rootMintableERC1155PredicateAccessListProxy;
+    address public stateReceiver;
+    address public system;
 
     function run() external {
         string memory config = vm.readFile("script/deployment/childContractsConfig.json");
@@ -143,7 +143,7 @@ contract DeployChildContracts is
             config.readAddress('["RewardPool"].newRewardToken'),
             config.readAddress('["RewardPool"].newRewardWallet'),
             validatorSetProxy,
-            networkParamsProxy
+            config.readUint('["RewardPool"].newBaseReward')
         );
 
         (childERC20Logic, childERC20Proxy) = deployChildERC20(

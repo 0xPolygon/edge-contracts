@@ -42,10 +42,6 @@ interface ICustomSupernetManager {
     /// @dev only callable by owner
     function enableStaking() external;
 
-    /// @notice Withdraws slashed MATIC of slashed validators
-    /// @dev only callable by owner
-    function withdrawSlashedStake(address to) external;
-
     /// @notice called by the exit helpers to either release the stake of a validator or slash it
     /// @dev can only be synced from child after genesis
     function onL2StateReceive(uint256 /*id*/, address sender, bytes calldata data) external;

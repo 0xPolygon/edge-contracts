@@ -106,14 +106,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     /**
      * @inheritdoc ICustomSupernetManager
      */
-    function withdrawSlashedStake(address to) external onlyOwner {
-        uint256 balance = _matic.balanceOf(address(this));
-        _matic.safeTransfer(to, balance);
-    }
-
-    /**
-     * @inheritdoc ICustomSupernetManager
-     */
     function onL2StateReceive(uint256 /*id*/, address sender, bytes calldata data) external {
         if (msg.sender != _exitHelper || sender != _childValidatorSet) revert Unauthorized("_exitHelper");
         if (bytes32(data[:32]) == _UNSTAKE_SIG) {

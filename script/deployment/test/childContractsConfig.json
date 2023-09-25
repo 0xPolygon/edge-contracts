@@ -15,7 +15,8 @@
 
   "RewardPool": {
     "newRewardToken": "",
-    "newRewardWallet": ""
+    "newRewardWallet": "",
+    "newBaseReward": ""
   },
 
   "ChildERC20": {
