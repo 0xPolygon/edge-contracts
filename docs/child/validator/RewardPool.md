@@ -163,6 +163,23 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### baseReward
+
+```solidity
+function baseReward() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### distributeRewardFor
 
 ```solidity
@@ -184,7 +201,7 @@ function distributeRewardFor(uint256 epochId, Uptime[] uptime, uint256 epochSize
 ### initialize
 
 ```solidity
-function initialize(address newRewardToken, address newRewardWallet, address newValidatorSet, address networkParamsAddr) external nonpayable
+function initialize(address newRewardToken, address newRewardWallet, address newValidatorSet, uint256 newBaseReward) external nonpayable
 ```
 
 
@@ -198,7 +215,7 @@ function initialize(address newRewardToken, address newRewardWallet, address new
 | newRewardToken | address | undefined |
 | newRewardWallet | address | undefined |
 | newValidatorSet | address | undefined |
-| networkParamsAddr | address | undefined |
+| newBaseReward | uint256 | undefined |
 
 ### paidRewardPerEpoch
 

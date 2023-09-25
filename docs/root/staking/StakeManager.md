@@ -109,23 +109,6 @@ called by child manager contract to release a validator&#39;s stake
 | validator | address | undefined |
 | amount | uint256 | undefined |
 
-### slashStakeOf
-
-```solidity
-function slashStakeOf(address validator, uint256 amount) external nonpayable
-```
-
-called by child manager contract to slash a validator&#39;s stakemanager collects slashed amount
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| validator | address | undefined |
-| amount | uint256 | undefined |
-
 ### stakeFor
 
 ```solidity
@@ -355,24 +338,6 @@ event StakeWithdrawn(address indexed validator, address indexed recipient, uint2
 |---|---|---|
 | validator `indexed` | address | undefined |
 | recipient `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
-### ValidatorSlashed
-
-```solidity
-event ValidatorSlashed(uint256 indexed id, address indexed validator, uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| id `indexed` | uint256 | undefined |
-| validator `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
 
