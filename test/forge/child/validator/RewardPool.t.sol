@@ -30,7 +30,7 @@ abstract contract Uninitialized is Test {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(1), address(1), address(1), address(networkParams), init);
+        validatorSet.initialize(address(1), address(1), address(1), epochSize, init);
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch, epochSize);

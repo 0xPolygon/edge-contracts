@@ -39,7 +39,7 @@ abstract contract Initialized is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
     }
 }
 
@@ -64,7 +64,7 @@ contract ValidatorSet_Initialize is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
         assertEq(validatorSet.balanceOf(address(this)), 300);
         assertEq(validatorSet.balanceOf(alice), 100);
         assertEq(validatorSet.totalSupply(), 400);

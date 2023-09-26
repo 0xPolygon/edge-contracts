@@ -134,7 +134,7 @@ contract DeployChildContracts is
             config.readAddress('["ValidatorSet"].newStateSender'),
             stateReceiver,
             config.readAddress('["ValidatorSet"].newRootChainManager'),
-            networkParamsProxy,
+            config.readUint('["ValidatorSet"].newEpochSize'),
             abi.decode(config.readBytes('["ValidatorSet"].initialValidators'), (ValidatorInit[]))
         );
 

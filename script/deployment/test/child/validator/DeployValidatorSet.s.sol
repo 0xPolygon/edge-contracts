@@ -13,12 +13,12 @@ abstract contract ValidatorSetDeployer is Script {
         address newStateSender,
         address newStateReceiver,
         address newRootChainManager,
-        address newNetworkParams,
+        uint256 newEpochSize,
         ValidatorInit[] memory initialValidators
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             ValidatorSet.initialize,
-            (newStateSender, newStateReceiver, newRootChainManager, newNetworkParams, initialValidators)
+            (newStateSender, newStateReceiver, newRootChainManager, newEpochSize, initialValidators)
         );
 
         vm.startBroadcast();
@@ -44,7 +44,7 @@ contract DeployValidatorSet is ValidatorSetDeployer {
         address newStateSender,
         address newStateReceiver,
         address newRootChainManager,
-        address newNetworkParams,
+        uint256 newEpochSize,
         ValidatorInit[] memory initialValidators
     ) external returns (address logicAddr, address proxyAddr) {
         return
@@ -53,7 +53,7 @@ contract DeployValidatorSet is ValidatorSetDeployer {
                 newStateSender,
                 newStateReceiver,
                 newRootChainManager,
-                newNetworkParams,
+                newEpochSize,
                 initialValidators
             );
     }

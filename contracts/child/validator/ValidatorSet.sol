@@ -13,12 +13,12 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
 
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
+    uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
 
     IStateSender private _stateSender;
     address private _stateReceiver;
     address private _rootChainManager;
-    // slither-disable-next-line unused-state,naming-convention,constable-states
-    uint256 private _legacy_slot_0_vs;
+    uint256 public EPOCH_SIZE;
 
     uint256 public currentEpochId;
 
@@ -26,13 +26,11 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     uint256[] public epochEndBlocks;
     mapping(address => WithdrawalQueue) private _withdrawals;
 
-    NetworkParams private _networkParams;
-
     function initialize(
         address newStateSender,
         address newStateReceiver,
         address newRootChainManager,
-        address newNetworkParams,
+        uint256 newEpochSize,
         ValidatorInit[] memory initialValidators
     ) public initializer {
         require(
@@ -43,7 +41,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
         _stateSender = IStateSender(newStateSender);
         _stateReceiver = newStateReceiver;
         _rootChainManager = newRootChainManager;
-        _networkParams = NetworkParams(newNetworkParams);
+        EPOCH_SIZE = newEpochSize;
         for (uint256 i = 0; i < initialValidators.length; ) {
             _stake(initialValidators[i].addr, initialValidators[i].stake);
             unchecked {
@@ -119,7 +117,7 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     }
 
     function _registerWithdrawal(address account, uint256 amount) internal {
-        _withdrawals[account].append(amount, currentEpochId + _networkParams.withdrawalWaitPeriod());
+        _withdrawals[account].append(amount, currentEpochId + WITHDRAWAL_WAIT_PERIOD);
         emit WithdrawalRegistered(account, amount);
     }
 
