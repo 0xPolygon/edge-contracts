@@ -13,7 +13,7 @@ Distributes rewards to validators for committed epochs
 ### distributeRewardFor
 
 ```solidity
-function distributeRewardFor(uint256 epochId, Uptime[] uptime, uint256 epochSize) external nonpayable
+function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayable
 ```
 
 
@@ -26,7 +26,6 @@ function distributeRewardFor(uint256 epochId, Uptime[] uptime, uint256 epochSize
 |---|---|---|
 | epochId | uint256 | undefined |
 | uptime | Uptime[] | undefined |
-| epochSize | uint256 | undefined |
 
 ### paidRewardPerEpoch
 

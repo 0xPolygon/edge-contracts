@@ -40,7 +40,7 @@ abstract contract Committed is Initialized {
         _beforeCommit();
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
         vm.roll(block.number + 1);
         _afterCommit();
     }
@@ -70,7 +70,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
     function test_RevertOnlySystemCall() public {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_RevertInvalidEpochId(uint256 id) public {
@@ -78,7 +78,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.expectRevert("UNEXPECTED_EPOCH_ID");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(id, epoch, epochSize);
+        validatorSet.commitEpoch(id, epoch);
     }
 
     function test_RevertNoBlocksCommitted(uint256 startBlock, uint256 endBlock) public {
@@ -86,7 +86,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: startBlock, endBlock: endBlock, epochRoot: bytes32(0)});
         vm.expectRevert("NO_BLOCKS_COMMITTED");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_RevertEpochSize(uint256 startBlock, uint256 endBlock) public {
@@ -95,14 +95,14 @@ contract ValidatorSet_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: startBlock, endBlock: endBlock, epochRoot: bytes32(0)});
         vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_RevertInvalidStartBlock() public {
         Epoch memory epoch = Epoch({startBlock: 0, endBlock: 63, epochRoot: bytes32(0)});
         vm.expectRevert("INVALID_START_BLOCK");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_CommitEpoch() public {
@@ -110,7 +110,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
         emit NewEpoch(1, 1, 64, bytes32(0));
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
         assertEq(validatorSet.currentEpochId(), 2);
         assertEq(validatorSet.epochEndBlocks(1), 64);
         assertEq(validatorSet.totalBlocks(1), 64);

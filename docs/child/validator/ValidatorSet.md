@@ -44,6 +44,23 @@ function BLOCKLIST_PRECOMPILE() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### EPOCH_SIZE
+
+```solidity
+function EPOCH_SIZE() external view returns (uint256)
+```
+
+amount of blocks in an epoch
+
+*when an epoch is committed a multiple of this number of blocks must be committed*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### NATIVE_TOKEN_CONTRACT
 
 ```solidity
@@ -163,6 +180,23 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### WITHDRAWAL_WAIT_PERIOD
+
+```solidity
+function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### allowance
 
 ```solidity
@@ -257,7 +291,7 @@ function balanceOfAt(address account, uint256 epochNumber) external view returns
 ### commitEpoch
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch, uint256 epochSize) external nonpayable
+function commitEpoch(uint256 id, Epoch epoch) external nonpayable
 ```
 
 
@@ -270,7 +304,6 @@ function commitEpoch(uint256 id, Epoch epoch, uint256 epochSize) external nonpay
 |---|---|---|
 | id | uint256 | undefined |
 | epoch | Epoch | undefined |
-| epochSize | uint256 | undefined |
 
 ### currentEpochId
 
@@ -401,7 +434,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, address newNetworkParams, ValidatorInit[] initialValidators) external nonpayable
+function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, uint256 newEpochSize, ValidatorInit[] initialValidators) external nonpayable
 ```
 
 
@@ -415,7 +448,7 @@ function initialize(address newStateSender, address newStateReceiver, address ne
 | newStateSender | address | undefined |
 | newStateReceiver | address | undefined |
 | newRootChainManager | address | undefined |
-| newNetworkParams | address | undefined |
+| newEpochSize | uint256 | undefined |
 | initialValidators | ValidatorInit[] | undefined |
 
 ### name
