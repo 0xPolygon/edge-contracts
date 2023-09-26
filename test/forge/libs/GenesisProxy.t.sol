@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 
-import {ForkParams} from "contracts/child/ForkParams.sol";
 import {GenesisProxy} from "contracts/lib/GenesisProxy.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -14,14 +13,14 @@ contract GenesisProxyTest is Test {
     address logicAddr;
     address proxyAddr;
 
-    ForkParams internal proxyAsForkParams;
+    DummyContract internal proxyAsDummyContract;
     GenesisProxy internal proxy;
     ITransparentUpgradeableProxy internal proxyWithAdminInterface;
 
     address proxyAdmin;
 
     function setUp() public {
-        logicAddr = address(new ForkParams());
+        logicAddr = address(new DummyContract());
 
         proxyAdmin = makeAddr("proxyAdmin");
 
@@ -31,7 +30,7 @@ contract GenesisProxyTest is Test {
 
         proxy.protectSetUpProxy(proxyAdmin);
         vm.prank(proxyAdmin);
-        proxy.setUpProxy(logicAddr, proxyAdmin, abi.encodeWithSelector(ForkParams.initialize.selector, newOwner));
+        proxy.setUpProxy(logicAddr, proxyAdmin, abi.encodeWithSelector(DummyContract.initialize.selector, newOwner));
     }
 
     function testRevert_constructor() public {
@@ -50,7 +49,7 @@ contract GenesisProxyTest is Test {
         proxy.protectSetUpProxy(proxyAdmin);
 
         vm.prank(proxyAdmin);
-        proxy.setUpProxy(logicAddr, proxyAdmin, abi.encodeWithSelector(ForkParams.initialize.selector, newOwner));
+        proxy.setUpProxy(logicAddr, proxyAdmin, abi.encodeWithSelector(DummyContract.initialize.selector, newOwner));
 
         vm.expectRevert("Already protected");
         proxy.protectSetUpProxy(proxyAdmin);
@@ -82,7 +81,7 @@ contract GenesisProxyTest is Test {
     }
 
     function test_Delegation() public {
-        assertEq(proxyAsForkParams.owner(), newOwner);
+        assertEq(proxyAsDummyContract.owner(), newOwner);
     }
 
     function testLogicChange() public {
@@ -108,8 +107,16 @@ contract GenesisProxyTest is Test {
     }
 
     function _recordProxy(address _proxyAddr) internal {
-        proxyAsForkParams = ForkParams(_proxyAddr);
+        proxyAsDummyContract = DummyContract(_proxyAddr);
         proxy = GenesisProxy(payable(address(_proxyAddr)));
         proxyWithAdminInterface = ITransparentUpgradeableProxy(_proxyAddr);
+    }
+}
+
+contract DummyContract {
+    address public owner;
+
+    function initialize(address _owner) public {
+        owner = _owner;
     }
 }

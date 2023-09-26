@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20Snapshot
 import "../../lib/WithdrawalQueue.sol";
 import "../../interfaces/child/validator/IValidatorSet.sol";
 import "../../interfaces/IStateSender.sol";
-import "../../child/NetworkParams.sol";
 import "../System.sol";
 
 contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {

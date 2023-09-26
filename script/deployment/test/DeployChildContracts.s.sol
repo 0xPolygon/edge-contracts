@@ -18,11 +18,9 @@ import "script/deployment/test/child/DeployChildERC1155.s.sol";
 import "script/deployment/test/child/DeployChildERC1155Predicate.s.sol";
 import "script/deployment/test/child/DeployChildERC1155PredicateAccessList.s.sol";
 import "script/deployment/test/child/DeployEIP1559Burn.s.sol";
-import "script/deployment/test/child/DeployForkParams.s.sol";
 import "script/deployment/test/child/DeployL2StateSender.s.sol";
 import "script/deployment/test/child/DeployNativeERC20.s.sol";
 import "script/deployment/test/child/DeployNativeERC20Mintable.s.sol";
-import "script/deployment/test/child/DeployNetworkParams.s.sol";
 import "script/deployment/test/child/DeployRootMintableERC20Predicate.s.sol";
 import "script/deployment/test/child/DeployRootMintableERC20PredicateAccessList.s.sol";
 import "script/deployment/test/child/DeployRootMintableERC721Predicate.s.sol";
@@ -45,11 +43,9 @@ contract DeployChildContracts is
     ChildERC1155PredicateDeployer,
     ChildERC1155PredicateAccessListDeployer,
     EIP1559BurnDeployer,
-    ForkParamsDeployer,
     L2StateSenderDeployer,
     NativeERC20Deployer,
     NativeERC20MintableDeployer,
-    NetworkParamsDeployer,
     RootMintableERC20PredicateDeployer,
     RootMintableERC20PredicateAccessListDeployer,
     RootMintableERC721PredicateDeployer,
@@ -86,15 +82,11 @@ contract DeployChildContracts is
     address public childERC1155PredicateAccessListProxy;
     address public eip1559BurnLogic;
     address public eip1559BurnProxy;
-    address public forkParamsLogic;
-    address public forkParamsProxy;
     address public l2StateSender;
     address public nativeERC20Logic;
     address public nativeERC20Proxy;
     address public nativeERC20MintableLogic;
     address public nativeERC20MintableProxy;
-    address public networkParamsLogic;
-    address public networkParamsProxy;
     address public rootMintableERC20PredicateLogic;
     address public rootMintableERC20PredicateProxy;
     address public rootMintableERC20PredicateAccessListLogic;
@@ -123,11 +115,6 @@ contract DeployChildContracts is
         proxyAdmin = address(_proxyAdmin);
 
         stateReceiver = deployStateReceiver();
-
-        (networkParamsLogic, networkParamsProxy) = deployNetworkParams(
-            proxyAdmin,
-            abi.decode(config.readBytes('["NetworkParams"].initParams'), (NetworkParams.InitParams))
-        );
 
         (validatorSetLogic, validatorSetProxy) = deployValidatorSet(
             proxyAdmin,
@@ -238,11 +225,6 @@ contract DeployChildContracts is
             proxyAdmin,
             IChildERC20Predicate(childERC20PredicateProxy),
             config.readAddress('["EIP1559Burn"].newBurnDestination')
-        );
-
-        (forkParamsLogic, forkParamsProxy) = deployForkParams(
-            proxyAdmin,
-            config.readAddress('["ForkParams"].newOwner')
         );
 
         (nativeERC20Logic, nativeERC20Proxy) = deployNativeERC20(

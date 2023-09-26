@@ -6,8 +6,6 @@ import {ValidatorSet, ValidatorInit, Epoch} from "contracts/child/validator/Vali
 import {L2StateSender} from "contracts/child/L2StateSender.sol";
 import "contracts/interfaces/Errors.sol";
 
-import {NetworkParams} from "contracts/child/NetworkParams.sol";
-
 abstract contract Uninitialized is Test {
     address internal constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     bytes32 internal constant STAKE_SIG = keccak256("STAKE");
@@ -20,14 +18,7 @@ abstract contract Uninitialized is Test {
     address bob = makeAddr("bob");
     uint256 epochSize = 64;
 
-    NetworkParams networkParams;
-
     function setUp() public virtual {
-        networkParams = new NetworkParams();
-        networkParams.initialize(
-            NetworkParams.InitParams(address(1), 1, epochSize, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-        );
-
         stateSender = new L2StateSender();
         validatorSet = new ValidatorSet();
     }

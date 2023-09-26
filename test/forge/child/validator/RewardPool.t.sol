@@ -7,8 +7,6 @@ import {ValidatorSet, ValidatorInit, Epoch} from "contracts/child/validator/Vali
 import {RewardPool, IRewardPool, Uptime} from "contracts/child/validator/RewardPool.sol";
 import "contracts/interfaces/Errors.sol";
 
-import {NetworkParams} from "contracts/child/NetworkParams.sol";
-
 abstract contract Uninitialized is Test {
     address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
 
@@ -19,12 +17,7 @@ abstract contract Uninitialized is Test {
     address alice = makeAddr("alice");
     uint256 epochSize = 64;
 
-    NetworkParams networkParams;
-
     function setUp() public virtual {
-        networkParams = new NetworkParams();
-        networkParams.initialize(NetworkParams.InitParams(address(1), 1, 64, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
-
         token = new MockERC20();
         validatorSet = new ValidatorSet();
         ValidatorInit[] memory init = new ValidatorInit[](2);
