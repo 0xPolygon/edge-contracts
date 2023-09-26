@@ -26,23 +26,6 @@ function batchExit(IExitHelper.BatchExitInput[] inputs) external nonpayable
 |---|---|---|
 | inputs | IExitHelper.BatchExitInput[] | undefined |
 
-### caller
-
-```solidity
-function caller() external view returns (address)
-```
-
-Returns the address that called the exit function
-
-*only available in the context of the exit function*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | address of the caller |
-
 ### exit
 
 ```solidity

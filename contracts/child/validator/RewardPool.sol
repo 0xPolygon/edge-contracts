@@ -7,25 +7,22 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "../System.sol";
 import "../../interfaces/child/validator/IRewardPool.sol";
 
-import {NetworkParams} from "contracts/child/NetworkParams.sol";
-
 contract RewardPool is IRewardPool, System, Initializable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     IERC20Upgradeable public rewardToken;
     address public rewardWallet;
     IValidatorSet public validatorSet;
+    uint256 public baseReward;
 
     mapping(uint256 => uint256) public paidRewardPerEpoch;
     mapping(address => uint256) public pendingRewards;
-
-    NetworkParams private _networkParams;
 
     function initialize(
         address newRewardToken,
         address newRewardWallet,
         address newValidatorSet,
-        address networkParamsAddr
+        uint256 newBaseReward
     ) public initializer {
         require(
             newRewardToken != address(0) && newRewardWallet != address(0) && newValidatorSet != address(0),
@@ -35,19 +32,19 @@ contract RewardPool is IRewardPool, System, Initializable {
         rewardToken = IERC20Upgradeable(newRewardToken);
         rewardWallet = newRewardWallet;
         validatorSet = IValidatorSet(newValidatorSet);
-
-        _networkParams = NetworkParams(networkParamsAddr);
+        baseReward = newBaseReward;
     }
 
     /**
      * @inheritdoc IRewardPool
      */
-    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime, uint256 epochSize) external onlySystemCall {
+    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime) external onlySystemCall {
         require(paidRewardPerEpoch[epochId] == 0, "REWARD_ALREADY_DISTRIBUTED");
         uint256 totalBlocks = validatorSet.totalBlocks(epochId);
         require(totalBlocks != 0, "EPOCH_NOT_COMMITTED");
+        uint256 epochSize = validatorSet.EPOCH_SIZE();
         // slither-disable-next-line divide-before-multiply
-        uint256 reward = (_networkParams.epochReward() * totalBlocks) / epochSize;
+        uint256 reward = (baseReward * totalBlocks) / epochSize;
         // TODO disincentivize long epoch times
 
         uint256 totalSupply = validatorSet.totalSupplyAt(epochId);

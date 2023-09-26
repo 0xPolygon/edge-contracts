@@ -307,22 +307,6 @@ Allows to whitelist validators that are allowed to stake
 |---|---|---|
 | validators_ | address[] | undefined |
 
-### withdrawSlashedStake
-
-```solidity
-function withdrawSlashedStake(address to) external nonpayable
-```
-
-Withdraws slashed MATIC of slashed validators
-
-*only callable by owner*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to | address | undefined |
-
 
 
 ## Events

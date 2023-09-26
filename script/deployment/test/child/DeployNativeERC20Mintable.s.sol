@@ -13,8 +13,8 @@ abstract contract NativeERC20MintableDeployer is Script {
         address predicate_,
         address owner_,
         address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) internal returns (address logicAddr, address proxyAddr) {
@@ -46,8 +46,8 @@ contract DeployNativeERC20Mintable is NativeERC20MintableDeployer {
         address predicate_,
         address owner_,
         address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) external returns (address logicAddr, address proxyAddr) {

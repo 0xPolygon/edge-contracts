@@ -16,7 +16,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
-    bytes32 private constant _SLASH_SIG = keccak256("SLASH");
 
     IBLS private _bls;
     IStateSender private _stateSender;
@@ -107,23 +106,11 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     /**
      * @inheritdoc ICustomSupernetManager
      */
-    function withdrawSlashedStake(address to) external onlyOwner {
-        uint256 balance = _matic.balanceOf(address(this));
-        _matic.safeTransfer(to, balance);
-    }
-
-    /**
-     * @inheritdoc ICustomSupernetManager
-     */
     function onL2StateReceive(uint256 /*id*/, address sender, bytes calldata data) external {
         if (msg.sender != _exitHelper || sender != _childValidatorSet) revert Unauthorized("_exitHelper");
         if (bytes32(data[:32]) == _UNSTAKE_SIG) {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _unstake(validator, amount);
-        } else if (bytes32(data[:32]) == _SLASH_SIG) {
-            (, address[] memory validatorsToSlash, uint256 slashingPercentage, uint256 slashIncentivePercentage) = abi
-                .decode(data, (bytes32, address[], uint256, uint256));
-            _slash(id, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
         }
     }
 
@@ -156,36 +143,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         // slither-disable-next-line reentrancy-benign,reentrancy-events
         _stakeManager.releaseStakeOf(validator, amount);
         _removeIfValidatorUnstaked(validator);
-    }
-
-    function _slash(
-        uint256 exitEventId,
-        address[] memory validatorsToSlash,
-        uint256 slashingPercentage,
-        uint256 slashIncentivePercentage
-    ) internal {
-        uint256 length = validatorsToSlash.length;
-        uint256 totalSlashedAmount;
-        for (uint256 i = 0; i < length; ) {
-            uint256 slashedAmount = (_stakeManager.stakeOf(validatorsToSlash[i], id) * slashingPercentage) / 100;
-            // slither-disable-next-line reentrancy-benign,reentrancy-events,reentrancy-no-eth
-            _stakeManager.slashStakeOf(validatorsToSlash[i], slashedAmount);
-            _removeIfValidatorUnstaked(validatorsToSlash[i]);
-            totalSlashedAmount += slashedAmount;
-            unchecked {
-                ++i;
-            }
-        }
-
-        // contract will always have enough balance since slashStakeOf returns entire slashed amt
-        uint256 rewardAmount = (totalSlashedAmount * slashIncentivePercentage) / 100;
-        _matic.safeTransfer(IExitHelper(_exitHelper).caller(), rewardAmount);
-
-        // complete slashing on child chain
-        _stateSender.syncState(
-            _childValidatorSet,
-            abi.encode(_SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage)
-        );
     }
 
     function _verifyValidatorRegistration(

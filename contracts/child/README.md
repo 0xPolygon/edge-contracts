@@ -14,17 +14,9 @@ The predicate contracts provide an interface for the bridge to manage transactio
 
 For use in Supernets that wish to have a mechanism similar to EIP1559, burning a portion of the assets used to pay gas fees - the fees are sent to this contract, then withdrawn to root to be burnt.
 
-## ForkParams
-
-Allows for the inclusion of softfork features on the child chain. Read by the client each epoch.
-
 ## L2StateSender
 
 A simple arbitrary message bridge for sending messages from child to root.
-
-## NetworkParams
-
-Configurable network parameters (such as validator set size and block gas limit) that are read by the client each epoch.
 
 ## State Receiver
 

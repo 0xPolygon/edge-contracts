@@ -11,8 +11,8 @@ abstract contract ChildERC20Deployer is Script {
     function deployChildERC20(
         address proxyAdmin,
         address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(ChildERC20.initialize, (rootToken_, name_, symbol_, decimals_));
@@ -34,8 +34,8 @@ contract DeployChildERC20 is ChildERC20Deployer {
     function run(
         address proxyAdmin,
         address rootToken_,
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_
     ) external returns (address logicAddr, address proxyAddr) {
         return deployChildERC20(proxyAdmin, rootToken_, name_, symbol_, decimals_);

@@ -150,34 +150,6 @@ contract StakeManager_ReleaseStake is Staked, StakeManager {
     }
 }
 
-contract StakeManager_SlashStake is Staked, StakeManager {
-    function test_RevertNotSupernetManager() public {
-        vm.expectRevert("StakeManagerChildData: INVALID_MANAGER");
-        stakeManager.slashStakeOf(address(this), 1);
-    }
-
-    function test_SlashStakeFor(uint256 amount) public {
-        if (amount > maxAmount) amount = maxAmount;
-        vm.expectEmit(true, true, true, true);
-        emit StakeRemoved(id, address(this), stakeManager.stakeOf(address(this), id));
-        vm.expectEmit(true, true, true, true);
-        emit ValidatorSlashed(id, address(this), amount);
-        vm.prank(address(supernetManager));
-        stakeManager.slashStakeOf(address(this), amount);
-        assertEq(stakeManager.stakeOf(address(this), id), 0, "should be unstaked completely");
-        assertEq(
-            stakeManager.withdrawableStake(address(this)),
-            maxAmount - amount,
-            "withdrawable stake should be reduced by the slashed amount"
-        );
-        assertEq(
-            token.balanceOf(address(supernetManager)),
-            amount,
-            "supernet manager should receive the slashed amount"
-        );
-    }
-}
-
 contract StakeManager_WithdrawStake is Unstaked, StakeManager {
     function test_WithdrawStake(uint256 amount) public {
         vm.assume(amount <= maxAmount);
