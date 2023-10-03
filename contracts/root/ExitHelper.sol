@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/root/ICheckpointManager.sol";
 import "../interfaces/root/IExitHelper.sol";
+import "../interfaces/Errors.sol";
 
 contract ExitHelper is IExitHelper, Initializable {
     mapping(uint256 => bool) public processedExits;
@@ -12,10 +13,14 @@ contract ExitHelper is IExitHelper, Initializable {
     event ExitProcessed(uint256 indexed id, bool indexed success, bytes returnData);
 
     modifier onlyInitialized() {
-        require(address(checkpointManager) != address(0), "ExitHelper: NOT_INITIALIZED");
+        if (address(checkpointManager) == address(0)) revert NotInitialized();
 
         _;
     }
+
+    /*constructor() {
+        _disableInitializers();
+    }*/
 
     /**
      * @notice Initialize the contract with the checkpoint manager address
@@ -23,10 +28,8 @@ contract ExitHelper is IExitHelper, Initializable {
      * @param newCheckpointManager Address of the checkpoint manager contract
      */
     function initialize(ICheckpointManager newCheckpointManager) external initializer {
-        require(
-            address(newCheckpointManager) != address(0) && address(newCheckpointManager).code.length != 0,
-            "ExitHelper: INVALID_ADDRESS"
-        );
+        if (!(address(newCheckpointManager) != address(0) && address(newCheckpointManager).code.length != 0))
+            revert InvalidAddress();
         checkpointManager = newCheckpointManager;
     }
 
@@ -72,14 +75,13 @@ contract ExitHelper is IExitHelper, Initializable {
                 return;
             }
         } else {
-            require(!processedExits[id], "ExitHelper: EXIT_ALREADY_PROCESSED");
+            if (processedExits[id]) revert ExitAlreadyProcessed();
         }
 
         // slither-disable-next-line calls-loop
-        require(
-            checkpointManager.getEventMembershipByBlockNumber(blockNumber, keccak256(unhashedLeaf), leafIndex, proof),
-            "ExitHelper: INVALID_PROOF"
-        );
+        if (
+            !(checkpointManager.getEventMembershipByBlockNumber(blockNumber, keccak256(unhashedLeaf), leafIndex, proof))
+        ) revert InvalidProof();
 
         processedExits[id] = true;
 

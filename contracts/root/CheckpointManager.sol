@@ -7,6 +7,7 @@ import "../common/Merkle.sol";
 import "../interfaces/root/ICheckpointManager.sol";
 import "../interfaces/common/IBLS.sol";
 import "../interfaces/common/IBN256G2.sol";
+import "../interfaces/Errors.sol";
 
 contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];
@@ -35,6 +36,8 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     constructor(address initiator) {
         // slither-disable-next-line missing-zero-check
         _INITIATOR = initiator;
+
+        //_disableInitializers();
     }
 
     /**
@@ -50,7 +53,8 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
-        if (_INITIATOR != address(0)) require(msg.sender == _INITIATOR);
+        if (_INITIATOR != address(0))
+            if (msg.sender != _INITIATOR) revert InvalidInitiator();
 
         // slither-disable-start events-maths
         chainId = chainId_;
@@ -71,7 +75,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         Validator[] calldata newValidatorSet,
         bytes calldata bitmap
     ) external {
-        require(currentValidatorSetHash == checkpointMetadata.currentValidatorSetHash, "INVALID_VALIDATOR_SET_HASH");
+        if (currentValidatorSetHash != checkpointMetadata.currentValidatorSetHash) revert InvalidValidatorSetHash();
         bytes memory hash = abi.encode(
             keccak256(
                 abi.encode(
@@ -119,7 +123,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = getEventRootByBlock(blockNumber);
-        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
+        if (eventRoot == bytes32(0)) revert NoEventRootForBlockNumber();
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -133,7 +137,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = checkpoints[epoch].eventRoot;
-        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_EPOCH");
+        if (eventRoot == bytes32(0)) revert NoEventRootForEpoch();
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -162,7 +166,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 totalPower = 0;
         for (uint256 i = 0; i < length; ++i) {
             uint256 votingPower = newValidatorSet[i].votingPower;
-            require(votingPower > 0, "VOTING_POWER_ZERO");
+            if (votingPower == 0) revert VotingPowerZero();
             totalPower += votingPower;
             currentValidatorSet[i] = newValidatorSet[i];
         }
@@ -208,12 +212,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
             }
         }
 
-        require(aggVotingPower != 0, "BITMAP_IS_EMPTY");
-        require(aggVotingPower > ((2 * totalVotingPower) / 3), "INSUFFICIENT_VOTING_POWER");
+        if (aggVotingPower == 0) revert BitmapIsEmpty();
+        if (aggVotingPower <= (2 * totalVotingPower) / 3) revert InsufficientVotingPower();
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
-        require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
+        if (!(callSuccess && result)) revert SignatureVerificationFailed();
     }
 
     /**
@@ -223,11 +227,9 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      */
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        require(
-            checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1),
-            "INVALID_EPOCH"
-        );
-        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "EMPTY_CHECKPOINT");
+        if (!(checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1)))
+            revert InvalidEpoch();
+        if (!(checkpoint.blockNumber > oldCheckpoint.blockNumber)) revert EmptyCheckpoint();
     }
 
     function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {

@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC1155Predicate.sol";
 import "../interfaces/IStateSender.sol";
+import "../interfaces/Errors.sol";
 
 // solhint-disable reason-string
 contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predicate {
@@ -20,6 +21,10 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
+    /*constructor() {
+        _disableInitializers();
+    }*/
+
     /**
      * @notice Initialization function for RootERC1155Predicate
      * @param newStateSender Address of StateSender to send deposit information to
@@ -33,13 +38,12 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         address newChildERC1155Predicate,
         address newChildTokenTemplate
     ) external initializer {
-        require(
-            newStateSender != address(0) &&
+        if (
+            !(newStateSender != address(0) &&
                 newExitHelper != address(0) &&
                 newChildERC1155Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "RootERC1155Predicate: BAD_INITIALIZATION"
-        );
+                newChildTokenTemplate != address(0))
+        ) revert BadInitialization();
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         childERC1155Predicate = newChildERC1155Predicate;
@@ -52,8 +56,8 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == exitHelper, "RootERC1155Predicate: ONLY_EXIT_HELPER");
-        require(sender == childERC1155Predicate, "RootERC1155Predicate: ONLY_CHILD_PREDICATE");
+        if (msg.sender != exitHelper) revert OnlyExitHelper();
+        if (sender != childERC1155Predicate) revert OnlyChildPredicate();
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
@@ -87,10 +91,7 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
     ) external {
-        require(
-            receivers.length == tokenIds.length && receivers.length == amounts.length,
-            "RootERC1155Predicate: INVALID_LENGTH"
-        );
+        if (!(receivers.length == tokenIds.length && receivers.length == amounts.length)) revert InvalidLength();
         _depositBatch(rootToken, receivers, tokenIds, amounts);
     }
 
@@ -98,8 +99,8 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
      * @inheritdoc IRootERC1155Predicate
      */
     function mapToken(IERC1155MetadataURI rootToken) public returns (address childToken) {
-        require(address(rootToken) != address(0), "RootERC1155Predicate: INVALID_TOKEN");
-        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC1155Predicate: ALREADY_MAPPED");
+        if (address(rootToken) == address(0)) revert InvalidToken();
+        if (rootTokenToChildToken[address(rootToken)] != address(0)) revert AlreadyMapped();
 
         address childPredicate = childERC1155Predicate;
 

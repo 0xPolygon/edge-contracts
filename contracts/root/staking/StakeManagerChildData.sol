@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "../../interfaces/Errors.sol";
+
 /**
  * @title StakeManagerChildData
  * @notice Holds data to allow look-up between child chain manager contract address and child chain id.
@@ -22,7 +24,7 @@ abstract contract StakeManagerChildData {
      * @return id Child chain id allocated for the child chain.
      */
     function _registerChild(address manager) internal returns (uint256 id) {
-        require(manager != address(0), "StakeManagerChildData: INVALID_ADDRESS");
+        if (manager == address(0)) revert InvalidAddress();
         unchecked {
             id = ++_counter;
         }
@@ -37,7 +39,7 @@ abstract contract StakeManagerChildData {
      */
     function _managerOf(uint256 id) internal view returns (address manager) {
         manager = _managers[id];
-        require(manager != address(0), "StakeManagerChildData: INVALID_ID");
+        if (manager == address(0)) revert InvalidId();
     }
 
     /**
@@ -47,7 +49,7 @@ abstract contract StakeManagerChildData {
      */
     function _idFor(address manager) internal view returns (uint256 id) {
         id = _ids[manager];
-        require(id != 0, "StakeManagerChildData: INVALID_MANAGER");
+        if (id == 0) revert InvalidManager();
     }
 
     // Storage gap

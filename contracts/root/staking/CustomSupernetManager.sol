@@ -9,6 +9,7 @@ import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
 import "../../interfaces/root/IExitHelper.sol";
+import "../../interfaces/Errors.sol";
 
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeable, SupernetManager {
     using SafeERC20 for IERC20;
@@ -33,6 +34,10 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         _;
     }
 
+    /*constructor() {
+        _disableInitializers();
+    }*/
+
     function initialize(
         address newStakeManager,
         address newBls,
@@ -42,16 +47,15 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         address newExitHelper,
         string memory newDomain
     ) public initializer {
-        require(
-            newStakeManager != address(0) &&
+        if (
+            !(newStakeManager != address(0) &&
                 newBls != address(0) &&
                 newStateSender != address(0) &&
                 newMatic != address(0) &&
                 newChildValidatorSet != address(0) &&
                 newExitHelper != address(0) &&
-                bytes(newDomain).length != 0,
-            "INVALID_INPUT"
-        );
+                bytes(newDomain).length != 0)
+        ) revert InvalidInput();
         __SupernetManager_init(newStakeManager);
         _bls = IBLS(newBls);
         _stateSender = IStateSender(newStateSender);

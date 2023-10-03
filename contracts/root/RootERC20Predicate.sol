@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC20Predicate.sol";
 import "../interfaces/IStateSender.sol";
+import "../interfaces/Errors.sol";
 
 // solhint-disable reason-string
 contract RootERC20Predicate is Initializable, IRootERC20Predicate {
@@ -19,6 +20,10 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
+
+    /*constructor() {
+        _disableInitializers();
+    }*/
 
     /**
      * @notice Initialization function for RootERC20Predicate
@@ -34,13 +39,12 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address newChildTokenTemplate,
         address nativeTokenRootAddress
     ) external initializer {
-        require(
-            newStateSender != address(0) &&
+        if (
+            !(newStateSender != address(0) &&
                 newExitHelper != address(0) &&
                 newChildERC20Predicate != address(0) &&
-                newChildTokenTemplate != address(0),
-            "RootERC20Predicate: BAD_INITIALIZATION"
-        );
+                newChildTokenTemplate != address(0))
+        ) revert BadInitialization();
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         childERC20Predicate = newChildERC20Predicate;
@@ -57,8 +61,8 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        require(msg.sender == exitHelper, "RootERC20Predicate: ONLY_EXIT_HELPER");
-        require(sender == childERC20Predicate, "RootERC20Predicate: ONLY_CHILD_PREDICATE");
+        if (msg.sender != exitHelper) revert OnlyExitHelper();
+        if (sender != childERC20Predicate) revert OnlyChildPredicate();
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
@@ -85,8 +89,8 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function mapToken(IERC20Metadata rootToken) public returns (address) {
-        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
-        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
+        if (address(rootToken) == address(0)) revert InvalidToken();
+        if (rootTokenToChildToken[address(rootToken)] != address(0)) revert AlreadyMapped();
 
         address childPredicate = childERC20Predicate;
 
