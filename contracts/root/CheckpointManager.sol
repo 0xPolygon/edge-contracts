@@ -30,7 +30,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     // slither-disable-next-line naming-convention
     address private immutable _INITIALIZER;
 
-    /// @notice If the contract is meant to be initialized at a later time, specifiy the address that will initialize it.
+    /// @notice If the contract is meant to be initialized at a later time, specify the address that will initialize it.
     /// @notice Otherwise, pass `address(0)`.
     constructor(address INITIALIZER) {
         // slither-disable-next-line missing-zero-check
