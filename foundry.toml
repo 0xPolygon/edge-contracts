@@ -15,7 +15,7 @@ fs_permissions = [
   { access = "read", path = "script/deployment/sharedRootContractsConfig.json" },
   { access = "read", path = "script/deployment/rootContractSetConfig.json" },
   { access = "read", path = "script/deployment/rootTokenContractsConfig.json" },
-  { access = "read", path = "out/GenesisProxy.sol/GenesisProxy.json" }
+  { access = "read", path = "out/" }
 ]
 
 # do not use for computationally expensive tests
