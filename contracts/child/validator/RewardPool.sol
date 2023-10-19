@@ -18,6 +18,10 @@ contract RewardPool is IRewardPool, System, Initializable {
     mapping(uint256 => uint256) public paidRewardPerEpoch;
     mapping(address => uint256) public pendingRewards;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address newRewardToken,
         address newRewardWallet,

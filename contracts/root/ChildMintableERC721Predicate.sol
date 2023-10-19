@@ -33,9 +33,9 @@ contract ChildMintableERC721Predicate is Initializable, IChildMintableERC721Pred
         _;
     }
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     /**
      * @notice Initialization function for ChildMintableERC721Predicate

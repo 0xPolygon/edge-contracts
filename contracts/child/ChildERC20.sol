@@ -25,6 +25,10 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @inheritdoc IChildERC20
      */

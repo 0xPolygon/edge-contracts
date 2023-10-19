@@ -21,9 +21,9 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     /**
      * @notice Initialization function for RootERC721Predicate

@@ -29,9 +29,9 @@ contract ChildMintableERC20Predicate is Initializable, IChildMintableERC20Predic
 
     mapping(address => address) public rootTokenToChildToken;
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     /**
      * @notice Initialization function for ChildMintableERC20Predicate

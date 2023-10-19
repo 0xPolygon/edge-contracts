@@ -21,9 +21,9 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     /**
      * @notice Initialization function for RootERC20Predicate

@@ -21,9 +21,9 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     /**
      * @notice Initialization function for RootERC1155Predicate

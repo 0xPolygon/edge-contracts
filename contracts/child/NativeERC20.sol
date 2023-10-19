@@ -30,6 +30,10 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @dev Sets the values for {predicate}, {name} and {symbol}.
      *

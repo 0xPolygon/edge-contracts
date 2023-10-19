@@ -37,7 +37,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         // slither-disable-next-line missing-zero-check
         _INITIATOR = initiator;
 
-        //_disableInitializers();
+        _disableInitializers();
     }
 
     /**
@@ -53,8 +53,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 chainId_,
         Validator[] calldata newValidatorSet
     ) external initializer {
-        if (_INITIATOR != address(0))
-            if (msg.sender != _INITIATOR) revert InvalidInitiator();
+        if (_INITIATOR != address(0)) require(msg.sender == _INITIATOR);
 
         // slither-disable-start events-maths
         chainId = chainId_;
@@ -217,7 +216,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
-        if (!(callSuccess && result)) revert SignatureVerificationFailed();
+        if (!callSuccess || !result) revert SignatureVerificationFailed();
     }
 
     /**
@@ -227,9 +226,9 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      */
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        if (!(checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1)))
+        if (checkpoint.epoch != oldCheckpoint.epoch && checkpoint.epoch != (oldCheckpoint.epoch + 1))
             revert InvalidEpoch();
-        if (!(checkpoint.blockNumber > oldCheckpoint.blockNumber)) revert EmptyCheckpoint();
+        if (checkpoint.blockNumber <= oldCheckpoint.blockNumber) revert EmptyCheckpoint();
     }
 
     function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {

@@ -31,6 +31,10 @@ contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IE
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @dev Sets the values for {predicate}, {name} and {symbol}.
      *

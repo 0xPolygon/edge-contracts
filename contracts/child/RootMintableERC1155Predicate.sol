@@ -20,6 +20,10 @@ contract RootMintableERC1155Predicate is Initializable, ERC1155Holder, IRootMint
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for RootMintableERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send deposit information to

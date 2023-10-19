@@ -33,9 +33,9 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
         _;
     }
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     /**
      * @notice Initialization function for ChildMintableERC1155Predicate

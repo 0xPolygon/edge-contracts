@@ -34,9 +34,9 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         _;
     }
 
-    /*constructor() {
+    constructor() {
         _disableInitializers();
-    }*/
+    }
 
     function initialize(
         address newStakeManager,
