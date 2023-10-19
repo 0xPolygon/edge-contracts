@@ -27,8 +27,8 @@ abstract contract Uninitialized is Test {
         childValidatorSet = makeAddr("childValidatorSet");
         exitHelper = address(new ExitHelper());
         token = new MockERC20();
-        stakeManager = new StakeManager();
-        supernetManager = new CustomSupernetManager();
+        stakeManager = StakeManager(proxify("StakeManager.sol", ""));
+        supernetManager = CustomSupernetManager(proxify("CustomSupernetManager.sol", ""));
         stakeManager.initialize(address(token));
     }
 }

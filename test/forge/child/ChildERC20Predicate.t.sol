@@ -18,7 +18,7 @@ contract ChildERC20PredicateTest is Test {
     address bob;
 
     function setUp() public {
-        predicate = new ChildERC20Predicate();
+        predicate = ChildERC20Predicate(proxify("ChildERC20Predicate.sol", ""));
 
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");

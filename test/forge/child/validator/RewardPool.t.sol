@@ -19,7 +19,7 @@ abstract contract Uninitialized is Test {
 
     function setUp() public virtual {
         token = new MockERC20();
-        validatorSet = new ValidatorSet();
+        validatorSet = ValidatorSet(proxify("ValidatorSet.sol", ""));
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
@@ -28,7 +28,7 @@ abstract contract Uninitialized is Test {
         vm.prank(SYSTEM);
         validatorSet.commitEpoch(1, epoch);
         vm.roll(block.number + 1);
-        pool = new RewardPool();
+        pool = RewardPool(proxify("RewardPool.sol", ""));
         token.mint(rewardWallet, 1000 ether);
         vm.prank(rewardWallet);
         token.approve(address(pool), type(uint256).max);

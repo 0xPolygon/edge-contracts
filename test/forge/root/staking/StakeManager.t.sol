@@ -14,7 +14,7 @@ abstract contract Uninitialized is Test {
 
     function setUp() public virtual {
         token = new MockERC20();
-        stakeManager = new StakeManager();
+        stakeManager = StakeManager(proxify("StakeManager.sol", ""));
         supernetManager = new MockSupernetManager();
     }
 }

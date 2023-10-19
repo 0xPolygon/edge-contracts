@@ -37,8 +37,7 @@ abstract contract Uninitialized is Test {
     function setUp() public virtual {
         bls = new BLS();
         bn256G2 = new BN256G2();
-        checkpointManager = new CheckpointManager(address(0));
-        exitHelper = new ExitHelper();
+        exitHelper = ExitHelper(proxify("ExitHelper.sol", ""));
 
         admin = makeAddr("admin");
         alice = makeAddr("Alice");
@@ -81,6 +80,7 @@ abstract contract Uninitialized is Test {
         }
         submitCounter = 1;
 
+        checkpointManager = CheckpointManager(proxify("CheckpointManager.sol", abi.encode(address(0))));
         checkpointManager.initialize(bls, bn256G2, submitCounter, validatorSet);
     }
 }

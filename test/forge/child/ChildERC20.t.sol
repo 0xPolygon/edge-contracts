@@ -18,8 +18,8 @@ contract ChildERC20Test is Test {
     uint8 decimals = 18;
 
     function setUp() public {
-        childERC20 = new ChildERC20();
-        predicate = new ChildERC20Predicate();
+        childERC20 = ChildERC20(proxify("ChildERC20.sol", ""));
+        predicate = ChildERC20Predicate(proxify("ChildERC20Predicate.sol", ""));
 
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
