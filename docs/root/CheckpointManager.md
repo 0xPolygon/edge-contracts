@@ -388,3 +388,105 @@ event Initialized(uint8 version)
 
 
 
+## Errors
+
+### BitmapIsEmpty
+
+```solidity
+error BitmapIsEmpty()
+```
+
+
+
+
+
+
+### EmptyCheckpoint
+
+```solidity
+error EmptyCheckpoint()
+```
+
+
+
+
+
+
+### InsufficientVotingPower
+
+```solidity
+error InsufficientVotingPower()
+```
+
+
+
+
+
+
+### InvalidEpoch
+
+```solidity
+error InvalidEpoch()
+```
+
+
+
+
+
+
+### InvalidValidatorSetHash
+
+```solidity
+error InvalidValidatorSetHash()
+```
+
+
+
+
+
+
+### NoEventRootForBlockNumber
+
+```solidity
+error NoEventRootForBlockNumber()
+```
+
+
+
+
+
+
+### NoEventRootForEpoch
+
+```solidity
+error NoEventRootForEpoch()
+```
+
+
+
+
+
+
+### SignatureVerificationFailed
+
+```solidity
+error SignatureVerificationFailed()
+```
+
+
+
+
+
+
+### VotingPowerZero
+
+```solidity
+error VotingPowerZero()
+```
+
+
+
+
+
+
+

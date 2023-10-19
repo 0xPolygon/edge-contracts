@@ -82,3 +82,28 @@ event Initialized(uint8 version)
 
 
 
+## Errors
+
+### IdAlreadySet
+
+```solidity
+error IdAlreadySet()
+```
+
+
+
+
+
+
+### OnlyStakeManager
+
+```solidity
+error OnlyStakeManager()
+```
+
+
+
+
+
+
+

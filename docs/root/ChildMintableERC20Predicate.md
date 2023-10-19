@@ -302,3 +302,83 @@ event MintableTokenMapped(address indexed rootToken, address indexed childToken)
 
 
 
+## Errors
+
+### BadInitialization
+
+```solidity
+error BadInitialization()
+```
+
+
+
+
+
+
+### BurnFailed
+
+```solidity
+error BurnFailed()
+```
+
+
+
+
+
+
+### MintFailed
+
+```solidity
+error MintFailed()
+```
+
+
+
+
+
+
+### NotContract
+
+```solidity
+error NotContract()
+```
+
+
+
+
+
+
+### OnlyExitHelper
+
+```solidity
+error OnlyExitHelper()
+```
+
+
+
+
+
+
+### OnlyRootPredicate
+
+```solidity
+error OnlyRootPredicate()
+```
+
+
+
+
+
+
+### UnmappedToken
+
+```solidity
+error UnmappedToken()
+```
+
+
+
+
+
+
+

@@ -140,3 +140,50 @@ event Initialized(uint8 version)
 
 
 
+## Errors
+
+### ExitAlreadyProcessed
+
+```solidity
+error ExitAlreadyProcessed()
+```
+
+
+
+
+
+
+### InvalidAddress
+
+```solidity
+error InvalidAddress()
+```
+
+
+
+
+
+
+### InvalidProof
+
+```solidity
+error InvalidProof()
+```
+
+
+
+
+
+
+### NotInitialized
+
+```solidity
+error NotInitialized()
+```
+
+
+
+
+
+
+

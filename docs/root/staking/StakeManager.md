@@ -342,3 +342,50 @@ event StakeWithdrawn(address indexed validator, address indexed recipient, uint2
 
 
 
+## Errors
+
+### IdAlreadySet
+
+```solidity
+error IdAlreadySet()
+```
+
+
+
+
+
+
+### InvalidAddress
+
+```solidity
+error InvalidAddress()
+```
+
+
+
+
+
+
+### InvalidId
+
+```solidity
+error InvalidId()
+```
+
+
+
+
+
+
+### InvalidManager
+
+```solidity
+error InvalidManager()
+```
+
+
+
+
+
+
+
