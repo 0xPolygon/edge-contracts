@@ -141,7 +141,7 @@ abstract contract ExitHelperExitted is CheckpointSubmitted {
 contract ExitHelper_Initialize is Uninitialized {
     function testCannotInitialize_InvalidAddress() public {
         CheckpointManager checkpointManager_null;
-        vm.expectRevert(InvalidAddress.selector);
+        vm.expectRevert("ExitHelper: INVALID_ADDRESS");
         exitHelper.initialize(checkpointManager_null);
     }
 
@@ -161,7 +161,7 @@ contract ExitHelper_ExitFailedBeforeInitialized is Uninitialized {
         bytes memory unhashedLeaf = abi.encodePacked(block.timestamp);
         proof.push(keccak256(abi.encodePacked(block.timestamp)));
 
-        vm.expectRevert(NotInitialized.selector);
+        vm.expectRevert("ExitHelper: NOT_INITIALIZED");
         exitHelper.exit(blockNumber, leafIndex, unhashedLeaf, proof);
     }
 
@@ -171,7 +171,7 @@ contract ExitHelper_ExitFailedBeforeInitialized is Uninitialized {
         bytes memory unhashedLeaf = abi.encodePacked(block.timestamp);
         proof.push(keccak256(abi.encodePacked(block.timestamp)));
 
-        vm.expectRevert(NotInitialized.selector);
+        vm.expectRevert("ExitHelper: NOT_INITIALIZED");
         batchExitInput.push(IExitHelper.BatchExitInput(blockNumber, leafIndex, unhashedLeaf, proof));
         exitHelper.batchExit(batchExitInput);
     }
@@ -221,7 +221,7 @@ contract ExitHelper_ExitFailedAfterInitialized is CheckpointSubmitted {
         uint256 leafIndex = 0;
         proof.push(keccak256(abi.encodePacked(block.timestamp)));
 
-        vm.expectRevert(InvalidProof.selector);
+        vm.expectRevert("ExitHelper: INVALID_PROOF");
         exitHelper.exit(blockNumber, leafIndex, unhashedLeaves[0], proof);
     }
 }
@@ -231,7 +231,7 @@ contract ExitHelper_ExitFailedAfterSubmitted is ExitHelperExitted {
         uint256 blockNumber = 0;
         uint256 leafIndex = 0;
 
-        vm.expectRevert(ExitAlreadyProcessed.selector);
+        vm.expectRevert("ExitHelper: EXIT_ALREADY_PROCESSED");
         exitHelper.exit(blockNumber, leafIndex, unhashedLeaves[0], proves[0]);
     }
 }

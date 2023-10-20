@@ -47,8 +47,13 @@ describe("RootERC1155Predicate", () => {
 
     const RootERC1155Predicate: RootERC1155Predicate__factory = await ethers.getContractFactory("RootERC1155Predicate");
     rootERC1155Predicate = await RootERC1155Predicate.deploy();
-
     await rootERC1155Predicate.deployed();
+
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(rootERC1155Predicate.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    rootERC1155Predicate = RootERC1155Predicate.attach(_proxy.address);
 
     impersonateAccount(exitHelper.address);
     setBalance(exitHelper.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");

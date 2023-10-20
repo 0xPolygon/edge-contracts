@@ -46,8 +46,13 @@ describe("RootERC20Predicate", () => {
 
     const RootERC20Predicate: RootERC20Predicate__factory = await ethers.getContractFactory("RootERC20Predicate");
     rootERC20Predicate = await RootERC20Predicate.deploy();
-
     await rootERC20Predicate.deployed();
+
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(rootERC20Predicate.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    rootERC20Predicate = RootERC20Predicate.attach(_proxy.address);
 
     impersonateAccount(exitHelper.address);
     setBalance(exitHelper.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");

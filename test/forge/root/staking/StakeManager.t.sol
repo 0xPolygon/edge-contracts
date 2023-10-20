@@ -5,7 +5,6 @@ import "@utils/Test.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
 import {MockSupernetManager} from "contracts/mocks/MockSupernetManager.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
-import "contracts/interfaces/Errors.sol";
 
 abstract contract Uninitialized is Test {
     MockERC20 token;
@@ -92,12 +91,12 @@ contract StakeManager_Register is Initialized, StakeManager {
 
 contract StakeManager_StakeFor is Registered, StakeManager {
     function test_RevertIdZero() public {
-        vm.expectRevert(InvalidId.selector);
+        vm.expectRevert("StakeManager: INVALID_ID");
         stakeManager.stakeFor(0, 1);
     }
 
     function test_RevertChainDoesNotExist() public {
-        vm.expectRevert(InvalidId.selector);
+        vm.expectRevert("StakeManager: INVALID_ID");
         stakeManager.stakeFor(id2 + 1, 1);
     }
 
@@ -133,7 +132,7 @@ contract StakeManager_StakeFor is Registered, StakeManager {
 
 contract StakeManager_ReleaseStake is Staked, StakeManager {
     function test_RevertNotSupernetManager() public {
-        vm.expectRevert(InvalidManager.selector);
+        vm.expectRevert("StakeManagerChildData: INVALID_MANAGER");
         stakeManager.releaseStakeOf(address(this), 1);
     }
 

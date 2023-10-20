@@ -50,8 +50,13 @@ describe("RootMintableERC1155Predicate", () => {
       "RootMintableERC1155Predicate"
     );
     rootMintableERC1155Predicate = await RootMintableERC1155Predicate.deploy();
-
     await rootMintableERC1155Predicate.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(rootMintableERC1155Predicate.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    rootMintableERC1155Predicate = RootMintableERC1155Predicate.attach(_proxy.address);
 
     impersonateAccount("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE");
     setBalance("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE", "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");

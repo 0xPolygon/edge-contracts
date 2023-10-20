@@ -20,14 +20,18 @@ describe("ChildERC1155", () => {
 
     const ChildERC1155: ChildERC1155__factory = await ethers.getContractFactory("ChildERC1155");
     childERC1155 = await ChildERC1155.deploy();
-
     await childERC1155.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childERC1155.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childERC1155 = ChildERC1155.attach(_proxy.address);
 
     const ChildERC1155Predicate: ChildERC1155Predicate__factory = await ethers.getContractFactory(
       "ChildERC1155Predicate"
     );
     childERC1155Predicate = await ChildERC1155Predicate.deploy();
-
     await childERC1155Predicate.deployed();
 
     impersonateAccount(childERC1155Predicate.address);

@@ -37,9 +37,19 @@ describe("ExitHelper", () => {
     checkpointManager = (await CheckpointManager.deploy(ethers.constants.AddressZero)) as CheckpointManager;
     await checkpointManager.deployed();
 
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(checkpointManager.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    checkpointManager = CheckpointManager.attach(_proxy.address);
+
     const ExitHelper = await ethers.getContractFactory("ExitHelper");
     exitHelper = (await ExitHelper.deploy()) as ExitHelper;
     await exitHelper.deployed();
+
+    const _proxy2 = await TransparentUpgradeableProxy.deploy(exitHelper.address, _proxyAdmin, "0x");
+    await _proxy2.deployed();
+    exitHelper = ExitHelper.attach(_proxy2.address);
   });
 
   it("Initialize CheckpointManager and validate initialization", async () => {

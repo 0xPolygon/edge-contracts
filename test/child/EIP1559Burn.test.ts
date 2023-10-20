@@ -100,8 +100,13 @@ describe("EIP1559Burn", () => {
 
     const EIP1559Burn: EIP1559Burn__factory = await ethers.getContractFactory("EIP1559Burn");
     eip1559Burn = await EIP1559Burn.deploy();
-
     await eip1559Burn.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(eip1559Burn.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    eip1559Burn = EIP1559Burn.attach(_proxy.address);
 
     totalSupply = 0;
   });
