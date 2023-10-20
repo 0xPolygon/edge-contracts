@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC721Predicate.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/Errors.sol";
 
 // solhint-disable reason-string
 contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicate {
@@ -38,12 +37,13 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
         address newChildERC721Predicate,
         address newChildTokenTemplate
     ) external initializer {
-        if (
-            !(newStateSender != address(0) &&
+        require(
+            newStateSender != address(0) &&
                 newExitHelper != address(0) &&
                 newChildERC721Predicate != address(0) &&
-                newChildTokenTemplate != address(0))
-        ) revert BadInitialization();
+                newChildTokenTemplate != address(0),
+            "RootERC721Predicate: BAD_INITIALIZATION"
+        );
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         childERC721Predicate = newChildERC721Predicate;
@@ -56,8 +56,8 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        if (msg.sender != exitHelper) revert OnlyExitHelper();
-        if (sender != childERC721Predicate) revert OnlyChildPredicate();
+        require(msg.sender == exitHelper, "RootERC721Predicate: ONLY_EXIT_HELPER");
+        require(sender == childERC721Predicate, "RootERC721Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
@@ -90,7 +90,7 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
         address[] calldata receivers,
         uint256[] calldata tokenIds
     ) external {
-        if (!(receivers.length == tokenIds.length)) revert InvalidLength();
+        require(receivers.length == tokenIds.length, "RootERC721Predicate: INVALID_LENGTH");
         _depositBatch(rootToken, receivers, tokenIds);
     }
 
@@ -98,8 +98,8 @@ contract RootERC721Predicate is Initializable, ERC721Holder, IRootERC721Predicat
      * @inheritdoc IRootERC721Predicate
      */
     function mapToken(IERC721Metadata rootToken) public returns (address) {
-        if (address(rootToken) == address(0)) revert InvalidToken();
-        if (rootTokenToChildToken[address(rootToken)] != address(0)) revert AlreadyMapped();
+        require(address(rootToken) != address(0), "RootERC721Predicate: INVALID_TOKEN");
+        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC721Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC721Predicate;
 

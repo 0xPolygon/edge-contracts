@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/root/staking/IStakeManager.sol";
 import "./StakeManagerChildData.sol";
 import "./StakeManagerStakingData.sol";
-import "../../interfaces/Errors.sol";
 
 contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, StakeManagerStakingData {
     using SafeERC20 for IERC20;
@@ -26,7 +25,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
      * @inheritdoc IStakeManager
      */
     function registerChildChain(address manager) external returns (uint256 id) {
-        if (_ids[manager] != 0) revert IdAlreadySet();
+        require(_ids[manager] == 0, "StakeManager: ID_ALREADY_SET");
         id = _registerChild(manager);
         ISupernetManager(manager).onInit(id);
         // slither-disable-next-line reentrancy-events
@@ -37,7 +36,7 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
      * @inheritdoc IStakeManager
      */
     function stakeFor(uint256 id, uint256 amount) external {
-        if (id == 0 || id > _counter) revert InvalidId();
+        require(id != 0 && id <= _counter, "StakeManager: INVALID_ID");
         // slither-disable-next-line reentrancy-benign,reentrancy-events
         _stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         // calling the library directly once fixes the coverage issue

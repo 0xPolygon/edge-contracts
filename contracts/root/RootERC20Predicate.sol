@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC20Predicate.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/Errors.sol";
 
 // solhint-disable reason-string
 contract RootERC20Predicate is Initializable, IRootERC20Predicate {
@@ -39,12 +38,13 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address newChildTokenTemplate,
         address nativeTokenRootAddress
     ) external initializer {
-        if (
-            !(newStateSender != address(0) &&
+        require(
+            newStateSender != address(0) &&
                 newExitHelper != address(0) &&
                 newChildERC20Predicate != address(0) &&
-                newChildTokenTemplate != address(0))
-        ) revert BadInitialization();
+                newChildTokenTemplate != address(0),
+            "RootERC20Predicate: BAD_INITIALIZATION"
+        );
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         childERC20Predicate = newChildERC20Predicate;
@@ -61,8 +61,8 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        if (msg.sender != exitHelper) revert OnlyExitHelper();
-        if (sender != childERC20Predicate) revert OnlyChildPredicate();
+        require(msg.sender == exitHelper, "RootERC20Predicate: ONLY_EXIT_HELPER");
+        require(sender == childERC20Predicate, "RootERC20Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
@@ -89,8 +89,8 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
      * @inheritdoc IRootERC20Predicate
      */
     function mapToken(IERC20Metadata rootToken) public returns (address) {
-        if (address(rootToken) == address(0)) revert InvalidToken();
-        if (rootTokenToChildToken[address(rootToken)] != address(0)) revert AlreadyMapped();
+        require(address(rootToken) != address(0), "RootERC20Predicate: INVALID_TOKEN");
+        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC20Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC20Predicate;
 

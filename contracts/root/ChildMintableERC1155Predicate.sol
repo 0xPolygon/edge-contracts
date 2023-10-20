@@ -2,12 +2,10 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IChildMintableERC1155Predicate.sol";
 import "../interfaces/child/IChildERC1155.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/Errors.sol";
 
 /**
     @title ChildMintableERC1155Predicate
@@ -29,7 +27,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     mapping(address => address) public rootTokenToChildToken;
 
     modifier onlyValidToken(IChildERC1155 childToken) {
-        if (!_verifyContract(childToken)) revert NotContract();
+        require(_verifyContract(childToken), "ChildMintableERC1155Predicate: NOT_CONTRACT");
         _;
     }
 
@@ -61,8 +59,8 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        if (msg.sender != exitHelper) revert OnlyExitHelper();
-        if (sender != rootERC1155Predicate) revert OnlyRootPredicate();
+        require(msg.sender == exitHelper, "ChildMintableERC1155Predicate: ONLY_EXIT_HELPER");
+        require(sender == rootERC1155Predicate, "ChildMintableERC1155Predicate: ONLY_ROOT_PREDICATE");
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _beforeTokenDeposit();
@@ -136,12 +134,13 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
         address newRootERC1155Predicate,
         address newChildTokenTemplate
     ) internal {
-        if (
-            !(newStateSender != address(0) &&
+        require(
+            newStateSender != address(0) &&
                 newExitHelper != address(0) &&
                 newRootERC1155Predicate != address(0) &&
-                newChildTokenTemplate != address(0))
-        ) revert BadInitialization();
+                newChildTokenTemplate != address(0),
+            "ChildMintableERC1155Predicate: BAD_INITIALIZATION"
+        );
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         rootERC1155Predicate = newRootERC1155Predicate;
@@ -168,13 +167,16 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     ) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
-        if (!(rootTokenToChildToken[rootToken] == address(childToken))) revert UnmappedToken();
+        require(
+            rootTokenToChildToken[rootToken] == address(childToken),
+            "ChildMintableERC1155Predicate: UNMAPPED_TOKEN"
+        );
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        if (!childToken.burn(msg.sender, tokenId, amount)) revert BurnFailed();
+        require(childToken.burn(msg.sender, tokenId, amount), "ChildMintableERC1155Predicate: BURN_FAILED");
         stateSender.syncState(
             rootERC1155Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, tokenId, amount)
@@ -191,15 +193,21 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     ) private onlyValidToken(childToken) {
         address rootToken = childToken.rootToken();
 
-        if (!(rootTokenToChildToken[rootToken] == address(childToken))) revert UnmappedToken();
+        require(
+            rootTokenToChildToken[rootToken] == address(childToken),
+            "ChildMintableERC1155Predicate: UNMAPPED_TOKEN"
+        );
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(childToken.predicate() == address(this));
 
-        if (!(receivers.length == tokenIds.length && tokenIds.length == amounts.length)) revert InvalidLength();
+        require(
+            receivers.length == tokenIds.length && tokenIds.length == amounts.length,
+            "ChildMintableERC1155Predicate: INVALID_LENGTH"
+        );
 
-        if (!childToken.burnBatch(msg.sender, tokenIds, amounts)) revert BurnFailed();
+        require(childToken.burnBatch(msg.sender, tokenIds, amounts), "ChildMintableERC1155Predicate: BURN_FAILED");
 
         stateSender.syncState(
             rootERC1155Predicate,
@@ -217,7 +225,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
 
         IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
 
-        if (address(childToken) == address(0)) revert UnmappedToken();
+        require(address(childToken) != address(0), "ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
         // a mapped token should always pass specifications
         assert(_verifyContract(childToken));
 
@@ -229,7 +237,10 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC1155(childToken).predicate() == address(this));
-        if (!IChildERC1155(childToken).mint(receiver, tokenId, amount)) revert MintFailed();
+        require(
+            IChildERC1155(childToken).mint(receiver, tokenId, amount),
+            "ChildMintableERC1155Predicate: MINT_FAILED"
+        );
         // slither-disable-next-line reentrancy-events
         emit MintableERC1155Deposit(depositToken, address(childToken), depositor, receiver, tokenId, amount);
     }
@@ -246,7 +257,7 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
 
         IChildERC1155 childToken = IChildERC1155(rootTokenToChildToken[depositToken]);
 
-        if (address(childToken) == address(0)) revert UnmappedToken();
+        require(address(childToken) != address(0), "ChildMintableERC1155Predicate: UNMAPPED_TOKEN");
         // a mapped token should always pass specifications
         assert(_verifyContract(childToken));
 
@@ -258,7 +269,10 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
         assert(IChildERC1155(childToken).predicate() == address(this));
-        if (!IChildERC1155(childToken).mintBatch(receivers, tokenIds, amounts)) revert MintFailed();
+        require(
+            IChildERC1155(childToken).mintBatch(receivers, tokenIds, amounts),
+            "ChildMintableERC1155Predicate: MINT_FAILED"
+        );
         // slither-disable-next-line reentrancy-events
         emit MintableERC1155DepositBatch(depositToken, address(childToken), depositor, receivers, tokenIds, amounts);
     }

@@ -7,7 +7,6 @@ import "../common/Merkle.sol";
 import "../interfaces/root/ICheckpointManager.sol";
 import "../interfaces/common/IBLS.sol";
 import "../interfaces/common/IBN256G2.sol";
-import "../interfaces/Errors.sol";
 
 contract CheckpointManager is ICheckpointManager, Initializable {
     using ArraysUpgradeable for uint256[];
@@ -74,7 +73,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         Validator[] calldata newValidatorSet,
         bytes calldata bitmap
     ) external {
-        if (currentValidatorSetHash != checkpointMetadata.currentValidatorSetHash) revert InvalidValidatorSetHash();
+        require(currentValidatorSetHash == checkpointMetadata.currentValidatorSetHash, "INVALID_VALIDATOR_SET_HASH");
         bytes memory hash = abi.encode(
             keccak256(
                 abi.encode(
@@ -122,7 +121,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = getEventRootByBlock(blockNumber);
-        if (eventRoot == bytes32(0)) revert NoEventRootForBlockNumber();
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_BLOCK_NUMBER");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -136,7 +135,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         bytes32[] calldata proof
     ) external view returns (bool) {
         bytes32 eventRoot = checkpoints[epoch].eventRoot;
-        if (eventRoot == bytes32(0)) revert NoEventRootForEpoch();
+        require(eventRoot != bytes32(0), "NO_EVENT_ROOT_FOR_EPOCH");
         return leaf.checkMembership(leafIndex, eventRoot, proof);
     }
 
@@ -165,7 +164,7 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         uint256 totalPower = 0;
         for (uint256 i = 0; i < length; ++i) {
             uint256 votingPower = newValidatorSet[i].votingPower;
-            if (votingPower == 0) revert VotingPowerZero();
+            require(votingPower > 0, "VOTING_POWER_ZERO");
             totalPower += votingPower;
             currentValidatorSet[i] = newValidatorSet[i];
         }
@@ -211,12 +210,12 @@ contract CheckpointManager is ICheckpointManager, Initializable {
             }
         }
 
-        if (aggVotingPower == 0) revert BitmapIsEmpty();
-        if (aggVotingPower <= (2 * totalVotingPower) / 3) revert InsufficientVotingPower();
+        require(aggVotingPower != 0, "BITMAP_IS_EMPTY");
+        require(aggVotingPower > ((2 * totalVotingPower) / 3), "INSUFFICIENT_VOTING_POWER");
 
         (bool callSuccess, bool result) = bls.verifySingle(signature, aggPubkey, message);
 
-        if (!callSuccess || !result) revert SignatureVerificationFailed();
+        require(callSuccess && result, "SIGNATURE_VERIFICATION_FAILED");
     }
 
     /**
@@ -226,9 +225,11 @@ contract CheckpointManager is ICheckpointManager, Initializable {
      */
     function _verifyCheckpoint(uint256 prevId, Checkpoint calldata checkpoint) private view {
         Checkpoint memory oldCheckpoint = checkpoints[prevId];
-        if (checkpoint.epoch != oldCheckpoint.epoch && checkpoint.epoch != (oldCheckpoint.epoch + 1))
-            revert InvalidEpoch();
-        if (checkpoint.blockNumber <= oldCheckpoint.blockNumber) revert EmptyCheckpoint();
+        require(
+            checkpoint.epoch == oldCheckpoint.epoch || checkpoint.epoch == (oldCheckpoint.epoch + 1),
+            "INVALID_EPOCH"
+        );
+        require(checkpoint.blockNumber > oldCheckpoint.blockNumber, "EMPTY_CHECKPOINT");
     }
 
     function _getValueFromBitmap(bytes calldata bitmap, uint256 index) private pure returns (bool) {

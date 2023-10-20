@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IRootERC1155Predicate.sol";
 import "../interfaces/IStateSender.sol";
-import "../interfaces/Errors.sol";
 
 // solhint-disable reason-string
 contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predicate {
@@ -38,12 +37,13 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         address newChildERC1155Predicate,
         address newChildTokenTemplate
     ) external initializer {
-        if (
-            !(newStateSender != address(0) &&
+        require(
+            newStateSender != address(0) &&
                 newExitHelper != address(0) &&
                 newChildERC1155Predicate != address(0) &&
-                newChildTokenTemplate != address(0))
-        ) revert BadInitialization();
+                newChildTokenTemplate != address(0),
+            "RootERC1155Predicate: BAD_INITIALIZATION"
+        );
         stateSender = IStateSender(newStateSender);
         exitHelper = newExitHelper;
         childERC1155Predicate = newChildERC1155Predicate;
@@ -56,8 +56,8 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
      * @dev Can be extended to include other signatures for more functionality
      */
     function onL2StateReceive(uint256 /* id */, address sender, bytes calldata data) external {
-        if (msg.sender != exitHelper) revert OnlyExitHelper();
-        if (sender != childERC1155Predicate) revert OnlyChildPredicate();
+        require(msg.sender == exitHelper, "RootERC1155Predicate: ONLY_EXIT_HELPER");
+        require(sender == childERC1155Predicate, "RootERC1155Predicate: ONLY_CHILD_PREDICATE");
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
@@ -91,7 +91,10 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
     ) external {
-        if (!(receivers.length == tokenIds.length && receivers.length == amounts.length)) revert InvalidLength();
+        require(
+            receivers.length == tokenIds.length && receivers.length == amounts.length,
+            "RootERC1155Predicate: INVALID_LENGTH"
+        );
         _depositBatch(rootToken, receivers, tokenIds, amounts);
     }
 
@@ -99,8 +102,8 @@ contract RootERC1155Predicate is Initializable, ERC1155Holder, IRootERC1155Predi
      * @inheritdoc IRootERC1155Predicate
      */
     function mapToken(IERC1155MetadataURI rootToken) public returns (address childToken) {
-        if (address(rootToken) == address(0)) revert InvalidToken();
-        if (rootTokenToChildToken[address(rootToken)] != address(0)) revert AlreadyMapped();
+        require(address(rootToken) != address(0), "RootERC1155Predicate: INVALID_TOKEN");
+        require(rootTokenToChildToken[address(rootToken)] == address(0), "RootERC1155Predicate: ALREADY_MAPPED");
 
         address childPredicate = childERC1155Predicate;
 

@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../interfaces/root/staking/IStakeManager.sol";
 import "../../interfaces/root/staking/ISupernetManager.sol";
-import "../../interfaces/Errors.sol";
 
 abstract contract SupernetManager is ISupernetManager, Initializable {
     // slither-disable-next-line naming-convention
@@ -12,7 +11,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     uint256 public id;
 
     modifier onlyStakeManager() {
-        if (msg.sender != address(_stakeManager)) revert OnlyStakeManager();
+        require(msg.sender == address(_stakeManager), "SupernetManager: ONLY_STAKE_MANAGER");
         _;
     }
 
@@ -22,7 +21,7 @@ abstract contract SupernetManager is ISupernetManager, Initializable {
     }
 
     function onInit(uint256 id_) external onlyStakeManager {
-        if (id != 0) revert IdAlreadySet();
+        require(id == 0, "SupernetManager: ID_ALREADY_SET");
         // slither-disable-next-line events-maths
         id = id_;
     }

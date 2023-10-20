@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import "../interfaces/IStateSender.sol";
-import "../interfaces/Errors.sol";
 
 contract StateSender is IStateSender {
     uint256 public constant MAX_LENGTH = 2048;
@@ -21,9 +20,9 @@ contract StateSender is IStateSender {
      */
     function syncState(address receiver, bytes calldata data) external {
         // check receiver
-        if (receiver == address(0)) revert InvalidReceiver();
+        require(receiver != address(0), "INVALID_RECEIVER");
         // check data length
-        if (data.length > MAX_LENGTH) revert ExceedsMaxLength();
+        require(data.length <= MAX_LENGTH, "EXCEEDS_MAX_LENGTH");
 
         // State sync id will start with 1
         emit StateSynced(++counter, msg.sender, receiver, data);

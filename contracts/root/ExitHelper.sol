@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/root/ICheckpointManager.sol";
 import "../interfaces/root/IExitHelper.sol";
-import "../interfaces/Errors.sol";
 
 contract ExitHelper is IExitHelper, Initializable {
     mapping(uint256 => bool) public processedExits;
@@ -13,7 +12,7 @@ contract ExitHelper is IExitHelper, Initializable {
     event ExitProcessed(uint256 indexed id, bool indexed success, bytes returnData);
 
     modifier onlyInitialized() {
-        if (address(checkpointManager) == address(0)) revert NotInitialized();
+        require(address(checkpointManager) != address(0), "ExitHelper: NOT_INITIALIZED");
 
         _;
     }
@@ -28,8 +27,10 @@ contract ExitHelper is IExitHelper, Initializable {
      * @param newCheckpointManager Address of the checkpoint manager contract
      */
     function initialize(ICheckpointManager newCheckpointManager) external initializer {
-        if (!(address(newCheckpointManager) != address(0) && address(newCheckpointManager).code.length != 0))
-            revert InvalidAddress();
+        require(
+            address(newCheckpointManager) != address(0) && address(newCheckpointManager).code.length != 0,
+            "ExitHelper: INVALID_ADDRESS"
+        );
         checkpointManager = newCheckpointManager;
     }
 
@@ -75,13 +76,14 @@ contract ExitHelper is IExitHelper, Initializable {
                 return;
             }
         } else {
-            if (processedExits[id]) revert ExitAlreadyProcessed();
+            require(!processedExits[id], "ExitHelper: EXIT_ALREADY_PROCESSED");
         }
 
         // slither-disable-next-line calls-loop
-        if (
-            !(checkpointManager.getEventMembershipByBlockNumber(blockNumber, keccak256(unhashedLeaf), leafIndex, proof))
-        ) revert InvalidProof();
+        require(
+            checkpointManager.getEventMembershipByBlockNumber(blockNumber, keccak256(unhashedLeaf), leafIndex, proof),
+            "ExitHelper: INVALID_PROOF"
+        );
 
         processedExits[id] = true;
 
