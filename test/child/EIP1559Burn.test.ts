@@ -58,8 +58,13 @@ describe("EIP1559Burn", () => {
     const ChildERC20Predicate: ChildERC20Predicate__factory = await ethers.getContractFactory("ChildERC20Predicate");
 
     childERC20Predicate = await ChildERC20Predicate.deploy();
-
     await childERC20Predicate.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childERC20Predicate.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childERC20Predicate = ChildERC20Predicate.attach(_proxy.address);
 
     const NativeERC20: NativeERC20__factory = await ethers.getContractFactory("NativeERC20");
 
@@ -102,11 +107,9 @@ describe("EIP1559Burn", () => {
     eip1559Burn = await EIP1559Burn.deploy();
     await eip1559Burn.deployed();
 
-    const _proxyAdmin = accounts[10].address;
-    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
-    const _proxy = await TransparentUpgradeableProxy.deploy(eip1559Burn.address, _proxyAdmin, "0x");
-    await _proxy.deployed();
-    eip1559Burn = EIP1559Burn.attach(_proxy.address);
+    const _proxy2 = await TransparentUpgradeableProxy.deploy(eip1559Burn.address, _proxyAdmin, "0x");
+    await _proxy2.deployed();
+    eip1559Burn = EIP1559Burn.attach(_proxy2.address);
 
     totalSupply = 0;
   });

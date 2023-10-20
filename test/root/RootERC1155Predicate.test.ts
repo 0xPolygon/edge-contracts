@@ -35,7 +35,6 @@ describe("RootERC1155Predicate", () => {
 
     const ExitHelper: ExitHelper__factory = await ethers.getContractFactory("ExitHelper");
     exitHelper = await ExitHelper.deploy();
-
     await exitHelper.deployed();
 
     childERC1155Predicate = ethers.Wallet.createRandom().address;
@@ -51,9 +50,9 @@ describe("RootERC1155Predicate", () => {
 
     const _proxyAdmin = accounts[5].address;
     const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
-    const _proxy = await TransparentUpgradeableProxy.deploy(rootERC1155Predicate.address, _proxyAdmin, "0x");
-    await _proxy.deployed();
-    rootERC1155Predicate = RootERC1155Predicate.attach(_proxy.address);
+    const _proxy2 = await TransparentUpgradeableProxy.deploy(rootERC1155Predicate.address, _proxyAdmin, "0x");
+    await _proxy2.deployed();
+    rootERC1155Predicate = RootERC1155Predicate.attach(_proxy2.address);
 
     impersonateAccount(exitHelper.address);
     setBalance(exitHelper.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
