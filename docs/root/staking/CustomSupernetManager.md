@@ -457,28 +457,6 @@ event ValidatorRegistered(address indexed validator, uint256[4] blsKey)
 
 ## Errors
 
-### IdAlreadySet
-
-```solidity
-error IdAlreadySet()
-```
-
-
-
-
-
-
-### InvalidInput
-
-```solidity
-error InvalidInput()
-```
-
-
-
-
-
-
 ### InvalidSignature
 
 ```solidity
@@ -494,17 +472,6 @@ error InvalidSignature(address validator)
 | Name | Type | Description |
 |---|---|---|
 | validator | address | undefined |
-
-### OnlyStakeManager
-
-```solidity
-error OnlyStakeManager()
-```
-
-
-
-
-
 
 ### Unauthorized
 

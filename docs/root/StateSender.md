@@ -86,28 +86,3 @@ event StateSynced(uint256 indexed id, address indexed sender, address indexed re
 
 
 
-## Errors
-
-### ExceedsMaxLength
-
-```solidity
-error ExceedsMaxLength()
-```
-
-
-
-
-
-
-### InvalidReceiver
-
-```solidity
-error InvalidReceiver()
-```
-
-
-
-
-
-
-
