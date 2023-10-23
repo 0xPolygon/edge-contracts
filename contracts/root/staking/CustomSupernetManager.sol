@@ -9,6 +9,7 @@ import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
 import "../../interfaces/root/IExitHelper.sol";
+import "../../interfaces/root/IRootERC20Predicate.sol";
 
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeable, SupernetManager {
     using SafeERC20 for IERC20;
@@ -22,6 +23,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     IERC20 private _matic;
     address private _childValidatorSet;
     address private _exitHelper;
+    IRootERC20Predicate private _rootERC20Predicate;
 
     bytes32 public domain;
 
@@ -40,6 +42,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         address newMatic,
         address newChildValidatorSet,
         address newExitHelper,
+        address newRootERC20Predicate,
         string memory newDomain
     ) public initializer {
         require(
@@ -52,12 +55,14 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
                 bytes(newDomain).length != 0,
             "INVALID_INPUT"
         );
+
         __SupernetManager_init(newStakeManager);
         _bls = IBLS(newBls);
         _stateSender = IStateSender(newStateSender);
         _matic = IERC20(newMatic);
         _childValidatorSet = newChildValidatorSet;
         _exitHelper = newExitHelper;
+        _rootERC20Predicate = IRootERC20Predicate(newRootERC20Predicate);
         domain = keccak256(abi.encodePacked(newDomain));
         __Ownable2Step_init();
     }
@@ -129,9 +134,30 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         return validators[validator_];
     }
 
+    /**
+     *
+     * @inheritdoc ICustomSupernetManager
+     */
+    function premine(uint256 amount) external {
+        if (address(_rootERC20Predicate) == address(0)) {
+            revert Unauthorized("CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE");
+        }
+
+        IERC20 nativeTokenRoot = IERC20(_rootERC20Predicate.nativeTokenRoot());
+        if (address(nativeTokenRoot) == address(0)) {
+            revert Unauthorized("CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT");
+        }
+        require(!_genesis.completed(), "CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
+
+        nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
+        _genesis.insert(msg.sender, 0, amount);
+
+        emit AccountPremined(msg.sender, amount);
+    }
+
     function _onStake(address validator, uint256 amount) internal override onlyValidator(validator) {
         if (_genesis.gatheringGenesisValidators()) {
-            _genesis.insert(validator, amount);
+            _genesis.insert(validator, amount, 0);
         } else if (_genesis.completed()) {
             _stateSender.syncState(_childValidatorSet, abi.encode(_STAKE_SIG, validator, amount));
         } else {

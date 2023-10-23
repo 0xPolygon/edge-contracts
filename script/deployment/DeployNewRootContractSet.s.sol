@@ -61,6 +61,7 @@ contract DeployNewRootContractSet is
             config.readAddress('["CustomSupernetManager"].newMatic'),
             config.readAddress('["CustomSupernetManager"].newChildValidatorSet'),
             exitHelperProxy,
+            config.readAddress('["CustomSupernetManager"].newRootERC20Predicate'),
             config.readString('["CustomSupernetManager"].newDomain')
         );
     }

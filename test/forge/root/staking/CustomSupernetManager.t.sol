@@ -8,6 +8,7 @@ import {ExitHelper} from "contracts/root/ExitHelper.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
 import {CustomSupernetManager, Validator, GenesisValidator} from "contracts/root/staking/CustomSupernetManager.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
+import {RootERC20Predicate} from "contracts/root/RootERC20Predicate.sol";
 import "contracts/interfaces/Errors.sol";
 
 abstract contract Uninitialized is Test {
@@ -20,6 +21,7 @@ abstract contract Uninitialized is Test {
     MockERC20 token;
     StakeManager stakeManager;
     CustomSupernetManager supernetManager;
+    RootERC20Predicate rootERC20Predicate;
 
     function setUp() public virtual {
         bls = new BLS();
@@ -30,6 +32,7 @@ abstract contract Uninitialized is Test {
         stakeManager = new StakeManager();
         supernetManager = new CustomSupernetManager();
         stakeManager.initialize(address(token));
+        rootERC20Predicate = new RootERC20Predicate();
     }
 }
 
@@ -43,6 +46,7 @@ abstract contract Initialized is Uninitialized {
             address(token),
             childValidatorSet,
             exitHelper,
+            address(rootERC20Predicate),
             DOMAIN
         );
     }
@@ -170,6 +174,7 @@ contract CustomSupernetManager_Initialize is Uninitialized {
             address(token),
             childValidatorSet,
             exitHelper,
+            address(rootERC20Predicate),
             DOMAIN
         );
         assertEq(supernetManager.owner(), address(this), "should set owner");

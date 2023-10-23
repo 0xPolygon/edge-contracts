@@ -89,6 +89,22 @@ called by the exit helpers to either release the stake of a validator or slash i
 | sender | address | undefined |
 | data | bytes | undefined |
 
+### premine
+
+```solidity
+function premine(uint256 amount) external nonpayable
+```
+
+premine is used to specify premine information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | represents the amount to be premined in the genesis. |
+
 ### register
 
 ```solidity
@@ -125,6 +141,23 @@ Allows to whitelist validators that are allowed to stake
 
 
 ## Events
+
+### AccountPremined
+
+```solidity
+event AccountPremined(address indexed account, uint256 amount)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### AddedToWhitelist
 
