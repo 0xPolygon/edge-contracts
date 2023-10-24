@@ -152,6 +152,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
         _genesis.insert(msg.sender, 0, amount);
 
+        // slither-disable-next-line reentrancy-events
         emit AccountPremined(msg.sender, amount);
     }
 
