@@ -272,7 +272,7 @@ contract CustomSupernetManager_StakeGenesis is ValidatorsRegistered {
         GenesisValidator[] memory genesisValidators = supernetManager.genesisSet();
         assertEq(genesisValidators.length, 1, "should set genesisSet");
         GenesisValidator memory validator = genesisValidators[0];
-        assertEq(validator.validator, address(this), "should set validator address");
+        assertEq(validator.addr, address(this), "should set validator address");
         assertEq(validator.initialStake, amount, "should set amount");
     }
 
@@ -282,7 +282,7 @@ contract CustomSupernetManager_StakeGenesis is ValidatorsRegistered {
         GenesisValidator[] memory genesisValidators = supernetManager.genesisSet();
         assertEq(genesisValidators.length, 1, "should set genesisSet");
         GenesisValidator memory validator = genesisValidators[0];
-        assertEq(validator.validator, address(this), "should set validator address");
+        assertEq(validator.addr, address(this), "should set validator address");
         assertEq(validator.initialStake, amount, "should set amount");
     }
 }
@@ -385,5 +385,82 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
         supernetManager.onL2StateReceive(1, childValidatorSet, callData);
         assertEq(stakeManager.stakeOf(address(this), 1), amount - unstakeAmount, "should not withdraw all");
         assertEq(supernetManager.getValidator(address(this)).isActive, true, "should not deactivate");
+    }
+}
+
+contract CustomSupernetManager_PremineInitialized is Initialized {
+    uint256 amount = 100 ether;
+    event AccountPremined(address indexed account, uint256 amount);
+
+    address childERC20Predicate;
+    address childTokenTemplate;
+    address bob = makeAddr("bob");
+
+    function setUp() public virtual override {
+        super.setUp();
+        token.mint(bob, amount);
+        childERC20Predicate = makeAddr("childERC20Predicate");
+        childTokenTemplate = makeAddr("childTokenTemplate");
+        rootERC20Predicate.initialize(
+            address(stateSender),
+            exitHelper,
+            childERC20Predicate,
+            childTokenTemplate,
+            address(token)
+        );
+    }
+
+    function test_successfulPremine() public {
+        vm.startPrank(bob);
+        token.approve(address(supernetManager), amount);
+        vm.expectEmit(true, true, true, true);
+        emit AccountPremined(bob, amount);
+        supernetManager.premine(amount);
+
+        GenesisValidator[] memory genesisAccounts = supernetManager.genesisSet();
+        assertEq(genesisAccounts.length, 1, "should set genesisSet");
+        GenesisValidator memory account = genesisAccounts[0];
+        assertEq(account.addr, bob, "should set validator address");
+        assertEq(account.initialStake, 0, "should set initial stake");
+        assertEq(account.balance, amount, "should set balance");
+    }
+
+    function test_genesisSetFinalizedRevert() public {
+        supernetManager.finalizeGenesis();
+        supernetManager.enableStaking();
+        vm.expectRevert("CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
+        supernetManager.premine(amount);
+    }
+}
+
+contract CustomSupernetManager_UndefinedRootERC20Predicate is Uninitialized {
+    function setUp() public virtual override {
+        super.setUp();
+        supernetManager.initialize(
+            address(stakeManager),
+            address(bls),
+            address(stateSender),
+            address(token),
+            childValidatorSet,
+            exitHelper,
+            address(0),
+            DOMAIN
+        );
+    }
+
+    function test_revertUndefinedRootERC20Predicate() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Unauthorized.selector, "CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE")
+        );
+        supernetManager.premine(100 ether);
+    }
+}
+
+contract CustomSupernetManager_UndefinedNativeTokenRoot is Initialized {
+    function test_revertUndefinedNativeTokenRoot() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Unauthorized.selector, "CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT")
+        );
+        supernetManager.premine(100 ether);
     }
 }

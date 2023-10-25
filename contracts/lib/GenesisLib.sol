@@ -13,7 +13,7 @@ enum GenesisStatus {
 }
 
 struct GenesisValidator {
-    address validator;
+    address addr;
     uint256 initialStake;
     uint256 balance;
 }
