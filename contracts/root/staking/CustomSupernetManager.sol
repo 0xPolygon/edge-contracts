@@ -150,7 +150,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         require(!_genesis.completed(), "CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
 
         _genesis.insert(msg.sender, 0, amount);
-
         nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
 
         // slither-disable-next-line reentrancy-events
