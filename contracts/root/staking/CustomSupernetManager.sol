@@ -23,12 +23,12 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     IERC20 private _matic;
     address private _childValidatorSet;
     address private _exitHelper;
-    IRootERC20Predicate private _rootERC20Predicate;
 
     bytes32 public domain;
 
     GenesisSet private _genesis;
     mapping(address => Validator) public validators;
+    IRootERC20Predicate private _rootERC20Predicate;
 
     modifier onlyValidator(address validator) {
         if (!validators[validator].isActive) revert Unauthorized("VALIDATOR");
@@ -149,8 +149,9 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         }
         require(!_genesis.completed(), "CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
 
-        nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
         _genesis.insert(msg.sender, 0, amount);
+
+        nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
 
         // slither-disable-next-line reentrancy-events
         emit AccountPremined(msg.sender, amount);
@@ -208,5 +209,5 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 }
