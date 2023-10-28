@@ -127,6 +127,13 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     /**
+     * @inheritdoc ICustomSupernetManager
+     */
+    function genesisBalances() external view returns (uint256[] memory) {
+        return _genesis.balances;
+    }
+
+    /**
      *
      * @inheritdoc ICustomSupernetManager
      */

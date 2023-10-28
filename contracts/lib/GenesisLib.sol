@@ -15,13 +15,13 @@ enum GenesisStatus {
 struct GenesisValidator {
     address addr;
     uint256 initialStake;
-    uint256 balance;
 }
 
 struct GenesisSet {
     GenesisValidator[] genesisValidators;
     GenesisStatus status;
     mapping(address => uint256) indices;
+    uint256[] balances;
 }
 
 library GenesisLib {
@@ -39,12 +39,14 @@ library GenesisLib {
             // use index starting with 1, 0 is empty by default
             index = self.genesisValidators.length + 1;
             self.indices[validator] = index;
-            self.genesisValidators.push(GenesisValidator(validator, stake, balance));
+            self.genesisValidators.push(GenesisValidator(validator, stake));
+            self.balances.push(balance);
         } else {
             // update values
-            GenesisValidator storage genesisValidator = self.genesisValidators[_indexOf(self, validator)];
+            uint256 idx = _indexOf(self, validator);
+            GenesisValidator storage genesisValidator = self.genesisValidators[idx];
             genesisValidator.initialStake += stake;
-            genesisValidator.balance += balance;
+            self.balances[idx] += balance;
         }
     }
 

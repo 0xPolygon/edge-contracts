@@ -422,7 +422,9 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
         GenesisValidator memory account = genesisAccounts[0];
         assertEq(account.addr, bob, "should set validator address");
         assertEq(account.initialStake, 0, "should set initial stake");
-        assertEq(account.balance, amount, "should set balance");
+
+        uint256[] memory genesisBalances = supernetManager.genesisBalances();
+        assertEq(genesisBalances[0], amount, "should set balance");
     }
 
     function test_genesisSetFinalizedRevert() public {

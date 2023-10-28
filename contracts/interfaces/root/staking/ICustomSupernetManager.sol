@@ -50,6 +50,9 @@ interface ICustomSupernetManager {
     /// @notice returns the genesis validator set with their balances
     function genesisSet() external view returns (GenesisValidator[] memory);
 
+    /// @notice genesisBalances returns genesis accounts balances
+    function genesisBalances() external view returns (uint256[] memory);
+
     /// @notice returns validator instance based on provided address
     function getValidator(address validator_) external view returns (Validator memory);
 
