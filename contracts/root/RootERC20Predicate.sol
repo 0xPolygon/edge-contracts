@@ -19,7 +19,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
-    address public nativeTokenRoot;
+    address private _nativeTokenRootAddress;
 
     /**
      * @notice Initialization function for RootERC20Predicate
@@ -33,7 +33,7 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         address newExitHelper,
         address newChildERC20Predicate,
         address newChildTokenTemplate,
-        address newNativeTokenRoot
+        address nativeTokenRootAddress
     ) external initializer {
         require(
             newStateSender != address(0) &&
@@ -46,10 +46,10 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         exitHelper = newExitHelper;
         childERC20Predicate = newChildERC20Predicate;
         childTokenTemplate = newChildTokenTemplate;
-        if (nativeTokenRoot != address(0)) {
-            nativeTokenRoot = newNativeTokenRoot;
-            rootTokenToChildToken[nativeTokenRoot] = 0x0000000000000000000000000000000000001010;
-            emit TokenMapped(nativeTokenRoot, 0x0000000000000000000000000000000000001010);
+        if (nativeTokenRootAddress != address(0)) {
+            _nativeTokenRootAddress = nativeTokenRootAddress;
+            rootTokenToChildToken[nativeTokenRootAddress] = 0x0000000000000000000000000000000000001010;
+            emit TokenMapped(nativeTokenRootAddress, 0x0000000000000000000000000000000000001010);
         }
     }
 
@@ -108,6 +108,13 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
         emit TokenMapped(address(rootToken), childToken);
 
         return childToken;
+    }
+
+    /**
+     * @inheritdoc IRootERC20Predicate
+     */
+    function nativeTokenRoot() external view returns (address) {
+        return _nativeTokenRootAddress;
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {

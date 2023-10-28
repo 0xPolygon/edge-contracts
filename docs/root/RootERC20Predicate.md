@@ -150,7 +150,7 @@ function exitHelper() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate, address newChildTokenTemplate, address newNativeTokenRoot) external nonpayable
+function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate, address newChildTokenTemplate, address nativeTokenRootAddress) external nonpayable
 ```
 
 Initialization function for RootERC20Predicate
@@ -165,7 +165,7 @@ Initialization function for RootERC20Predicate
 | newExitHelper | address | Address of ExitHelper to receive withdrawal information from |
 | newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | undefined |
-| newNativeTokenRoot | address | undefined |
+| nativeTokenRootAddress | address | undefined |
 
 ### mapToken
 
