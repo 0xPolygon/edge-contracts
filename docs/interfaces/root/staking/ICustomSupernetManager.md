@@ -65,28 +65,6 @@ returns the genesis validator set with their balances
 |---|---|---|
 | _0 | GenesisValidator[] | undefined |
 
-### getGenesisBalance
-
-```solidity
-function getGenesisBalance(address account) external view returns (uint256)
-```
-
-getGenesisBalance returns balance for the given account address.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | address of the account |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### getValidator
 
 ```solidity
@@ -183,7 +161,7 @@ event AddedToWhitelist(address indexed validator)
 ### GenesisBalanceAdded
 
 ```solidity
-event GenesisBalanceAdded(address indexed account, uint256 amount)
+event GenesisBalanceAdded(address indexed account, uint256 indexed amount)
 ```
 
 
@@ -195,7 +173,7 @@ event GenesisBalanceAdded(address indexed account, uint256 amount)
 | Name | Type | Description |
 |---|---|---|
 | account `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| amount `indexed` | uint256 | undefined |
 
 ### GenesisFinalized
 

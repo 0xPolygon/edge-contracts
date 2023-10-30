@@ -29,7 +29,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     GenesisSet private _genesis;
     mapping(address => Validator) public validators;
     IRootERC20Predicate private _rootERC20Predicate;
-    mapping(address => uint256) private _genesisBalances;
+    mapping(address => uint256) public genesisBalances;
 
     modifier onlyValidator(address validator) {
         if (!validators[validator].isActive) revert Unauthorized("VALIDATOR");
@@ -153,20 +153,13 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
         // we need to track EOAs as well in the genesis set, in order to be able to query genesisBalances mapping
         _genesis.insert(msg.sender, 0);
-        _genesisBalances[msg.sender] = amount;
+        genesisBalances[msg.sender] = amount;
 
         // lock native tokens on the root erc20 predicate
         nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
 
         // slither-disable-next-line reentrancy-events
         emit GenesisBalanceAdded(msg.sender, amount);
-    }
-
-    /**
-     * @inheritdoc ICustomSupernetManager
-     */
-    function getGenesisBalance(address account) external view returns (uint256) {
-        return _genesisBalances[account];
     }
 
     function _onStake(address validator, uint256 amount) internal override onlyValidator(validator) {

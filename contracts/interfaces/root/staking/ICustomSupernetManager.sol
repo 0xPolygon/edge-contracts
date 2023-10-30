@@ -57,8 +57,4 @@ interface ICustomSupernetManager {
     /// It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
     /// @param amount represents the amount to be premined in the genesis.
     function addGenesisBalance(uint256 amount) external;
-
-    /// @notice getGenesisBalance returns balance for the given account address.
-    /// @param account address of the account
-    function getGenesisBalance(address account) external view returns (uint256);
 }

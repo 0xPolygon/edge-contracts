@@ -389,7 +389,7 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
 }
 
 contract CustomSupernetManager_PremineInitialized is Initialized {
-    uint256 amount = 100 ether;
+    uint256 balance = 100 ether;
     event GenesisBalanceAdded(address indexed account, uint256 indexed amount);
 
     address childERC20Predicate;
@@ -398,7 +398,7 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
 
     function setUp() public virtual override {
         super.setUp();
-        token.mint(bob, amount);
+        token.mint(bob, balance);
         childERC20Predicate = makeAddr("childERC20Predicate");
         childTokenTemplate = makeAddr("childTokenTemplate");
         rootERC20Predicate.initialize(
@@ -412,29 +412,29 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
 
     function test_addGenesisBalance_successful() public {
         vm.startPrank(bob);
-        token.approve(address(supernetManager), amount);
+        token.approve(address(supernetManager), balance);
         vm.expectEmit(true, true, true, true);
-        emit GenesisBalanceAdded(bob, amount);
-        supernetManager.addGenesisBalance(amount);
+        emit GenesisBalanceAdded(bob, balance);
+        supernetManager.addGenesisBalance(balance);
 
         GenesisValidator[] memory genesisAccounts = supernetManager.genesisSet();
         assertEq(genesisAccounts.length, 1, "should set genesisSet");
         GenesisValidator memory account = genesisAccounts[0];
         assertEq(account.addr, bob, "should set validator address");
-        assertEq(account.initialStake, 0, "should set initial stake");
+        assertEq(account.initialStake, 0, "should set initial stake to 0");
 
-        uint256 actualBalance = supernetManager.getGenesisBalance(account.addr);
-        assertEq(actualBalance, amount, "should set balance");
+        uint256 actualBalance = supernetManager.genesisBalances(account.addr);
+        assertEq(actualBalance, balance, "should set genesis balance");
     }
 
     function test_addGenesisBalance_genesisSetFinalizedRevert() public {
         supernetManager.finalizeGenesis();
         supernetManager.enableStaking();
         vm.expectRevert("CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
-        supernetManager.addGenesisBalance(amount);
+        supernetManager.addGenesisBalance(balance);
     }
 
-     function test_addGenesisBalance_invalidAmountRevert() public {
+    function test_addGenesisBalance_invalidAmountRevert() public {
         vm.expectRevert("CustomSupernetManager: INVALID_AMOUNT");
         supernetManager.addGenesisBalance(0);
     }
