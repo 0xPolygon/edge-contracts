@@ -159,10 +159,12 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
 
         // slither-disable-next-line reentrancy-events
-        emit AccountPremined(msg.sender, amount);
+        emit GenesisBalanceAdded(msg.sender, amount);
     }
 
-    /// @inheritdoc ICustomSupernetManager
+    /**
+     * @inheritdoc ICustomSupernetManager
+     */
     function getGenesisBalance(address account) external view returns (uint256) {
         return _genesisBalances[account];
     }

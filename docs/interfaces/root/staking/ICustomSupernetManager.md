@@ -164,23 +164,6 @@ Allows to whitelist validators that are allowed to stake
 
 ## Events
 
-### AccountPremined
-
-```solidity
-event AccountPremined(address indexed account, uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
 ### AddedToWhitelist
 
 ```solidity
@@ -196,6 +179,23 @@ event AddedToWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
+
+### GenesisBalanceAdded
+
+```solidity
+event GenesisBalanceAdded(address indexed account, uint256 amount)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| amount  | uint256 | undefined |
 
 ### GenesisFinalized
 

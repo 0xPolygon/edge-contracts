@@ -390,7 +390,7 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
 
 contract CustomSupernetManager_PremineInitialized is Initialized {
     uint256 amount = 100 ether;
-    event AccountPremined(address indexed account, uint256 amount);
+    event GenesisBalanceAdded(address indexed account, uint256 indexed amount);
 
     address childERC20Predicate;
     address childTokenTemplate;
@@ -414,7 +414,7 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
         vm.startPrank(bob);
         token.approve(address(supernetManager), amount);
         vm.expectEmit(true, true, true, true);
-        emit AccountPremined(bob, amount);
+        emit GenesisBalanceAdded(bob, amount);
         supernetManager.addGenesisBalance(amount);
 
         GenesisValidator[] memory genesisAccounts = supernetManager.genesisSet();

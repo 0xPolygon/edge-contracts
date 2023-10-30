@@ -21,7 +21,7 @@ interface ICustomSupernetManager {
     event RemovedFromWhitelist(address indexed validator);
     event ValidatorRegistered(address indexed validator, uint256[4] blsKey);
     event ValidatorDeactivated(address indexed validator);
-    event AccountPremined(address indexed account, uint256 amount);
+    event GenesisBalanceAdded(address indexed account, uint256 indexed amount);
     event GenesisFinalized(uint256 amountValidators);
     event StakingEnabled();
 
