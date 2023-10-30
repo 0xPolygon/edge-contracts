@@ -145,7 +145,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
      *
      * @inheritdoc ICustomSupernetManager
      */
-    function premine(uint256 amount) external {
+    function addGenesisBalance(uint256 amount) external {
         if (address(_rootERC20Predicate) == address(0)) {
             revert Unauthorized("CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE");
         }
@@ -215,5 +215,5 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     // slither-disable-next-line unused-state,naming-convention
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }

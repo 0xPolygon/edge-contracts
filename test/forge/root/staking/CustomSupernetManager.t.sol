@@ -410,12 +410,12 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
         );
     }
 
-    function test_successfulPremine() public {
+    function test_addGenesisBalance_successful() public {
         vm.startPrank(bob);
         token.approve(address(supernetManager), amount);
         vm.expectEmit(true, true, true, true);
         emit AccountPremined(bob, amount);
-        supernetManager.premine(amount);
+        supernetManager.addGenesisBalance(amount);
 
         GenesisValidator[] memory genesisAccounts = supernetManager.genesisSet();
         assertEq(genesisAccounts.length, 1, "should set genesisSet");
@@ -427,11 +427,11 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
         assertEq(genesisBalances[0], amount, "should set balance");
     }
 
-    function test_genesisSetFinalizedRevert() public {
+    function test_addGenesisBalance_genesisSetFinalizedRevert() public {
         supernetManager.finalizeGenesis();
         supernetManager.enableStaking();
         vm.expectRevert("CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
-        supernetManager.premine(amount);
+        supernetManager.addGenesisBalance(amount);
     }
 }
 
@@ -450,19 +450,19 @@ contract CustomSupernetManager_UndefinedRootERC20Predicate is Uninitialized {
         );
     }
 
-    function test_revertUndefinedRootERC20Predicate() public {
+    function test_addGenesisBalance_revertUndefinedRootERC20Predicate() public {
         vm.expectRevert(
             abi.encodeWithSelector(Unauthorized.selector, "CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE")
         );
-        supernetManager.premine(100 ether);
+        supernetManager.addGenesisBalance(100 ether);
     }
 }
 
 contract CustomSupernetManager_UndefinedNativeTokenRoot is Initialized {
-    function test_revertUndefinedNativeTokenRoot() public {
+    function test_addGenesisBalance_revertUndefinedNativeTokenRoot() public {
         vm.expectRevert(
             abi.encodeWithSelector(Unauthorized.selector, "CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT")
         );
-        supernetManager.premine(100 ether);
+        supernetManager.addGenesisBalance(100 ether);
     }
 }

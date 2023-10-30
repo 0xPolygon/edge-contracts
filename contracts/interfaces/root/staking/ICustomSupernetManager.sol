@@ -56,8 +56,8 @@ interface ICustomSupernetManager {
     /// @notice returns validator instance based on provided address
     function getValidator(address validator_) external view returns (Validator memory);
 
-    /// @notice premine is used to specify premine information for genesis accounts on the Supernets.
+    /// @notice addGenesisBalance is used to specify genesis balance information for genesis accounts on the Supernets.
     /// It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
     /// @param amount represents the amount to be premined in the genesis.
-    function premine(uint256 amount) external;
+    function addGenesisBalance(uint256 amount) external;
 }

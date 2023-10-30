@@ -10,6 +10,22 @@ Manages validator access and syncs voting power between the stake manager and va
 
 ## Methods
 
+### addGenesisBalance
+
+```solidity
+function addGenesisBalance(uint256 amount) external nonpayable
+```
+
+premine is used to specify premine information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | represents the amount to be premined in the genesis. |
+
 ### enableStaking
 
 ```solidity
@@ -31,6 +47,23 @@ finalizes initial genesis validator set
 
 *only callable by owner*
 
+
+### genesisBalances
+
+```solidity
+function genesisBalances() external view returns (uint256[])
+```
+
+genesisBalances returns genesis accounts balances
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256[] | undefined |
 
 ### genesisSet
 
@@ -88,22 +121,6 @@ called by the exit helpers to either release the stake of a validator or slash i
 | _0 | uint256 | undefined |
 | sender | address | undefined |
 | data | bytes | undefined |
-
-### premine
-
-```solidity
-function premine(uint256 amount) external nonpayable
-```
-
-premine is used to specify premine information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | represents the amount to be premined in the genesis. |
 
 ### register
 
