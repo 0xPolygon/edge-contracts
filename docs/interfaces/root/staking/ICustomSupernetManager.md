@@ -16,7 +16,7 @@ Manages validator access and syncs voting power between the stake manager and va
 function addGenesisBalance(uint256 amount) external nonpayable
 ```
 
-premine is used to specify premine information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
+addGenesisBalance is used to specify genesis balance information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
 
 
 
