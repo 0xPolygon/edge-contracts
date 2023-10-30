@@ -50,9 +50,6 @@ interface ICustomSupernetManager {
     /// @notice returns the genesis validator set with their balances
     function genesisSet() external view returns (GenesisValidator[] memory);
 
-    /// @notice genesisBalances returns genesis accounts balances
-    function genesisBalances() external view returns (uint256[] memory);
-
     /// @notice returns validator instance based on provided address
     function getValidator(address validator_) external view returns (Validator memory);
 
@@ -60,4 +57,8 @@ interface ICustomSupernetManager {
     /// It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
     /// @param amount represents the amount to be premined in the genesis.
     function addGenesisBalance(uint256 amount) external;
+
+    /// @notice getGenesisBalance returns balance for the given account address.
+    /// @param account address of the account
+    function getGenesisBalance(address account) external view returns (uint256);
 }

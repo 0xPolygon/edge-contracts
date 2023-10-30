@@ -76,23 +76,6 @@ finalizes initial genesis validator set
 *only callable by owner*
 
 
-### genesisBalances
-
-```solidity
-function genesisBalances() external view returns (uint256[])
-```
-
-genesisBalances returns genesis accounts balances
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256[] | undefined |
-
 ### genesisSet
 
 ```solidity
@@ -109,6 +92,28 @@ returns the genesis validator set with their balances
 | Name | Type | Description |
 |---|---|---|
 | _0 | GenesisValidator[] | undefined |
+
+### getGenesisBalance
+
+```solidity
+function getGenesisBalance(address account) external view returns (uint256)
+```
+
+getGenesisBalance returns balance for the given account address.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | address of the account |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### getValidator
 

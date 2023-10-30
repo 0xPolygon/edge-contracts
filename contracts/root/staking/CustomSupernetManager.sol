@@ -29,6 +29,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     GenesisSet private _genesis;
     mapping(address => Validator) public validators;
     IRootERC20Predicate private _rootERC20Predicate;
+    mapping(address => uint256) private _genesisBalances;
 
     modifier onlyValidator(address validator) {
         if (!validators[validator].isActive) revert Unauthorized("VALIDATOR");
@@ -127,13 +128,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     /**
-     * @inheritdoc ICustomSupernetManager
-     */
-    function genesisBalances() external view returns (uint256[] memory) {
-        return _genesis.balances;
-    }
-
-    /**
      *
      * @inheritdoc ICustomSupernetManager
      */
@@ -146,6 +140,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
      * @inheritdoc ICustomSupernetManager
      */
     function addGenesisBalance(uint256 amount) external {
+        require(amount > 0, "CustomSupernetManager: INVALID_AMOUNT");
         if (address(_rootERC20Predicate) == address(0)) {
             revert Unauthorized("CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE");
         }
@@ -156,16 +151,25 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         }
         require(!_genesis.completed(), "CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
 
-        _genesis.insert(msg.sender, 0, amount);
+        // we need to track EOAs as well in the genesis set, in order to be able to query genesisBalances mapping
+        _genesis.insert(msg.sender, 0);
+        _genesisBalances[msg.sender] = amount;
+
+        // lock native tokens on the root erc20 predicate
         nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
 
         // slither-disable-next-line reentrancy-events
         emit AccountPremined(msg.sender, amount);
     }
 
+    /// @inheritdoc ICustomSupernetManager
+    function getGenesisBalance(address account) external view returns (uint256) {
+        return _genesisBalances[account];
+    }
+
     function _onStake(address validator, uint256 amount) internal override onlyValidator(validator) {
         if (_genesis.gatheringGenesisValidators()) {
-            _genesis.insert(validator, amount, 0);
+            _genesis.insert(validator, amount);
         } else if (_genesis.completed()) {
             _stateSender.syncState(_childValidatorSet, abi.encode(_STAKE_SIG, validator, amount));
         } else {

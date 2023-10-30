@@ -423,8 +423,8 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
         assertEq(account.addr, bob, "should set validator address");
         assertEq(account.initialStake, 0, "should set initial stake");
 
-        uint256[] memory genesisBalances = supernetManager.genesisBalances();
-        assertEq(genesisBalances[0], amount, "should set balance");
+        uint256 actualBalance = supernetManager.getGenesisBalance(account.addr);
+        assertEq(actualBalance, amount, "should set balance");
     }
 
     function test_addGenesisBalance_genesisSetFinalizedRevert() public {
@@ -432,6 +432,11 @@ contract CustomSupernetManager_PremineInitialized is Initialized {
         supernetManager.enableStaking();
         vm.expectRevert("CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
         supernetManager.addGenesisBalance(amount);
+    }
+
+     function test_addGenesisBalance_invalidAmountRevert() public {
+        vm.expectRevert("CustomSupernetManager: INVALID_AMOUNT");
+        supernetManager.addGenesisBalance(0);
     }
 }
 

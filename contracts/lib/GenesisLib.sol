@@ -21,7 +21,6 @@ struct GenesisSet {
     GenesisValidator[] genesisValidators;
     GenesisStatus status;
     mapping(address => uint256) indices;
-    uint256[] balances;
 }
 
 library GenesisLib {
@@ -31,7 +30,7 @@ library GenesisLib {
      * @param validator address of the validator
      * @param stake amount to add to the validators genesis stake
      */
-    function insert(GenesisSet storage self, address validator, uint256 stake, uint256 balance) internal {
+    function insert(GenesisSet storage self, address validator, uint256 stake) internal {
         assert(self.status == GenesisStatus.NOT_STARTED);
         uint256 index = self.indices[validator];
         if (index == 0) {
@@ -40,13 +39,11 @@ library GenesisLib {
             index = self.genesisValidators.length + 1;
             self.indices[validator] = index;
             self.genesisValidators.push(GenesisValidator(validator, stake));
-            self.balances.push(balance);
         } else {
             // update values
             uint256 idx = _indexOf(self, validator);
             GenesisValidator storage genesisValidator = self.genesisValidators[idx];
             genesisValidator.initialStake += stake;
-            self.balances[idx] += balance;
         }
     }
 
