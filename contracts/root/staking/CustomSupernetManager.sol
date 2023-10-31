@@ -153,7 +153,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
         // we need to track EOAs as well in the genesis set, in order to be able to query genesisBalances mapping
         _genesis.insert(msg.sender, 0);
-        genesisBalances[msg.sender] = amount;
+        genesisBalances[msg.sender] += amount;
 
         // lock native tokens on the root erc20 predicate
         nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
