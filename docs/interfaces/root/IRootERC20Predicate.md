@@ -67,6 +67,23 @@ Function to be used for token mapping
 |---|---|---|
 | _0 | address | address Address of the child token |
 
+### nativeTokenRoot
+
+```solidity
+function nativeTokenRoot() external nonpayable returns (address)
+```
+
+Function that retrieves rootchain token that represents Supernets native token
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | address Address of rootchain token (mapped to Supernets native token) |
+
 ### onL2StateReceive
 
 ```solidity

@@ -150,7 +150,7 @@ function exitHelper() external view returns (address)
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate, address newChildTokenTemplate, address nativeTokenRootAddress) external nonpayable
+function initialize(address newStateSender, address newExitHelper, address newChildERC20Predicate, address newChildTokenTemplate, address newNativeTokenRoot) external nonpayable
 ```
 
 Initialization function for RootERC20Predicate
@@ -165,7 +165,7 @@ Initialization function for RootERC20Predicate
 | newExitHelper | address | Address of ExitHelper to receive withdrawal information from |
 | newChildERC20Predicate | address | Address of child ERC20 predicate to communicate with |
 | newChildTokenTemplate | address | undefined |
-| nativeTokenRootAddress | address | undefined |
+| newNativeTokenRoot | address | undefined |
 
 ### mapToken
 
@@ -188,6 +188,23 @@ Function to be used for token mapping
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | address Address of the child token |
+
+### nativeTokenRoot
+
+```solidity
+function nativeTokenRoot() external view returns (address)
+```
+
+Function that retrieves rootchain token that represents Supernets native token
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | address Address of rootchain token (mapped to Supernets native token) |
 
 ### onL2StateReceive
 
