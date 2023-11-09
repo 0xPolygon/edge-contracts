@@ -1,18 +1,18 @@
 {
-  "common": {
-    "proxyAdminOwner": "",
-    "newBls": "",
-    "newChildTokenTemplate": ""
+  "ProxyAdmin": {
+    "proxyAdminOwner": ""
   },
 
   "CheckpointManager": {
-    "INITIALIZER": ""
+    "initiator": ""
   },
 
   "CustomSupernetManager": {
     "newStakeManager": "",
+    "newBls": "",
     "newMatic": "",
     "newChildValidatorSet": "",
+    "newRootERC20Predicate": "",
     "newDomain": ""
   }
 }

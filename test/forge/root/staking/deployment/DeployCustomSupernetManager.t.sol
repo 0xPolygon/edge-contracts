@@ -25,6 +25,7 @@ contract DeployCustomSupernetManagerTest is Test {
     address newMatic;
     address newChildValidatorSet;
     address newExitHelper;
+    address newRootERC20Predicate;
     string newDomain;
 
     function setUp() public {
@@ -37,6 +38,7 @@ contract DeployCustomSupernetManagerTest is Test {
         newMatic = makeAddr("newMatic");
         newChildValidatorSet = makeAddr("newChildValidatorSet");
         newExitHelper = makeAddr("newExitHelper");
+        newRootERC20Predicate = makeAddr("newRootERC20Predicate");
         newDomain = "newDomain";
 
         (logicAddr, proxyAddr) = deployer.run(
@@ -47,6 +49,7 @@ contract DeployCustomSupernetManagerTest is Test {
             newMatic,
             newChildValidatorSet,
             newExitHelper,
+            newRootERC20Predicate,
             newDomain
         );
         _recordProxy(proxyAddr);
@@ -70,6 +73,7 @@ contract DeployCustomSupernetManagerTest is Test {
             newMatic,
             newChildValidatorSet,
             newExitHelper,
+            newRootERC20Predicate,
             newDomain
         );
 

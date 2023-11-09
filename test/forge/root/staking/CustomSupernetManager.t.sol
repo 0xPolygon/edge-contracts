@@ -8,6 +8,7 @@ import {ExitHelper} from "contracts/root/ExitHelper.sol";
 import {StakeManager} from "contracts/root/staking/StakeManager.sol";
 import {CustomSupernetManager, Validator, GenesisValidator} from "contracts/root/staking/CustomSupernetManager.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
+import {RootERC20Predicate} from "contracts/root/RootERC20Predicate.sol";
 import "contracts/interfaces/Errors.sol";
 
 abstract contract Uninitialized is Test {
@@ -20,6 +21,7 @@ abstract contract Uninitialized is Test {
     MockERC20 token;
     StakeManager stakeManager;
     CustomSupernetManager supernetManager;
+    RootERC20Predicate rootERC20Predicate;
 
     function setUp() public virtual {
         bls = new BLS();
@@ -30,6 +32,7 @@ abstract contract Uninitialized is Test {
         stakeManager = new StakeManager();
         supernetManager = new CustomSupernetManager();
         stakeManager.initialize(address(token));
+        rootERC20Predicate = new RootERC20Predicate();
     }
 }
 
@@ -43,6 +46,7 @@ abstract contract Initialized is Uninitialized {
             address(token),
             childValidatorSet,
             exitHelper,
+            address(rootERC20Predicate),
             DOMAIN
         );
     }
@@ -170,6 +174,7 @@ contract CustomSupernetManager_Initialize is Uninitialized {
             address(token),
             childValidatorSet,
             exitHelper,
+            address(rootERC20Predicate),
             DOMAIN
         );
         assertEq(supernetManager.owner(), address(this), "should set owner");
@@ -267,7 +272,7 @@ contract CustomSupernetManager_StakeGenesis is ValidatorsRegistered {
         GenesisValidator[] memory genesisValidators = supernetManager.genesisSet();
         assertEq(genesisValidators.length, 1, "should set genesisSet");
         GenesisValidator memory validator = genesisValidators[0];
-        assertEq(validator.validator, address(this), "should set validator address");
+        assertEq(validator.addr, address(this), "should set validator address");
         assertEq(validator.initialStake, amount, "should set amount");
     }
 
@@ -277,7 +282,7 @@ contract CustomSupernetManager_StakeGenesis is ValidatorsRegistered {
         GenesisValidator[] memory genesisValidators = supernetManager.genesisSet();
         assertEq(genesisValidators.length, 1, "should set genesisSet");
         GenesisValidator memory validator = genesisValidators[0];
-        assertEq(validator.validator, address(this), "should set validator address");
+        assertEq(validator.addr, address(this), "should set validator address");
         assertEq(validator.initialStake, amount, "should set amount");
     }
 }
@@ -383,119 +388,86 @@ contract CustomSupernetManager_Unstake is EnabledStaking {
     }
 }
 
-contract CustomSupernetManager_Slash is EnabledStaking {
-    address private mev = makeAddr("MEV");
-    bytes32 private constant SLASH_SIG = keccak256("SLASH");
-    event ValidatorDeactivated(address indexed validator);
-    event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
-    event StakeRemoved(uint256 indexed id, address indexed validator, uint256 amount);
-    event StakeWithdrawn(address indexed validator, address indexed recipient, uint256 amount);
-    event Transfer(address indexed from, address indexed to, uint256 value);
+contract CustomSupernetManager_PremineInitialized is Initialized {
+    uint256 balance = 100 ether;
+    event GenesisBalanceAdded(address indexed account, uint256 indexed amount);
 
-    uint256 private slashingPercentage = 50; // sent from ValidatorSet
-    uint256 private slashIncentivePercentage = 30; // sent from ValidatorSet
+    address childERC20Predicate;
+    address childTokenTemplate;
+    address bob = makeAddr("bob");
 
-    function test_SuccessfulFullWithdrawal() public {
-        uint256 exitEventId = 1;
-
-        address[] memory validatorsToSlash = new address[](1);
-        validatorsToSlash[0] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
-        uint256 slashedAmount = (amount * slashingPercentage) / 100;
-
-        vm.expectEmit(true, true, true, true);
-        emit StakeWithdrawn(address(this), address(supernetManager), slashedAmount);
-        vm.expectEmit(true, true, true, true);
-        emit StakeRemoved(exitEventId, address(this), amount);
-        vm.expectEmit(true, true, true, true);
-        emit ValidatorDeactivated(address(this));
-        // emits state sync event to complete slashing on child chain
-        vm.expectEmit(true, true, true, true);
-        emit StateSynced(
-            exitEventId,
-            address(supernetManager),
-            childValidatorSet,
-            abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage)
+    function setUp() public virtual override {
+        super.setUp();
+        token.mint(bob, balance);
+        childERC20Predicate = makeAddr("childERC20Predicate");
+        childTokenTemplate = makeAddr("childTokenTemplate");
+        rootERC20Predicate.initialize(
+            address(stateSender),
+            exitHelper,
+            childERC20Predicate,
+            childTokenTemplate,
+            address(token)
         );
-        vm.store(exitHelper, callerSlotOnExitHelper, bytes32(uint256(uint160(mev)))); // simulate caller of exit()
-        vm.prank(exitHelper);
-        supernetManager.onL2StateReceive(exitEventId, childValidatorSet, callData);
-        vm.store(exitHelper, callerSlotOnExitHelper, bytes32(0));
-
-        assertEq(stakeManager.stakeOf(address(this), 1), 0, "should unstake all");
-        assertEq(
-            stakeManager.withdrawableStake(address(this)),
-            amount - (amount * slashingPercentage) / 100,
-            "should slash"
-        );
-        assertEq(supernetManager.getValidator(address(this)).isActive, false, "should deactivate");
     }
 
-    function test_SlashIncentiveDistribution() external {
-        uint256 exitEventId = 1;
-        address[] memory validatorsToSlash = new address[](1);
-        validatorsToSlash[0] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
-        uint256 slashedAmount = (amount * slashingPercentage) / 100;
-        uint256 exitorReward = (slashedAmount * slashIncentivePercentage) / 100;
-
-        assertEq(token.balanceOf(mev), 0); // balance before
+    function test_addGenesisBalance_successful() public {
+        vm.startPrank(bob);
+        token.approve(address(supernetManager), balance);
         vm.expectEmit(true, true, true, true);
-        emit Transfer(address(supernetManager), mev, exitorReward);
-        vm.store(exitHelper, callerSlotOnExitHelper, bytes32(uint256(uint160(mev)))); // simulate caller of exit()
-        vm.prank(exitHelper);
-        supernetManager.onL2StateReceive(exitEventId, childValidatorSet, callData);
-        vm.store(exitHelper, callerSlotOnExitHelper, bytes32(0));
-        assertEq(token.balanceOf(mev), exitorReward, "should transfer slashing reward");
+        emit GenesisBalanceAdded(bob, balance);
+        supernetManager.addGenesisBalance(balance);
+
+        GenesisValidator[] memory genesisAccounts = supernetManager.genesisSet();
+        assertEq(genesisAccounts.length, 1, "should set genesisSet");
+        GenesisValidator memory account = genesisAccounts[0];
+        assertEq(account.addr, bob, "should set validator address");
+        assertEq(account.initialStake, 0, "should set initial stake to 0");
+
+        uint256 actualBalance = supernetManager.genesisBalances(account.addr);
+        assertEq(actualBalance, balance, "should set genesis balance");
     }
 
-    function test_SlashEntireValidatorSet() external {
-        uint256 aliceStakedAmount = amount << 3;
-        token.mint(alice, aliceStakedAmount);
-        vm.prank(alice);
-        stakeManager.stakeFor(1, aliceStakedAmount);
+    function test_addGenesisBalance_genesisSetFinalizedRevert() public {
+        supernetManager.finalizeGenesis();
+        supernetManager.enableStaking();
+        vm.expectRevert("CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
+        supernetManager.addGenesisBalance(balance);
+    }
 
-        uint256 aliceSlashedAmount = (aliceStakedAmount * slashingPercentage) / 100;
-        uint256 thisSlashedAmount = (amount * slashingPercentage) / 100;
-
-        address[] memory validatorsToSlash = new address[](2);
-        validatorsToSlash[0] = alice;
-        validatorsToSlash[1] = address(this);
-        bytes memory callData = abi.encode(SLASH_SIG, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
-
-        vm.store(exitHelper, callerSlotOnExitHelper, bytes32(uint256(uint160(mev)))); // simulate caller of exit()
-        vm.prank(exitHelper);
-        supernetManager.onL2StateReceive(1, childValidatorSet, callData);
-        vm.store(exitHelper, callerSlotOnExitHelper, bytes32(0));
-
-        assertEq(stakeManager.stakeOf(address(this), 1), 0, "should unstake all");
-        assertEq(stakeManager.stakeOf(alice, 1), 0, "should unstake all");
-        assertEq(stakeManager.withdrawableStake(address(this)), amount - thisSlashedAmount, "should slash");
-        assertEq(stakeManager.withdrawableStake(alice), aliceStakedAmount - aliceSlashedAmount, "should slash");
-        assertEq(supernetManager.getValidator(address(this)).isActive, false, "should deactivate");
-        assertEq(supernetManager.getValidator(alice).isActive, false, "should deactivate");
-        uint256 exitorReward = ((thisSlashedAmount + aliceSlashedAmount) * slashIncentivePercentage) / 100;
-        assertEq(token.balanceOf(mev), exitorReward, "should transfer slashing reward");
+    function test_addGenesisBalance_invalidAmountRevert() public {
+        vm.expectRevert("CustomSupernetManager: INVALID_AMOUNT");
+        supernetManager.addGenesisBalance(0);
     }
 }
 
-contract CustomSupernetManager_WithdrawSlash is Slashed {
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    function test_RevertNotOwner() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(alice);
-        supernetManager.withdrawSlashedStake(alice);
+contract CustomSupernetManager_UndefinedRootERC20Predicate is Uninitialized {
+    function setUp() public virtual override {
+        super.setUp();
+        supernetManager.initialize(
+            address(stakeManager),
+            address(bls),
+            address(stateSender),
+            address(token),
+            childValidatorSet,
+            exitHelper,
+            address(0),
+            DOMAIN
+        );
     }
 
-    function test_WithdrawSlashedAmount() public {
-        uint256 slashedAmount = (amount * slashingPercentage) / 100;
-        uint256 slashingReward = (slashedAmount * slashIncentivePercentage) / 100; // given to exitor after slash
-        uint256 withdrawableAmount = slashedAmount - slashingReward;
-        assertEq(token.balanceOf(address(supernetManager)), withdrawableAmount);
-        vm.expectEmit(true, true, true, true);
-        emit Transfer(address(supernetManager), alice, withdrawableAmount);
-        supernetManager.withdrawSlashedStake(alice);
-        assertEq(token.balanceOf(address(supernetManager)), 0);
+    function test_addGenesisBalance_revertUndefinedRootERC20Predicate() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Unauthorized.selector, "CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE")
+        );
+        supernetManager.addGenesisBalance(100 ether);
+    }
+}
+
+contract CustomSupernetManager_UndefinedNativeTokenRoot is Initialized {
+    function test_addGenesisBalance_revertUndefinedNativeTokenRoot() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Unauthorized.selector, "CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT")
+        );
+        supernetManager.addGenesisBalance(100 ether);
     }
 }

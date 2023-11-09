@@ -13,7 +13,6 @@ interface IStakeManager {
     event StakeAdded(uint256 indexed id, address indexed validator, uint256 amount);
     event StakeRemoved(uint256 indexed id, address indexed validator, uint256 amount);
     event StakeWithdrawn(address indexed validator, address indexed recipient, uint256 amount);
-    event ValidatorSlashed(uint256 indexed id, address indexed validator, uint256 amount);
 
     /// @notice registers a new child chain with the staking contract
     /// @return id of the child chain
@@ -27,10 +26,6 @@ interface IStakeManager {
 
     /// @notice allows a validator to withdraw released stake
     function withdrawStake(address to, uint256 amount) external;
-
-    /// @notice called by child manager contract to slash a validator's stake
-    /// @notice manager collects slashed amount
-    function slashStakeOf(address validator, uint256 amount) external;
 
     /// @notice returns the amount of stake a validator can withdraw
     function withdrawableStake(address validator) external view returns (uint256 amount);

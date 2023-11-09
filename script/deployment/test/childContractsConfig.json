@@ -1,0 +1,141 @@
+{
+  "ProxyAdmin": {
+    "proxyAdminOwner": ""
+  },
+
+  "NetworkParams": {
+    "initParams": ""
+  },
+
+  "ValidatorSet": {
+    "newStateSender": "",
+    "newRootChainManager": "",
+    "newEpochSize": "",
+    "initialValidators": ""
+  },
+
+  "RewardPool": {
+    "newRewardToken": "",
+    "newRewardWallet": "",
+    "newBaseReward": ""
+  },
+
+  "ChildERC20": {
+    "rootToken_": "",
+    "name_": "",
+    "symbol_": "",
+    "decimals_": ""
+  },
+
+  "ChildERC20Predicate": {
+    "newRootERC20Predicate": "",
+    "newChildTokenTemplate": "",
+    "newNativeTokenRootAddress": ""
+  },
+
+  "ChildERC20PredicateAccessList": {
+    "newRootERC20Predicate": "",
+    "newChildTokenTemplate": "",
+    "newNativeTokenRootAddress": "",
+    "newUseAllowList": "",
+    "newUseBlockList": "",
+    "newOwner": ""
+  },
+
+  "ChildERC721": {
+    "rootToken_": "",
+    "name_": "",
+    "symbol_": ""
+  },
+
+  "ChildERC721Predicate": {
+    "newRootERC721Predicate": "",
+    "newChildTokenTemplate": ""
+  },
+
+  "ChildERC721PredicateAccessList": {
+    "newRootERC721Predicate": "",
+    "newChildTokenTemplate": "",
+    "newUseAllowList": "",
+    "newUseBlockList": "",
+    "newOwner": ""
+  },
+
+  "ChildERC1155": {
+    "rootToken_": "",
+    "uri_": ""
+  },
+
+  "ChildERC1155Predicate": {
+    "newRootERC1155Predicate": "",
+    "newChildTokenTemplate": ""
+  },
+
+  "ChildERC1155PredicateAccessList": {
+    "newRootERC1155Predicate": "",
+    "newChildTokenTemplate": "",
+    "newUseAllowList": "",
+    "newUseBlockList": "",
+    "newOwner": ""
+  },
+
+  "EIP1559Burn": {
+    "newBurnDestination": ""
+  },
+
+  "ForkParams": {
+    "newOwner": ""
+  },
+
+  "NativeERC20": {
+    "predicate_": "",
+    "rootToken_": "",
+    "name_": "",
+    "symbol_": "",
+    "decimals_": "",
+    "tokenSupply_": ""
+  },
+
+  "NativeERC20Mintable": {
+    "predicate_": "",
+    "owner_": "",
+    "rootToken_": "",
+    "name_": "",
+    "symbol_": "",
+    "decimals_": "",
+    "tokenSupply_": ""
+  },
+
+  "RootMintableERC20Predicate": {
+    "newChildTokenTemplate": ""
+  },
+
+  "RootMintableERC20PredicateAccessList": {
+    "newChildTokenTemplate": "",
+    "newUseAllowList": "",
+    "newUseBlockList": "",
+    "newOwner": ""
+  },
+
+  "RootMintableERC721Predicate": {
+    "newChildTokenTemplate": ""
+  },
+
+  "RootMintableERC721PredicateAccessList": {
+    "newRootERC72newChildTokenTemplate1Predicate": "",
+    "newUseAllowList": "",
+    "newUseBlockList": "",
+    "newOwner": ""
+  },
+
+  "RootMintableERC1155Predicate": {
+    "newChildTokenTemplate": ""
+  },
+
+  "RootMintableERC1155PredicateAccessList": {
+    "newChildTokenTemplate": "",
+    "newUseAllowList": "",
+    "newUseBlockList": "",
+    "newOwner": ""
+  }
+}

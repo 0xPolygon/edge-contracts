@@ -64,19 +64,6 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
     /**
      * @inheritdoc IStakeManager
      */
-    function slashStakeOf(address validator, uint256 amount) external {
-        uint256 id = idFor(msg.sender);
-        uint256 stake = _stakeOf(validator, id);
-        if (amount > stake) amount = stake;
-        _removeStake(validator, id, stake);
-        _withdrawStake(validator, msg.sender, amount);
-        emit StakeRemoved(id, validator, stake);
-        emit ValidatorSlashed(id, validator, amount);
-    }
-
-    /**
-     * @inheritdoc IStakeManager
-     */
     function withdrawableStake(address validator) external view returns (uint256 amount) {
         amount = _withdrawableStakeOf(validator);
     }

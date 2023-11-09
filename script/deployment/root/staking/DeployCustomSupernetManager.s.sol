@@ -16,11 +16,21 @@ abstract contract CustomSupernetManagerDeployer is Script {
         address newMatic,
         address newChildValidatorSet,
         address newExitHelper,
+        address newRootERC20Predicate,
         string memory newDomain
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             CustomSupernetManager.initialize,
-            (newStakeManager, newBls, newStateSender, newMatic, newChildValidatorSet, newExitHelper, newDomain)
+            (
+                newStakeManager,
+                newBls,
+                newStateSender,
+                newMatic,
+                newChildValidatorSet,
+                newExitHelper,
+                newRootERC20Predicate,
+                newDomain
+            )
         );
 
         vm.startBroadcast();
@@ -49,6 +59,7 @@ contract DeployCustomSupernetManager is CustomSupernetManagerDeployer {
         address newMatic,
         address newChildValidatorSet,
         address newExitHelper,
+        address newRootERC20Predicate,
         string memory newDomain
     ) external returns (address logicAddr, address proxyAddr) {
         return
@@ -60,6 +71,7 @@ contract DeployCustomSupernetManager is CustomSupernetManagerDeployer {
                 newMatic,
                 newChildValidatorSet,
                 newExitHelper,
+                newRootERC20Predicate,
                 newDomain
             );
     }

@@ -32,12 +32,12 @@ contract DeployNewRootContractSet is
             address customSupernetManagerProxy
         )
     {
-        string memory config = vm.readFile("script/deployment/newRootContractSetConfig.json");
+        string memory config = vm.readFile("script/deployment/rootContractSetConfig.json");
 
         vm.startBroadcast();
 
         ProxyAdmin _proxyAdmin = new ProxyAdmin();
-        _proxyAdmin.transferOwnership(config.readAddress('["common"].proxyAdminOwner'));
+        _proxyAdmin.transferOwnership(config.readAddress('["ProxyAdmin"].proxyAdminOwner'));
 
         vm.stopBroadcast();
 
@@ -56,11 +56,12 @@ contract DeployNewRootContractSet is
         (customSupernetManagerLogic, customSupernetManagerProxy) = deployCustomSupernetManager(
             proxyAdmin,
             config.readAddress('["CustomSupernetManager"].newStakeManager'),
-            config.readAddress('["common"].newBls'),
+            config.readAddress('["CustomSupernetManager"].newBls'),
             stateSender,
             config.readAddress('["CustomSupernetManager"].newMatic'),
             config.readAddress('["CustomSupernetManager"].newChildValidatorSet'),
             exitHelperProxy,
+            config.readAddress('["CustomSupernetManager"].newRootERC20Predicate'),
             config.readString('["CustomSupernetManager"].newDomain')
         );
     }

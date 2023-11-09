@@ -10,6 +10,22 @@ Manages validator access and syncs voting power between the stake manager and va
 
 ## Methods
 
+### addGenesisBalance
+
+```solidity
+function addGenesisBalance(uint256 amount) external nonpayable
+```
+
+addGenesisBalance is used to specify genesis balance information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | represents the amount to be premined in the genesis. |
+
 ### enableStaking
 
 ```solidity
@@ -122,22 +138,6 @@ Allows to whitelist validators that are allowed to stake
 |---|---|---|
 | validators_ | address[] | undefined |
 
-### withdrawSlashedStake
-
-```solidity
-function withdrawSlashedStake(address to) external nonpayable
-```
-
-Withdraws slashed MATIC of slashed validators
-
-*only callable by owner*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to | address | undefined |
-
 
 
 ## Events
@@ -157,6 +157,23 @@ event AddedToWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
+
+### GenesisBalanceAdded
+
+```solidity
+event GenesisBalanceAdded(address indexed account, uint256 indexed amount)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| amount `indexed` | uint256 | undefined |
 
 ### GenesisFinalized
 
