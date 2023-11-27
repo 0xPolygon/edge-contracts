@@ -3,8 +3,8 @@ pragma solidity 0.8.19;
 
 import "@utils/Test.sol";
 
-import {ChildERC20} from "contracts/child/ChildERC20.sol";
-import {ChildERC20Predicate} from "contracts/child/ChildERC20Predicate.sol";
+import {ChildERC20} from "contracts/blade/ChildERC20.sol";
+import {ChildERC20Predicate} from "contracts/blade/ChildERC20Predicate.sol";
 
 contract ChildERC20Test is Test {
     ChildERC20 childERC20;

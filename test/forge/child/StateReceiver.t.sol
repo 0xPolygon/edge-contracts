@@ -4,8 +4,8 @@ pragma solidity 0.8.19;
 import "@utils/Test.sol";
 import {MurkyBase} from "murky/common/MurkyBase.sol";
 
-import {StateReceiver} from "contracts/child/StateReceiver.sol";
-import {System} from "contracts/child/StateReceiver.sol";
+import {StateReceiver} from "contracts/blade/StateReceiver.sol";
+import {System} from "contracts/blade/StateReceiver.sol";
 import {StateReceivingContract} from "contracts/mocks/StateReceivingContract.sol";
 import "contracts/interfaces/Errors.sol";
 

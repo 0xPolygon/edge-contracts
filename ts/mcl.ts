@@ -124,23 +124,6 @@ export function signValidatorMessage(domain: Domain, chainId: number, address: s
   return { signature, messagePoint };
 }
 
-export function signSupernetMessage(
-  domain: Domain,
-  chainId: number,
-  signerAddress: string,
-  contractAddress: string,
-  secret: SecretKey
-) {
-  const message = ethers.utils.solidityPack(
-    ["address", "address", "uint256"],
-    [signerAddress.toLowerCase(), contractAddress.toLowerCase(), chainId]
-  );
-  const messagePoint = hashToPoint(message, domain);
-  const signature: any = mcl.mul(messagePoint, secret);
-  signature.normalize();
-  return { signature, messagePoint };
-}
-
 export function sign(
   message: string,
   secret: SecretKey,

@@ -38,7 +38,7 @@ There are a number of different contracts with different roles in the suite, as 
 One piece of terminology that is useful in understanding the layout and contracts themselves is the references to `root` and `child`. Chains such as POS and Edge assume that there is a base layer chain that data from other chains is committed to. In the case of POS, the root chain is Ethereum mainnet and the child is Polygon POS, while in the case of Edge, the root chain is Edge and the child chains are the various Supernets.
 
 ```ml
-│ child/ "contracts that live on the child chain"
+│ blade/ "contracts that live on the blade chain"
 ├─ tokens - "contracts for the bridging/management of native and ERC20/721/1155 assets"
 ├─ EIP1559Burn - "allows child native token to be burnt on root"
 ├─ ForkParams - "configurable softfork features read by the client each epoch"
@@ -66,7 +66,7 @@ One piece of terminology that is useful in understanding the layout and contract
 ├─ StakeManagerLib - "manages validator stake (deposit, withdrawal, etc)"
 ├─ WithdrawalQueue — "lib of operations for the rewards withdrawal queue"
 │ mocks/ "mocks of various contracts for testing"
-│ root/ "contracts that live on the root chain (Ethereum mainnet)"
+│ bridge/ "contracts that live on the root chain (Ethereum mainnet)"
 ├─ root predicates - "templates for processing asset bridging on root"
 ├─ | staking "contracts comprising the hub for staking on any child chain"
    ├─ CustomSupernetManager - "manages validator access, syncs voting power"
@@ -169,13 +169,13 @@ One point that is worth emphasizing in this context is that from the perspective
 
 Deployment scripts have been provided for each of the root chain contracts. (The child chain contracts are genesis contracts, and are not deployed traditionally; they are deployed by the client as a part of the genesis of the child chain.)
 
-Some contracts in the Edge suite need be deployed only once on root. These contracts can deployed using the [`DeploySharedRootContracts`](script/deployment/DeploySharedRootContracts.sol) script, after [`sharedRootContractsConfig`](script/deployment/sharedRootContractsConfig.json) has been filled with appropriate values.
+Some contracts in the Edge suite need be deployed only once on root. These contracts can deployed using the [`DeployCommonContracts`](script/deployment/DeploySharedRootContracts.sol) script, after [`commonContractsConfig`](script/deployment/commonContractsConfig.json) has been filled with appropriate values.
 
-Other contracts are deployed on root once per Supernet. These contracts can deployed using the [`DeployNewRootContractSet.s.sol`](script/deployment/DeployNewRootContractSet.s.sol) script, after [`rootContractSetConfig.json`](script/deployment/rootContractSetConfig.json) has been filled with appropriate values.
+Other contracts are deployed on root once per Supernet. These contracts can deployed using the [`DeployNewBridgeContractSet.s.sol`](script/deployment/DeployNewBridgeContractSet.s.sol) script, after [`bridgeContractSetConfig.json`](script/deployment/bridgeContractSetConfig.json) has been filled with appropriate values.
 
 Note that the script does not initialize `CheckpointManager`. Instead, it protects it to be initializable only by the `INITIATOR` address later.
 
-Not all root contracts are deployed at this point, however. There are parts of the bridge that need the addresses of various child contracts in order to be initialized. These contracts can deployed using the [`DeployRootTokenContracts.s.sol`](script/deployment/DeployRootTokenContracts.s.sol) script, after [`rootTokenContractsConfig.json`](script/deployment/rootTokenContractsConfig.json) has been filled with appropriate values.
+Not all root contracts are deployed at this point, however. There are parts of the bridge that need the addresses of various child contracts in order to be initialized. These contracts can deployed using the [`DeployBridgeTokenContracts.s.sol`](script/deployment/DeployBridgeTokenContracts.s.sol) script, after [`bridgeTokenContractsConfig.json`](script/deployment/bridgeTokenContractsConfig.json) has been filled with appropriate values.
 
 Scripts are run by invoking:
 

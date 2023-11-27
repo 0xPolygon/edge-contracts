@@ -1,0 +1,13 @@
+{
+  "ProxyAdmin": {
+    "proxyAdminOwner": ""
+  },
+
+  "StakeManager": {
+    "newStakingToken": "",
+    "newBls": "",
+    "newEpochManager": "",
+    "newDomain": "",
+    "newGenesisValidators": ""
+  }
+}

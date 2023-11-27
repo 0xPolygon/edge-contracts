@@ -126,8 +126,17 @@ describe("ChildERC20Predicate", () => {
     const systemNativeERC20: NativeERC20 = nativeERC20.connect(
       await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
     );
-    await expect(systemNativeERC20.initialize(childERC20Predicate.address, nativeERC20RootToken, "TEST", "TEST", 18, 0))
-      .to.not.be.reverted;
+    await expect(
+      systemNativeERC20.initialize(
+        childERC20Predicate.address,
+        accounts[0].address,
+        nativeERC20RootToken,
+        "TEST",
+        "TEST",
+        18,
+        0
+      )
+    ).to.not.be.reverted;
     expect(await childERC20Predicate.l2StateSender()).to.equal(l2StateSender.address);
     expect(await childERC20Predicate.stateReceiver()).to.equal(stateReceiver.address);
     expect(await childERC20Predicate.rootERC20Predicate()).to.equal(rootERC20Predicate);

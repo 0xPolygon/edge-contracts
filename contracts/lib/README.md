@@ -9,10 +9,6 @@ There is natspec on the contracts, along with markdown docs automatically genera
 
 Edge implements protocol-level access lists for allowing (AllowList) or blocking (BlockList) access to various features of a Supernet, configurable by the administrators of the Supernet. Some of the potential applications of these lists require contracts to be able to check inclusion in the lists. The ability to do so is exposed by precompiles, this contract facilitates checking the precompile for membership.
 
-## ChildManagerLib
-
-Library for use in a registry managing Supernets.
-
 ## EIP712MetaTransaction
 
 Helper contract for working with EIP712

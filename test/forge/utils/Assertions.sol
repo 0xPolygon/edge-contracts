@@ -8,7 +8,7 @@ pragma solidity 0.8.19;
 import {StdAssertions} from "forge-std/StdAssertions.sol";
 
 // 📦 BOILERPLATE
-import {StateReceiver} from "contracts/child/StateReceiver.sol";
+import {StateReceiver} from "contracts/blade/StateReceiver.sol";
 import {Withdrawal} from "contracts/lib/WithdrawalQueue.sol";
 import {RewardPool, Validator, Node, ValidatorTree} from "contracts/interfaces/lib/IValidator.sol";
 

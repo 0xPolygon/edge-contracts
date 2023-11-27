@@ -12,9 +12,9 @@ ffi = true
 # comment out if you notice any weird behavior
 # sparse_mode = true
 fs_permissions = [
-  { access = "read", path = "script/deployment/sharedRootContractsConfig.json" },
-  { access = "read", path = "script/deployment/rootContractSetConfig.json" },
-  { access = "read", path = "script/deployment/rootTokenContractsConfig.json" },
+  { access = "read", path = "script/deployment/commonContractsConfig.json" },
+  { access = "read", path = "script/deployment/bridgeContractSetConfig.json" },
+  { access = "read", path = "script/deployment/bridgeTokenContractsConfig.json" },
   { access = "read", path = "out/GenesisProxy.sol/GenesisProxy.json" }
 ]
 
