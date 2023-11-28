@@ -126,6 +126,7 @@
     "newBls": "",
     "newEpochManager": "",
     "newDomain": "",
-    "newGenesisValidators": ""
+    "newGenesisValidators": "",
+    "newOwner": ""
   }
 }

@@ -58,7 +58,7 @@ abstract contract Initialized is Uninitialized {
         validators[0] = GenesisValidator({addr: bob, stake: bobInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[1] = GenesisValidator({addr: alice, stake: aliceInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[2] = GenesisValidator({addr: jim, stake: jimInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
-        stakeManager.initialize(address(token), blsAddr, address(epochManager), testDomain, validators);
+        stakeManager.initialize(address(token), blsAddr, address(epochManager), bob, testDomain, validators);
     }
 }
 
@@ -83,7 +83,7 @@ contract StakeManager_Initialize is Uninitialized {
         validators[0] = GenesisValidator({addr: bob, stake: bobInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[1] = GenesisValidator({addr: alice, stake: aliceInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[2] = GenesisValidator({addr: jim, stake: jimInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
-        stakeManager.initialize(address(token), blsAddr, address(epochManager), testDomain, validators);
+        stakeManager.initialize(address(token), blsAddr, address(epochManager), bob, testDomain, validators);
     }
 }
 
