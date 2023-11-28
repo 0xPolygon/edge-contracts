@@ -234,7 +234,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address newStakingToken, address newBls, address epochManager, string newDomain, GenesisValidator[] genesisValidators) external nonpayable
+function initialize(address newStakingToken, address newBls, address epochManager, address owner, string newDomain, GenesisValidator[] genesisValidators) external nonpayable
 ```
 
 
@@ -248,6 +248,7 @@ function initialize(address newStakingToken, address newBls, address epochManage
 | newStakingToken | address | undefined |
 | newBls | address | undefined |
 | epochManager | address | undefined |
+| owner | address | undefined |
 | newDomain | string | undefined |
 | genesisValidators | GenesisValidator[] | undefined |
 

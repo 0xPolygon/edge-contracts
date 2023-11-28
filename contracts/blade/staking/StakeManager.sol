@@ -38,6 +38,7 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
         address newStakingToken,
         address newBls,
         address epochManager,
+        address owner,
         string memory newDomain,
         GenesisValidator[] memory genesisValidators
     ) public initializer {
@@ -52,6 +53,7 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
             validators[validator.addr] = Validator(validator.addr, validator.blsKey, true, true);
             _stake(validator.addr, validator.stake);
         }
+        _transferOwnership(owner);
     }
 
     /**

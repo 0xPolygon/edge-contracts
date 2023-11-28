@@ -14,12 +14,13 @@ abstract contract StakeManagerDeployer is Script {
         address newStakingToken,
         address newBls,
         address newEpochManager,
+        address owner,
         string memory newDomain,
         GenesisValidator[] memory newGenesisValidators
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             StakeManager.initialize,
-            (newStakingToken, newBls, newEpochManager, newDomain, newGenesisValidators)
+            (newStakingToken, newBls, newEpochManager, owner, newDomain, newGenesisValidators)
         );
 
         vm.startBroadcast();
@@ -45,10 +46,19 @@ contract DeployStakeManager is StakeManagerDeployer {
         address newStakingToken,
         address newBls,
         address newEpochManager,
+        address owner,
         string memory newDomain,
         GenesisValidator[] memory newGenesisValidators
     ) external returns (address logicAddr, address proxyAddr) {
         return
-            deployStakeManager(proxyAdmin, newStakingToken, newBls, newEpochManager, newDomain, newGenesisValidators);
+            deployStakeManager(
+                proxyAdmin,
+                newStakingToken,
+                newBls,
+                newEpochManager,
+                owner,
+                newDomain,
+                newGenesisValidators
+            );
     }
 }
