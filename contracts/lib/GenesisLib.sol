@@ -13,7 +13,7 @@ enum GenesisStatus {
 }
 
 struct GenesisValidator {
-    address validator;
+    address addr;
     uint256 initialStake;
 }
 
@@ -41,7 +41,8 @@ library GenesisLib {
             self.genesisValidators.push(GenesisValidator(validator, stake));
         } else {
             // update values
-            GenesisValidator storage genesisValidator = self.genesisValidators[_indexOf(self, validator)];
+            uint256 idx = _indexOf(self, validator);
+            GenesisValidator storage genesisValidator = self.genesisValidators[idx];
             genesisValidator.initialStake += stake;
         }
     }
