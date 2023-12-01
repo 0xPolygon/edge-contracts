@@ -30,6 +30,12 @@ describe("CheckpointManager", () => {
     const CheckpointManager = await ethers.getContractFactory("CheckpointManager");
     checkpointManager = (await CheckpointManager.deploy(ethers.constants.AddressZero)) as CheckpointManager;
     await checkpointManager.deployed();
+
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(checkpointManager.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    checkpointManager = CheckpointManager.attach(_proxy.address);
   });
 
   it("Initialize failed by zero voting power", async () => {

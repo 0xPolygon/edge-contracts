@@ -22,13 +22,21 @@ describe("ChildERC721", () => {
 
     const ChildERC721: ChildERC721__factory = await ethers.getContractFactory("ChildERC721");
     childERC721 = await ChildERC721.deploy();
-
     await childERC721.deployed();
+
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childERC721.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childERC721 = ChildERC721.attach(_proxy.address);
 
     const ChildERC721Predicate: ChildERC721Predicate__factory = await ethers.getContractFactory("ChildERC721Predicate");
     childERC721Predicate = await ChildERC721Predicate.deploy();
-
     await childERC721Predicate.deployed();
+
+    const _proxy2 = await TransparentUpgradeableProxy.deploy(childERC721Predicate.address, _proxyAdmin, "0x");
+    await _proxy2.deployed();
+    childERC721Predicate = ChildERC721Predicate.attach(_proxy2.address);
 
     impersonateAccount(childERC721Predicate.address);
     setBalance(childERC721Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");

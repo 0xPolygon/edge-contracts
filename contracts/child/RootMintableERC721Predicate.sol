@@ -21,6 +21,10 @@ contract RootMintableERC721Predicate is Initializable, ERC721Holder, System, IRo
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for RootMintableERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send deposit information to

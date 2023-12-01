@@ -5,9 +5,9 @@ pragma solidity 0.8.19;
 // Custom Test.
 
 // 🧩 MODULES
-import {console2 as console} from "forge-std/console2.sol";
+import {console} from "forge-std/console.sol";
 import {Assertions} from "./Assertions.sol";
-import {StdCheats} from "forge-std/StdCheats.sol";
+import {Cheats} from "./Cheats.sol";
 import {stdError} from "forge-std/StdError.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
@@ -16,6 +16,6 @@ import {TestBase} from "forge-std/Base.sol";
 import {DSTest} from "ds-test/test.sol";
 
 // ⭐️ TEST
-abstract contract Test is DSTest, Assertions, StdCheats, StdUtils, TestBase {
+abstract contract Test is TestBase, DSTest, Assertions, Cheats, StdUtils {
 
 }

@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../interfaces/root/IChildMintableERC1155Predicate.sol";
 import "../interfaces/child/IChildERC1155.sol";
@@ -30,6 +29,10 @@ contract ChildMintableERC1155Predicate is Initializable, IChildMintableERC1155Pr
     modifier onlyValidToken(IChildERC1155 childToken) {
         require(_verifyContract(childToken), "ChildMintableERC1155Predicate: NOT_CONTRACT");
         _;
+    }
+
+    constructor() {
+        _disableInitializers();
     }
 
     /**

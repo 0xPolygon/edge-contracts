@@ -26,6 +26,10 @@ contract RootMintableERC20Predicate is IRootMintableERC20Predicate, Initializabl
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     mapping(address => address) public rootTokenToChildToken;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for RootMintableERC20Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to

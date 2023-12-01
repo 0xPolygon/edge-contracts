@@ -21,6 +21,7 @@ interface ICustomSupernetManager {
     event RemovedFromWhitelist(address indexed validator);
     event ValidatorRegistered(address indexed validator, uint256[4] blsKey);
     event ValidatorDeactivated(address indexed validator);
+    event GenesisBalanceAdded(address indexed account, uint256 indexed amount);
     event GenesisFinalized(uint256 amountValidators);
     event StakingEnabled();
 
@@ -42,10 +43,6 @@ interface ICustomSupernetManager {
     /// @dev only callable by owner
     function enableStaking() external;
 
-    /// @notice Withdraws slashed MATIC of slashed validators
-    /// @dev only callable by owner
-    function withdrawSlashedStake(address to) external;
-
     /// @notice called by the exit helpers to either release the stake of a validator or slash it
     /// @dev can only be synced from child after genesis
     function onL2StateReceive(uint256 /*id*/, address sender, bytes calldata data) external;
@@ -55,4 +52,9 @@ interface ICustomSupernetManager {
 
     /// @notice returns validator instance based on provided address
     function getValidator(address validator_) external view returns (Validator memory);
+
+    /// @notice addGenesisBalance is used to specify genesis balance information for genesis accounts on the Supernets.
+    /// It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
+    /// @param amount represents the amount to be premined in the genesis.
+    function addGenesisBalance(uint256 amount) external;
 }

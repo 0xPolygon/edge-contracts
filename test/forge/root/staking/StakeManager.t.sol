@@ -13,7 +13,7 @@ abstract contract Uninitialized is Test {
 
     function setUp() public virtual {
         token = new MockERC20();
-        stakeManager = new StakeManager();
+        stakeManager = StakeManager(proxify("StakeManager.sol", ""));
         supernetManager = new MockSupernetManager();
     }
 }
@@ -147,34 +147,6 @@ contract StakeManager_ReleaseStake is Staked, StakeManager {
         assertEq(stakeManager.totalStakeOf(address(this)), maxAmount - amount, "total stake of mismatch");
         assertEq(stakeManager.stakeOf(address(this), 1), maxAmount - amount, "stake of mismatch");
         assertEq(stakeManager.withdrawableStake(address(this)), amount, "withdrawable stake mismatch");
-    }
-}
-
-contract StakeManager_SlashStake is Staked, StakeManager {
-    function test_RevertNotSupernetManager() public {
-        vm.expectRevert("StakeManagerChildData: INVALID_MANAGER");
-        stakeManager.slashStakeOf(address(this), 1);
-    }
-
-    function test_SlashStakeFor(uint256 amount) public {
-        if (amount > maxAmount) amount = maxAmount;
-        vm.expectEmit(true, true, true, true);
-        emit StakeRemoved(id, address(this), stakeManager.stakeOf(address(this), id));
-        vm.expectEmit(true, true, true, true);
-        emit ValidatorSlashed(id, address(this), amount);
-        vm.prank(address(supernetManager));
-        stakeManager.slashStakeOf(address(this), amount);
-        assertEq(stakeManager.stakeOf(address(this), id), 0, "should be unstaked completely");
-        assertEq(
-            stakeManager.withdrawableStake(address(this)),
-            maxAmount - amount,
-            "withdrawable stake should be reduced by the slashed amount"
-        );
-        assertEq(
-            token.balanceOf(address(supernetManager)),
-            amount,
-            "supernet manager should receive the slashed amount"
-        );
     }
 }
 

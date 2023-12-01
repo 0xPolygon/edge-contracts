@@ -6,7 +6,7 @@
 
 
 
-*Inherits a modified version of `ERC20VotesUpgradeable` with a shifted storage layout.*
+
 
 ## Methods
 
@@ -44,39 +44,22 @@ function BLOCKLIST_PRECOMPILE() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### CLOCK_MODE
+### EPOCH_SIZE
 
 ```solidity
-function CLOCK_MODE() external view returns (string)
+function EPOCH_SIZE() external view returns (uint256)
 ```
 
+amount of blocks in an epoch
 
-
-*Description of the clock*
+*when an epoch is committed a multiple of this number of blocks must be committed*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined |
-
-### DOMAIN_SEPARATOR
-
-```solidity
-function DOMAIN_SEPARATOR() external view returns (bytes32)
-```
-
-
-
-*See {IERC20Permit-DOMAIN_SEPARATOR}.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
+| _0 | uint256 | undefined |
 
 ### NATIVE_TOKEN_CONTRACT
 
@@ -146,40 +129,6 @@ function READ_ADDRESSLIST_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### SLASHING_PERCENTAGE
-
-```solidity
-function SLASHING_PERCENTAGE() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### SLASH_INCENTIVE_PERCENTAGE
-
-```solidity
-function SLASH_INCENTIVE_PERCENTAGE() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### SYSTEM
 
 ```solidity
@@ -218,6 +167,23 @@ function VALIDATOR_PKCHECK_PRECOMPILE() external view returns (address)
 
 ```solidity
 function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### WITHDRAWAL_WAIT_PERIOD
+
+```solidity
+function WITHDRAWAL_WAIT_PERIOD() external view returns (uint256)
 ```
 
 
@@ -305,7 +271,7 @@ function balanceOf(address account) external view returns (uint256)
 function balanceOfAt(address account, uint256 epochNumber) external view returns (uint256)
 ```
 
-returns a validator balance for a given epoch
+
 
 
 
@@ -322,50 +288,10 @@ returns a validator balance for a given epoch
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### checkpoints
-
-```solidity
-function checkpoints(address account, uint32 pos) external view returns (struct ERC20VotesUpgradeable.Checkpoint)
-```
-
-
-
-*Get the `pos`-th checkpoint for `account`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-| pos | uint32 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | ERC20VotesUpgradeable.Checkpoint | undefined |
-
-### clock
-
-```solidity
-function clock() external view returns (uint48)
-```
-
-
-
-*Clock used for flagging checkpoints. Can be overridden to implement timestamp based checkpoints (and voting).*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint48 | undefined |
-
 ### commitEpoch
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch, uint256 epochSize) external nonpayable
+function commitEpoch(uint256 id, Epoch epoch) external nonpayable
 ```
 
 
@@ -378,7 +304,6 @@ function commitEpoch(uint256 id, Epoch epoch, uint256 epochSize) external nonpay
 |---|---|---|
 | id | uint256 | undefined |
 | epoch | Epoch | undefined |
-| epochSize | uint256 | undefined |
 
 ### currentEpochId
 
@@ -437,88 +362,6 @@ function decreaseAllowance(address spender, uint256 subtractedValue) external no
 |---|---|---|
 | _0 | bool | undefined |
 
-### delegate
-
-```solidity
-function delegate(address delegatee) external nonpayable
-```
-
-
-
-*Delegate votes from the sender to `delegatee`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| delegatee | address | undefined |
-
-### delegateBySig
-
-```solidity
-function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) external nonpayable
-```
-
-
-
-*Delegates votes from signer to `delegatee`*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| delegatee | address | undefined |
-| nonce | uint256 | undefined |
-| expiry | uint256 | undefined |
-| v | uint8 | undefined |
-| r | bytes32 | undefined |
-| s | bytes32 | undefined |
-
-### delegates
-
-```solidity
-function delegates(address account) external view returns (address)
-```
-
-
-
-*Get the address `account` is currently delegating to.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### eip712Domain
-
-```solidity
-function eip712Domain() external view returns (bytes1 fields, string name, string version, uint256 chainId, address verifyingContract, bytes32 salt, uint256[] extensions)
-```
-
-
-
-*See {EIP-5267}. _Available since v4.9._*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| fields | bytes1 | undefined |
-| name | string | undefined |
-| version | string | undefined |
-| chainId | uint256 | undefined |
-| verifyingContract | address | undefined |
-| salt | bytes32 | undefined |
-| extensions | uint256[] | undefined |
-
 ### epochEndBlocks
 
 ```solidity
@@ -565,73 +408,6 @@ function epochs(uint256) external view returns (uint256 startBlock, uint256 endB
 | endBlock | uint256 | undefined |
 | epochRoot | bytes32 | undefined |
 
-### getPastTotalSupply
-
-```solidity
-function getPastTotalSupply(uint256 timepoint) external view returns (uint256)
-```
-
-
-
-*Retrieve the `totalSupply` at the end of `timepoint`. Note, this value is the sum of all balances. It is NOT the sum of all the delegated votes! Requirements: - `timepoint` must be in the past*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| timepoint | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### getPastVotes
-
-```solidity
-function getPastVotes(address account, uint256 timepoint) external view returns (uint256)
-```
-
-
-
-*Retrieve the number of votes for `account` at the end of `timepoint`. Requirements: - `timepoint` must be in the past*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-| timepoint | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### getVotes
-
-```solidity
-function getVotes(address account) external view returns (uint256)
-```
-
-
-
-*Gets the current votes balance for `account`*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### increaseAllowance
 
 ```solidity
@@ -658,7 +434,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, address newNetworkParams, ValidatorInit[] initialValidators) external nonpayable
+function initialize(address newStateSender, address newStateReceiver, address newRootChainManager, uint256 newEpochSize, ValidatorInit[] initialValidators) external nonpayable
 ```
 
 
@@ -672,7 +448,7 @@ function initialize(address newStateSender, address newStateReceiver, address ne
 | newStateSender | address | undefined |
 | newStateReceiver | address | undefined |
 | newRootChainManager | address | undefined |
-| newNetworkParams | address | undefined |
+| newEpochSize | uint256 | undefined |
 | initialValidators | ValidatorInit[] | undefined |
 
 ### name
@@ -691,50 +467,6 @@ function name() external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### nonces
-
-```solidity
-function nonces(address owner) external view returns (uint256)
-```
-
-
-
-*See {IERC20Permit-nonces}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| owner | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### numCheckpoints
-
-```solidity
-function numCheckpoints(address account) external view returns (uint32)
-```
-
-
-
-*Get number of checkpoints for `account`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint32 | undefined |
 
 ### onStateReceive
 
@@ -775,66 +507,6 @@ Calculates how much is yet to become withdrawable for account.
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | Amount not yet withdrawable (in MATIC wei) |
-
-### permit
-
-```solidity
-function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonpayable
-```
-
-
-
-*See {IERC20Permit-permit}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| owner | address | undefined |
-| spender | address | undefined |
-| value | uint256 | undefined |
-| deadline | uint256 | undefined |
-| v | uint8 | undefined |
-| r | bytes32 | undefined |
-| s | bytes32 | undefined |
-
-### slash
-
-```solidity
-function slash(address[] validators) external nonpayable
-```
-
-initialises slashing process
-
-*system call,given list of validators are slashed on L2 subsequently after their stake is slashed on L1*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| validators | address[] | list of validators to be slashed |
-
-### slashProcessed
-
-```solidity
-function slashProcessed(uint256) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
 
 ### symbol
 
@@ -898,7 +570,7 @@ function totalSupply() external view returns (uint256)
 function totalSupplyAt(uint256 epochNumber) external view returns (uint256)
 ```
 
-returns the total supply for a given epoch
+
 
 
 
@@ -1032,53 +704,6 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
 
-### DelegateChanged
-
-```solidity
-event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate)
-```
-
-
-
-*Emitted when an account changes their delegate.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| delegator `indexed` | address | undefined |
-| fromDelegate `indexed` | address | undefined |
-| toDelegate `indexed` | address | undefined |
-
-### DelegateVotesChanged
-
-```solidity
-event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance)
-```
-
-
-
-*Emitted when a token transfer or delegate change results in changes to a delegate&#39;s number of votes.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| delegate `indexed` | address | undefined |
-| previousBalance  | uint256 | undefined |
-| newBalance  | uint256 | undefined |
-
-### EIP712DomainChanged
-
-```solidity
-event EIP712DomainChanged()
-```
-
-
-
-*MAY be emitted to signal that the domain could have changed.*
-
-
 ### Initialized
 
 ```solidity
@@ -1114,22 +739,21 @@ event NewEpoch(uint256 indexed id, uint256 indexed startBlock, uint256 indexed e
 | endBlock `indexed` | uint256 | undefined |
 | epochRoot  | bytes32 | undefined |
 
-### Slashed
+### Snapshot
 
 ```solidity
-event Slashed(uint256 indexed exitId, address[] validators)
+event Snapshot(uint256 id)
 ```
 
 
 
-
+*Emitted by {_snapshot} when a snapshot identified by `id` is created.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| exitId `indexed` | uint256 | undefined |
-| validators  | address[] | undefined |
+| id  | uint256 | undefined |
 
 ### Transfer
 

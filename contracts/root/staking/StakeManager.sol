@@ -13,6 +13,10 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
 
     IERC20 private _stakingToken;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address newStakingToken) public initializer {
         _stakingToken = IERC20(newStakingToken);
     }
@@ -59,19 +63,6 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
      */
     function withdrawStake(address to, uint256 amount) external {
         _withdrawStake(msg.sender, to, amount);
-    }
-
-    /**
-     * @inheritdoc IStakeManager
-     */
-    function slashStakeOf(address validator, uint256 amount) external {
-        uint256 id = idFor(msg.sender);
-        uint256 stake = _stakeOf(validator, id);
-        if (amount > stake) amount = stake;
-        _removeStake(validator, id, stake);
-        _withdrawStake(validator, msg.sender, amount);
-        emit StakeRemoved(id, validator, stake);
-        emit ValidatorSlashed(id, validator, amount);
     }
 
     /**

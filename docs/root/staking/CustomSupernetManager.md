@@ -21,6 +21,22 @@ function acceptOwnership() external nonpayable
 *The new owner accepts the ownership transfer.*
 
 
+### addGenesisBalance
+
+```solidity
+function addGenesisBalance(uint256 amount) external nonpayable
+```
+
+addGenesisBalance is used to specify genesis balance information for genesis accounts on the Supernets. It is applicable only in case Supernets native contract is mapped to a pre-existing rootchain ERC20 token.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | represents the amount to be premined in the genesis. |
+
 ### domain
 
 ```solidity
@@ -59,6 +75,28 @@ finalizes initial genesis validator set
 
 *only callable by owner*
 
+
+### genesisBalances
+
+```solidity
+function genesisBalances(address) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### genesisSet
 
@@ -119,7 +157,7 @@ function id() external view returns (uint256)
 ### initialize
 
 ```solidity
-function initialize(address newStakeManager, address newBls, address newStateSender, address newMatic, address newChildValidatorSet, address newExitHelper, string newDomain) external nonpayable
+function initialize(address newStakeManager, address newBls, address newStateSender, address newMatic, address newChildValidatorSet, address newExitHelper, address newRootERC20Predicate, string newDomain) external nonpayable
 ```
 
 
@@ -136,6 +174,7 @@ function initialize(address newStakeManager, address newBls, address newStateSen
 | newMatic | address | undefined |
 | newChildValidatorSet | address | undefined |
 | newExitHelper | address | undefined |
+| newRootERC20Predicate | address | undefined |
 | newDomain | string | undefined |
 
 ### onInit
@@ -307,22 +346,6 @@ Allows to whitelist validators that are allowed to stake
 |---|---|---|
 | validators_ | address[] | undefined |
 
-### withdrawSlashedStake
-
-```solidity
-function withdrawSlashedStake(address to) external nonpayable
-```
-
-Withdraws slashed MATIC of slashed validators
-
-*only callable by owner*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to | address | undefined |
-
 
 
 ## Events
@@ -342,6 +365,23 @@ event AddedToWhitelist(address indexed validator)
 | Name | Type | Description |
 |---|---|---|
 | validator `indexed` | address | undefined |
+
+### GenesisBalanceAdded
+
+```solidity
+event GenesisBalanceAdded(address indexed account, uint256 indexed amount)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| amount `indexed` | uint256 | undefined |
 
 ### GenesisFinalized
 

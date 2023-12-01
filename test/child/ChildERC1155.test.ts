@@ -20,14 +20,18 @@ describe("ChildERC1155", () => {
 
     const ChildERC1155: ChildERC1155__factory = await ethers.getContractFactory("ChildERC1155");
     childERC1155 = await ChildERC1155.deploy();
-
     await childERC1155.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childERC1155.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childERC1155 = ChildERC1155.attach(_proxy.address);
 
     const ChildERC1155Predicate: ChildERC1155Predicate__factory = await ethers.getContractFactory(
       "ChildERC1155Predicate"
     );
     childERC1155Predicate = await ChildERC1155Predicate.deploy();
-
     await childERC1155Predicate.deployed();
 
     impersonateAccount(childERC1155Predicate.address);
@@ -195,20 +199,20 @@ describe("ChildERC1155", () => {
     );
     await expect(mintTx)
       .to.emit(predicateChildERC1155, "TransferSingle")
-      .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[0].address, 0, 1);
+      .withArgs("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", ethers.constants.AddressZero, accounts[0].address, 0, 1);
     await expect(mintTx)
       .to.emit(predicateChildERC1155, "TransferSingle")
-      .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[0].address, 1, 2);
+      .withArgs("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", ethers.constants.AddressZero, accounts[0].address, 1, 2);
     await expect(mintTx)
       .to.emit(predicateChildERC1155, "TransferSingle")
-      .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[1].address, 2, 3);
+      .withArgs("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", ethers.constants.AddressZero, accounts[1].address, 2, 3);
   });
   it("batch burn tokens success", async () => {
     const burnTx = await predicateChildERC1155.burnBatch(accounts[0].address, [0, 1], [1, 2]);
     await expect(burnTx)
       .to.emit(predicateChildERC1155, "TransferBatch")
       .withArgs(
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
         accounts[0].address,
         ethers.constants.AddressZero,
         [0, 1],

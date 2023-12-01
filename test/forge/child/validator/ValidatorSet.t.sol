@@ -6,8 +6,6 @@ import {ValidatorSet, ValidatorInit, Epoch} from "contracts/child/validator/Vali
 import {L2StateSender} from "contracts/child/L2StateSender.sol";
 import "contracts/interfaces/Errors.sol";
 
-import {NetworkParams} from "contracts/child/NetworkParams.sol";
-
 abstract contract Uninitialized is Test {
     address internal constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     bytes32 internal constant STAKE_SIG = keccak256("STAKE");
@@ -20,16 +18,9 @@ abstract contract Uninitialized is Test {
     address bob = makeAddr("bob");
     uint256 epochSize = 64;
 
-    NetworkParams networkParams;
-
     function setUp() public virtual {
-        networkParams = new NetworkParams();
-        networkParams.initialize(
-            NetworkParams.InitParams(address(1), 1, epochSize, 1 ether, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-        );
-
         stateSender = new L2StateSender();
-        validatorSet = new ValidatorSet();
+        validatorSet = ValidatorSet(proxify("ValidatorSet.sol", ""));
     }
 }
 
@@ -39,7 +30,7 @@ abstract contract Initialized is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
     }
 }
 
@@ -49,7 +40,7 @@ abstract contract Committed is Initialized {
         _beforeCommit();
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
         vm.roll(block.number + 1);
         _afterCommit();
     }
@@ -64,7 +55,7 @@ contract ValidatorSet_Initialize is Uninitialized {
         ValidatorInit[] memory init = new ValidatorInit[](2);
         init[0] = ValidatorInit({addr: address(this), stake: 300});
         init[1] = ValidatorInit({addr: alice, stake: 100});
-        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, address(networkParams), init);
+        validatorSet.initialize(address(stateSender), stateReceiver, rootChainManager, epochSize, init);
         assertEq(validatorSet.balanceOf(address(this)), 300);
         assertEq(validatorSet.balanceOf(alice), 100);
         assertEq(validatorSet.totalSupply(), 400);
@@ -79,7 +70,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
     function test_RevertOnlySystemCall() public {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_RevertInvalidEpochId(uint256 id) public {
@@ -87,7 +78,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.expectRevert("UNEXPECTED_EPOCH_ID");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(id, epoch, epochSize);
+        validatorSet.commitEpoch(id, epoch);
     }
 
     function test_RevertNoBlocksCommitted(uint256 startBlock, uint256 endBlock) public {
@@ -95,7 +86,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: startBlock, endBlock: endBlock, epochRoot: bytes32(0)});
         vm.expectRevert("NO_BLOCKS_COMMITTED");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_RevertEpochSize(uint256 startBlock, uint256 endBlock) public {
@@ -104,14 +95,14 @@ contract ValidatorSet_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: startBlock, endBlock: endBlock, epochRoot: bytes32(0)});
         vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_RevertInvalidStartBlock() public {
         Epoch memory epoch = Epoch({startBlock: 0, endBlock: 63, epochRoot: bytes32(0)});
         vm.expectRevert("INVALID_START_BLOCK");
         vm.prank(SYSTEM);
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
     }
 
     function test_CommitEpoch() public {
@@ -119,7 +110,7 @@ contract ValidatorSet_CommitEpoch is Initialized {
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
         emit NewEpoch(1, 1, 64, bytes32(0));
-        validatorSet.commitEpoch(1, epoch, epochSize);
+        validatorSet.commitEpoch(1, epoch);
         assertEq(validatorSet.currentEpochId(), 2);
         assertEq(validatorSet.epochEndBlocks(1), 64);
         assertEq(validatorSet.totalBlocks(1), 64);
@@ -217,48 +208,4 @@ contract ValidatorSet_WithdrawStake is Committed {
 contract ValidatorSet_Slash is Committed {
     bytes32 private constant SLASH_SIG = keccak256("SLASH");
     event L2StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data);
-    event Slashed(uint256 indexed exitId, address[] validators);
-
-    function test_InitilizeSlashOnlySystemCall() public {
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        validatorSet.slash(new address[](0));
-    }
-
-    function test_InitialiseSlash(address[] memory validators) public {
-        vm.assume(validators.length <= (stateSender.MAX_LENGTH() - 160) / 32);
-        uint256 slashingPercentage = validatorSet.SLASHING_PERCENTAGE();
-        uint256 slashIncentivePercentage = validatorSet.SLASH_INCENTIVE_PERCENTAGE();
-        vm.prank(SYSTEM);
-        vm.expectEmit(true, true, true, true);
-        emit L2StateSynced(1, address(validatorSet), rootChainManager, abi.encode(SLASH_SIG, validators, slashingPercentage, slashIncentivePercentage));
-        validatorSet.slash(validators);
-    }
-
-    function test_FinalizeSlash() public {
-        uint256 exitEventId = 1;
-        uint256 slashingPercentage = validatorSet.SLASHING_PERCENTAGE();
-        address[] memory validatorsToSlash = new address[](2);
-        validatorsToSlash[0] = alice;
-        validatorsToSlash[1] = address(this);
-
-        assertEq(validatorSet.balanceOf(alice), 100);
-        assertEq(validatorSet.balanceOf(address(this)), 300);
-
-        vm.expectEmit(true, true, true, true);
-        emit Slashed(exitEventId, validatorsToSlash);
-        vm.prank(stateReceiver);
-        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage));
-        
-        assertEq(validatorSet.balanceOf(alice), 0, "should unstake");
-        assertEq(validatorSet.balanceOf(address(this)), 0, "should unstake");
-    }
-
-    function test_FinalizeSlashAlreadyProcessedSanityCheck() public {
-        uint256 exitEventId = 1;
-        vm.startPrank(stateReceiver);
-        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0), 0));
-        vm.expectRevert("SLASH_ALREADY_PROCESSED");
-        validatorSet.onStateReceive(1 /* StateSyncCounter */, rootChainManager, abi.encode(SLASH_SIG, exitEventId, new address[](0), 0));
-        vm.stopPrank();
-    }
 }

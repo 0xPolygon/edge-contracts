@@ -24,6 +24,10 @@ contract ChildERC1155 is EIP712MetaTransaction, ERC1155Upgradeable, IChildERC115
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @inheritdoc IChildERC1155
      */

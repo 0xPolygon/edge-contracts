@@ -71,6 +71,10 @@ contract ChildERC1155Predicate is IChildERC1155Predicate, Initializable, System 
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for ChildERC1155Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to

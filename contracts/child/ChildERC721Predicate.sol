@@ -67,6 +67,10 @@ contract ChildERC721Predicate is IChildERC721Predicate, Initializable, System {
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for ChildERC721Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to

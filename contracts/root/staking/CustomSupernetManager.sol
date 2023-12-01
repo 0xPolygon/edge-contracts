@@ -8,7 +8,7 @@ import "./SupernetManager.sol";
 import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
-import "../../interfaces/root/IExitHelper.sol";
+import "../../interfaces/root/IRootERC20Predicate.sol";
 
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeable, SupernetManager {
     using SafeERC20 for IERC20;
@@ -16,7 +16,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
     bytes32 private constant _STAKE_SIG = keccak256("STAKE");
     bytes32 private constant _UNSTAKE_SIG = keccak256("UNSTAKE");
-    bytes32 private constant _SLASH_SIG = keccak256("SLASH");
 
     IBLS private _bls;
     IStateSender private _stateSender;
@@ -28,10 +27,16 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
     GenesisSet private _genesis;
     mapping(address => Validator) public validators;
+    IRootERC20Predicate private _rootERC20Predicate;
+    mapping(address => uint256) public genesisBalances;
 
     modifier onlyValidator(address validator) {
         if (!validators[validator].isActive) revert Unauthorized("VALIDATOR");
         _;
+    }
+
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize(
@@ -41,6 +46,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         address newMatic,
         address newChildValidatorSet,
         address newExitHelper,
+        address newRootERC20Predicate,
         string memory newDomain
     ) public initializer {
         require(
@@ -53,12 +59,14 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
                 bytes(newDomain).length != 0,
             "INVALID_INPUT"
         );
+
         __SupernetManager_init(newStakeManager);
         _bls = IBLS(newBls);
         _stateSender = IStateSender(newStateSender);
         _matic = IERC20(newMatic);
         _childValidatorSet = newChildValidatorSet;
         _exitHelper = newExitHelper;
+        _rootERC20Predicate = IRootERC20Predicate(newRootERC20Predicate);
         domain = keccak256(abi.encodePacked(newDomain));
         __Ownable2Step_init();
     }
@@ -107,23 +115,11 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     /**
      * @inheritdoc ICustomSupernetManager
      */
-    function withdrawSlashedStake(address to) external onlyOwner {
-        uint256 balance = _matic.balanceOf(address(this));
-        _matic.safeTransfer(to, balance);
-    }
-
-    /**
-     * @inheritdoc ICustomSupernetManager
-     */
     function onL2StateReceive(uint256 /*id*/, address sender, bytes calldata data) external {
         if (msg.sender != _exitHelper || sender != _childValidatorSet) revert Unauthorized("_exitHelper");
         if (bytes32(data[:32]) == _UNSTAKE_SIG) {
             (address validator, uint256 amount) = abi.decode(data[32:], (address, uint256));
             _unstake(validator, amount);
-        } else if (bytes32(data[:32]) == _SLASH_SIG) {
-            (, address[] memory validatorsToSlash, uint256 slashingPercentage, uint256 slashIncentivePercentage) = abi
-                .decode(data, (bytes32, address[], uint256, uint256));
-            _slash(id, validatorsToSlash, slashingPercentage, slashIncentivePercentage);
         }
     }
 
@@ -142,6 +138,34 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         return validators[validator_];
     }
 
+    /**
+     *
+     * @inheritdoc ICustomSupernetManager
+     */
+    function addGenesisBalance(uint256 amount) external {
+        require(amount > 0, "CustomSupernetManager: INVALID_AMOUNT");
+        if (address(_rootERC20Predicate) == address(0)) {
+            revert Unauthorized("CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE");
+        }
+
+        IERC20 nativeTokenRoot = IERC20(_rootERC20Predicate.nativeTokenRoot());
+        if (address(nativeTokenRoot) == address(0)) {
+            revert Unauthorized("CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT");
+        }
+        require(!_genesis.completed(), "CustomSupernetManager: GENESIS_SET_IS_ALREADY_FINALIZED");
+
+        // we need to track EOAs as well in the genesis set, in order to be able to query genesisBalances mapping
+        _genesis.insert(msg.sender, 0);
+        // slither-disable-next-line reentrancy-benign
+        genesisBalances[msg.sender] += amount;
+
+        // lock native tokens on the root erc20 predicate
+        nativeTokenRoot.safeTransferFrom(msg.sender, address(_rootERC20Predicate), amount);
+
+        // slither-disable-next-line reentrancy-events
+        emit GenesisBalanceAdded(msg.sender, amount);
+    }
+
     function _onStake(address validator, uint256 amount) internal override onlyValidator(validator) {
         if (_genesis.gatheringGenesisValidators()) {
             _genesis.insert(validator, amount);
@@ -156,36 +180,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
         // slither-disable-next-line reentrancy-benign,reentrancy-events
         _stakeManager.releaseStakeOf(validator, amount);
         _removeIfValidatorUnstaked(validator);
-    }
-
-    function _slash(
-        uint256 exitEventId,
-        address[] memory validatorsToSlash,
-        uint256 slashingPercentage,
-        uint256 slashIncentivePercentage
-    ) internal {
-        uint256 length = validatorsToSlash.length;
-        uint256 totalSlashedAmount;
-        for (uint256 i = 0; i < length; ) {
-            uint256 slashedAmount = (_stakeManager.stakeOf(validatorsToSlash[i], id) * slashingPercentage) / 100;
-            // slither-disable-next-line reentrancy-benign,reentrancy-events,reentrancy-no-eth
-            _stakeManager.slashStakeOf(validatorsToSlash[i], slashedAmount);
-            _removeIfValidatorUnstaked(validatorsToSlash[i]);
-            totalSlashedAmount += slashedAmount;
-            unchecked {
-                ++i;
-            }
-        }
-
-        // contract will always have enough balance since slashStakeOf returns entire slashed amt
-        uint256 rewardAmount = (totalSlashedAmount * slashIncentivePercentage) / 100;
-        _matic.safeTransfer(IExitHelper(_exitHelper).caller(), rewardAmount);
-
-        // complete slashing on child chain
-        _stateSender.syncState(
-            _childValidatorSet,
-            abi.encode(_SLASH_SIG, exitEventId, validatorsToSlash, slashingPercentage)
-        );
     }
 
     function _verifyValidatorRegistration(
@@ -224,5 +218,5 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     }
 
     // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 }
