@@ -20,7 +20,7 @@ abstract contract Uninitialized is Test {
 
     function setUp() public virtual {
         stateSender = new L2StateSender();
-        validatorSet = new ValidatorSet();
+        validatorSet = ValidatorSet(proxify("ValidatorSet.sol", ""));
     }
 }
 

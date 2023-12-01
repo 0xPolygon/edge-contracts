@@ -13,6 +13,10 @@ contract StakeManager is IStakeManager, Initializable, StakeManagerChildData, St
 
     IERC20 private _stakingToken;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address newStakingToken) public initializer {
         _stakingToken = IERC20(newStakingToken);
     }

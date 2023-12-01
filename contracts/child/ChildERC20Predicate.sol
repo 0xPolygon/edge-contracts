@@ -49,6 +49,10 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for ChildERC20Predicate
      * @param newL2StateSender Address of L2StateSender to send exit information to

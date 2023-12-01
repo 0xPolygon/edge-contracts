@@ -52,8 +52,13 @@ describe("ChildMintableERC1155Predicate", () => {
       "ChildMintableERC1155Predicate"
     );
     childMintableERC1155Predicate = await ChildMintableERC1155Predicate.deploy();
-
     await childMintableERC1155Predicate.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childMintableERC1155Predicate.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childMintableERC1155Predicate = ChildMintableERC1155Predicate.attach(_proxy.address);
 
     impersonateAccount(exitHelper.address);
     setBalance(exitHelper.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -382,7 +387,13 @@ describe("ChildMintableERC1155Predicate", () => {
 
   it("fail deposit tokens of unknown child token: unmapped token", async () => {
     const rootToken = ethers.Wallet.createRandom().address;
-    const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
+    const ChildERC1155: ChildERC1155__factory = await ethers.getContractFactory("ChildERC1155");
+    var childToken = await ChildERC1155.deploy();
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childToken.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childToken = ChildERC1155.attach(_proxy.address);
     await childToken.initialize(rootToken, "TEST");
     let stateSyncData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "address", "address", "address", "uint256", "uint256"],
@@ -416,7 +427,13 @@ describe("ChildMintableERC1155Predicate", () => {
 
   it("fail withdraw tokens of unknown child token: unmapped token", async () => {
     const rootToken = ethers.Wallet.createRandom().address;
-    const childToken = await (await ethers.getContractFactory("ChildERC1155")).deploy();
+    const ChildERC1155: ChildERC1155__factory = await ethers.getContractFactory("ChildERC1155");
+    var childToken = await ChildERC1155.deploy();
+    const _proxyAdmin = accounts[5].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(childToken.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    childToken = ChildERC1155.attach(_proxy.address);
     await childToken.initialize(rootToken, "TEST");
     await expect(childMintableERC1155Predicate.withdraw(childToken.address, 0, 1)).to.be.revertedWith(
       "ChildMintableERC1155Predicate: UNMAPPED_TOKEN"

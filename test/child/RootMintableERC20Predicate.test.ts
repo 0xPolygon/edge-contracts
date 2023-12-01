@@ -52,8 +52,13 @@ describe("RootMintableERC20Predicate", () => {
       "RootMintableERC20Predicate"
     );
     rootMintableERC20Predicate = await RootMintableERC20Predicate.deploy();
-
     await rootMintableERC20Predicate.deployed();
+
+    const _proxyAdmin = accounts[10].address;
+    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const _proxy = await TransparentUpgradeableProxy.deploy(rootMintableERC20Predicate.address, _proxyAdmin, "0x");
+    await _proxy.deployed();
+    rootMintableERC20Predicate = RootMintableERC20Predicate.attach(_proxy.address);
 
     const NativeERC20: NativeERC20__factory = await ethers.getContractFactory("NativeERC20");
 

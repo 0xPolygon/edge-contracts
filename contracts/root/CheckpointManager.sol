@@ -35,6 +35,8 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     constructor(address initiator) {
         // slither-disable-next-line missing-zero-check
         _INITIATOR = initiator;
+
+        _disableInitializers();
     }
 
     /**

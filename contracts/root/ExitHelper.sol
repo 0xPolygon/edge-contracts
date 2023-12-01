@@ -17,6 +17,10 @@ contract ExitHelper is IExitHelper, Initializable {
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialize the contract with the checkpoint manager address
      * @dev The checkpoint manager contract must be deployed first

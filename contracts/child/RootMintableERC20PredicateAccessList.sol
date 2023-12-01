@@ -11,6 +11,10 @@ import {AccessList} from "../lib/AccessList.sol";
  */
 // solhint-disable reason-string
 contract RootMintableERC20PredicateAccessList is AccessList, RootMintableERC20Predicate {
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address newL2StateSender,
         address newStateReceiver,

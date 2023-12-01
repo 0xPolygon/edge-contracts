@@ -21,6 +21,10 @@ contract RootERC20Predicate is Initializable, IRootERC20Predicate {
     mapping(address => address) public rootTokenToChildToken;
     address public nativeTokenRoot;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for RootERC20Predicate
      * @param newStateSender Address of StateSender to send deposit information to

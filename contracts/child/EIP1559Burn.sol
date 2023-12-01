@@ -20,6 +20,10 @@ contract EIP1559Burn is Initializable {
     // slither-disable-next-line locked-ether
     receive() external payable {} // solhint-disable-line no-empty-blocks
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialization function for EIP1559 burn contract
      * @param newChildERC20Predicate Address of the ERC20 predicate on child chain

@@ -8,7 +8,6 @@ import "./SupernetManager.sol";
 import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/root/staking/ICustomSupernetManager.sol";
-import "../../interfaces/root/IExitHelper.sol";
 import "../../interfaces/root/IRootERC20Predicate.sol";
 
 contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeable, SupernetManager {
@@ -34,6 +33,10 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
     modifier onlyValidator(address validator) {
         if (!validators[validator].isActive) revert Unauthorized("VALIDATOR");
         _;
+    }
+
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize(

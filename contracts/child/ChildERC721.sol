@@ -22,6 +22,10 @@ contract ChildERC721 is EIP712MetaTransaction, ERC721Upgradeable, IChildERC721 {
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @inheritdoc IChildERC721
      */

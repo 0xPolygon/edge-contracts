@@ -17,8 +17,8 @@ contract ChildERC1155Test is Test {
     string URI = "lorem";
 
     function setUp() public {
-        childERC1155 = new ChildERC1155();
-        predicate = new ChildERC1155Predicate();
+        childERC1155 = ChildERC1155(proxify("ChildERC1155.sol", ""));
+        predicate = ChildERC1155Predicate(proxify("ChildERC1155Predicate.sol", ""));
 
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");

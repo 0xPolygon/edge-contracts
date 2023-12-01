@@ -26,6 +26,10 @@ contract ValidatorSet is IValidatorSet, ERC20SnapshotUpgradeable, System {
     uint256[] public epochEndBlocks;
     mapping(address => WithdrawalQueue) private _withdrawals;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address newStateSender,
         address newStateReceiver,
