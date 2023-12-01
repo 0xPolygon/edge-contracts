@@ -148,7 +148,6 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
             revert Unauthorized("CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE");
         }
 
-        // slither-disable-next-line reentrancy-events
         IERC20 nativeTokenRoot = IERC20(_rootERC20Predicate.nativeTokenRoot());
         if (address(nativeTokenRoot) == address(0)) {
             revert Unauthorized("CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT");
@@ -157,7 +156,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
 
         // we need to track EOAs as well in the genesis set, in order to be able to query genesisBalances mapping
         _genesis.insert(msg.sender, 0);
-        // slither-disable-next-line reentrancy-events
+        // slither-disable-next-line reentrancy-benign
         genesisBalances[msg.sender] += amount;
 
         // lock native tokens on the root erc20 predicate
