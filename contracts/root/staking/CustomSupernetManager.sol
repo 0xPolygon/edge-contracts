@@ -148,6 +148,7 @@ contract CustomSupernetManager is ICustomSupernetManager, Ownable2StepUpgradeabl
             revert Unauthorized("CustomSupernetManager: UNDEFINED_ROOT_ERC20_PREDICATE");
         }
 
+        // slither-disable-next-line reentrancy-events
         IERC20 nativeTokenRoot = IERC20(_rootERC20Predicate.nativeTokenRoot());
         if (address(nativeTokenRoot) == address(0)) {
             revert Unauthorized("CustomSupernetManager: UNDEFINED_NATIVE_TOKEN_ROOT");
