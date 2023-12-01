@@ -32,7 +32,7 @@ abstract contract Uninitialized is Test {
         stakeManager = StakeManager(proxify("StakeManager.sol", ""));
         supernetManager = CustomSupernetManager(proxify("CustomSupernetManager.sol", ""));
         stakeManager.initialize(address(token));
-        rootERC20Predicate = new RootERC20Predicate();
+        rootERC20Predicate = RootERC20Predicate(proxify("RootERC20Predicate.sol", ""));
     }
 }
 
