@@ -163,27 +163,10 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### baseReward
-
-```solidity
-function baseReward() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### commitEpoch
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch) external nonpayable
+function commitEpoch(uint256 id, uint256 epochSize, Epoch epoch) external nonpayable
 ```
 
 
@@ -195,6 +178,7 @@ function commitEpoch(uint256 id, Epoch epoch) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | id | uint256 | undefined |
+| epochSize | uint256 | undefined |
 | epoch | Epoch | undefined |
 
 ### currentEpochId
@@ -217,7 +201,7 @@ returns currentEpochId
 ### distributeRewardFor
 
 ```solidity
-function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayable
+function distributeRewardFor(uint256 epochId, uint256 epochSize, Uptime[] uptime) external nonpayable
 ```
 
 
@@ -229,18 +213,24 @@ function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayab
 | Name | Type | Description |
 |---|---|---|
 | epochId | uint256 | undefined |
+| epochSize | uint256 | undefined |
 | uptime | Uptime[] | undefined |
 
-### epochSize
+### epochEndingBlocks
 
 ```solidity
-function epochSize() external view returns (uint256)
+function epochEndingBlocks(uint256) external view returns (uint256)
 ```
 
+returns the epoch ending block of given epoch
 
 
 
+#### Parameters
 
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
@@ -275,7 +265,7 @@ function epochs(uint256) external view returns (uint256 startBlock, uint256 endB
 ### initialize
 
 ```solidity
-function initialize(address newStakeManager, address newRewardToken, address newRewardWallet, uint256 newBaseReward, uint256 newEpochSize) external nonpayable
+function initialize(address newStakeManager, address newRewardToken, address newRewardWallet, address newNetworkParams) external nonpayable
 ```
 
 
@@ -289,8 +279,24 @@ function initialize(address newStakeManager, address newRewardToken, address new
 | newStakeManager | address | undefined |
 | newRewardToken | address | undefined |
 | newRewardWallet | address | undefined |
-| newBaseReward | uint256 | undefined |
-| newEpochSize | uint256 | undefined |
+| newNetworkParams | address | undefined |
+
+### networkParams
+
+```solidity
+function networkParams() external view returns (contract NetworkParams)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract NetworkParams | undefined |
 
 ### paidRewardPerEpoch
 

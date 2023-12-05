@@ -24,8 +24,10 @@ interface IEpochManager {
 
     /// @notice distributes reward for the given epoch
     /// @dev transfers funds from sender to this contract
+    /// @param epochId id of the epoch we are distributing rewards for
+    /// @param epochSize size of the given epoch
     /// @param uptime uptime data for every validator
-    function distributeRewardFor(uint256 epochId, Uptime[] calldata uptime) external;
+    function distributeRewardFor(uint256 epochId, uint256 epochSize, Uptime[] calldata uptime) external;
 
     /// @notice withdraws pending rewards for the sender (validator)
     function withdrawReward() external;
@@ -36,9 +38,15 @@ interface IEpochManager {
     /// @notice returns the pending reward for the given account
     function pendingRewards(address account) external view returns (uint256);
 
+    /// @notice returns the epoch ending block of given epoch
+    function epochEndingBlocks(uint256 epochId) external view returns (uint256);
+
     /// @notice commits a new epoch
     /// @dev system call
-    function commitEpoch(uint256 id, Epoch calldata epoch) external;
+    /// @param id id of the epoch we are committing
+    /// @param epochSize size of the given epoch
+    /// @param epoch epoch data
+    function commitEpoch(uint256 id, uint256 epochSize, Epoch calldata epoch) external;
 
     /// @notice returns currentEpochId
     function currentEpochId() external view returns (uint256);

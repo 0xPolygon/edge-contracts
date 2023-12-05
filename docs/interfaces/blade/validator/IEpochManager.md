@@ -13,7 +13,7 @@ Tracks epochs and distributes rewards to validators for committed epochs
 ### commitEpoch
 
 ```solidity
-function commitEpoch(uint256 id, Epoch epoch) external nonpayable
+function commitEpoch(uint256 id, uint256 epochSize, Epoch epoch) external nonpayable
 ```
 
 
@@ -25,6 +25,7 @@ function commitEpoch(uint256 id, Epoch epoch) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | id | uint256 | undefined |
+| epochSize | uint256 | undefined |
 | epoch | Epoch | undefined |
 
 ### currentEpochId
@@ -47,7 +48,7 @@ returns currentEpochId
 ### distributeRewardFor
 
 ```solidity
-function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayable
+function distributeRewardFor(uint256 epochId, uint256 epochSize, Uptime[] uptime) external nonpayable
 ```
 
 
@@ -59,7 +60,30 @@ function distributeRewardFor(uint256 epochId, Uptime[] uptime) external nonpayab
 | Name | Type | Description |
 |---|---|---|
 | epochId | uint256 | undefined |
+| epochSize | uint256 | undefined |
 | uptime | Uptime[] | undefined |
+
+### epochEndingBlocks
+
+```solidity
+function epochEndingBlocks(uint256 epochId) external view returns (uint256)
+```
+
+returns the epoch ending block of given epoch
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| epochId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### paidRewardPerEpoch
 

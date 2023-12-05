@@ -7,6 +7,7 @@ import {EpochManager} from "contracts/blade/validator/EpochManager.sol";
 import {GenesisValidator} from "contracts/interfaces/blade/staking/IStakeManager.sol";
 import {StakeManager} from "contracts/blade/staking/StakeManager.sol";
 import {Epoch, Uptime} from "contracts/interfaces/blade/validator/IEpochManager.sol";
+import {NetworkParams, InitParams} from "contracts/blade/NetworkParams.sol";
 import "contracts/interfaces/Errors.sol";
 
 abstract contract Uninitialized is Test {
@@ -15,6 +16,7 @@ abstract contract Uninitialized is Test {
     MockERC20 token;
     StakeManager stakeManager;
     EpochManager epochManager;
+    NetworkParams networkParams;
     string testDomain = "DUMMY_DOMAIN";
     address rewardWallet = makeAddr("rewardWallet");
     address alice = makeAddr("alice");
@@ -30,6 +32,7 @@ abstract contract Uninitialized is Test {
 
         stakeManager = new StakeManager();
         epochManager = new EpochManager();
+        networkParams = new NetworkParams();
 
         vm.prank(rewardWallet);
         token.approve(address(epochManager), type(uint256).max);
@@ -41,14 +44,32 @@ abstract contract Uninitialized is Test {
         GenesisValidator[] memory validators = new GenesisValidator[](2);
         validators[0] = GenesisValidator({addr: bob, stake: 300, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[1] = GenesisValidator({addr: alice, stake: 100, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
-        stakeManager.initialize(address(token), blsAddr, address(epochManager), bob, testDomain, validators);
+        stakeManager.initialize(address(token), blsAddr, address(epochManager), address(networkParams), bob, testDomain, validators);
+        
+        InitParams memory initParams = InitParams({
+            newOwner: bob, 
+            newEpochSize: epochSize, 
+            newEpochReward: 1 ether, 
+            newCheckpointBlockInterval: 900,
+            newSprintSize: 5,
+            newMinValidatorSetSize: 3,
+            newMaxValidatorSetSize: 100,
+            newWithdrawalWaitPeriod: 1,
+            newBlockTime: 2,
+            newBlockTimeDrift: 1,
+            newVotingDelay: 10,
+            newVotingPeriod: 100,
+            newProposalThreshold: 67,
+            newBaseFeeChangeDenom: 2
+        });
+        networkParams.initialize(initParams);
     }
 }
 
 abstract contract Initialized is Uninitialized {
     function setUp() public virtual override {
         super.setUp();
-        epochManager.initialize(address(stakeManager), address(token), rewardWallet, 1 ether, epochSize);
+        epochManager.initialize(address(stakeManager), address(token), rewardWallet, address(networkParams));
     }
 }
 
@@ -58,7 +79,7 @@ abstract contract Committed is Initialized {
         _beforeCommit();
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.prank(SYSTEM);
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, epochSize, epoch);
         vm.roll(block.number + 1);
         _afterCommit();
     }
@@ -75,16 +96,15 @@ abstract contract Distributed is Committed {
         uptime[0] = Uptime({validator: address(this), signedBlocks: 64});
         uptime[1] = Uptime({validator: alice, signedBlocks: 64});
         vm.prank(SYSTEM);
-        epochManager.distributeRewardFor(1, uptime);
+        epochManager.distributeRewardFor(1, epochSize, uptime);
     }
 }
 
 contract EpochManager_Initialize is Uninitialized {
     function test_Initialize() public {
-        epochManager.initialize(address(stakeManager), address(token), rewardWallet, 1 ether, epochSize);
+        epochManager.initialize(address(stakeManager), address(token), rewardWallet, address(networkParams));
         assertEq(address(epochManager.rewardToken()), address(token));
         assertEq(epochManager.rewardWallet(), rewardWallet);
-        assertEq(epochManager.epochSize(), epochSize);
     }
 }
 
@@ -95,7 +115,7 @@ contract EpochManager_CommitEpoch is Initialized {
         vm.prank(alice);
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, epochSize, epoch);
     }
 
     function test_RevertInvalidEpochId(uint256 id) public {
@@ -103,7 +123,7 @@ contract EpochManager_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
         vm.expectRevert("UNEXPECTED_EPOCH_ID");
         vm.prank(SYSTEM);
-        epochManager.commitEpoch(id, epoch);
+        epochManager.commitEpoch(id, epochSize, epoch);
     }
 
     function test_RevertNoBlocksCommitted(uint256 startBlock, uint256 endBlock) public {
@@ -111,7 +131,7 @@ contract EpochManager_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: startBlock, endBlock: endBlock, epochRoot: bytes32(0)});
         vm.expectRevert("NO_BLOCKS_COMMITTED");
         vm.prank(SYSTEM);
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, epochSize, epoch);
     }
 
     function test_RevertEpochSize(uint256 startBlock, uint256 endBlock) public {
@@ -120,14 +140,14 @@ contract EpochManager_CommitEpoch is Initialized {
         Epoch memory epoch = Epoch({startBlock: startBlock, endBlock: endBlock, epochRoot: bytes32(0)});
         vm.expectRevert("EPOCH_MUST_BE_DIVISIBLE_BY_EPOCH_SIZE");
         vm.prank(SYSTEM);
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, epochSize, epoch);
     }
 
     function test_RevertInvalidStartBlock() public {
         Epoch memory epoch = Epoch({startBlock: 0, endBlock: 63, epochRoot: bytes32(0)});
         vm.expectRevert("INVALID_START_BLOCK");
         vm.prank(SYSTEM);
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, epochSize, epoch);
     }
 
     function test_CommitEpoch() public {
@@ -135,7 +155,7 @@ contract EpochManager_CommitEpoch is Initialized {
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
         emit NewEpoch(1, 1, 64, bytes32(0));
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, epochSize, epoch);
         assertEq(epochManager.currentEpochId(), 2);
     }
 }
@@ -145,21 +165,21 @@ contract EpochManager_Distribute is Committed {
 
     function test_RevertOnlySystem() public {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, "SYSTEMCALL"));
-        epochManager.distributeRewardFor(1, new Uptime[](0));
+        epochManager.distributeRewardFor(1, epochSize, new Uptime[](0));
     }
 
     function test_RevertGenesisEpoch() public {
         Uptime[] memory uptime = new Uptime[](0);
         vm.expectRevert("EPOCH_NOT_COMMITTED");
         vm.prank(SYSTEM);
-        epochManager.distributeRewardFor(0, uptime);
+        epochManager.distributeRewardFor(0, epochSize, uptime);
     }
 
     function test_RevertFutureEpoch() public {
         Uptime[] memory uptime = new Uptime[](0);
         vm.expectRevert("EPOCH_NOT_COMMITTED");
         vm.prank(SYSTEM);
-        epochManager.distributeRewardFor(2, uptime);
+        epochManager.distributeRewardFor(2, epochSize, uptime);
     }
 
     function test_RevertSignedBlocksExceedsTotalBlocks() public {
@@ -167,7 +187,7 @@ contract EpochManager_Distribute is Committed {
         uptime[0] = Uptime({validator: address(this), signedBlocks: 65});
         vm.prank(SYSTEM);
         vm.expectRevert("SIGNED_BLOCKS_EXCEEDS_TOTAL");
-        epochManager.distributeRewardFor(1, uptime);
+        epochManager.distributeRewardFor(1, epochSize, uptime);
     }
 
     function test_DistributeRewards() public {
@@ -180,7 +200,7 @@ contract EpochManager_Distribute is Committed {
         vm.prank(SYSTEM);
         vm.expectEmit(true, true, true, true);
         emit RewardDistributed(1, totalReward);
-        epochManager.distributeRewardFor(1, uptime);
+        epochManager.distributeRewardFor(1, epochSize, uptime);
         assertEq(epochManager.pendingRewards(bob), reward1);
         assertEq(epochManager.pendingRewards(alice), reward2);
         assertEq(epochManager.paidRewardPerEpoch(1), totalReward);
@@ -192,7 +212,7 @@ contract EpochManager_DuplicateDistribution is Distributed {
         Uptime[] memory uptime = new Uptime[](0);
         vm.startPrank(SYSTEM);
         vm.expectRevert("REWARD_ALREADY_DISTRIBUTED");
-        epochManager.distributeRewardFor(1, uptime);
+        epochManager.distributeRewardFor(1, epochSize, uptime);
     }
 }
 

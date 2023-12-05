@@ -113,8 +113,7 @@ contract DeployBladeContracts is
             config.readAddress('["EpochManager"].newStakeManager'),
             config.readAddress('["EpochManager"].newRewardToken'),
             config.readAddress('["EpochManager"].newRewardWallet'),
-            config.readUint('["EpochManager"].newBaseReward'),
-            config.readUint('["EpochManager"].newEpochSize')
+            config.readAddress('["EpochManager"].newNetworkParams')
         );
 
         (childERC20Logic, childERC20Proxy) = deployChildERC20(
@@ -287,6 +286,7 @@ contract DeployBladeContracts is
             config.readAddress('["StakeManager"].newStakingToken'),
             config.readAddress('["StakeManager"].newBls'),
             config.readAddress('["StakeManager"].newEpochManager'),
+            config.readAddress('["EpochManager"].newNetworkParams'),
             config.readAddress('["StakeManager"].newOwner'),
             config.readString('["StakeManager"].newDomain'),
             abi.decode(config.readBytes('["StakeManager"].newGenesisValidators'), (GenesisValidator[]))

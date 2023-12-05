@@ -7,6 +7,7 @@ import {EpochManager} from "contracts/blade/validator/EpochManager.sol";
 import {GenesisValidator} from "contracts/interfaces/blade/staking/IStakeManager.sol";
 import {Epoch} from "contracts/interfaces/blade/validator/IEpochManager.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
+import {NetworkParams} from "contracts/blade/NetworkParams.sol";
 
 abstract contract Uninitialized is Test {
     address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
@@ -16,6 +17,7 @@ abstract contract Uninitialized is Test {
 
     address blsAddr;
     EpochManager epochManager;
+    NetworkParams networkParams;
     string testDomain = "DUMMY_DOMAIN";
 
     address bob = makeAddr("bob");
@@ -37,6 +39,7 @@ abstract contract Uninitialized is Test {
 
         stakeManager = new StakeManager();
         epochManager = new EpochManager();
+        networkParams = new NetworkParams();
 
         vm.prank(alice);
         token.approve(address(stakeManager), type(uint256).max);
@@ -47,7 +50,7 @@ abstract contract Uninitialized is Test {
 
         blsAddr = makeAddr("bls");
 
-        epochManager.initialize(address(stakeManager), address(token), rewardWallet, 1 ether, 64);
+        epochManager.initialize(address(stakeManager), address(token), rewardWallet, address(networkParams));
     }
 }
 
@@ -58,7 +61,7 @@ abstract contract Initialized is Uninitialized {
         validators[0] = GenesisValidator({addr: bob, stake: bobInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[1] = GenesisValidator({addr: alice, stake: aliceInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[2] = GenesisValidator({addr: jim, stake: jimInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
-        stakeManager.initialize(address(token), blsAddr, address(epochManager), bob, testDomain, validators);
+        stakeManager.initialize(address(token), blsAddr, address(epochManager), address(networkParams), bob, testDomain, validators);
     }
 }
 
@@ -70,7 +73,7 @@ abstract contract Unstaked is Initialized {
 
         vm.prank(SYSTEM);
         Epoch memory epoch = Epoch({startBlock: 1, endBlock: 64, epochRoot: bytes32(0)});
-        epochManager.commitEpoch(1, epoch);
+        epochManager.commitEpoch(1, 64, epoch);
 
         vm.prank(address(stakeManager));
         token.approve(alice, type(uint256).max);
@@ -83,7 +86,7 @@ contract StakeManager_Initialize is Uninitialized {
         validators[0] = GenesisValidator({addr: bob, stake: bobInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[1] = GenesisValidator({addr: alice, stake: aliceInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
         validators[2] = GenesisValidator({addr: jim, stake: jimInitialStake, blsKey: [type(uint256).max, type(uint256).max, type(uint256).max, type(uint256).max]});
-        stakeManager.initialize(address(token), blsAddr, address(epochManager), bob, testDomain, validators);
+        stakeManager.initialize(address(token), blsAddr, address(epochManager), address(networkParams), bob, testDomain, validators);
     }
 }
 

@@ -5,22 +5,22 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import "../../interfaces/blade/staking/IStakeManager.sol";
 import "../../interfaces/IStateSender.sol";
 import "../../interfaces/common/IBLS.sol";
 import "../../interfaces/blade/validator/IEpochManager.sol";
 import "../../lib/WithdrawalQueue.sol";
+import "../../blade/NetworkParams.sol";
 
-contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, ERC20SnapshotUpgradeable {
+contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, ERC20VotesUpgradeable {
     using SafeERC20 for IERC20;
     using WithdrawalQueueLib for WithdrawalQueue;
-
-    uint256 public constant WITHDRAWAL_WAIT_PERIOD = 1;
 
     IBLS private _bls;
     IERC20 private _stakingToken;
     IEpochManager private _epochManager;
+    NetworkParams private _networkParams;
 
     bytes32 public domain;
 
@@ -38,14 +38,25 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
         address newStakingToken,
         address newBls,
         address epochManager,
+        address networkParams,
         address owner,
         string memory newDomain,
         GenesisValidator[] memory genesisValidators
     ) public initializer {
+        require(
+            newStakingToken != address(0) &&
+                newBls != address(0) &&
+                epochManager != address(0) &&
+                networkParams != address(0),
+            "INVALID_INPUT"
+        );
+
+        __ERC20Permit_init("StakeManager");
         __ERC20_init("StakeManager", "STAKE");
         _stakingToken = IERC20(newStakingToken);
         _bls = IBLS(newBls);
         _epochManager = IEpochManager(epochManager);
+        _networkParams = NetworkParams(networkParams);
         domain = keccak256(abi.encodePacked(newDomain));
 
         for (uint i = 0; i < genesisValidators.length; i++) {
@@ -143,6 +154,14 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
         return _withdrawals[account].pending(_epochManager.currentEpochId());
     }
 
+    function totalSupplyAt(uint256 epochNumber) external view returns (uint256) {
+        return super.getPastTotalSupply(_epochManager.epochEndingBlocks(epochNumber));
+    }
+
+    function balanceOfAt(address account, uint256 epochNumber) external view returns (uint256) {
+        return super.getPastVotes(account, _epochManager.epochEndingBlocks(epochNumber));
+    }
+
     function _addToWhitelist(address validator) internal {
         validators[validator].isWhitelisted = true;
         emit AddedToWhitelist(validator);
@@ -169,6 +188,7 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
         _mint(validator, amount);
         // slither-disable-next-line reentrancy-benign,reentrancy-events
         _stakingToken.safeTransferFrom(validator, address(this), amount);
+        _delegate(validator, validator);
         // slither-disable-next-line reentrancy-events
         emit StakeAdded(validator, amount);
     }
@@ -182,7 +202,7 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
     }
 
     function _registerWithdrawal(address account, uint256 amount) internal {
-        _withdrawals[account].append(amount, _epochManager.currentEpochId() + WITHDRAWAL_WAIT_PERIOD);
+        _withdrawals[account].append(amount, _epochManager.currentEpochId() + _networkParams.withdrawalWaitPeriod());
     }
 
     /// @notice Message to sign for registration
@@ -202,28 +222,14 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
         amount = balanceOf(validator);
     }
 
-    /// @dev the epoch number is also the snapshot id
-    function _getCurrentSnapshotId() internal view override returns (uint256) {
-        // slither-disable-next-line calls-loop
-        return _epochManager.currentEpochId();
-    }
-
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
         require(from == address(0) || to == address(0), "TRANSFER_FORBIDDEN");
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    function totalSupplyAt(
-        uint256 epochNumber
-    ) public view override(ERC20SnapshotUpgradeable, IStakeManager) returns (uint256) {
-        return super.totalSupplyAt(epochNumber);
-    }
-
-    function balanceOfAt(
-        address account,
-        uint256 epochNumber
-    ) public view override(ERC20SnapshotUpgradeable, IStakeManager) returns (uint256) {
-        return super.balanceOfAt(account, epochNumber);
+    function _delegate(address delegator, address delegatee) internal override {
+        if (delegator != delegatee) revert("DELEGATION_FORBIDDEN");
+        super._delegate(delegator, delegatee);
     }
 
     // slither-disable-next-line unused-state,naming-convention

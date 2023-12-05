@@ -11,8 +11,8 @@
     "newStakeManager": "",
     "newRewardToken": "",
     "newRewardWallet": "",
-    "newBaseReward": "",
-    "newEpochSize": ""
+    "newEpochSize": "",
+    "newNetworkParams": ""
   },
 
   "ChildERC20": {
@@ -125,6 +125,7 @@
     "newStakingToken": "",
     "newBls": "",
     "newEpochManager": "",
+    "newNetworkParams": "",
     "newDomain": "",
     "newGenesisValidators": "",
     "newOwner": ""

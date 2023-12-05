@@ -13,12 +13,11 @@ abstract contract EpochManagerDeployer is Script {
         address newStakeManager,
         address newRewardToken,
         address newRewardWallet,
-        uint256 newBaseReward,
-        uint256 newEpochSize
+        address newNetworkParams
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             EpochManager.initialize,
-            (newStakeManager, newRewardToken, newRewardWallet, newBaseReward, newEpochSize)
+            (newStakeManager, newRewardToken, newRewardWallet, newNetworkParams)
         );
 
         vm.startBroadcast();
@@ -44,17 +43,8 @@ contract DeployEpochManager is EpochManagerDeployer {
         address newStakeManager,
         address newRewardToken,
         address newRewardWallet,
-        uint256 newBaseReward,
-        uint256 newEpochSize
+        address newNetworkParams
     ) external returns (address logicAddr, address proxyAddr) {
-        return
-            deployEpochManager(
-                proxyAdmin,
-                newStakeManager,
-                newRewardToken,
-                newRewardWallet,
-                newBaseReward,
-                newEpochSize
-            );
+        return deployEpochManager(proxyAdmin, newStakeManager, newRewardToken, newRewardWallet, newNetworkParams);
     }
 }
