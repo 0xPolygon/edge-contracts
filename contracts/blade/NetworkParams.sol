@@ -72,8 +72,7 @@ contract NetworkParams is Ownable2Step, Initializable {
                 initParams.newWithdrawalWaitPeriod != 0 &&
                 initParams.newBlockTime != 0 &&
                 initParams.newBlockTimeDrift != 0 &&
-                initParams.newVotingPeriod != 0 &&
-                initParams.newBaseFeeChangeDenom != 0,
+                initParams.newVotingPeriod != 0,
             "NetworkParams: INVALID_INPUT"
         );
         checkpointBlockInterval = initParams.newCheckpointBlockInterval;
