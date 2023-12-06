@@ -370,6 +370,24 @@ function totalVotingPower() external view returns (uint256)
 
 ## Events
 
+### CheckpointSubmitted
+
+```solidity
+event CheckpointSubmitted(uint256 indexed epoch, uint256 indexed blockNumber, bytes32 eventRoot)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| epoch `indexed` | uint256 | undefined |
+| blockNumber `indexed` | uint256 | undefined |
+| eventRoot  | bytes32 | undefined |
+
 ### Initialized
 
 ```solidity

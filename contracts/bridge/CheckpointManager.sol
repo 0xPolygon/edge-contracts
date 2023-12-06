@@ -30,6 +30,8 @@ contract CheckpointManager is ICheckpointManager, Initializable {
     // slither-disable-next-line naming-convention
     address private immutable _INITIATOR;
 
+    event CheckpointSubmitted(uint256 indexed epoch, uint256 indexed blockNumber, bytes32 eventRoot);
+
     /// @notice If the contract is meant to be initialized at a later time, specifiy the address that will initialize it.
     /// @notice Otherwise, pass `address(0)`.
     constructor(address initiator) {
@@ -107,6 +109,8 @@ contract CheckpointManager is ICheckpointManager, Initializable {
         currentCheckpointBlockNumber = checkpoint.blockNumber;
 
         _setNewValidatorSet(newValidatorSet);
+
+        emit CheckpointSubmitted(checkpoint.epoch, checkpoint.blockNumber, checkpoint.eventRoot);
     }
 
     /**
