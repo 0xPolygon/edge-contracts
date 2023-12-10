@@ -108,7 +108,7 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
     /**
      * @inheritdoc IStakeManager
      */
-    function register(uint256[2] calldata signature, uint256[4] calldata pubkey) external {
+    function register(uint256[2] calldata signature, uint256[4] calldata pubkey, uint256 stakeAmount) external {
         Validator storage validator = validators[msg.sender];
         if (!validator.isWhitelisted) revert Unauthorized("WHITELIST");
         _verifyValidatorRegistration(msg.sender, signature, pubkey);
@@ -116,7 +116,10 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
         validator.blsKey = pubkey;
         validator.addr = msg.sender;
         _removeFromWhitelist(msg.sender);
-        emit ValidatorRegistered(msg.sender, pubkey);
+        if (stakeAmount > 0) {
+            _stake(msg.sender, stakeAmount);
+        }
+        emit ValidatorRegistered(msg.sender, pubkey, stakeAmount);
     }
 
     /**
@@ -207,8 +210,9 @@ contract StakeManager is IStakeManager, Initializable, Ownable2StepUpgradeable, 
 
     /// @notice Message to sign for registration
     function _message(address signer) internal view returns (uint256[2] memory) {
+        bytes memory hash = abi.encodePacked(signer, address(this), block.chainid);
         // slither-disable-next-line calls-loop
-        return _bls.hashToPoint(domain, abi.encodePacked(signer, address(this), block.chainid));
+        return _bls.hashToPoint(domain, hash);
     }
 
     function _removeIfValidatorUnstaked(address validator) internal {

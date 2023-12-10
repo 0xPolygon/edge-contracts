@@ -124,6 +124,29 @@ export function signValidatorMessage(domain: Domain, chainId: number, address: s
   return { signature, messagePoint };
 }
 
+export function signStakeManagerMessage(
+  domain: Domain,
+  chainId: number,
+  signerAddress: string,
+  contractAddress: string,
+  secret: SecretKey
+) {
+  // Check if signerAddress or contractAddress is undefined
+  if (signerAddress === undefined || contractAddress === undefined) {
+    // Return an empty array or handle it as needed
+    return { signature: [], messagePoint: [] };
+  }
+
+  const message = ethers.utils.solidityPack(
+    ["address", "address", "uint256"],
+    [signerAddress.toLowerCase(), contractAddress.toLowerCase(), chainId]
+  );
+  const messagePoint = hashToPoint(message, domain);
+  const signature: any = mcl.mul(messagePoint, secret);
+  signature.normalize();
+  return { signature, messagePoint };
+}
+
 export function sign(
   message: string,
   secret: SecretKey,

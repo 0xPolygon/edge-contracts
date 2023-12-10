@@ -80,7 +80,7 @@ Calculates how much is yet to become withdrawable for account.
 ### register
 
 ```solidity
-function register(uint256[2] signature, uint256[4] pubkey) external nonpayable
+function register(uint256[2] signature, uint256[4] pubkey, uint256 stakeAmount) external nonpayable
 ```
 
 
@@ -93,6 +93,7 @@ function register(uint256[2] signature, uint256[4] pubkey) external nonpayable
 |---|---|---|
 | signature | uint256[2] | undefined |
 | pubkey | uint256[4] | undefined |
+| stakeAmount | uint256 | undefined |
 
 ### stake
 
@@ -342,7 +343,7 @@ event ValidatorDeactivated(address indexed validator)
 ### ValidatorRegistered
 
 ```solidity
-event ValidatorRegistered(address indexed validator, uint256[4] blsKey)
+event ValidatorRegistered(address indexed validator, uint256[4] blsKey, uint256 amount)
 ```
 
 
@@ -355,6 +356,7 @@ event ValidatorRegistered(address indexed validator, uint256[4] blsKey)
 |---|---|---|
 | validator `indexed` | address | undefined |
 | blsKey  | uint256[4] | undefined |
+| amount  | uint256 | undefined |
 
 
 
