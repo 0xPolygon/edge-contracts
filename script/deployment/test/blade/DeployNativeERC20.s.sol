@@ -11,7 +11,6 @@ abstract contract NativeERC20Deployer is Script {
     function deployNativeERC20(
         address proxyAdmin,
         address predicate_,
-        address owner_,
         address rootToken_,
         string memory name_,
         string memory symbol_,
@@ -20,7 +19,7 @@ abstract contract NativeERC20Deployer is Script {
     ) internal returns (address logicAddr, address proxyAddr) {
         bytes memory initData = abi.encodeCall(
             NativeERC20.initialize,
-            (predicate_, owner_, rootToken_, name_, symbol_, decimals_, tokenSupply_)
+            (predicate_, rootToken_, name_, symbol_, decimals_, tokenSupply_)
         );
 
         vm.startBroadcast();
@@ -40,13 +39,12 @@ contract DeployNativeERC20 is NativeERC20Deployer {
     function run(
         address proxyAdmin,
         address predicate_,
-        address owner_,
         address rootToken_,
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) external returns (address logicAddr, address proxyAddr) {
-        return deployNativeERC20(proxyAdmin, predicate_, owner_, rootToken_, name_, symbol_, decimals_, tokenSupply_);
+        return deployNativeERC20(proxyAdmin, predicate_, rootToken_, name_, symbol_, decimals_, tokenSupply_);
     }
 }

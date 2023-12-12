@@ -3,8 +3,8 @@ import { BigNumber } from "ethers";
 import * as hre from "hardhat";
 import { ethers } from "hardhat";
 import {
-  NativeERC20,
-  NativeERC20__factory,
+  NativeERC20Mintable,
+  NativeERC20Mintable__factory,
   ChildERC20Predicate,
   ChildERC20Predicate__factory,
   MockNativeERC20Transfer,
@@ -12,10 +12,12 @@ import {
 } from "../../typechain-types";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "../constants";
 
-describe("NativeERC20", () => {
-  let nativeERC20: NativeERC20,
-    predicateNativeERC20: NativeERC20,
-    zeroAddressNativeERC20: NativeERC20,
+describe("NativeERC20Mintable", () => {
+  let nativeERC20: NativeERC20Mintable,
+    systemNativeERC20: NativeERC20Mintable,
+    predicateNativeERC20: NativeERC20Mintable,
+    minterNativeERC20: NativeERC20Mintable,
+    zeroAddressNativeERC20: NativeERC20Mintable,
     childERC20Predicate: ChildERC20Predicate,
     mockNativeERC20Transfer: MockNativeERC20Transfer,
     balance: BigNumber,
@@ -31,7 +33,7 @@ describe("NativeERC20", () => {
 
     await childERC20Predicate.deployed();
 
-    const NativeERC20: NativeERC20__factory = await ethers.getContractFactory("NativeERC20");
+    const NativeERC20: NativeERC20Mintable__factory = await ethers.getContractFactory("NativeERC20Mintable");
     nativeERC20 = await NativeERC20.deploy();
 
     await nativeERC20.deployed();
@@ -53,6 +55,8 @@ describe("NativeERC20", () => {
 
     nativeERC20 = nativeERC20.attach("0x0000000000000000000000000000000000001010");
 
+    systemNativeERC20 = nativeERC20.connect(await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"));
+
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002020",
       alwaysTrueBytecode, // native transfer pre-compile
@@ -68,12 +72,63 @@ describe("NativeERC20", () => {
     totalSupply = 0;
   });
 
-  it("initialize and validate initialization", async () => {
-    const systemNativeERC20: NativeERC20 = nativeERC20.connect(
-      await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE")
-    );
+  it("fail initialization: systemcall", async () => {
     await expect(
-      systemNativeERC20.initialize(childERC20Predicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
+      nativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18,
+        0
+      )
+    )
+      .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
+      .withArgs("SYSTEMCALL");
+  });
+
+  it("fail initialization: systemcall", async () => {
+    await expect(
+      nativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18,
+        0
+      )
+    )
+      .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
+      .withArgs("SYSTEMCALL");
+  });
+
+  it("fail initialization: invalid owner", async () => {
+    await expect(
+      systemNativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18,
+        0
+      )
+    ).to.be.revertedWith("NativeERC20: Invalid owner address");
+  });
+
+  it("initialize and validate initialization", async () => {
+    await expect(
+      systemNativeERC20.initialize(
+        childERC20Predicate.address,
+        accounts[1].address,
+        ethers.constants.AddressZero,
+        "TEST",
+        "TEST",
+        18,
+        0
+      )
     ).to.not.be.reverted;
     expect(await nativeERC20.name()).to.equal("TEST");
     expect(await nativeERC20.symbol()).to.equal("TEST");
@@ -81,17 +136,26 @@ describe("NativeERC20", () => {
     expect(await nativeERC20.totalSupply()).to.equal(0);
     expect(await nativeERC20.predicate()).to.equal(childERC20Predicate.address);
     expect(await nativeERC20.rootToken()).to.equal(ethers.constants.AddressZero);
+    expect(await nativeERC20.owner()).to.equal(accounts[1].address);
   });
 
   it("reinitialization fail", async () => {
     await expect(
-      nativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "", "", 0, 0)
+      nativeERC20.initialize(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        "",
+        "",
+        0,
+        0
+      )
     ).to.be.revertedWith("Initializable: contract is already initialized");
   });
 
   it("mint tokens fail: only predicate", async () => {
     await expect(nativeERC20.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith(
-      "NativeERC20: Only predicate can call"
+      "NativeERC20: Only predicate or owner can call"
     );
   });
 
@@ -133,6 +197,19 @@ describe("NativeERC20", () => {
       ethers.utils.hexStripZeros(ethers.utils.parseUnits(String(randomAmount)).toHexString()),
     ]);
     expect(await nativeERC20.totalSupply()).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+  });
+
+  it("mint tokens from minter", async () => {
+    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
+    totalSupply += randomAmount;
+    minterNativeERC20 = nativeERC20.connect(await ethers.getSigner(accounts[1].address));
+    await minterNativeERC20.mint(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
+    const prevBalance = await nativeERC20.balanceOf(accounts[0].address);
+    await hre.network.provider.send("hardhat_setBalance", [
+      accounts[0].address,
+      ethers.utils.hexStripZeros(prevBalance.add(ethers.utils.parseUnits(String(randomAmount))).toHexString()),
+    ]);
+    expect(await nativeERC20.totalSupply()).to.equal(ethers.utils.parseUnits(String(totalSupply)));
   });
 
   it("balanceOf", async () => {
@@ -313,7 +390,7 @@ describe("NativeERC20", () => {
 
   it("burn fail: only predicate", async () => {
     await expect(nativeERC20.burn(ethers.constants.AddressZero, 1)).to.be.revertedWith(
-      "NativeERC20: Only predicate can call"
+      "NativeERC20: Only predicate or owner can call"
     );
   });
 
@@ -325,8 +402,28 @@ describe("NativeERC20", () => {
 
   it("burn success", async () => {
     const burnAmount = Math.floor(Math.random() * totalSupply + 1);
+    totalSupply -= burnAmount;
     const expectedTotalSupply = (await nativeERC20.totalSupply()).sub(burnAmount);
     await expect(predicateNativeERC20.burn(accounts[0].address, burnAmount)).to.not.be.reverted;
+    const balance = ethers.utils.hexStripZeros(
+      BigNumber.from(await nativeERC20.balanceOf(accounts[0].address))
+        .sub(burnAmount)
+        .toHexString()
+    );
+    await hre.network.provider.send("hardhat_setBalance", [accounts[0].address, balance]);
+    expect(await nativeERC20.balanceOf(accounts[0].address)).to.equal(balance);
+    expect(await nativeERC20.totalSupply()).to.equal(expectedTotalSupply);
+  });
+
+  it("burn success from minter", async () => {
+    const burnAmount = Math.floor(Math.random() * totalSupply + 1);
+    totalSupply -= burnAmount;
+    const expectedTotalSupply = (await nativeERC20.totalSupply()).sub(burnAmount);
+    await hre.network.provider.request({
+      method: "hardhat_setBalance",
+      params: [accounts[1].address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
+    });
+    await expect(minterNativeERC20.burn(accounts[0].address, burnAmount)).to.not.be.reverted;
     const balance = ethers.utils.hexStripZeros(
       BigNumber.from(await nativeERC20.balanceOf(accounts[0].address))
         .sub(burnAmount)

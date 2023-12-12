@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "../interfaces/blade/IStateReceiver.sol";
-import "../interfaces/blade/INativeERC20.sol";
 import "./System.sol";
 
 /**
-    @title NativeERC20
-    @author Polygon Technology
+    @title NativeERC20Mintable
     @notice Native token contract on Blade chains
     @dev The contract exposes ERC20-like functions that are compatible with the native token
  */
 // solhint-disable reason-string
-contract NativeERC20 is Context, Initializable, System, INativeERC20 {
+contract NativeERC20Mintable is Context, Initializable, System, Ownable2Step, IERC20Metadata {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
@@ -24,8 +24,8 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     string private _symbol;
     uint8 private _decimals;
 
-    modifier onlyPredicate() {
-        require(msg.sender == _predicate, "NativeERC20: Only predicate can call");
+    modifier onlyPredicateOrMinter() {
+        require(msg.sender == _predicate || msg.sender == owner(), "NativeERC20: Only predicate or owner can call");
 
         _;
     }
@@ -40,12 +40,14 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      */
     function initialize(
         address predicate_,
+        address owner_,
         address rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) external virtual initializer onlySystemCall {
+        require(owner_ != address(0), "NativeERC20: Invalid owner address");
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
@@ -55,6 +57,7 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
         // slither-disable-next-line events-maths
         _decimals = decimals_;
         _totalSupply = tokenSupply_;
+        _transferOwnership(owner_);
     }
 
     /**
@@ -154,18 +157,26 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Mints an amount of tokens to a particular address
+     * @dev Can only be called by the predicate address
+     * @param account Account of the user to mint the tokens to
+     * @param amount Amount of tokens to mint to the account
+     * @return bool Returns true if function call is successful
      */
-    function mint(address account, uint256 amount) external virtual onlyPredicate returns (bool) {
+    function mint(address account, uint256 amount) external virtual onlyPredicateOrMinter returns (bool) {
         _mint(account, amount);
 
         return true;
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Burns an amount of tokens from a particular address
+     * @dev Can only be called by the predicate address
+     * @param account Account of the user to burn the tokens from
+     * @param amount Amount of tokens to burn from the account
+     * @return bool Returns true if function call is successful
      */
-    function burn(address account, uint256 amount) external virtual onlyPredicate returns (bool) {
+    function burn(address account, uint256 amount) external virtual onlyPredicateOrMinter returns (bool) {
         _burn(account, amount);
 
         return true;
@@ -225,16 +236,18 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Returns predicate address controlling the child token
+     * @return address Returns the address of the predicate
      */
-    function predicate() public view virtual override returns (address) {
+    function predicate() public view virtual returns (address) {
         return _predicate;
     }
 
     /**
-     * @inheritdoc INativeERC20
+     * @notice Returns corresponding root token address for the child native token
+     * @return address Returns the root token address
      */
-    function rootToken() public view virtual override returns (address) {
+    function rootToken() public view virtual returns (address) {
         return _rootToken;
     }
 

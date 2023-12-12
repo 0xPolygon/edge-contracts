@@ -15,9 +15,11 @@ import "script/deployment/test/blade/DeployChildERC721PredicateAccessList.s.sol"
 import "script/deployment/test/blade/DeployChildERC1155.s.sol";
 import "script/deployment/test/blade/DeployChildERC1155Predicate.s.sol";
 import "script/deployment/test/blade/DeployChildERC1155PredicateAccessList.s.sol";
+import "script/deployment/test/blade/DeployEIP1559Burn.s.sol";
 import "script/deployment/test/blade/DeployL2StateSender.s.sol";
 import "script/deployment/test/blade/validator/DeployEpochManager.s.sol";
 import "script/deployment/test/blade/DeployNativeERC20.s.sol";
+import "script/deployment/test/blade/DeployNativeERC20Mintable.s.sol";
 import "script/deployment/test/blade/DeployRootMintableERC20Predicate.s.sol";
 import "script/deployment/test/blade/DeployRootMintableERC20PredicateAccessList.s.sol";
 import "script/deployment/test/blade/DeployRootMintableERC721Predicate.s.sol";
@@ -39,8 +41,10 @@ contract DeployBladeContracts is
     ChildERC1155Deployer,
     ChildERC1155PredicateDeployer,
     ChildERC1155PredicateAccessListDeployer,
+    EIP1559BurnDeployer,
     L2StateSenderDeployer,
     NativeERC20Deployer,
+    NativeERC20MintableDeployer,
     RootMintableERC20PredicateDeployer,
     RootMintableERC20PredicateAccessListDeployer,
     RootMintableERC721PredicateDeployer,
@@ -74,9 +78,13 @@ contract DeployBladeContracts is
     address public childERC1155PredicateProxy;
     address public childERC1155PredicateAccessListLogic;
     address public childERC1155PredicateAccessListProxy;
+    address public eip1559BurnLogic;
+    address public eip1559BurnProxy;
     address public l2StateSender;
     address public nativeERC20Logic;
     address public nativeERC20Proxy;
+    address public nativeERC20MintableLogic;
+    address public nativeERC20MintableProxy;
     address public rootMintableERC20PredicateLogic;
     address public rootMintableERC20PredicateProxy;
     address public rootMintableERC20PredicateAccessListLogic;
@@ -204,7 +212,23 @@ contract DeployBladeContracts is
             config.readAddress('["ChildERC1155PredicateAccessList"].newOwner')
         );
 
+        (eip1559BurnLogic, eip1559BurnProxy) = deployEIP1559Burn(
+            proxyAdmin,
+            IChildERC20Predicate(childERC20PredicateProxy),
+            config.readAddress('["EIP1559Burn"].newBurnDestination')
+        );
+
         (nativeERC20Logic, nativeERC20Proxy) = deployNativeERC20(
+            proxyAdmin,
+            config.readAddress('["NativeERC20"].predicate_'),
+            config.readAddress('["NativeERC20"].rootToken_'),
+            config.readString('["NativeERC20"].name_'),
+            config.readString('["NativeERC20"].symbol_'),
+            uint8(config.readUint('["NativeERC20"].decimals_')),
+            config.readUint('["NativeERC20"].tokenSupply_')
+        );
+
+        (nativeERC20MintableLogic, nativeERC20MintableProxy) = deployNativeERC20Mintable(
             proxyAdmin,
             config.readAddress('["NativeERC20"].predicate_'),
             config.readAddress('["NativeERC20"].owner_'),

@@ -1,8 +1,8 @@
-# NativeERC20
+# NativeERC20Mintable
 
-*Polygon Technology*
 
-> NativeERC20
+
+> NativeERC20Mintable
 
 Native token contract on Blade chains
 
@@ -163,6 +163,17 @@ function VALIDATOR_PKCHECK_PRECOMPILE_GAS() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### acceptOwnership
+
+```solidity
+function acceptOwnership() external nonpayable
+```
+
+
+
+*The new owner accepts the ownership transfer.*
+
+
 ### allowance
 
 ```solidity
@@ -320,7 +331,7 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 ### initialize
 
 ```solidity
-function initialize(address predicate_, address rootToken_, string name_, string symbol_, uint8 decimals_, uint256 tokenSupply_) external nonpayable
+function initialize(address predicate_, address owner_, address rootToken_, string name_, string symbol_, uint8 decimals_, uint256 tokenSupply_) external nonpayable
 ```
 
 
@@ -332,6 +343,7 @@ function initialize(address predicate_, address rootToken_, string name_, string
 | Name | Type | Description |
 |---|---|---|
 | predicate_ | address | undefined |
+| owner_ | address | undefined |
 | rootToken_ | address | undefined |
 | name_ | string | undefined |
 | symbol_ | string | undefined |
@@ -378,6 +390,40 @@ function name() external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+
+
+*Returns the address of the current owner.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### pendingOwner
+
+```solidity
+function pendingOwner() external view returns (address)
+```
+
+
+
+*Returns the address of the pending owner.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### predicate
 
 ```solidity
@@ -394,6 +440,17 @@ Returns predicate address controlling the child token
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | address Returns the address of the predicate |
+
+### renounceOwnership
+
+```solidity
+function renounceOwnership() external nonpayable
+```
+
+
+
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
+
 
 ### rootToken
 
@@ -493,6 +550,22 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
+### transferOwnership
+
+```solidity
+function transferOwnership(address newOwner) external nonpayable
+```
+
+
+
+*Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one. Can only be called by the current owner.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newOwner | address | undefined |
+
 
 
 ## Events
@@ -530,6 +603,40 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### OwnershipTransferStarted
+
+```solidity
+event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
+
+### OwnershipTransferred
+
+```solidity
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| previousOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### Transfer
 
