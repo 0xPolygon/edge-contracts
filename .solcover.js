@@ -1,4 +1,4 @@
 module.exports = {
   configureYulOptimizer: true,
-  skipFiles: ["mocks"],
+  skipFiles: ["mocks", "blade/accountAbsrracion/test"],
 };
