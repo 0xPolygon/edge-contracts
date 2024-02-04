@@ -65,14 +65,22 @@ contract VerifyingPaymaster is BasePaymaster {
         uint48 validAfter
     ) public view returns (bytes32) {
         //can't use userOp.hash(), since it contains also the paymasterAndData itself.
+        address sender = userOp.getSender();
 
         return
             keccak256(
                 abi.encode(
-                    pack(userOp),
-                    block.chainid,
+                    sender,
+                    userOp.nonce,
+                    keccak256(userOp.initCode),
+                    keccak256(userOp.callData),
+                    userOp.callGasLimit,
+                    userOp.verificationGasLimit,
+                    userOp.preVerificationGas,
+                    userOp.maxFeePerGas,
+                    userOp.maxPriorityFeePerGas,
                     address(this),
-                    senderNonce[userOp.getSender()],
+                    senderNonce[sender],
                     validUntil,
                     validAfter
                 )
